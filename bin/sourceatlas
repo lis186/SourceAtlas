@@ -1,0 +1,218 @@
+#!/usr/bin/env bash
+
+# SourceAtlas - Lightweight code indexing tool for AI agents
+# Main CLI entry point
+
+set -e
+
+# Version information
+readonly VERSION="0.1.0"
+readonly SCHEMA_VERSION="1"
+readonly PROG_NAME="$(basename "$0")"
+
+# Script directory
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly LIB_DIR="${SCRIPT_DIR}/../lib"
+
+# Load core library if it exists
+if [[ -f "${LIB_DIR}/core.sh" ]]; then
+    source "${LIB_DIR}/core.sh"
+fi
+
+# Show version information
+show_version() {
+    cat <<EOF
+SourceAtlas - Code Indexing Tool
+Version: ${VERSION}
+Schema Version: ${SCHEMA_VERSION}
+EOF
+}
+
+# Show help message
+show_help() {
+    cat <<EOF
+Usage: ${PROG_NAME} <command> [options]
+
+SourceAtlas creates lightweight code indexes to help AI agents navigate large codebases.
+
+Commands:
+  version         Show version information
+  init            Initialize configuration in current directory
+  scan            Scan directory and generate index
+  symbols         Generate symbol table from index
+  stats           Generate statistics from index
+  manifest        Create or update manifest file
+  shard           Split index into shards
+  delta           Perform incremental update
+  query           Search the index
+  segment         Extract code segments
+  export-dsl      Export index in DSL format
+  clean           Remove generated files
+  run             Run full indexing pipeline
+  verify          Verify index consistency
+  help            Show this help message
+
+Options:
+  --help          Show help for a specific command
+  --version       Show version information
+
+Examples:
+  ${PROG_NAME} init
+  ${PROG_NAME} scan --root . --out .sourceatlas/
+  ${PROG_NAME} run
+
+For more information, see: https://github.com/sourceatlas/sourceatlas
+EOF
+}
+
+# Command: init
+cmd_init() {
+    echo "Error: init command not yet implemented"
+    exit 1
+}
+
+# Command: scan
+cmd_scan() {
+    echo "Error: scan command not yet implemented"
+    exit 1
+}
+
+# Command: symbols
+cmd_symbols() {
+    echo "Error: symbols command not yet implemented"
+    exit 1
+}
+
+# Command: stats
+cmd_stats() {
+    echo "Error: stats command not yet implemented"
+    exit 1
+}
+
+# Command: manifest
+cmd_manifest() {
+    echo "Error: manifest command not yet implemented"
+    exit 1
+}
+
+# Command: shard
+cmd_shard() {
+    echo "Error: shard command not yet implemented"
+    exit 1
+}
+
+# Command: delta
+cmd_delta() {
+    echo "Error: delta command not yet implemented"
+    exit 1
+}
+
+# Command: query
+cmd_query() {
+    echo "Error: query command not yet implemented"
+    exit 1
+}
+
+# Command: segment
+cmd_segment() {
+    echo "Error: segment command not yet implemented"
+    exit 1
+}
+
+# Command: export-dsl
+cmd_export_dsl() {
+    echo "Error: export-dsl command not yet implemented"
+    exit 1
+}
+
+# Command: clean
+cmd_clean() {
+    echo "Error: clean command not yet implemented"
+    exit 1
+}
+
+# Command: run
+cmd_run() {
+    echo "Error: run command not yet implemented"
+    exit 1
+}
+
+# Command: verify
+cmd_verify() {
+    echo "Error: verify command not yet implemented"
+    exit 1
+}
+
+# Main entry point
+main() {
+    local command="${1:-}"
+    
+    case "$command" in
+        version|--version|-v)
+            show_version
+            ;;
+        help|--help|-h|"")
+            show_help
+            ;;
+        init)
+            shift
+            cmd_init "$@"
+            ;;
+        scan)
+            shift
+            cmd_scan "$@"
+            ;;
+        symbols)
+            shift
+            cmd_symbols "$@"
+            ;;
+        stats)
+            shift
+            cmd_stats "$@"
+            ;;
+        manifest)
+            shift
+            cmd_manifest "$@"
+            ;;
+        shard)
+            shift
+            cmd_shard "$@"
+            ;;
+        delta)
+            shift
+            cmd_delta "$@"
+            ;;
+        query)
+            shift
+            cmd_query "$@"
+            ;;
+        segment)
+            shift
+            cmd_segment "$@"
+            ;;
+        export-dsl)
+            shift
+            cmd_export_dsl "$@"
+            ;;
+        clean)
+            shift
+            cmd_clean "$@"
+            ;;
+        run)
+            shift
+            cmd_run "$@"
+            ;;
+        verify)
+            shift
+            cmd_verify "$@"
+            ;;
+        *)
+            echo "Error: Unknown command: $command" >&2
+            echo "Run '${PROG_NAME} help' for usage information." >&2
+            exit 1
+            ;;
+    esac
+}
+
+# Run main function
+main "$@"

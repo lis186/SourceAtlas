@@ -6,7 +6,10 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(mkdir:*)",
-      "Bash(bats:*)"
+      "Bash(bats:*)",
+      "Bash(chmod:*)",
+      "Bash(ln:*)",
+      "Bash(PATH:*)"
     ],
     "deny": [],
     "ask": []

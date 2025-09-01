@@ -49,7 +49,7 @@ Gate：完成 Phase 0 後，確認工具可在本機與 CI 執行，再展開 Ph
 Deps：Phase 0 完成
 目標：以測試定義 CLI 行為契約與輸出檔案格式，不實作程式碼。
 
-- [ ] Step 1.1 `satlas version` 與 `sourceatlas version` 行為測試
+- [x] Step 1.1 `satlas version` 與 `sourceatlas version` 行為測試（完成：2025-09-02 02:36 UTC+8）
   - 驗證標準：兩個命令皆可執行且輸出包含 `schema_version` 與工具版本字串，輸出內容完全一致
 - [ ] Step 1.2 `satlas init` 產物測試
   - 驗證標準：在空目錄執行後產生預設設定與排除清單（含預設 exclude patterns）
