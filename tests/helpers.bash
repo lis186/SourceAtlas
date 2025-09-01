@@ -51,7 +51,8 @@ assert_file_contains() {
     local file_path="$1"
     local text="$2"
     
-    if ! grep -q "${text}" "${file_path}"; then
+    # Use -F for fixed string matching to avoid regex interpretation
+    if ! grep -F -q "${text}" "${file_path}"; then
         echo "File ${file_path} does not contain: ${text}" >&2
         return 1
     fi

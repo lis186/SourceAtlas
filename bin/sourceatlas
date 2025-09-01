@@ -67,8 +67,224 @@ EOF
 
 # Command: init
 cmd_init() {
-    echo "Error: init command not yet implemented"
-    exit 1
+    local force=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --force|-f)
+                force=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} init [options]
+
+Initialize SourceAtlas configuration in the current directory.
+
+Options:
+  --force, -f     Force reinitialization (overwrite existing config)
+  --help, -h      Show this help message
+
+Examples:
+  ${PROG_NAME} init
+  ${PROG_NAME} init --force
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                echo "Run '${PROG_NAME} init --help' for usage." >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    local atlas_dir=".sourceatlas"
+    
+    # Check if already initialized
+    if [[ -d "${atlas_dir}" ]] && [[ "${force}" = false ]]; then
+        echo "SourceAtlas already initialized in this directory."
+        echo "Use '${PROG_NAME} init --force' to reinitialize."
+        exit 0
+    fi
+    
+    # Create .sourceatlas directory
+    mkdir -p "${atlas_dir}"
+    
+    # Create default config file
+    cat > "${atlas_dir}/config.toml" <<'EOF'
+# SourceAtlas Configuration
+
+[general]
+# Repository name (auto-detected if not set)
+repo = ""
+
+# Schema version
+schema_version = 1
+
+[languages]
+# Languages to index
+enabled = ["swift", "kotlin", "objc", "ruby", "python", "shell", "java", "javascript", "typescript"]
+
+# Language-specific settings
+[languages.swift]
+extensions = [".swift"]
+symbols = ["class", "struct", "enum", "protocol", "extension", "actor", "func"]
+
+[languages.kotlin]
+extensions = [".kt", ".kts"]
+symbols = ["class", "object", "interface", "fun", "data class", "sealed class"]
+
+[languages.objc]
+extensions = [".m", ".h", ".mm"]
+symbols = ["@interface", "@implementation", "@protocol", "@property"]
+
+[languages.ruby]
+extensions = [".rb", ".rake", ".gemspec"]
+symbols = ["class", "module", "def"]
+
+[languages.python]
+extensions = [".py", ".pyi"]
+symbols = ["class", "def", "async def"]
+
+[languages.shell]
+extensions = [".sh", ".bash", ".zsh"]
+symbols = ["function"]
+
+[output]
+# Output directory
+directory = ".sourceatlas"
+
+# Compression
+compress = true
+compression = "gzip"
+
+[limits]
+# Shard limits
+shard_max_bytes = 2097152  # 2MB
+shard_max_records = 10000
+
+# Progressive retrieval limits
+max_shards_per_query = 3
+max_files_per_query = 20
+max_lines_per_segment = 400
+segment_padding = 10
+
+# Performance limits
+max_file_size_bytes = 10485760  # 10MB
+max_threads = 4
+EOF
+    
+    # Create exclude patterns file
+    cat > "${atlas_dir}/exclude_patterns.txt" <<'EOF'
+# Exclude patterns for SourceAtlas
+# One pattern per line, supports glob patterns
+
+# Build directories
+**/build/**
+**/.gradle/**
+**/dist/**
+**/out/**
+**/target/**
+
+# Version control
+**/.git/**
+**/.svn/**
+**/.hg/**
+
+# Dependencies
+**/node_modules/**
+**/Pods/**
+**/vendor/**
+**/PrebuiltFrameworks/**
+**/.bundle/**
+
+# IDE and editor files
+**/.idea/**
+**/.vscode/**
+**/*.xcworkspace/**
+**/*.xcodeproj/**
+**/.DS_Store
+**/.settings/**
+**/.classpath
+**/.project
+
+# Temporary files
+**/tmp/**
+**/temp/**
+**/cache/**
+**/*.tmp
+**/*.temp
+**/*.cache
+
+# Sensitive files
+*.mobileprovision
+*.cer
+*.p12
+*.p8
+*.key
+*.pem
+*.pfx
+*.keystore
+*.jks
+
+# Binary files
+*.jar
+*.war
+*.ear
+*.class
+*.dll
+*.exe
+*.so
+*.dylib
+*.a
+*.o
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# Images and media
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.mp4
+*.mp3
+*.wav
+
+# Documentation builds
+**/docs/_build/**
+**/site/**
+EOF
+    
+    # Create .gitignore for atlas directory
+    cat > "${atlas_dir}/.gitignore" <<'EOF'
+# SourceAtlas generated files
+*.jsonl
+*.jsonl.gz
+*.jsonl.zst
+*.tsv
+*.tsv.gz
+*.tsv.zst
+*.json
+!config.toml
+!exclude_patterns.txt
+EOF
+    
+    echo "SourceAtlas initialized successfully in ${atlas_dir}/"
+    echo ""
+    echo "Next steps:"
+    echo "  1. Review and customize ${atlas_dir}/config.toml"
+    echo "  2. Review and customize ${atlas_dir}/exclude_patterns.txt"
+    echo "  3. Run '${PROG_NAME} scan' to generate the index"
 }
 
 # Command: scan
