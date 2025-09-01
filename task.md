@@ -30,13 +30,13 @@
 Deps：無
 目標：建立測試策略、測試框架、測試夾具與覆蓋範圍矩陣，作為後續 TDD 依據。
 
-- [ ] Step 0.1 選定 E2E/CLI 測試框架與結構（建議：`bats-core`）
+- [x] Step 0.1 選定 E2E/CLI 測試框架與結構（建議：`bats-core`）（完成：2025-09-02 02:28 UTC+8）
   - 產出：`tests/e2e/` 目錄結構與共用 helper（暫定 `tests/helpers.bash`）
   - 驗證標準：最小空白測試可在 CI 腳本中執行（`bats -v` 正常；CI 任務綠燈）
-- [ ] Step 0.2 建立測試夾具（fixtures）
+- [x] Step 0.2 建立測試夾具（fixtures）（完成：2025-09-02 02:32 UTC+8）
   - 產出：`tests/fixtures/sourceatlas/`（含多語言最小檔案：swift/kt/objc/rb/sh/py、設定檔、排除目錄）
   - 驗證標準：fixtures 可被測試腳本成功複製到暫存資料夾並被測試引用
-- [ ] Step 0.3 覆蓋範圍矩陣與風險分級（Coverage Matrix）
+- [x] Step 0.3 覆蓋範圍矩陣與風險分級（Coverage Matrix）（完成：2025-09-02 02:35 UTC+8）
   - 產出：`tests/coverage-matrix.md`，映射 PRD 章節（4/5/11/15/16/17/20/22/23/24 等）到測試項
   - 驗證標準：矩陣包含每個 CLI 子命令、各語言符號規則、分片/節流/安全/效能/驗收等欄位
 
@@ -185,7 +185,7 @@ Deps：Phase 6 完成
 ## 變更與完成記錄（完成後逐步勾選）
 
 - [x] 建立任務計畫（本檔案）
-- [ ] Phase 0 完成
+- [x] Phase 0 完成（完成：2025-09-02 02:35 UTC+8）
 - [ ] Phase 1 完成
 - [ ] Phase 2 完成
 - [ ] Phase 3 完成
