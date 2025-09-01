@@ -1,0 +1,18 @@
+{
+  "name": "SourceAtlas Test App",
+  "version": "1.0.0",
+  "modules": {
+    "ios": {
+      "enabled": true,
+      "min_version": "14.0"
+    },
+    "android": {
+      "enabled": true,
+      "min_sdk": 24
+    }
+  },
+  "features": {
+    "analytics": true,
+    "crash_reporting": false
+  }
+}
