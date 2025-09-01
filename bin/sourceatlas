@@ -289,8 +289,132 @@ EOF
 
 # Command: scan
 cmd_scan() {
-    echo "Error: scan command not yet implemented"
-    exit 1
+    local root_dir="."
+    local out_dir=".sourceatlas"
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --root)
+                root_dir="$2"
+                shift 2
+                ;;
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} scan [options]
+
+Scan directory and generate index.
+
+Options:
+  --root DIR      Root directory to scan (default: current directory)
+  --out DIR       Output directory (default: .sourceatlas)
+  --help, -h      Show this help message
+
+Examples:
+  ${PROG_NAME} scan
+  ${PROG_NAME} scan --root src --out .sourceatlas
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                echo "Run '${PROG_NAME} scan --help' for usage." >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Check if initialized
+    if [[ ! -f ".sourceatlas/config.toml" ]] && [[ "$out_dir" == ".sourceatlas" ]]; then
+        echo "SourceAtlas not initialized. Run '${PROG_NAME} init' first." >&2
+        exit 1
+    fi
+    
+    # Create output directory
+    mkdir -p "$out_dir"
+    
+    local index_file="${out_dir}/sourceatlas.index.jsonl"
+    local exclude_file=".sourceatlas/exclude_patterns.txt"
+    local repo_name="$(basename "$(pwd)")"
+    
+    # Clear existing index
+    > "$index_file"
+    
+    echo "Scanning directory: $root_dir"
+    echo "Output: $index_file"
+    
+    local file_count=0
+    
+    # Find all files and process them
+    find "$root_dir" -type f -name "*" 2>/dev/null | while read -r file; do
+        # Skip if file matches exclude patterns
+        if is_excluded "$file" "$exclude_file"; then
+            continue
+        fi
+        
+        # Skip hidden files and directories
+        if [[ "$file" == *"/."* ]]; then
+            continue
+        fi
+        
+        # Skip the atlas directory itself
+        if [[ "$file" == *"/.sourceatlas/"* ]]; then
+            continue
+        fi
+        
+        local file_name="$(basename "$file")"
+        local ext="$(get_extension "$file")"
+        local lang="$(get_language "$ext")"
+        
+        # Skip binary and unknown files
+        if [[ "$lang" == "unknown" ]]; then
+            case "$ext" in
+                .png|.jpg|.jpeg|.gif|.svg|.ico|.pdf|.zip|.tar|.gz|.exe|.dll|.so|.dylib|.a|.o|.class|.jar)
+                    continue
+                    ;;
+            esac
+        fi
+        
+        local size_bytes="$(get_file_size "$file")"
+        local loc="$(count_lines "$file")"
+        local content_hash="$(calculate_hash "$file")"
+        local role="$(detect_role "$file")"
+        local imports="$(extract_imports "$file" "$lang")"
+        local symbols="$(extract_symbols "$file" "$lang")"
+        local summary="$(generate_summary "$file" "$lang" "$role")"
+        
+        # Create JSON object
+        local json_obj=$(cat <<EOF
+{
+  "repo": "$(json_escape "$repo_name")",
+  "path": "$(json_escape "$file")",
+  "file_name": "$(json_escape "$file_name")",
+  "ext": "$(json_escape "$ext")",
+  "lang": "$(json_escape "$lang")",
+  "size_bytes": $size_bytes,
+  "loc": $loc,
+  "roles": ["$(json_escape "$role")"],
+  "summary": "$(json_escape "$summary")",
+  "imports": ["$(json_escape "$imports")"],
+  "symbols": [],
+  "importance_score": 0.5,
+  "content_hash": "$(json_escape "$content_hash")"
+}
+EOF
+        )
+        
+        # Write JSON object as single line
+        echo "$json_obj" | jq -c . >> "$index_file"
+        
+        ((file_count++))
+    done
+    
+    echo "Indexed $file_count files"
+    echo "Index created: $index_file"
 }
 
 # Command: symbols

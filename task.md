@@ -53,7 +53,7 @@ Deps：Phase 0 完成
   - 驗證標準：兩個命令皆可執行且輸出包含 `schema_version` 與工具版本字串，輸出內容完全一致
 - [x] Step 1.2 `satlas init` 產物測試（完成：2025-09-02 02:39 UTC+8）
   - 驗證標準：在空目錄執行後產生預設設定與排除清單（含預設 exclude patterns）
-- [ ] Step 1.3 `satlas scan` 基本索引輸出測試
+- [x] Step 1.3 `satlas scan` 基本索引輸出測試（完成：2025-09-02 02:42 UTC+8）
   - 驗證標準：生成 `.sourceatlas/sourceatlas.index.jsonl`；每行最小欄位齊全（`repo,path,file_name,ext,lang,size_bytes,loc,roles,summary,imports,symbols[],importance_score,content_hash`）
 - [ ] Step 1.4 `satlas symbols` 反向符號表測試
   - 驗證標準：生成 `.sourceatlas/sourceatlas.symbols.tsv`；欄位與排序正確
