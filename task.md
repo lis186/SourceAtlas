@@ -160,9 +160,9 @@ Deps：Phase 5 完成
 Deps：Phase 6 完成
 目標：以真實 30–50 題測試集驗證 Hit@K、MRR、Precision/Recall@K 與假陽性率。
 
-- [ ] Step 7.1 測試集準備（`queries.tsv`、`truth.tsv`）
+- [x] Step 7.1 測試集準備（`queries.tsv`、`truth.tsv`）（完成：2025-09-02 19:15 UTC+8）
   - 驗證標準：格式與 PRD 24 章一致
-- [ ] Step 7.2 Runner 與報表（`report.json`、`report.tsv`）
+- [x] Step 7.2 Runner 與報表（`report.json`、`report.tsv`）（完成：2025-09-02 19:15 UTC+8）
   - 驗證標準：整體指標達成 Gate 條件（Hit@5 ≥ 80%、覆蓋 ≥ 95% 等）
 
 ---
@@ -194,4 +194,4 @@ Deps：Phase 6 完成
 - [x] Phase 4 完成（完成：2025-09-02 18:45 UTC+8）
 - [x] Phase 5 完成（完成：2025-09-02 18:55 UTC+8）
 - [x] Phase 6 完成（完成：2025-09-02 19:10 UTC+8）
-- [ ] Phase 7 完成
+- [x] Phase 7 完成（完成：2025-09-02 19:15 UTC+8）
