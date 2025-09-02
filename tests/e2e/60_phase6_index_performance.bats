@@ -117,9 +117,8 @@ teardown() {
 }
 
 @test "timing measurement handles empty directories gracefully" {
-    # Create empty test directory
-    local empty_dir="${TEST_TEMP_DIR}/empty_test"
-    mkdir -p "$empty_dir"
+    # Create empty test directory with automatic cleanup
+    local empty_dir=$(create_temp_dir "empty-test")
     cd "$empty_dir"
     
     run satlas init
@@ -148,21 +147,19 @@ teardown() {
     
     small_duration_ms=$(calculate_duration_ms "$start_time" "$end_time")
     
-    # Create isolated test subdirectory for complete cleanup
-    local scale_test_dir="${TEST_TEMP_DIR}/scale_test"
-    mkdir -p "$scale_test_dir"
+    # Create isolated test subdirectory with automatic cleanup
+    local scale_test_dir=$(create_temp_dir "scale-test")
     cd "$scale_test_dir"
     
     # Initialize separate instance to avoid contaminating main test
     satlas init
     
-    # Create additional files to simulate larger project
-    local temp_files=()
+    # Create additional files to simulate larger project with tracking
     for i in {1..10}; do
         local temp_file="test_file_$i.swift"
         echo "// Test file $i" > "$temp_file"
         echo "class TestClass$i { }" >> "$temp_file"
-        temp_files+=("$temp_file")
+        register_temp_file "$scale_test_dir/$temp_file"
     done
     
     # Run in isolated environment
@@ -173,9 +170,8 @@ teardown() {
     
     larger_duration_ms=$(calculate_duration_ms "$start_time" "$end_time")
     
-    # Return to original directory and clean up completely
+    # Return to original directory (cleanup handled automatically by trap)
     cd "${TEST_TEMP_DIR}"
-    rm -rf "$scale_test_dir"
     
     # Both should complete in reasonable time, larger may take more time (in milliseconds)
     [ "$small_duration_ms" -lt 30000 ]   # < 30 seconds

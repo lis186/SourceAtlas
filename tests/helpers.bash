@@ -1,18 +1,85 @@
 #!/usr/bin/env bash
 # Test helpers for SourceAtlas E2E tests
 
-# Setup test environment
+# Setup test environment with comprehensive cleanup and unique namespacing
 setup_test_env() {
-    export TEST_TEMP_DIR="$(mktemp -d -t sourceatlas-test-XXXXXX)"
+    # Create unique test namespace for parallel execution safety
+    local test_id="${BATS_TEST_NUMBER:-$$}-$(date +%s%3N 2>/dev/null || date +%s)"
+    export TEST_TEMP_DIR="$(mktemp -d -t sourceatlas-test-${test_id}-XXXXXX)"
     export SATLAS_ROOT="${TEST_TEMP_DIR}"
     export PATH="${BATS_TEST_DIRNAME}/../../bin:${PATH}"
+    
+    # Track temporary resources for cleanup
+    export TEST_TEMP_FILES=()
+    export TEST_TEMP_DIRS=("$TEST_TEMP_DIR")
+    export TEST_BACKGROUND_PIDS=()
+    
+    # Set trap for automatic cleanup on test failure/exit
+    trap 'cleanup_test_resources' EXIT INT TERM ERR
 }
 
-# Cleanup test environment
-cleanup_test_env() {
-    if [[ -n "${TEST_TEMP_DIR}" ]] && [[ -d "${TEST_TEMP_DIR}" ]]; then
-        rm -rf "${TEST_TEMP_DIR}"
+# Comprehensive cleanup for test resources with failure safety
+cleanup_test_resources() {
+    local exit_code=$?
+    
+    # Remove trap to prevent recursive calls
+    trap - EXIT INT TERM ERR
+    
+    # Cleanup background processes first (most critical)
+    if [[ -n "${TEST_BACKGROUND_PIDS:-}" ]]; then
+        for pid in "${TEST_BACKGROUND_PIDS[@]}"; do
+            if kill -0 "$pid" 2>/dev/null; then
+                kill "$pid" 2>/dev/null || true
+                sleep 0.1
+                # Force kill if still running
+                if kill -0 "$pid" 2>/dev/null; then
+                    kill -9 "$pid" 2>/dev/null || true
+                fi
+            fi
+        done
+        unset TEST_BACKGROUND_PIDS
     fi
+    
+    # Cleanup temporary files
+    if [[ -n "${TEST_TEMP_FILES:-}" ]]; then
+        for file in "${TEST_TEMP_FILES[@]}"; do
+            if [[ -f "$file" ]]; then
+                rm -f "$file" 2>/dev/null || true
+            fi
+        done
+        unset TEST_TEMP_FILES
+    fi
+    
+    # Cleanup temporary directories (most destructive last)
+    if [[ -n "${TEST_TEMP_DIRS:-}" ]]; then
+        for dir in "${TEST_TEMP_DIRS[@]}"; do
+            # Safety checks before destructive operations
+            if [[ -d "$dir" ]] && [[ "$dir" == /tmp/* ]] || [[ "$dir" == /var/tmp/* ]]; then
+                # Additional safety: ensure it's actually a test directory we created
+                if [[ "$(basename "$dir")" == sourceatlas-test-* ]]; then
+                    rm -rf "$dir" 2>/dev/null || true
+                fi
+            fi
+        done
+        unset TEST_TEMP_DIRS
+    fi
+    
+    # Legacy cleanup for backward compatibility
+    if [[ -n "${TEST_TEMP_DIR:-}" ]] && [[ -d "${TEST_TEMP_DIR}" ]]; then
+        # Safety check: ensure it's a test directory
+        if [[ "$(basename "$TEST_TEMP_DIR")" == sourceatlas-test-* ]]; then
+            rm -rf "${TEST_TEMP_DIR}" 2>/dev/null || true
+        fi
+        unset TEST_TEMP_DIR
+    fi
+    
+    # Preserve original exit code
+    return $exit_code
+}
+
+# Legacy cleanup function for backward compatibility
+cleanup_test_env() {
+    cleanup_test_resources
 }
 
 # Copy fixtures to test directory
@@ -826,4 +893,115 @@ validate_stats_content() {
         echo "invalid:insufficient_numeric_fields:$valid_numeric"
         return 1
     fi
+}
+
+# Register temporary file for automatic cleanup
+register_temp_file() {
+    local file_path="$1"
+    
+    if [[ -n "$file_path" ]] && [[ -f "$file_path" ]]; then
+        TEST_TEMP_FILES+=("$file_path")
+    fi
+}
+
+# Register temporary directory for automatic cleanup  
+register_temp_dir() {
+    local dir_path="$1"
+    
+    if [[ -n "$dir_path" ]] && [[ -d "$dir_path" ]]; then
+        TEST_TEMP_DIRS+=("$dir_path")
+    fi
+}
+
+# Register background process for automatic cleanup
+register_background_pid() {
+    local pid="$1"
+    
+    if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+        TEST_BACKGROUND_PIDS+=("$pid")
+    fi
+}
+
+# Create tracked temporary file with automatic cleanup
+create_temp_file() {
+    local prefix="${1:-sourceatlas-test}"
+    local suffix="${2:-}"
+    
+    local temp_file
+    if [[ -n "$suffix" ]]; then
+        temp_file=$(mktemp -t "${prefix}-XXXXXX${suffix}")
+    else
+        temp_file=$(mktemp -t "${prefix}-XXXXXX")
+    fi
+    
+    if [[ -f "$temp_file" ]]; then
+        register_temp_file "$temp_file"
+        echo "$temp_file"
+    else
+        echo "CLEANUP_ERROR:failed_to_create_temp_file:$prefix" >&2
+        return 1
+    fi
+}
+
+# Create tracked temporary directory with automatic cleanup
+create_temp_dir() {
+    local prefix="${1:-sourceatlas-test}"
+    
+    local temp_dir=$(mktemp -d -t "${prefix}-XXXXXX")
+    
+    if [[ -d "$temp_dir" ]]; then
+        register_temp_dir "$temp_dir"
+        echo "$temp_dir"
+    else
+        echo "CLEANUP_ERROR:failed_to_create_temp_dir:$prefix" >&2
+        return 1
+    fi
+}
+
+# Helper function validation - ensures function exists before calling
+validate_helper_function() {
+    local function_name="$1"
+    
+    if ! declare -f "$function_name" >/dev/null 2>&1; then
+        echo "HELPER_ERROR:function_not_defined:$function_name" >&2
+        return 1
+    fi
+    
+    return 0
+}
+
+# Validate timing fields exist in stats content
+has_timing_fields() {
+    local stats_content="$1"
+    
+    # Validate helper function is being called correctly
+    validate_helper_function "has_timing_fields" || return 1
+    
+    local timing_fields=("index_time" "processing_time" "elapsed" "duration_ms" "timing")
+    
+    for field in "${timing_fields[@]}"; do
+        if [[ "$stats_content" == *"$field"* ]]; then
+            return 0
+        fi
+    done
+    
+    return 1
+}
+
+# Validate phase timing information exists
+has_phase_timing() {
+    local stats_content="$1"
+    
+    # Validate helper function is being called correctly
+    validate_helper_function "has_phase_timing" || return 1
+    
+    local phase_fields=("phase_timing" "scan_time" "index_time" "shard_time" "phases")
+    
+    for field in "${phase_fields[@]}"; do
+        if [[ "$stats_content" == *"$field"* ]]; then
+            return 0
+        fi
+    done
+    
+    return 1
 }
