@@ -160,51 +160,77 @@ extract_imports() {
 extract_symbols() {
     local file="$1"
     local lang="$2"
-    local symbols=""
     
     case "$lang" in
         swift)
-            # Extract class, struct, enum, protocol, func definitions
-            symbols=$(grep -E '^\s*(class|struct|enum|protocol|extension|actor|func)\s+' "$file" | \
-                     sed 's/^\s*//' | \
-                     sed 's/\s*{.*//' | \
-                     head -5 | \
-                     tr '\n' ',' | \
-                     sed 's/,$//')
+            # Extract class, struct, enum, protocol, func definitions with line numbers
+            grep -n -E '^\s*(class|struct|enum|protocol|extension|actor|func)\s+' "$file" | \
+            head -5 | \
+            while IFS=':' read -r line_num content; do
+                local kind=$(echo "$content" | sed 's/^\s*\([a-z]*\).*/\1/')
+                local name=$(echo "$content" | sed 's/^\s*[a-z]*\s*\([^({[:space:]]*\).*/\1/')
+                local visibility="internal"  # Default for Swift
+                
+                # Try to detect visibility
+                if echo "$content" | grep -q "public"; then
+                    visibility="public"
+                elif echo "$content" | grep -q "private"; then
+                    visibility="private"
+                fi
+                
+                echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
+            done | jq -s .
             ;;
         kotlin)
-            # Extract class, object, interface, fun definitions
-            symbols=$(grep -E '^\s*(class|object|interface|fun|data class|sealed class)\s+' "$file" | \
-                     sed 's/^\s*//' | \
-                     sed 's/\s*[{(].*//' | \
-                     head -5 | \
-                     tr '\n' ',' | \
-                     sed 's/,$//')
+            # Extract class, object, interface, fun definitions with line numbers
+            grep -n -E '^\s*(class|object|interface|fun|data class|sealed class)\s+' "$file" | \
+            head -5 | \
+            while IFS=':' read -r line_num content; do
+                local kind=$(echo "$content" | sed 's/^\s*\([a-z]*\).*/\1/')
+                local name=$(echo "$content" | sed 's/^\s*[a-z]*\s*class\s*\([^({[:space:]]*\).*/\1/')
+                if [[ "$kind" == "fun" ]]; then
+                    name=$(echo "$content" | sed 's/^\s*fun\s*\([^({[:space:]]*\).*/\1/')
+                fi
+                local visibility="internal"  # Default for Kotlin
+                
+                # Try to detect visibility
+                if echo "$content" | grep -q "public"; then
+                    visibility="public"
+                elif echo "$content" | grep -q "private"; then
+                    visibility="private"
+                fi
+                
+                echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
+            done | jq -s .
             ;;
         python)
-            # Extract class and def definitions
-            symbols=$(grep -E '^(class|def)\s+' "$file" | \
-                     sed 's/^\s*//' | \
-                     sed 's/\s*[(:].*/ /' | \
-                     head -5 | \
-                     tr '\n' ',' | \
-                     sed 's/,$//')
+            # Extract class and def definitions with line numbers
+            grep -n -E '^(class|def)\s+' "$file" | \
+            head -5 | \
+            while IFS=':' read -r line_num content; do
+                local kind=$(echo "$content" | sed 's/^\([a-z]*\).*/\1/')
+                local name=$(echo "$content" | sed 's/^[a-z]*\s*\([^([:space:]]*\).*/\1/')
+                local visibility="public"  # Python default
+                
+                echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
+            done | jq -s .
             ;;
         ruby)
-            # Extract class, module, def definitions
-            symbols=$(grep -E '^\s*(class|module|def)\s+' "$file" | \
-                     sed 's/^\s*//' | \
-                     sed 's/\s*[(;<].*//' | \
-                     head -5 | \
-                     tr '\n' ',' | \
-                     sed 's/,$//')
+            # Extract class, module, def definitions with line numbers
+            grep -n -E '^\s*(class|module|def)\s+' "$file" | \
+            head -5 | \
+            while IFS=':' read -r line_num content; do
+                local kind=$(echo "$content" | sed 's/^\s*\([a-z]*\).*/\1/')
+                local name=$(echo "$content" | sed 's/^\s*[a-z]*\s*\([^([:space:]]*\).*/\1/')
+                local visibility="public"  # Ruby default
+                
+                echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
+            done | jq -s .
             ;;
         *)
-            symbols=""
+            echo "[]"
             ;;
     esac
-    
-    echo "$symbols"
 }
 
 # Detect role from file path and name

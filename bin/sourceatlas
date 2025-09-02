@@ -384,7 +384,7 @@ EOF
         local content_hash="$(calculate_hash "$file")"
         local role="$(detect_role "$file")"
         local imports="$(extract_imports "$file" "$lang")"
-        local symbols="$(extract_symbols "$file" "$lang")"
+        local symbols_json="$(extract_symbols "$file" "$lang")"
         local summary="$(generate_summary "$file" "$lang" "$role")"
         
         # Create JSON object
@@ -400,7 +400,7 @@ EOF
   "roles": ["$(json_escape "$role")"],
   "summary": "$(json_escape "$summary")",
   "imports": ["$(json_escape "$imports")"],
-  "symbols": [],
+  "symbols": $symbols_json,
   "importance_score": 0.5,
   "content_hash": "$(json_escape "$content_hash")"
 }
@@ -419,8 +419,91 @@ EOF
 
 # Command: symbols
 cmd_symbols() {
-    echo "Error: symbols command not yet implemented"
-    exit 1
+    local out_dir=".sourceatlas"
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} symbols [options]
+
+Generate reverse symbol table from index.
+
+Options:
+  --out DIR       Output directory (default: .sourceatlas)
+  --help, -h      Show this help message
+
+Examples:
+  ${PROG_NAME} symbols
+  ${PROG_NAME} symbols --out .sourceatlas
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                echo "Run '${PROG_NAME} symbols --help' for usage." >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    local index_file="${out_dir}/sourceatlas.index.jsonl"
+    local symbols_file="${out_dir}/sourceatlas.symbols.tsv"
+    
+    # Check if index file exists
+    if [[ ! -f "$index_file" ]]; then
+        echo "Error: Index file not found: $index_file" >&2
+        echo "Run '${PROG_NAME} scan' first to generate the index." >&2
+        exit 1
+    fi
+    
+    # Create output directory
+    mkdir -p "$out_dir"
+    
+    echo "Generating symbol table from: $index_file"
+    echo "Output: $symbols_file"
+    
+    # Write TSV header
+    echo -e "symbol\tkind\trepo\tpath\tline_start\tline_end" > "$symbols_file"
+    
+    # Process each line of the index
+    local symbol_count=0
+    
+    while IFS= read -r line; do
+        # Skip empty lines
+        [[ -z "$line" ]] && continue
+        
+        # Parse JSON line
+        local repo=$(echo "$line" | jq -r '.repo // ""')
+        local path=$(echo "$line" | jq -r '.path // ""')
+        local symbols_array=$(echo "$line" | jq -c '.symbols // []')
+        
+        # Skip if no symbols
+        if [[ "$symbols_array" == "[]" ]] || [[ "$symbols_array" == "null" ]]; then
+            continue
+        fi
+        
+        # Extract each symbol and write to TSV
+        echo "$symbols_array" | jq -r --arg repo "$repo" --arg path "$path" '.[] | select(.name != null and .name != "") | [.name, .kind, $repo, $path, .line_start, .line_end] | @tsv' >> "$symbols_file"
+        
+        local symbols_in_file=$(echo "$symbols_array" | jq -r '. | length')
+        symbol_count=$((symbol_count + symbols_in_file))
+        
+    done < "$index_file"
+    
+    # Sort the symbols file (skip header)
+    {
+        head -n 1 "$symbols_file"
+        tail -n +2 "$symbols_file" | sort
+    } > "${symbols_file}.tmp" && mv "${symbols_file}.tmp" "$symbols_file"
+    
+    echo "Generated $symbol_count symbols"
+    echo "Symbol table created: $symbols_file"
 }
 
 # Command: stats
