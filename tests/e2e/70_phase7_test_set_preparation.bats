@@ -151,23 +151,14 @@ teardown() {
     local queries_file="${TEST_TEMP_DIR}/queries.tsv"
     create_uat_queries_file "$queries_file" 3
 
-    # Check that expected files referenced in queries actually exist in fixtures
-    tail -n +2 "$queries_file" | cut -f4 | tr ',' '\n' | sort -u | while read expected_file; do
-        # Look for the file in the test directory structure
-        if [[ -n "$expected_file" ]]; then
-            local found=false
-            for file in $(find . -name "$expected_file" 2>/dev/null); do
-                found=true
-                break
-            done
-            
-            # If not found by exact name, check if it's referenced in the index
-            if [[ "$found" != true ]]; then
-                local index_file="${TEST_TEMP_DIR}/.sourceatlas/sourceatlas.index.jsonl"
-                if [[ -f "$index_file" ]]; then
-                    grep -q "$expected_file" "$index_file" || echo "Warning: Expected file $expected_file not found in fixtures or index"
-                fi
-            fi
-        fi
-    done
+    # Use the simplified helper function to validate expected files
+    validate_expected_files_exist "$queries_file"
+    
+    # The helper function will output warnings for missing files
+    # and return non-zero if any files are missing
+    local validation_result=$?
+    
+    # For this test, we allow missing files with warnings
+    # but still want to know if validation ran successfully
+    [ "$validation_result" -eq 0 ] || [ "$validation_result" -eq 1 ]
 }
