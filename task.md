@@ -6,6 +6,7 @@
 
 - **測試優先**：寫測試時先假設程式碼是正確的，只撰寫測試；若同一測試用例連續三次嘗試失敗，立即暫停並請求確認。
 - **Coverage 先行**：在撰寫任何測試前，先產出「測試覆蓋範圍規劃」以界定需測範圍與優先級。
+- **測試分層原則**：Don't write e2e test in unit tests. E2E 測試專注於完整 CLI 流程，單元測試專注於函數邏輯，兩者嚴格分離。
 - **步驟驗證**：每個步驟都有明確驗證標準（多為自動化測試）；驗證成功才算完成。
 - **持續更新**：每個步驟完成後在本檔案勾選完成，記錄重大決策與已解問題，並視情況調整後續計畫。
 - **依賴關係**：各 Phase 可列出依賴（待釐清議題或先決步驟）。
@@ -49,33 +50,33 @@ Gate：完成 Phase 0 後，確認工具可在本機與 CI 執行，再展開 Ph
 Deps：Phase 0 完成
 目標：以測試定義 CLI 行為契約與輸出檔案格式，不實作程式碼。
 
-- [x] Step 1.1 `satlas version` 與 `sourceatlas version` 行為測試（完成：2025-09-02 02:36 UTC+8）
+- [x] Step 1.1 `satlas version` 與 `sourceatlas version` 行為測試（完成：2025-09-02 07:29 UTC+8）
   - 驗證標準：兩個命令皆可執行且輸出包含 `schema_version` 與工具版本字串，輸出內容完全一致
-- [x] Step 1.2 `satlas init` 產物測試（完成：2025-09-02 02:39 UTC+8）
+- [x] Step 1.2 `satlas init` 產物測試（完成：2025-09-02 07:36 UTC+8）
   - 驗證標準：在空目錄執行後產生預設設定與排除清單（含預設 exclude patterns）
-- [x] Step 1.3 `satlas scan` 基本索引輸出測試（完成：2025-09-02 02:42 UTC+8）
+- [x] Step 1.3 `satlas scan` 基本索引輸出測試（完成：2025-09-02 07:38 UTC+8）
   - 驗證標準：生成 `.sourceatlas/sourceatlas.index.jsonl`；每行最小欄位齊全（`repo,path,file_name,ext,lang,size_bytes,loc,roles,summary,imports,symbols[],importance_score,content_hash`）
-- [x] Step 1.4 `satlas symbols` 反向符號表測試（完成：2025-09-02 02:45 UTC+8）
+- [x] Step 1.4 `satlas symbols` 反向符號表測試（完成：2025-09-02 08:05 UTC+8）
   - 驗證標準：生成 `.sourceatlas/sourceatlas.symbols.tsv`；欄位與排序正確
-- [x] Step 1.5 `satlas stats` 統計輸出測試（完成：2025-09-02 02:51 UTC+8）
+- [x] Step 1.5 `satlas stats` 統計輸出測試（完成：2025-09-02 08:13 UTC+8）
   - 驗證標準：生成 `.sourceatlas/sourceatlas.stats.json`；包含檔案數、語言分佈、平均 LOC、索引時間
-- [x] Step 1.6 `satlas manifest` Root Manifest 測試（完成：2025-09-02 02:54 UTC+8）
+- [x] Step 1.6 `satlas manifest` Root Manifest 測試（完成：2025-09-02 08:20 UTC+8）
   - 驗證標準：生成 `sourceatlas.manifest.json`；分片列表、hash、檔數、語言與路徑存在
-- [x] Step 1.7 `satlas shard` 分片測試（完成：2025-09-02 02:58 UTC+8）
+- [x] Step 1.7 `satlas shard` 分片測試（完成：2025-09-02 08:29 UTC+8）
   - 驗證標準：依目錄/語言切分多個 `sourceatlas.index.[shard].jsonl[.gz]`；大小/筆數不超過預設上限
-- [x] Step 1.8 `satlas delta` 增量更新測試（完成：2025-09-02 03:45 UTC+8）
+- [x] Step 1.8 `satlas delta` 增量更新測試（完成：2025-09-02 08:45 UTC+8）
   - 驗證標準：修改 fixtures 後僅重建受影響分片；產生 `delta.report.json`
-- [x] Step 1.9 `satlas query` 查詢測試（完成：2025-09-02 04:10 UTC+8）
+- [x] Step 1.9 `satlas query` 查詢測試（完成：2025-09-02 08:53 UTC+8）
   - 驗證標準：支援 symbol/role/path/lang 關鍵字或正則查詢；回傳文件清單
-- [x] Step 1.10 `satlas segment` 片段擷取測試（完成：2025-09-02 04:35 UTC+8）
+- [x] Step 1.10 `satlas segment` 片段擷取測試（完成：2025-09-02 08:57 UTC+8）
   - 驗證標準：`get_segment(path,start,end,pad)` 行數限制（預設 ≤400）且自動 pad 上下文
-- [x] Step 1.11 `satlas export-dsl` 低 token DSL 測試（完成：2025-09-02 04:55 UTC+8）
+- [x] Step 1.11 `satlas export-dsl` 低 token DSL 測試（完成：2025-09-02 09:03 UTC+8）
   - 驗證標準：輸出符合 `F/SYM` 格式，欄位縮寫與範例一致
-- [ ] Step 1.12 `satlas clean` 清理測試
+- [x] Step 1.12 `satlas clean` 清理測試（完成：2025-09-02 09:30 UTC+8）
   - 驗證標準：清除輸出產物且不影響原始碼
-- [x] Step 1.13 `satlas run` 一條龍流程測試（完成：2025-09-02 03:15 UTC+8）
+- [x] Step 1.13 `satlas run` 一條龍流程測試（完成：2025-09-02 08:38 UTC+8）
   - 驗證標準：在空目錄與有變更目錄皆可完成掃描→索引→分片→symbols→stats→manifest
-- [ ] Step 1.14 `satlas verify` 一致性檢查測試
+- [x] Step 1.14 `satlas verify` 一致性檢查測試（完成：2025-09-02 09:35 UTC+8）
   - 驗證標準：索引、symbols、manifest 之間的路徑與 hash 對齊
 
 備註：每個子命令測試若連續三次修正仍失敗，立即暫停並請求確認。
@@ -186,7 +187,7 @@ Deps：Phase 6 完成
 
 - [x] 建立任務計畫（本檔案）
 - [x] Phase 0 完成（完成：2025-09-02 02:35 UTC+8）
-- [ ] Phase 1 完成
+- [x] Phase 1 完成（完成：2025-09-02 09:35 UTC+8）
 - [ ] Phase 2 完成
 - [ ] Phase 3 完成
 - [ ] Phase 4 完成

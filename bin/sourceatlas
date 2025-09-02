@@ -2356,8 +2356,360 @@ EOF
 
 # Command: clean
 cmd_clean() {
-    echo "Error: clean command not yet implemented"
-    exit 1
+    local out_dir=".sourceatlas"
+    local dry_run=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --dry-run)
+                dry_run=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} clean [options]
+
+Remove generated output files while preserving source code and configuration.
+
+Options:
+  --out DIR       Output directory to clean (default: .sourceatlas)
+  --dry-run       Show what would be removed without actually removing
+  --help, -h      Show this help message
+
+Examples:
+  ${PROG_NAME} clean
+  ${PROG_NAME} clean --out custom_output
+  ${PROG_NAME} clean --dry-run
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                echo "Run '${PROG_NAME} clean --help' for usage." >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Create output directory if it doesn't exist
+    mkdir -p "$out_dir"
+    
+    # List of files to clean (preserve config files)
+    local files_to_clean=(
+        "sourceatlas.index.jsonl"
+        "sourceatlas.symbols.tsv"
+        "sourceatlas.stats.json"
+        "sourceatlas.manifest.json"
+        "sourceatlas.dsl"
+        "delta.report.json"
+    )
+    
+    # Also clean shard files
+    local shard_files=("${out_dir}"/sourceatlas.index.*.jsonl)
+    local compressed_files=("${out_dir}"/*.gz)
+    
+    local cleaned_count=0
+    local total_size=0
+    
+    if [[ "$dry_run" == true ]]; then
+        echo "DRY RUN - Files that would be removed:"
+        echo ""
+    fi
+    
+    # Clean main output files
+    for file in "${files_to_clean[@]}"; do
+        local full_path="${out_dir}/${file}"
+        if [[ -f "$full_path" ]]; then
+            if [[ "$dry_run" == true ]]; then
+                local size=$(wc -c < "$full_path" 2>/dev/null || echo "0")
+                echo "  $full_path ($size bytes)"
+                total_size=$((total_size + size))
+            else
+                local size=$(wc -c < "$full_path" 2>/dev/null || echo "0")
+                rm -f "$full_path"
+                echo "Removed: $full_path ($size bytes)"
+                total_size=$((total_size + size))
+            fi
+            ((cleaned_count++))
+        fi
+    done
+    
+    # Clean shard files
+    for shard_file in "${shard_files[@]}"; do
+        if [[ -f "$shard_file" ]]; then
+            if [[ "$dry_run" == true ]]; then
+                local size=$(wc -c < "$shard_file" 2>/dev/null || echo "0")
+                echo "  $shard_file ($size bytes)"
+                total_size=$((total_size + size))
+            else
+                local size=$(wc -c < "$shard_file" 2>/dev/null || echo "0")
+                rm -f "$shard_file"
+                echo "Removed: $shard_file ($size bytes)"
+                total_size=$((total_size + size))
+            fi
+            ((cleaned_count++))
+        fi
+    done
+    
+    # Clean compressed files
+    for compressed_file in "${compressed_files[@]}"; do
+        if [[ -f "$compressed_file" ]]; then
+            if [[ "$dry_run" == true ]]; then
+                local size=$(wc -c < "$compressed_file" 2>/dev/null || echo "0")
+                echo "  $compressed_file ($size bytes)"
+                total_size=$((total_size + size))
+            else
+                local size=$(wc -c < "$compressed_file" 2>/dev/null || echo "0")
+                rm -f "$compressed_file"
+                echo "Removed: $compressed_file ($size bytes)"
+                total_size=$((total_size + size))
+            fi
+            ((cleaned_count++))
+        fi
+    done
+    
+    # Summary
+    if [[ "$dry_run" == true ]]; then
+        echo ""
+        echo "Would remove $cleaned_count files ($total_size bytes total)"
+        echo "Configuration files (.sourceatlas/config.toml, exclude_patterns.txt) would be preserved"
+    else
+        if [[ $cleaned_count -eq 0 ]]; then
+            echo "No output files found to clean in: $out_dir"
+        else
+            echo ""
+            echo "Cleaned $cleaned_count files ($total_size bytes total)"
+            echo "Configuration files preserved"
+        fi
+    fi
+}
+
+# Command: verify
+cmd_verify() {
+    local out_dir=".sourceatlas"
+    local verbose=false
+    local exit_code=0
+    local checks_passed=0
+    local total_checks=0
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
+            --help|-h)
+                echo "Usage: $PROG_NAME verify [options]"
+                echo ""
+                echo "Verify consistency between index, symbols, and manifest files"
+                echo ""
+                echo "Options:"
+                echo "  --out DIR         Use custom output directory (default: .sourceatlas)"
+                echo "  --verbose, -v     Show detailed verification information"
+                echo "  --help, -h        Show this help message"
+                return 0
+                ;;
+            *)
+                echo "Unknown option: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Required files
+    local index_file="${out_dir}/sourceatlas.index.jsonl"
+    local symbols_file="${out_dir}/sourceatlas.symbols.tsv" 
+    local manifest_file="${out_dir}/sourceatlas.manifest.json"
+    local stats_file="${out_dir}/sourceatlas.stats.json"
+    
+    # Check if index exists
+    if [[ ! -f "$index_file" ]]; then
+        echo "Index file not found: $index_file" >&2
+        exit 1
+    fi
+    
+    if [[ "$verbose" == true ]]; then
+        echo "Verifying SourceAtlas outputs in: $out_dir"
+        echo ""
+    fi
+    
+    # Check 1: Index file integrity
+    ((total_checks++))
+    if [[ "$verbose" == true ]]; then
+        echo "Checking index file integrity..."
+    fi
+    
+    local index_lines=$(wc -l < "$index_file" 2>/dev/null || echo "0")
+    local valid_json_lines=0
+    
+    while IFS= read -r line; do
+        [[ -z "$line" ]] && continue
+        if echo "$line" | jq empty 2>/dev/null; then
+            ((valid_json_lines++))
+        fi
+    done < "$index_file"
+    
+    if [[ $valid_json_lines -eq $index_lines ]]; then
+        if [[ "$verbose" == true ]]; then
+            echo "  ✓ Index file contains $index_lines valid JSON lines"
+        fi
+        ((checks_passed++))
+    else
+        echo "  ✗ Index file contains invalid JSON ($valid_json_lines/$index_lines valid)"
+        exit_code=1
+    fi
+    
+    # Check 2: Index-Symbol consistency  
+    if [[ -f "$symbols_file" ]]; then
+        ((total_checks++))
+        if [[ "$verbose" == true ]]; then
+            echo "Checking index-symbol consistency..."
+        fi
+        
+        local symbol_files_count=0
+        local missing_files=0
+        
+        # Get list of files in index
+        local index_files=$(mktemp)
+        while IFS= read -r line; do
+            [[ -z "$line" ]] && continue
+            echo "$line" | jq -r '.path // ""' | grep -v '^$'
+        done < "$index_file" | sort -u > "$index_files"
+        
+        # Check each symbol reference
+        while IFS=$'\t' read -r symbol line_num file_path symbol_type visibility || [[ -n "$symbol" ]]; do
+            [[ -z "$symbol" || "$symbol" == "symbol" ]] && continue  # Skip header
+            ((symbol_files_count++))
+            if ! grep -Fxq "$file_path" "$index_files"; then
+                if [[ "$verbose" == true ]]; then
+                    echo "  ✗ Symbol '$symbol' references missing file: $file_path"
+                fi
+                ((missing_files++))
+            fi
+        done < "$symbols_file"
+        
+        rm -f "$index_files"
+        
+        if [[ $missing_files -eq 0 ]]; then
+            if [[ "$verbose" == true ]]; then
+                echo "  ✓ All $symbol_files_count symbol references are valid"
+            fi
+            ((checks_passed++))
+        else
+            echo "  ✗ $missing_files symbol references point to missing files"
+            exit_code=1
+        fi
+    else
+        if [[ "$verbose" == true ]]; then
+            echo "Symbols file not found - skipping symbol consistency check"
+        fi
+    fi
+    
+    # Check 3: Manifest consistency
+    if [[ -f "$manifest_file" ]]; then
+        ((total_checks++))
+        if [[ "$verbose" == true ]]; then
+            echo "Checking manifest consistency..."
+        fi
+        
+        # Verify manifest file count matches index
+        local manifest_file_count=$(jq -r '.file_count // 0' "$manifest_file" 2>/dev/null)
+        local actual_file_count=$(grep -c . "$index_file" 2>/dev/null || echo "0")
+        
+        if [[ "$manifest_file_count" == "$actual_file_count" ]]; then
+            if [[ "$verbose" == true ]]; then
+                echo "  ✓ Manifest file count matches index ($actual_file_count files)"
+            fi
+            ((checks_passed++))
+        else
+            echo "  ✗ File count mismatch - Manifest: $manifest_file_count, Index: $actual_file_count"
+            exit_code=1
+        fi
+        
+        # Verify shard information if shards exist
+        local shard_files=("${out_dir}"/sourceatlas.index.*.jsonl)
+        local has_shards=false
+        for shard in "${shard_files[@]}"; do
+            [[ -f "$shard" ]] && has_shards=true && break
+        done
+        
+        if [[ "$has_shards" == true ]]; then
+            local manifest_shards=$(jq -r '.shards[]? // empty' "$manifest_file" 2>/dev/null | wc -l)
+            local actual_shards=0
+            for shard in "${shard_files[@]}"; do
+                [[ -f "$shard" ]] && ((actual_shards++))
+            done
+            
+            if [[ "$manifest_shards" == "$actual_shards" ]]; then
+                if [[ "$verbose" == true ]]; then
+                    echo "  ✓ Manifest shard count matches actual shards ($actual_shards)"
+                fi
+            else
+                echo "  ✗ Shard count mismatch - Manifest: $manifest_shards, Actual: $actual_shards"
+                exit_code=1
+            fi
+        fi
+    else
+        if [[ "$verbose" == true ]]; then
+            echo "Manifest file not found - skipping manifest consistency check"
+        fi
+    fi
+    
+    # Check 4: File existence verification (spot check)
+    ((total_checks++))
+    if [[ "$verbose" == true ]]; then
+        echo "Verifying file existence (spot check)..."
+    fi
+    
+    local files_checked=0
+    local missing_source_files=0
+    local max_files_to_check=10
+    
+    while IFS= read -r line && [[ $files_checked -lt $max_files_to_check ]]; do
+        [[ -z "$line" ]] && continue
+        local file_path=$(echo "$line" | jq -r '.path // ""')
+        [[ -z "$file_path" || "$file_path" == "null" ]] && continue
+        
+        if [[ ! -f "$file_path" ]]; then
+            if [[ "$verbose" == true ]]; then
+                echo "  ✗ Indexed file no longer exists: $file_path"
+            fi
+            ((missing_source_files++))
+        fi
+        ((files_checked++))
+    done < "$index_file"
+    
+    if [[ $missing_source_files -eq 0 ]]; then
+        if [[ "$verbose" == true ]]; then
+            echo "  ✓ All checked files exist ($files_checked files verified)"
+        fi
+        ((checks_passed++))
+    else
+        echo "  ✗ $missing_source_files out of $files_checked checked files are missing"
+        exit_code=1
+    fi
+    
+    # Summary
+    echo ""
+    if [[ $exit_code -eq 0 ]]; then
+        echo "All checks passed ($checks_passed/$total_checks)"
+        echo "SourceAtlas outputs are consistent"
+    else
+        echo "Verification failed ($checks_passed/$total_checks checks passed)"
+        echo "Consistency issues detected - consider regenerating outputs"
+    fi
+    
+    return $exit_code
 }
 
 # Command: run
@@ -2575,11 +2927,8 @@ compress_output_files() {
     done
 }
 
-# Command: verify
-cmd_verify() {
-    echo "Error: verify command not yet implemented"
-    exit 1
-}
+# Command: verify (stub - real implementation is above)
+# The actual cmd_verify implementation is above at line ~2492
 
 # Main entry point
 main() {
