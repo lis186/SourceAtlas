@@ -1,8 +1,41 @@
 #!/usr/bin/env bash
 # Test helpers for SourceAtlas E2E tests
 
+# Check for required tools and provide warnings
+check_required_tools() {
+    local missing_tools=()
+    local optional_tools=()
+    
+    # Required tools (tests will fail without these)
+    command -v jq >/dev/null 2>&1 || missing_tools+=("jq")
+    
+    # Optional but recommended tools (functionality degraded without these)
+    command -v awk >/dev/null 2>&1 || optional_tools+=("awk")
+    
+    # Report missing required tools
+    if [[ ${#missing_tools[@]} -gt 0 ]]; then
+        echo "ERROR: Required tools missing: ${missing_tools[*]}" >&2
+        echo "Please install missing tools before running tests" >&2
+        return 1
+    fi
+    
+    # Warn about missing optional tools
+    if [[ ${#optional_tools[@]} -gt 0 ]]; then
+        echo "WARNING: Optional tools missing: ${optional_tools[*]}" >&2
+        echo "Some functionality may use fallback implementations" >&2
+    fi
+    
+    return 0
+}
+
 # Setup test environment with comprehensive cleanup and unique namespacing
 setup_test_env() {
+    # Check for required tools on first run
+    if [[ -z "${TOOLS_CHECKED:-}" ]]; then
+        check_required_tools || true  # Warn but don't fail
+        export TOOLS_CHECKED=1
+    fi
+    
     # Create unique test namespace for parallel execution safety
     local test_id="${BATS_TEST_NUMBER:-$$}-$(date +%s%3N 2>/dev/null || date +%s)"
     export TEST_TEMP_DIR="$(mktemp -d -t sourceatlas-test-${test_id}-XXXXXX)"
@@ -994,4 +1027,423 @@ has_phase_timing() {
     done
     
     return 1
+}
+
+# Phase 7 UAT Quality Metrics - Configuration Constants
+readonly UAT_HIT_AT_5_THRESHOLD=80    # Hit@5 threshold percentage (≥80%)
+readonly UAT_COVERAGE_THRESHOLD=95    # Coverage threshold percentage (≥95%)
+readonly UAT_FPR_THRESHOLD=20         # False Positive Rate threshold percentage (<20%)
+readonly UAT_MIN_QUERIES=30           # Minimum test queries required
+readonly UAT_MAX_QUERIES=50           # Maximum test queries allowed
+
+# Create UAT test queries file with dynamic generation based on count
+# Optional caching: If UAT_CACHE_DIR is set, reuse cached files when possible
+create_uat_queries_file() {
+    local queries_file="$1"
+    local query_count="${2:-35}"  # Default to 35 queries
+    
+    if [[ -z "$queries_file" ]]; then
+        echo "ERROR: queries_file parameter required" >&2
+        return 1
+    fi
+    
+    # Check for cached version if caching is enabled
+    if [[ -n "${UAT_CACHE_DIR:-}" ]] && [[ -d "$UAT_CACHE_DIR" ]]; then
+        local cache_file="$UAT_CACHE_DIR/queries_${query_count}.tsv"
+        if [[ -f "$cache_file" ]]; then
+            # Use cached file if it exists and is recent (less than 1 hour old)
+            if [[ $(find "$cache_file" -mmin -60 2>/dev/null) ]]; then
+                cp "$cache_file" "$queries_file"
+                return 0
+            fi
+        fi
+    fi
+    
+    # Validate query count is within acceptable range
+    if [[ "$query_count" -lt 1 ]]; then
+        echo "ERROR: query_count must be at least 1" >&2
+        return 1
+    fi
+    
+    # For PRD compliance testing, enforce min/max range
+    if [[ "$query_count" -ge "$UAT_MIN_QUERIES" ]]; then
+        if [[ "$query_count" -gt "$UAT_MAX_QUERIES" ]]; then
+            echo "WARNING: query_count $query_count exceeds UAT_MAX_QUERIES ($UAT_MAX_QUERIES)" >&2
+        fi
+    fi
+    
+    # Define all available test queries (35 total)
+    local all_queries=(
+        "1	AppDelegate	symbol	AppDelegate.swift	high"
+        "2	MainActivity	symbol	MainActivity.kt	high"
+        "3	ConfigLoader	symbol	utils.py	high"
+        "4	TestHelper	symbol	test_helper.rb	high"
+        "5	build_ios	symbol	build.sh	medium"
+        "6	class.*Delegate	regex	AppDelegate.swift	high"
+        "7	func.*init	regex	AppDelegate.swift,MainActivity.kt	medium"
+        "8	def.*process	regex	utils.py	medium"
+        "9	module.*Helper	regex	test_helper.rb	low"
+        "10	function.*main	regex	build.sh	low"
+        "11	import.*UIKit	import	AppDelegate.swift	high"
+        "12	import.*androidx	import	MainActivity.kt	high"
+        "13	import.*json	import	utils.py	medium"
+        "14	require.*spec	import	test_helper.rb	low"
+        "15	source.*common	import	build.sh	low"
+        "16	@AndroidEntryPoint	annotation	MainActivity.kt	high"
+        "17	@UIApplicationMain	annotation	AppDelegate.swift	high"
+        "18	@dataclass	annotation	utils.py	medium"
+        "19	*.swift	file_extension	AppDelegate.swift	medium"
+        "20	*.kt	file_extension	MainActivity.kt	medium"
+        "21	*.py	file_extension	utils.py	medium"
+        "22	*.rb	file_extension	test_helper.rb	low"
+        "23	*.sh	file_extension	build.sh	low"
+        "24	ios/AppDelegate	path	AppDelegate.swift	high"
+        "25	android/MainActivity	path	MainActivity.kt	high"
+        "26	scripts/utils	path	utils.py	medium"
+        "27	scripts/test_helper	path	test_helper.rb	low"
+        "28	scripts/build	path	build.sh	low"
+        "29	networking.*error	semantic	AppDelegate.swift	low"
+        "30	database.*query	semantic	utils.py	low"
+        "31	test.*assertion	semantic	test_helper.rb	low"
+        "32	build.*configuration	semantic	build.sh	low"
+        "33	user.*interface	semantic	AppDelegate.swift	medium"
+        "34	data.*processing	semantic	utils.py	medium"
+        "35	configuration.*management	semantic	build.sh	low"
+    )
+    
+    # Write header
+    echo "query_id	query_text	query_type	expected_files	priority" > "$queries_file"
+    
+    # Write the requested number of queries
+    local queries_written=0
+    local total_available=${#all_queries[@]}
+    
+    for ((i=0; i<query_count && i<total_available; i++)); do
+        echo "${all_queries[$i]}" >> "$queries_file"
+        queries_written=$((queries_written + 1))
+    done
+    
+    # If more queries requested than available, cycle through them with new IDs
+    if [[ "$query_count" -gt "$total_available" ]]; then
+        local extra_needed=$((query_count - total_available))
+        for ((i=0; i<extra_needed; i++)); do
+            local orig_idx=$((i % total_available))
+            local new_id=$((total_available + i + 1))
+            # Extract fields from original query and update ID
+            local orig_query="${all_queries[$orig_idx]}"
+            local updated_query=$(echo "$orig_query" | sed "s/^[0-9]\+/$new_id/")
+            echo "$updated_query" >> "$queries_file"
+            queries_written=$((queries_written + 1))
+        done
+    fi
+    
+    # Validate file was created successfully
+    if [[ ! -f "$queries_file" ]]; then
+        echo "ERROR: Failed to create queries file: $queries_file" >&2
+        return 1
+    fi
+    
+    # Verify correct number of queries (excluding header)
+    local actual_count=$(($(wc -l < "$queries_file") - 1))
+    if [[ "$actual_count" -ne "$query_count" ]]; then
+        echo "ERROR: Query count mismatch: expected $query_count, created $actual_count" >&2
+        return 1
+    fi
+    
+    # Cache the generated file if caching is enabled
+    if [[ -n "${UAT_CACHE_DIR:-}" ]] && [[ -d "$UAT_CACHE_DIR" ]]; then
+        local cache_file="$UAT_CACHE_DIR/queries_${query_count}.tsv"
+        cp "$queries_file" "$cache_file" 2>/dev/null || true
+    fi
+    
+    return 0
+}
+
+# Create UAT ground truth file with fixture-based approach
+# Optional caching: If UAT_CACHE_DIR is set, reuse cached files when possible  
+create_uat_truth_file() {
+    local truth_file="$1"
+    
+    if [[ -z "$truth_file" ]]; then
+        echo "ERROR: truth_file parameter required" >&2
+        return 1
+    fi
+    
+    # Check for cached version if caching is enabled
+    if [[ -n "${UAT_CACHE_DIR:-}" ]] && [[ -d "$UAT_CACHE_DIR" ]]; then
+        local cache_file="$UAT_CACHE_DIR/truth.tsv"
+        if [[ -f "$cache_file" ]]; then
+            # Use cached file if it exists and is recent (less than 1 hour old)
+            if [[ $(find "$cache_file" -mmin -60 2>/dev/null) ]]; then
+                cp "$cache_file" "$truth_file"
+                return 0
+            fi
+        fi
+    fi
+    
+    cat > "$truth_file" << 'EOF'
+query_id	relevant_file	rank	relevance_score	file_path	line_numbers	context
+1	AppDelegate.swift	1	1.0	ios/AppDelegate.swift	1-50	Main application delegate
+2	MainActivity.kt	1	1.0	android/MainActivity.kt	1-45	Main Android activity
+3	utils.py	1	1.0	scripts/utils.py	15-20	ConfigLoader class definition
+4	test_helper.rb	1	1.0	scripts/test_helper.rb	10-15	TestHelper module
+5	build.sh	1	1.0	scripts/build.sh	25-30	build_ios function
+6	AppDelegate.swift	1	0.9	ios/AppDelegate.swift	12-15	class AppDelegate definition
+7	AppDelegate.swift	1	0.8	ios/AppDelegate.swift	20-25	init function
+8	AppDelegate.swift	1	1.0	ios/AppDelegate.swift	1-3	UIKit import statement
+9	MainActivity.kt	1	1.0	android/MainActivity.kt	3-4	AndroidEntryPoint annotation
+10	AppDelegate.swift	1	1.0	ios/AppDelegate.swift	1-50	Swift file extension match
+EOF
+
+    # Validate file was created successfully
+    if [[ ! -f "$truth_file" ]]; then
+        echo "ERROR: Failed to create truth file: $truth_file" >&2
+        return 1
+    fi
+    
+    # Cache the generated file if caching is enabled
+    if [[ -n "${UAT_CACHE_DIR:-}" ]] && [[ -d "$UAT_CACHE_DIR" ]]; then
+        local cache_file="$UAT_CACHE_DIR/truth.tsv"
+        cp "$truth_file" "$cache_file" 2>/dev/null || true
+    fi
+    
+    return 0
+}
+
+# Execute UAT queries with proper variable handling (avoiding subshell issues)
+# Returns results as JSON in a temporary file for safer parsing
+execute_uat_queries() {
+    local queries_file="$1"
+    local results_file="${2:-$(mktemp -t uat_results.XXXXXX.json)}"  # Output file for JSON results
+    
+    if [[ -z "$queries_file" ]]; then
+        echo "ERROR: queries_file parameter required" >&2
+        return 1
+    fi
+    
+    if [[ ! -f "$queries_file" ]]; then
+        echo "ERROR: Queries file not found: $queries_file" >&2
+        return 1
+    fi
+    
+    local passed_queries=0
+    local total_queries=0
+    local temp_details_file="$(mktemp -t uat_details.XXXXXX.csv)"
+    
+    # Register temp files for cleanup if using global tracking
+    if [[ -n "${TEST_TEMP_FILES:-}" ]]; then
+        TEST_TEMP_FILES+=("$results_file" "$temp_details_file")
+    fi
+    
+    # Process queries without using subshell to avoid variable scope issues
+    while IFS=$'\t' read -r query_id query_text query_type expected_files priority; do
+        # Skip header row
+        if [[ "$query_id" == "query_id" ]]; then
+            continue
+        fi
+        
+        total_queries=$((total_queries + 1))
+        
+        # Execute query based on type with proper error handling
+        local query_success=false
+        case "$query_type" in
+            "symbol"|"import"|"regex"|"annotation"|"file_extension"|"path"|"semantic")
+                if run satlas query "$query_text" 2>/dev/null; then
+                    if [[ "$status" -eq 0 ]]; then
+                        query_success=true
+                        passed_queries=$((passed_queries + 1))
+                    fi
+                fi
+                ;;
+            *)
+                echo "WARNING: Unknown query type: $query_type for query $query_id" >&2
+                ;;
+        esac
+        
+        # Log result to temp file for debugging
+        echo "$query_id,$query_text,$query_type,$query_success" >> "$temp_details_file"
+        
+    done < "$queries_file"
+    
+    # Create JSON output for safer parsing (no eval needed)
+    cat > "$results_file" << EOF
+{
+    "total_queries": $total_queries,
+    "passed_queries": $passed_queries,
+    "success_rate": $(awk -v p="$passed_queries" -v t="$total_queries" 'BEGIN {if(t>0) printf "%.2f", p/t; else print "0.00"}'),
+    "details_file": "$temp_details_file"
+}
+EOF
+    
+    # Output the results file path
+    echo "$results_file"
+    
+    return 0
+}
+
+# Calculate floating point percentage with error handling and fallback
+calculate_percentage() {
+    local numerator="$1"
+    local denominator="$2"
+    local precision="${3:-2}"  # Default to 2 decimal places
+    
+    if [[ -z "$numerator" ]] || [[ -z "$denominator" ]]; then
+        echo "ERROR: Both numerator and denominator required" >&2
+        return 1
+    fi
+    
+    if [[ "$denominator" -eq 0 ]]; then
+        echo "ERROR: Division by zero" >&2
+        return 1
+    fi
+    
+    # Check if awk is available
+    if command -v awk >/dev/null 2>&1; then
+        # Use awk for reliable floating point arithmetic
+        awk -v num="$numerator" -v denom="$denominator" -v prec="$precision" \
+            'BEGIN { printf "%.*f", prec, (num * 100.0) / denom }'
+    elif command -v bc >/dev/null 2>&1; then
+        # Fallback to bc if available
+        echo "scale=$precision; ($numerator * 100) / $denominator" | bc
+    elif command -v python3 >/dev/null 2>&1; then
+        # Fallback to python3 if available
+        python3 -c "print(f'{($numerator * 100.0 / $denominator):.${precision}f}')"
+    elif command -v perl >/dev/null 2>&1; then
+        # Fallback to perl if available
+        perl -e "printf '%.${precision}f', ($numerator * 100.0 / $denominator)"
+    else
+        # Last resort: bash integer arithmetic (less precise)
+        echo "WARNING: No floating point calculator available, using integer math" >&2
+        local result=$(( (numerator * 100) / denominator ))
+        echo "$result"
+    fi
+}
+
+# Validate JSON with jq and robust error handling
+validate_json_field() {
+    local json_file="$1"
+    local field_path="$2"
+    local expected_type="${3:-}"  # Optional: number, string, boolean, array, object
+    
+    if [[ -z "$json_file" ]] || [[ -z "$field_path" ]]; then
+        echo "ERROR: Both json_file and field_path required" >&2
+        return 1
+    fi
+    
+    if [[ ! -f "$json_file" ]]; then
+        echo "ERROR: JSON file not found: $json_file" >&2
+        return 1
+    fi
+    
+    # First validate JSON syntax
+    if ! jq empty "$json_file" 2>/dev/null; then
+        echo "ERROR: Invalid JSON syntax in file: $json_file" >&2
+        return 1
+    fi
+    
+    # Check if field exists
+    if ! jq -e "$field_path" "$json_file" >/dev/null 2>&1; then
+        echo "ERROR: Field not found: $field_path in $json_file" >&2
+        return 1
+    fi
+    
+    # Validate field type if specified
+    if [[ -n "$expected_type" ]]; then
+        local actual_type
+        actual_type=$(jq -r "type" <<< "$(jq "$field_path" "$json_file")")
+        if [[ "$actual_type" != "$expected_type" ]]; then
+            echo "ERROR: Field $field_path expected type $expected_type, got $actual_type" >&2
+            return 1
+        fi
+    fi
+    
+    return 0
+}
+
+# Extract JSON field value with error handling
+extract_json_value() {
+    local json_file="$1"
+    local field_path="$2"
+    
+    if ! validate_json_field "$json_file" "$field_path"; then
+        return 1
+    fi
+    
+    jq -r "$field_path" "$json_file" 2>/dev/null || {
+        echo "ERROR: Failed to extract value for field: $field_path" >&2
+        return 1
+    }
+}
+
+# Validate that expected files exist in fixtures or index (optimized batch version)
+# Reduces file I/O by batching operations
+validate_expected_files_exist() {
+    local queries_file="$1"
+    local index_file="${2:-${TEST_TEMP_DIR}/.sourceatlas/sourceatlas.index.jsonl}"
+    
+    if [[ -z "$queries_file" ]]; then
+        echo "ERROR: queries_file parameter required" >&2
+        return 1
+    fi
+    
+    if [[ ! -f "$queries_file" ]]; then
+        echo "ERROR: Queries file not found: $queries_file" >&2
+        return 1
+    fi
+    
+    local all_found=true
+    local missing_files=()
+    
+    # Batch extract all unique expected files at once
+    local expected_files_list=$(tail -n +2 "$queries_file" | cut -f4 | tr ',' '\n' | sort -u | grep -v '^$')
+    
+    # Batch find all matching files in filesystem (single find operation)
+    local found_files=""
+    if [[ -n "$expected_files_list" ]]; then
+        found_files=$(find . -type f 2>/dev/null | xargs -I {} basename {} | sort -u)
+    fi
+    
+    # If index file exists, batch extract all file references from it
+    local index_files=""
+    if [[ -f "$index_file" ]]; then
+        # Extract both file_name and path fields in one pass
+        index_files=$(grep -o '"file_name":"[^"]*"\|"path":"[^"]*"' "$index_file" 2>/dev/null | \
+                      sed 's/.*:"\([^"]*\)"/\1/' | \
+                      xargs -I {} basename {} | \
+                      sort -u)
+    fi
+    
+    # Check each expected file against both lists
+    while IFS= read -r expected_file; do
+        # Skip empty entries
+        if [[ -z "$expected_file" ]]; then
+            continue
+        fi
+        
+        local found=false
+        
+        # Check against filesystem results
+        if echo "$found_files" | grep -q "^${expected_file}$"; then
+            found=true
+        # Check against index results
+        elif echo "$index_files" | grep -q "^${expected_file}$"; then
+            found=true
+        fi
+        
+        # Report missing files
+        if [[ "$found" != true ]]; then
+            echo "WARNING: Expected file not found in fixtures or index: $expected_file" >&2
+            missing_files+=("$expected_file")
+            all_found=false
+        fi
+    done <<< "$expected_files_list"
+    
+    # Return success if all files were found
+    if [[ "$all_found" == true ]]; then
+        return 0
+    else
+        # Optionally report summary
+        echo "INFO: ${#missing_files[@]} files not found" >&2
+        return 1
+    fi
 }
