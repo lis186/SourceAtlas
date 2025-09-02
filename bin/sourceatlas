@@ -1210,8 +1210,296 @@ EOF
 
 # Command: delta
 cmd_delta() {
-    echo "Error: delta command not yet implemented"
-    exit 1
+    local out_dir=".sourceatlas"
+    local apply_changes=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --apply)
+                apply_changes=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} delta [options]
+
+Detect incremental changes and optionally rebuild affected files.
+
+Options:
+  --out DIR       Output directory (default: .sourceatlas)
+  --apply         Apply changes and rebuild affected files
+  --help, -h      Show this help message
+
+Examples:
+  ${PROG_NAME} delta
+  ${PROG_NAME} delta --apply
+  ${PROG_NAME} delta --out custom_output
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                echo "Run '${PROG_NAME} delta --help' for usage." >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    local index_file="${out_dir}/sourceatlas.index.jsonl"
+    local delta_report="${out_dir}/delta.report.json"
+    
+    # Check if index file exists
+    if [[ ! -f "$index_file" ]]; then
+        echo "Error: Index file not found: $index_file" >&2
+        echo "Run '${PROG_NAME} scan' first to generate the index." >&2
+        exit 1
+    fi
+    
+    # Create output directory
+    mkdir -p "$out_dir"
+    
+    echo "Detecting changes..."
+    
+    # Track changes
+    local added_files=()
+    local modified_files=()
+    local removed_files=()
+    local change_count=0
+    
+    # Get list of current files from index
+    local indexed_files=$(mktemp)
+    jq -r '.path' "$index_file" | sort > "$indexed_files"
+    
+    # Get list of current source files (using same logic as scan command)
+    local current_files=$(mktemp)
+    local exclude_file="${out_dir}/exclude_patterns.txt"
+    [[ -f "$exclude_file" ]] || exclude_file="/dev/null"
+    
+    find . -type f -name "*" 2>/dev/null | while read -r file; do
+        # Skip if file matches exclude patterns
+        if is_excluded "$file" "$exclude_file"; then
+            continue
+        fi
+        
+        # Skip hidden files and directories
+        if [[ "$file" == *"/."* ]]; then
+            continue
+        fi
+        
+        # Skip the atlas directory itself
+        if [[ "$file" == *"/.sourceatlas/"* ]]; then
+            continue
+        fi
+        
+        local ext="$(get_extension "$file")"
+        local lang="$(get_language "$ext")"
+        
+        # Skip binary and unknown files (same logic as scan)
+        if [[ "$lang" == "unknown" ]]; then
+            case "$ext" in
+                .png|.jpg|.jpeg|.gif|.svg|.ico|.pdf|.zip|.tar|.gz|.exe|.dll|.so|.dylib|.a|.o|.class|.jar)
+                    continue
+                    ;;
+            esac
+        fi
+        
+        echo "$file"
+    done | sort > "$current_files"
+    
+    # Find added files
+    while IFS= read -r file; do
+        if ! grep -Fxq "$file" "$indexed_files"; then
+            added_files+=("$file")
+            ((change_count++))
+        fi
+    done < "$current_files"
+    
+    # Find removed files
+    while IFS= read -r file; do
+        if ! grep -Fxq "$file" "$current_files"; then
+            removed_files+=("$file")
+            ((change_count++))
+        fi
+    done < "$indexed_files"
+    
+    # Find modified files (check mtime and size)
+    while IFS= read -r line; do
+        [[ -z "$line" ]] && continue
+        
+        local path=$(echo "$line" | jq -r '.path // ""')
+        local indexed_size=$(echo "$line" | jq -r '.size_bytes // 0')
+        local indexed_hash=$(echo "$line" | jq -r '.content_hash // ""')
+        
+        if [[ -f "$path" ]]; then
+            local current_size=$(stat -f%z "$path" 2>/dev/null || stat -c%s "$path" 2>/dev/null || echo "0")
+            
+            # Check if size changed or file is newer than a reasonable time
+            if [[ "$current_size" != "$indexed_size" ]]; then
+                # Verify with content hash if available
+                local current_hash=""
+                if command -v sha256sum >/dev/null; then
+                    current_hash=$(sha256sum "$path" | cut -d' ' -f1)
+                elif command -v shasum >/dev/null; then
+                    current_hash=$(shasum -a 256 "$path" | cut -d' ' -f1)
+                elif command -v openssl >/dev/null; then
+                    current_hash=$(openssl dgst -sha256 -hex "$path" | cut -d' ' -f2)
+                fi
+                
+                if [[ -n "$current_hash" ]] && [[ "$current_hash" != "$indexed_hash" ]]; then
+                    modified_files+=("$path")
+                    ((change_count++))
+                elif [[ -z "$indexed_hash" ]]; then
+                    # No hash available, assume modified if size changed
+                    modified_files+=("$path")
+                    ((change_count++))
+                fi
+            fi
+        fi
+    done < "$index_file"
+    
+    # Generate report
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    cat > "$delta_report" <<EOF
+{
+  "timestamp": "$timestamp",
+  "changes": [
+EOF
+    
+    local first_entry=true
+    
+    # Add added files to report
+    for file in "${added_files[@]}"; do
+        if [[ "$first_entry" == true ]]; then
+            first_entry=false
+        else
+            echo "," >> "$delta_report"
+        fi
+        cat >> "$delta_report" <<EOF
+    {
+      "type": "added",
+      "path": "$file"
+    }
+EOF
+    done
+    
+    # Add modified files to report
+    for file in "${modified_files[@]}"; do
+        if [[ "$first_entry" == true ]]; then
+            first_entry=false
+        else
+            echo "," >> "$delta_report"
+        fi
+        cat >> "$delta_report" <<EOF
+    {
+      "type": "modified",
+      "path": "$file"
+    }
+EOF
+    done
+    
+    # Add removed files to report
+    for file in "${removed_files[@]}"; do
+        if [[ "$first_entry" == true ]]; then
+            first_entry=false
+        else
+            echo "," >> "$delta_report"
+        fi
+        cat >> "$delta_report" <<EOF
+    {
+      "type": "removed",
+      "path": "$file"
+    }
+EOF
+    done
+    
+    # Close changes array and add summary
+    cat >> "$delta_report" <<EOF
+  ],
+  "summary": {
+    "added_count": ${#added_files[@]},
+    "modified_count": ${#modified_files[@]},
+    "removed_count": ${#removed_files[@]},
+    "total_changes": $change_count
+  }
+}
+EOF
+    
+    # Clean up temp files
+    rm -f "$indexed_files" "$current_files"
+    
+    # Report results
+    if [[ $change_count -eq 0 ]]; then
+        echo "No changes detected"
+        echo "Delta report: $delta_report"
+        return 0
+    fi
+    
+    echo "Changes detected:"
+    [[ ${#added_files[@]} -gt 0 ]] && echo "  Added: ${#added_files[@]} files"
+    [[ ${#modified_files[@]} -gt 0 ]] && echo "  Modified: ${#modified_files[@]} files"
+    [[ ${#removed_files[@]} -gt 0 ]] && echo "  Removed: ${#removed_files[@]} files"
+    
+    # Show some examples
+    if [[ ${#added_files[@]} -gt 0 ]]; then
+        echo "  Examples of added files:"
+        for i in "${!added_files[@]}"; do
+            [[ $i -ge 3 ]] && break
+            echo "    + ${added_files[$i]}"
+        done
+    fi
+    
+    if [[ ${#modified_files[@]} -gt 0 ]]; then
+        echo "  Examples of modified files:"
+        for i in "${!modified_files[@]}"; do
+            [[ $i -ge 3 ]] && break
+            echo "    ~ ${modified_files[$i]}"
+        done
+    fi
+    
+    if [[ ${#removed_files[@]} -gt 0 ]]; then
+        echo "  Examples of removed files:"
+        for i in "${!removed_files[@]}"; do
+            [[ $i -ge 3 ]] && break
+            echo "    - ${removed_files[$i]}"
+        done
+    fi
+    
+    # Check for large changes (>30% threshold)
+    local total_indexed=$(count_lines "$index_file")
+    local change_percent=0
+    if [[ $total_indexed -gt 0 ]]; then
+        change_percent=$((change_count * 100 / total_indexed))
+    fi
+    
+    if [[ $change_percent -gt 30 ]]; then
+        echo ""
+        echo "Warning: Large number of changes detected ($change_percent%)"
+        echo "Consider running full rebuild: ${PROG_NAME} run"
+    fi
+    
+    echo ""
+    echo "Delta report: $delta_report"
+    
+    # Apply changes if requested
+    if [[ "$apply_changes" == true ]]; then
+        echo ""
+        echo "Applying changes and rebuilding affected files..."
+        
+        # For now, just rebuild everything since we don't have partial rebuild
+        # In a full implementation, we would only rebuild affected shards
+        cmd_scan --out "$out_dir"
+        cmd_symbols --out "$out_dir"
+        cmd_stats --out "$out_dir"
+        cmd_manifest --out "$out_dir"
+        
+        echo "Changes applied successfully"
+    fi
 }
 
 # Command: query

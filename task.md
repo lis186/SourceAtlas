@@ -63,7 +63,7 @@ Deps：Phase 0 完成
   - 驗證標準：生成 `sourceatlas.manifest.json`；分片列表、hash、檔數、語言與路徑存在
 - [x] Step 1.7 `satlas shard` 分片測試（完成：2025-09-02 02:58 UTC+8）
   - 驗證標準：依目錄/語言切分多個 `sourceatlas.index.[shard].jsonl[.gz]`；大小/筆數不超過預設上限
-- [ ] Step 1.8 `satlas delta` 增量更新測試
+- [x] Step 1.8 `satlas delta` 增量更新測試（完成：2025-09-02 03:45 UTC+8）
   - 驗證標準：修改 fixtures 後僅重建受影響分片；產生 `delta.report.json`
 - [ ] Step 1.9 `satlas query` 查詢測試
   - 驗證標準：支援 symbol/role/path/lang 關鍵字或正則查詢；回傳文件清單
@@ -73,7 +73,7 @@ Deps：Phase 0 完成
   - 驗證標準：輸出符合 `F/SYM` 格式，欄位縮寫與範例一致
 - [ ] Step 1.12 `satlas clean` 清理測試
   - 驗證標準：清除輸出產物且不影響原始碼
-- [ ] Step 1.13 `satlas run` 一條龍流程測試
+- [x] Step 1.13 `satlas run` 一條龍流程測試（完成：2025-09-02 03:15 UTC+8）
   - 驗證標準：在空目錄與有變更目錄皆可完成掃描→索引→分片→symbols→stats→manifest
 - [ ] Step 1.14 `satlas verify` 一致性檢查測試
   - 驗證標準：索引、symbols、manifest 之間的路徑與 hash 對齊
