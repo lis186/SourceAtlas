@@ -90,13 +90,13 @@ Gate：完成後依測試結果調整 Phase 2 的語言覆蓋與抽取規則優�
 Deps：Phase 1 基本 CLI 契約已就緒
 目標：以正則/ctags 驗證頂層符號抽取、匯入/依賴、可見性與行號範圍。
 
-- [ ] Step 2.1 Swift 符號抽取測試（class/struct/enum/protocol/extension/actor/func）
+- [x] Step 2.1 Swift 符號抽取測試（class/struct/enum/protocol/extension/actor/func）（完成：2025-09-02 11:45 UTC+8）
   - 驗證標準：symbols 行號範圍與可見性（public/internal/private）正確；imports 正確
-- [ ] Step 2.2 Objective‑C 抽取測試（@interface/@implementation/@property/方法 -/+）
+- [x] Step 2.2 Objective‑C 抽取測試（@interface/@implementation/@property/方法 -/+）（完成：2025-09-02 12:00 UTC+8）
   - 驗證標準：interface/implementation 區段與方法行號對位正確；imports 正確
-- [ ] Step 2.3 Kotlin 抽取測試（class/object/interface/fun/annotations）
+- [x] Step 2.3 Kotlin 抽取測試（class/object/interface/fun/annotations）（完成：2025-09-02 12:15 UTC+8）
   - 驗證標準：頂層宣告與註解標記（如 @AndroidEntryPoint）正確
-- [ ] Step 2.4 其他語言（rb/sh/py）最低限度抽取
+- [x] Step 2.4 其他語言（rb/sh/py）最低限度抽取（完成：2025-09-02 12:15 UTC+8）
   - 驗證標準：class/module/def 或等價頂層宣告被索引；未知語言退化為檔案層索引
 
 Gate：若 Hit@5 < 80% 或覆蓋 < 95%，回補規則或擴充 fixtures。
@@ -188,7 +188,7 @@ Deps：Phase 6 完成
 - [x] 建立任務計畫（本檔案）
 - [x] Phase 0 完成（完成：2025-09-02 02:35 UTC+8）
 - [x] Phase 1 完成（完成：2025-09-02 09:35 UTC+8）
-- [ ] Phase 2 完成
+- [x] Phase 2 完成（完成：2025-09-02 12:15 UTC+8）
 - [ ] Phase 3 完成
 - [ ] Phase 4 完成
 - [ ] Phase 5 完成

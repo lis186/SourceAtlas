@@ -148,6 +148,10 @@ extract_imports() {
         javascript|typescript)
             imports=$(grep -E '^(import|require)\s*\(' "$file" | sed 's/.*[("'\'']\([^"'\'']*\)[)"'\''].*/\1/' | tr '\n' ',' | sed 's/,$//')
             ;;
+        objc)
+            # Extract #import and @import statements
+            imports=$(grep -E '^#import\s*[<"]|^@import\s+' "$file" | sed 's/.*[<"]\([^>"]*\)[>"].*/\1/' | sed 's/^@import\s\+\([^;]*\);.*/\1/' | tr '\n' ',' | sed 's/,$//')
+            ;;
         *)
             imports=""
             ;;
@@ -163,41 +167,85 @@ extract_symbols() {
     
     case "$lang" in
         swift)
-            # Extract class, struct, enum, protocol, func definitions with line numbers
-            grep -n -E '^\s*(class|struct|enum|protocol|extension|actor|func)\s+' "$file" | \
-            head -5 | \
+            # Extract class, struct, enum, protocol, extension, actor, func definitions with line numbers
+            # Include visibility modifiers (public, private, internal, fileprivate, open)
+            grep -n -E '^\s*((public|private|internal|fileprivate|open)\s+)?(class|struct|enum|protocol|extension|actor|func)\s+' "$file" | \
+            head -10 | \
             while IFS=':' read -r line_num content; do
-                local kind=$(echo "$content" | sed 's/^\s*\([a-z]*\).*/\1/')
-                local name=$(echo "$content" | sed 's/^\s*[a-z]*\s*\([^({[:space:]]*\).*/\1/')
+                # Extract visibility, kind and name
                 local visibility="internal"  # Default for Swift
+                local kind=""
+                local name=""
                 
-                # Try to detect visibility
-                if echo "$content" | grep -q "public"; then
-                    visibility="public"
-                elif echo "$content" | grep -q "private"; then
-                    visibility="private"
+                # Check if line starts with visibility modifier
+                if echo "$content" | grep -qE '^\s*(public|private|internal|fileprivate|open)\s+'; then
+                    visibility=$(echo "$content" | awk '{print $1}')
+                    kind=$(echo "$content" | awk '{print $2}')
+                    name=$(echo "$content" | awk '{print $3}' | sed 's/[:{(].*//')
+                else
+                    kind=$(echo "$content" | awk '{print $1}')
+                    name=$(echo "$content" | awk '{print $2}' | sed 's/[:{(].*//')
                 fi
                 
                 echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
             done | jq -s .
             ;;
         kotlin)
-            # Extract class, object, interface, fun definitions with line numbers
-            grep -n -E '^\s*(class|object|interface|fun|data class|sealed class)\s+' "$file" | \
-            head -5 | \
+            # Extract class, object, interface, fun, data class, sealed class, companion object definitions with line numbers
+            # Also capture annotations like @AndroidEntryPoint
+            grep -n -E '^\s*(@[A-Za-z0-9_]+|((public|private|internal|protected)\s+)?(class|object|interface|fun|data class|sealed class|companion object)\s+)' "$file" | \
+            head -10 | \
             while IFS=':' read -r line_num content; do
-                local kind=$(echo "$content" | sed 's/^\s*\([a-z]*\).*/\1/')
-                local name=$(echo "$content" | sed 's/^\s*[a-z]*\s*class\s*\([^({[:space:]]*\).*/\1/')
-                if [[ "$kind" == "fun" ]]; then
-                    name=$(echo "$content" | sed 's/^\s*fun\s*\([^({[:space:]]*\).*/\1/')
-                fi
+                local kind=""
+                local name=""
                 local visibility="internal"  # Default for Kotlin
                 
-                # Try to detect visibility
-                if echo "$content" | grep -q "public"; then
-                    visibility="public"
-                elif echo "$content" | grep -q "private"; then
-                    visibility="private"
+                # Handle annotations
+                if echo "$content" | grep -q "^@"; then
+                    kind="annotation"
+                    name=$(echo "$content" | awk '{print $1}' | sed 's/@//')
+                # Handle visibility modifiers
+                elif echo "$content" | grep -qE '^\s*(public|private|internal|protected)\s+'; then
+                    visibility=$(echo "$content" | awk '{print $1}')
+                    # Extract kind and name after visibility modifier
+                    if echo "$content" | grep -q "class"; then
+                        kind="class"
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="class") print $(i+1)}' | sed 's/[:{(].*//')
+                    elif echo "$content" | grep -q "object"; then
+                        kind="object"
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="object") print $(i+1)}' | sed 's/[:{(].*//')
+                    elif echo "$content" | grep -q "interface"; then
+                        kind="interface"
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="interface") print $(i+1)}' | sed 's/[:{(].*//')
+                    elif echo "$content" | grep -q "fun"; then
+                        kind="fun"
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="fun") print $(i+1)}' | sed 's/[:{(].*//')
+                    fi
+                # Handle declarations without explicit visibility modifiers
+                else
+                    if echo "$content" | grep -q "data class"; then
+                        kind="data_class"
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="class") print $(i+1)}' | sed 's/[:{(].*//')
+                    elif echo "$content" | grep -q "sealed class"; then
+                        kind="sealed_class"  
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="class") print $(i+1)}' | sed 's/[:{(].*//')
+                    elif echo "$content" | grep -q "companion object"; then
+                        kind="companion_object"
+                        # companion object usually doesn't have a name, use "Companion" as default
+                        name="Companion"
+                    elif echo "$content" | grep -q "class"; then
+                        kind="class"
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="class") print $(i+1)}' | sed 's/[:{(].*//')
+                    elif echo "$content" | grep -q "object"; then
+                        kind="object"
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="object") print $(i+1)}' | sed 's/[:{(].*//')
+                    elif echo "$content" | grep -q "interface"; then
+                        kind="interface" 
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="interface") print $(i+1)}' | sed 's/[:{(].*//')
+                    elif echo "$content" | grep -q "fun"; then
+                        kind="fun"
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="fun") print $(i+1)}' | sed 's/[:{(].*//')
+                    fi
                 fi
                 
                 echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
@@ -206,11 +254,57 @@ extract_symbols() {
         python)
             # Extract class and def definitions with line numbers
             grep -n -E '^(class|def)\s+' "$file" | \
-            head -5 | \
+            head -10 | \
             while IFS=':' read -r line_num content; do
-                local kind=$(echo "$content" | sed 's/^\([a-z]*\).*/\1/')
-                local name=$(echo "$content" | sed 's/^[a-z]*\s*\([^([:space:]]*\).*/\1/')
+                local kind=""
+                local name=""
                 local visibility="public"  # Python default
+                
+                # Extract kind and name using awk for better parsing
+                if echo "$content" | grep -q "^class"; then
+                    kind="class"
+                    name=$(echo "$content" | awk '{print $2}' | sed 's/[:(].*//')
+                elif echo "$content" | grep -q "^def"; then
+                    kind="def"
+                    name=$(echo "$content" | awk '{print $2}' | sed 's/[:(].*//')
+                fi
+                
+                echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
+            done | jq -s .
+            ;;
+        objc)
+            # Extract @interface, @implementation, @property, and method definitions with line numbers
+            # Include both instance methods (-) and class methods (+)
+            grep -n -E '^\s*(@interface|@implementation|@property|[-+]\s*\(|@protocol)\s*' "$file" | \
+            head -10 | \
+            while IFS=':' read -r line_num content; do
+                local kind=""
+                local name=""
+                local visibility="public"  # Default for Objective-C
+                
+                # Extract different types of Objective-C symbols
+                if echo "$content" | grep -q "@interface"; then
+                    kind="interface"
+                    name=$(echo "$content" | awk '{print $2}')
+                elif echo "$content" | grep -q "@implementation"; then
+                    kind="implementation" 
+                    name=$(echo "$content" | awk '{print $2}')
+                elif echo "$content" | grep -q "@property"; then
+                    kind="property"
+                    name=$(echo "$content" | awk '{print $NF}' | sed 's/[;*]//g')
+                elif echo "$content" | grep -q "@protocol"; then
+                    kind="protocol"
+                    name=$(echo "$content" | awk '{print $2}' | sed 's/[;<].*$//')
+                elif echo "$content" | grep -qE '^\s*[-+]\s*\('; then
+                    # Method definition
+                    if echo "$content" | grep -q "\-"; then
+                        kind="instance_method"
+                    else
+                        kind="class_method"
+                    fi
+                    # Extract method name (first part before colon or semicolon)
+                    name=$(echo "$content" | awk -F'[)(]' '{print $3}' | awk '{print $1}' | sed 's/[:;].*//')
+                fi
                 
                 echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
             done | jq -s .
@@ -218,11 +312,44 @@ extract_symbols() {
         ruby)
             # Extract class, module, def definitions with line numbers
             grep -n -E '^\s*(class|module|def)\s+' "$file" | \
-            head -5 | \
+            head -10 | \
             while IFS=':' read -r line_num content; do
-                local kind=$(echo "$content" | sed 's/^\s*\([a-z]*\).*/\1/')
-                local name=$(echo "$content" | sed 's/^\s*[a-z]*\s*\([^([:space:]]*\).*/\1/')
+                local kind=""
+                local name=""
                 local visibility="public"  # Ruby default
+                
+                # Extract kind and name using awk for better parsing
+                if echo "$content" | grep -q "class"; then
+                    kind="class"
+                    name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="class") print $(i+1)}' | sed 's/[<(].*//')
+                elif echo "$content" | grep -q "module"; then
+                    kind="module"
+                    name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="module") print $(i+1)}' | sed 's/[<(].*//')
+                elif echo "$content" | grep -q "def"; then
+                    kind="def"
+                    name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="def") print $(i+1)}' | sed 's/[<(].*//')
+                fi
+                
+                echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
+            done | jq -s .
+            ;;
+        shell)
+            # Extract function definitions with line numbers
+            grep -n -E '^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_]*[[:space:]]*\(\)[[:space:]]*\{|^[[:space:]]*function[[:space:]]+[a-zA-Z_][a-zA-Z0-9_]*' "$file" | \
+            head -10 | \
+            while IFS=':' read -r line_num content; do
+                local kind="function"
+                local name=""
+                local visibility="public"  # Shell default
+                
+                # Extract function name using awk for better parsing
+                if echo "$content" | grep -q "function"; then
+                    # function name() format
+                    name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="function") print $(i+1)}' | sed 's/[(){].*//')
+                else
+                    # name() format
+                    name=$(echo "$content" | awk '{print $1}' | sed 's/[(){].*//')
+                fi
                 
                 echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
             done | jq -s .
