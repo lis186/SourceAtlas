@@ -254,11 +254,20 @@ extract_symbols() {
         python)
             # Extract class and def definitions with line numbers
             grep -n -E '^(class|def)\s+' "$file" | \
-            head -5 | \
+            head -10 | \
             while IFS=':' read -r line_num content; do
-                local kind=$(echo "$content" | sed 's/^\([a-z]*\).*/\1/')
-                local name=$(echo "$content" | sed 's/^[a-z]*\s*\([^([:space:]]*\).*/\1/')
+                local kind=""
+                local name=""
                 local visibility="public"  # Python default
+                
+                # Extract kind and name using awk for better parsing
+                if echo "$content" | grep -q "^class"; then
+                    kind="class"
+                    name=$(echo "$content" | awk '{print $2}' | sed 's/[:(].*//')
+                elif echo "$content" | grep -q "^def"; then
+                    kind="def"
+                    name=$(echo "$content" | awk '{print $2}' | sed 's/[:(].*//')
+                fi
                 
                 echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
             done | jq -s .
@@ -303,11 +312,44 @@ extract_symbols() {
         ruby)
             # Extract class, module, def definitions with line numbers
             grep -n -E '^\s*(class|module|def)\s+' "$file" | \
-            head -5 | \
+            head -10 | \
             while IFS=':' read -r line_num content; do
-                local kind=$(echo "$content" | sed 's/^\s*\([a-z]*\).*/\1/')
-                local name=$(echo "$content" | sed 's/^\s*[a-z]*\s*\([^([:space:]]*\).*/\1/')
+                local kind=""
+                local name=""
                 local visibility="public"  # Ruby default
+                
+                # Extract kind and name using awk for better parsing
+                if echo "$content" | grep -q "class"; then
+                    kind="class"
+                    name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="class") print $(i+1)}' | sed 's/[<(].*//')
+                elif echo "$content" | grep -q "module"; then
+                    kind="module"
+                    name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="module") print $(i+1)}' | sed 's/[<(].*//')
+                elif echo "$content" | grep -q "def"; then
+                    kind="def"
+                    name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="def") print $(i+1)}' | sed 's/[<(].*//')
+                fi
+                
+                echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
+            done | jq -s .
+            ;;
+        shell)
+            # Extract function definitions with line numbers
+            grep -n -E '^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_]*[[:space:]]*\(\)[[:space:]]*\{|^[[:space:]]*function[[:space:]]+[a-zA-Z_][a-zA-Z0-9_]*' "$file" | \
+            head -10 | \
+            while IFS=':' read -r line_num content; do
+                local kind="function"
+                local name=""
+                local visibility="public"  # Shell default
+                
+                # Extract function name using awk for better parsing
+                if echo "$content" | grep -q "function"; then
+                    # function name() format
+                    name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="function") print $(i+1)}' | sed 's/[(){].*//')
+                else
+                    # name() format
+                    name=$(echo "$content" | awk '{print $1}' | sed 's/[(){].*//')
+                fi
                 
                 echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
             done | jq -s .

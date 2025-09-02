@@ -1,0 +1,85 @@
+# Exclude patterns for SourceAtlas
+# One pattern per line, supports glob patterns
+
+# Build directories
+**/build/**
+**/.gradle/**
+**/dist/**
+**/out/**
+**/target/**
+
+# Version control
+**/.git/**
+**/.svn/**
+**/.hg/**
+
+# Dependencies
+**/node_modules/**
+**/Pods/**
+**/vendor/**
+**/PrebuiltFrameworks/**
+**/.bundle/**
+
+# IDE and editor files
+**/.idea/**
+**/.vscode/**
+**/*.xcworkspace/**
+**/*.xcodeproj/**
+**/.DS_Store
+**/.settings/**
+**/.classpath
+**/.project
+
+# Temporary files
+**/tmp/**
+**/temp/**
+**/cache/**
+**/*.tmp
+**/*.temp
+**/*.cache
+
+# Sensitive files
+*.mobileprovision
+*.cer
+*.p12
+*.p8
+*.key
+*.pem
+*.pfx
+*.keystore
+*.jks
+
+# Binary files
+*.jar
+*.war
+*.ear
+*.class
+*.dll
+*.exe
+*.so
+*.dylib
+*.a
+*.o
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# Images and media
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.mp4
+*.mp3
+*.wav
+
+# Documentation builds
+**/docs/_build/**
+**/site/**

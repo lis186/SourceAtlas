@@ -1,0 +1,10 @@
+# SourceAtlas generated files
+*.jsonl
+*.jsonl.gz
+*.jsonl.zst
+*.tsv
+*.tsv.gz
+*.tsv.zst
+*.json
+!config.toml
+!exclude_patterns.txt
