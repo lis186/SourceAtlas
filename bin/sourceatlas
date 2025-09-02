@@ -1240,8 +1240,217 @@ cmd_clean() {
 
 # Command: run
 cmd_run() {
-    echo "Error: run command not yet implemented"
-    exit 1
+    local root_dir="."
+    local out_dir=".sourceatlas"
+    local enable_shard=false
+    local enable_compress=false
+    local dry_run=false
+    local verbose=false
+    local languages=""
+    local threads=1
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --root)
+                root_dir="$2"
+                shift 2
+                ;;
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --shard)
+                enable_shard=true
+                shift
+                ;;
+            --compress)
+                enable_compress=true
+                shift
+                ;;
+            --langs)
+                languages="$2"
+                shift 2
+                ;;
+            --threads)
+                threads="$2"
+                shift 2
+                ;;
+            --dry-run)
+                dry_run=true
+                shift
+                ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} run [options]
+
+Run full indexing pipeline: scan → symbols → stats → manifest
+
+Options:
+  --root DIR        Root directory to scan (default: current directory)
+  --out DIR         Output directory (default: .sourceatlas)
+  --shard           Enable sharding after indexing
+  --compress        Compress output files
+  --langs LIST      Comma-separated list of languages to process
+  --threads NUM     Number of threads to use (default: 1)
+  --dry-run         Show what would be done without executing
+  --verbose, -v     Show detailed progress
+  --help, -h        Show this help message
+
+Examples:
+  ${PROG_NAME} run
+  ${PROG_NAME} run --root src --shard --compress
+  ${PROG_NAME} run --langs swift,kotlin --verbose
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                echo "Run '${PROG_NAME} run --help' for usage." >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    if [[ "$verbose" == true ]]; then
+        echo "=== SourceAtlas Pipeline ==="
+        echo "Root: $root_dir"
+        echo "Output: $out_dir"
+        echo "Shard: $enable_shard"
+        echo "Compress: $enable_compress"
+        echo "Languages: ${languages:-all}"
+        echo "Threads: $threads"
+        echo "=========================="
+    fi
+    
+    if [[ "$dry_run" == true ]]; then
+        echo "DRY RUN MODE - No files will be created"
+        echo ""
+        echo "Would execute pipeline:"
+        echo "1. Initialize configuration (if needed)"
+        echo "2. Scan directory: $root_dir"
+        echo "3. Generate symbol table"
+        echo "4. Calculate statistics"
+        echo "5. Create manifest"
+        if [[ "$enable_shard" == true ]]; then
+            echo "6. Create shards"
+        fi
+        if [[ "$enable_compress" == true ]]; then
+            echo "7. Compress output files"
+        fi
+        echo ""
+        echo "Output would be created in: $out_dir"
+        return 0
+    fi
+    
+    # Step 1: Initialize if needed
+    if [[ ! -f ".sourceatlas/config.toml" ]] && [[ "$out_dir" == ".sourceatlas" ]]; then
+        if [[ "$verbose" == true ]]; then
+            echo "Step 1: Initializing configuration..."
+        fi
+        cmd_init
+    else
+        if [[ "$verbose" == true ]]; then
+            echo "Step 1: Configuration already exists"
+        fi
+    fi
+    
+    # Step 2: Scan
+    if [[ "$verbose" == true ]]; then
+        echo "Step 2: Scanning directory..."
+    fi
+    local scan_args=("--root" "$root_dir" "--out" "$out_dir")
+    # Note: Language filtering will be implemented in a future phase
+    # For now, scan processes all supported languages
+    cmd_scan "${scan_args[@]}" || {
+        echo "Error: Scan step failed" >&2
+        return 1
+    }
+    
+    # Step 3: Generate symbols
+    if [[ "$verbose" == true ]]; then
+        echo "Step 3: Generating symbol table..."
+    fi
+    cmd_symbols --out "$out_dir" || {
+        echo "Error: Symbols step failed" >&2
+        return 1
+    }
+    
+    # Step 4: Calculate stats
+    if [[ "$verbose" == true ]]; then
+        echo "Step 4: Calculating statistics..."
+    fi
+    cmd_stats --out "$out_dir" || {
+        echo "Error: Stats step failed" >&2
+        return 1
+    }
+    
+    # Step 5: Create manifest
+    if [[ "$verbose" == true ]]; then
+        echo "Step 5: Creating manifest..."
+    fi
+    cmd_manifest --out "$out_dir" || {
+        echo "Error: Manifest step failed" >&2
+        return 1
+    }
+    
+    # Step 6: Create shards (optional)
+    if [[ "$enable_shard" == true ]]; then
+        if [[ "$verbose" == true ]]; then
+            echo "Step 6: Creating shards..."
+        fi
+        cmd_shard --out "$out_dir" || {
+            echo "Error: Shard step failed" >&2
+            return 1
+        }
+    fi
+    
+    # Step 7: Compress files (optional)
+    if [[ "$enable_compress" == true ]]; then
+        if [[ "$verbose" == true ]]; then
+            echo "Step 7: Compressing files..."
+        fi
+        compress_output_files "$out_dir"
+    fi
+    
+    if [[ "$verbose" == true ]]; then
+        echo "=== Pipeline Complete ==="
+        echo "Output directory: $out_dir"
+        ls -la "$out_dir"
+        echo "========================"
+    fi
+    
+    echo "Pipeline completed successfully"
+    echo "Output directory: $out_dir"
+    
+    # Show summary
+    local index_file="${out_dir}/sourceatlas.index.jsonl"
+    if [[ -f "$index_file" ]]; then
+        local file_count=$(count_lines "$index_file")
+        echo "Indexed $file_count files"
+    fi
+}
+
+# Compress output files
+compress_output_files() {
+    local out_dir="$1"
+    
+    # Compress JSONL and TSV files
+    for file in "${out_dir}"/*.jsonl "${out_dir}"/*.tsv; do
+        if [[ -f "$file" ]] && [[ ! -f "${file}.gz" ]]; then
+            if command -v gzip >/dev/null 2>&1; then
+                gzip -c "$file" > "${file}.gz"
+                echo "Compressed: $(basename "$file")"
+            else
+                echo "Warning: gzip not available for compression"
+                break
+            fi
+        fi
+    done
 }
 
 # Command: verify
