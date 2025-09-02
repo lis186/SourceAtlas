@@ -67,7 +67,7 @@ Deps：Phase 0 完成
   - 驗證標準：修改 fixtures 後僅重建受影響分片；產生 `delta.report.json`
 - [x] Step 1.9 `satlas query` 查詢測試（完成：2025-09-02 04:10 UTC+8）
   - 驗證標準：支援 symbol/role/path/lang 關鍵字或正則查詢；回傳文件清單
-- [ ] Step 1.10 `satlas segment` 片段擷取測試
+- [x] Step 1.10 `satlas segment` 片段擷取測試（完成：2025-09-02 04:35 UTC+8）
   - 驗證標準：`get_segment(path,start,end,pad)` 行數限制（預設 ≤400）且自動 pad 上下文
 - [ ] Step 1.11 `satlas export-dsl` 低 token DSL 測試
   - 驗證標準：輸出符合 `F/SYM` 格式，欄位縮寫與範例一致

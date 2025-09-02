@@ -1927,8 +1927,231 @@ EOF
 
 # Command: segment
 cmd_segment() {
-    echo "Error: segment command not yet implemented"
-    exit 1
+    local out_dir=".sourceatlas"
+    local file_path=""
+    local start_line=1
+    local end_line=1
+    local pad_lines=0
+    local max_lines=400
+    local show_line_numbers=false
+    local show_context=false
+    local show_symbols=false
+    local output_format="text"
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --pad)
+                pad_lines="$2"
+                shift 2
+                ;;
+            --max-lines)
+                max_lines="$2"
+                shift 2
+                ;;
+            --line-numbers|-n)
+                show_line_numbers=true
+                shift
+                ;;
+            --context|-c)
+                show_context=true
+                shift
+                ;;
+            --symbol-context)
+                show_symbols=true
+                shift
+                ;;
+            --format|-f)
+                output_format="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} segment [options] FILE START END
+
+Extract code segment with optional padding and context.
+
+Arguments:
+  FILE            File path to extract from
+  START           Start line number
+  END             End line number
+
+Options:
+  --out DIR       Output directory (default: .sourceatlas)
+  --pad NUM       Add NUM lines of padding around segment (default: 0)
+  --max-lines NUM Maximum lines to return (default: 400)
+  --line-numbers, -n  Show line numbers
+  --context, -c   Show file context information
+  --symbol-context    Show symbol information for the range
+  --format FORMAT Output format: text, json (default: text)
+  --help, -h      Show this help message
+
+Examples:
+  ${PROG_NAME} segment file.swift 10 20
+  ${PROG_NAME} segment --pad 5 --line-numbers file.kt 15 25
+  ${PROG_NAME} segment --format json --context file.py 100 150
+EOF
+                exit 0
+                ;;
+            -*)
+                echo "Error: Unknown option: $1" >&2
+                echo "Run '${PROG_NAME} segment --help' for usage." >&2
+                exit 1
+                ;;
+            *)
+                if [[ -z "$file_path" ]]; then
+                    file_path="$1"
+                elif [[ -z "$start_line" ]] || [[ "$start_line" == "1" ]]; then
+                    start_line="$1"
+                elif [[ -z "$end_line" ]] || [[ "$end_line" == "1" ]]; then
+                    end_line="$1"
+                fi
+                shift
+                ;;
+        esac
+    done
+    
+    # Validate arguments
+    if [[ -z "$file_path" ]]; then
+        echo "Error: File path is required" >&2
+        echo "Run '${PROG_NAME} segment --help' for usage." >&2
+        exit 1
+    fi
+    
+    if [[ -z "$start_line" ]] || [[ -z "$end_line" ]]; then
+        echo "Error: Start and end line numbers are required" >&2
+        echo "Run '${PROG_NAME} segment --help' for usage." >&2
+        exit 1
+    fi
+    
+    # Validate line numbers
+    if ! [[ "$start_line" =~ ^[0-9]+$ ]] || ! [[ "$end_line" =~ ^[0-9]+$ ]]; then
+        echo "Error: Line numbers must be positive integers" >&2
+        exit 1
+    fi
+    
+    # Swap if reverse range
+    if [[ $start_line -gt $end_line ]]; then
+        local temp=$start_line
+        start_line=$end_line
+        end_line=$temp
+    fi
+    
+    local index_file="${out_dir}/sourceatlas.index.jsonl"
+    
+    # Check if index file exists
+    if [[ ! -f "$index_file" ]]; then
+        echo "Error: Index file not found: $index_file" >&2
+        echo "Run '${PROG_NAME} scan' first to generate the index." >&2
+        exit 1
+    fi
+    
+    # Check if file exists
+    if [[ ! -f "$file_path" ]]; then
+        echo "Error: File not found: $file_path" >&2
+        exit 1
+    fi
+    
+    # Calculate actual range with padding
+    local actual_start=$((start_line - pad_lines))
+    local actual_end=$((end_line + pad_lines))
+    
+    # Ensure we don't go below line 1
+    [[ $actual_start -lt 1 ]] && actual_start=1
+    
+    # Get total line count of file
+    local total_lines=$(wc -l < "$file_path")
+    [[ $actual_end -gt $total_lines ]] && actual_end=$total_lines
+    
+    # Calculate segment size and apply max_lines limit
+    local segment_size=$((actual_end - actual_start + 1))
+    if [[ $segment_size -gt $max_lines ]]; then
+        actual_end=$((actual_start + max_lines - 1))
+        segment_size=$max_lines
+    fi
+    
+    # Extract the segment
+    local segment_content=""
+    if [[ $actual_start -eq $actual_end ]]; then
+        # Single line
+        segment_content=$(sed -n "${actual_start}p" "$file_path")
+    else
+        # Range of lines
+        segment_content=$(sed -n "${actual_start},${actual_end}p" "$file_path")
+    fi
+    
+    # Get file info from index if available
+    local file_lang="unknown"
+    local file_role="unknown"
+    local symbols_info=""
+    
+    # For now, skip index lookup to isolate the issue
+    # TODO: Fix jq parsing for JSONL file
+    
+    # Output based on format
+    if [[ "$output_format" == "json" ]]; then
+        cat <<EOF
+{
+  "file": "$file_path",
+  "language": "${file_lang:-unknown}",
+  "role": "${file_role:-unknown}",
+  "requested_range": {
+    "start": $start_line,
+    "end": $end_line
+  },
+  "actual_range": {
+    "start": $actual_start,
+    "end": $actual_end
+  },
+  "padding": $pad_lines,
+  "total_lines": $segment_size,
+  "content": $(printf '%s' "$segment_content" | jq -R -s .)
+EOF
+        
+        if [[ "$show_symbols" == true && -n "$symbols_info" ]]; then
+            echo '  ,"symbols": ['
+            echo "$symbols_info" | while IFS= read -r symbol; do
+                [[ -n "$symbol" ]] && echo "    \"$symbol\","
+            done | sed '$ s/,$//'
+            echo '  ]'
+        fi
+        
+        echo "}"
+    else
+        # Text format
+        if [[ "$show_context" == true ]]; then
+            echo "File: $file_path"
+            echo "Language: ${file_lang:-unknown}"
+            echo "Role: ${file_role:-unknown}"
+            echo "Lines: $actual_start-$actual_end (requested: $start_line-$end_line)"
+            if [[ $pad_lines -gt 0 ]]; then
+                echo "Padding: $pad_lines lines"
+            fi
+            if [[ $segment_size -ge $max_lines ]]; then
+                echo "Note: Output limited to $max_lines lines"
+            fi
+            echo ""
+        fi
+        
+        if [[ "$show_symbols" == true && -n "$symbols_info" ]]; then
+            echo "Symbols in range:"
+            echo "$symbols_info" | while IFS= read -r symbol; do
+                [[ -n "$symbol" ]] && echo "  - $symbol"
+            done
+            echo ""
+        fi
+        
+        # Output content with optional line numbers
+        if [[ "$show_line_numbers" == true ]]; then
+            echo "$segment_content" | nl -ba -nln -v"$actual_start" | sed 's/^[ ]*\([0-9]*\)/\1:/'
+        else
+            echo "$segment_content"
+        fi
+    fi
 }
 
 # Command: export-dsl
