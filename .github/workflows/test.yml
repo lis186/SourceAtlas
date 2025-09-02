@@ -1,0 +1,188 @@
+name: SourceAtlas Test Suite
+
+on:
+  push:
+    branches: [ main, phase* ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test (${{ matrix.test-group }})
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        test-group: 
+          - "read-only"
+          - "modification" 
+          - "independent"
+          - "performance"
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install dependencies
+        run: |
+          # Install bats-core for testing
+          sudo apt-get update
+          sudo apt-get install -y bats
+          
+          # Verify bats installation
+          bats --version
+          
+          # Install jq for JSON processing in tests
+          sudo apt-get install -y jq
+          
+          # Make CLI executable
+          chmod +x bin/satlas bin/sourceatlas
+
+      - name: Validate test environment
+        run: |
+          # Check if required tools are available
+          which bats || exit 1
+          which jq || exit 1
+          ls -la bin/
+          
+          # Validate test structure
+          ls tests/helpers.bash || exit 1
+          ls tests/helpers_optimized.bash || exit 1
+          ls tests/fixtures/sourceatlas/ || exit 1
+
+      - name: Run test group - Read-only
+        if: matrix.test-group == 'read-only'
+        run: |
+          echo "🔍 Running read-only test group with shared caching"
+          
+          # These tests can share cached indexes for maximum performance
+          bats --jobs 4 --tap \
+            tests/e2e/18_cli_query.bats \
+            tests/e2e/19_cli_segment.bats \
+            tests/e2e/20_cli_export_dsl.bats \
+            tests/e2e/22_cli_verify.bats \
+            tests/e2e/phase2_*.bats
+
+      - name: Run test group - Modification
+        if: matrix.test-group == 'modification'
+        run: |
+          echo "🔧 Running modification test group with isolated environments"
+          
+          # These tests modify state and need isolation
+          bats --jobs 2 --tap \
+            tests/e2e/17_cli_delta.bats \
+            tests/e2e/21_cli_clean.bats \
+            tests/e2e/30_phase3_*.bats \
+            tests/e2e/31_phase3_*.bats
+
+      - name: Run test group - Independent
+        if: matrix.test-group == 'independent'
+        run: |
+          echo "🎯 Running independent test group with maximum parallelism"
+          
+          # These tests are fully independent and can run in parallel
+          bats --jobs 4 --tap \
+            tests/e2e/00_framework.bats \
+            tests/e2e/01_fixtures.bats \
+            tests/e2e/10_cli_version.bats \
+            tests/e2e/11_cli_init.bats \
+            tests/e2e/12_cli_scan.bats \
+            tests/e2e/13_cli_symbols.bats \
+            tests/e2e/14_cli_stats.bats \
+            tests/e2e/15_cli_manifest.bats \
+            tests/e2e/16_cli_shard.bats \
+            tests/e2e/22_cli_run.bats
+
+      - name: Run test group - Performance
+        if: matrix.test-group == 'performance'  
+        run: |
+          echo "🚀 Running performance test group with timing validation"
+          
+          # Performance and Phase 4-6 tests that require careful resource management
+          bats --jobs 2 --tap \
+            tests/e2e/40_phase4_*.bats \
+            tests/e2e/41_phase4_*.bats \
+            tests/e2e/50_phase5_*.bats \
+            tests/e2e/51_phase5_*.bats \
+            tests/e2e/60_phase6_*.bats \
+            tests/e2e/61_phase6_*.bats
+
+      - name: Collect test results
+        if: always()
+        run: |
+          echo "📊 Test Results Summary for ${{ matrix.test-group }}"
+          echo "Test group: ${{ matrix.test-group }}"
+          echo "Runner: ${{ runner.os }}"
+          echo "Timestamp: $(date -Iseconds)"
+
+      - name: Upload test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-failure-${{ matrix.test-group }}
+          path: |
+            tests/e2e/
+            /tmp/sourceatlas-test-*
+          retention-days: 3
+
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: test
+    if: always()
+    
+    steps:
+      - name: Check test results
+        run: |
+          echo "🏁 All test groups completed"
+          echo "Read-only: ${{ needs.test.result }}"
+          echo "Modification: ${{ needs.test.result }}"
+          echo "Independent: ${{ needs.test.result }}"
+          echo "Performance: ${{ needs.test.result }}"
+          
+          # Fail if any test group failed
+          if [[ "${{ needs.test.result }}" == "failure" ]]; then
+            echo "❌ Some test groups failed"
+            exit 1
+          else
+            echo "✅ All test groups passed"
+          fi
+
+  # Optional: Performance benchmarking job
+  benchmark:
+    name: Performance Benchmark
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: test
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bats jq
+          chmod +x bin/satlas bin/sourceatlas
+
+      - name: Run benchmark comparison
+        run: |
+          echo "🔬 Running performance benchmark comparison"
+          
+          # Make benchmark script executable
+          chmod +x tests/e2e/benchmark_comparison.sh
+          
+          # Run benchmark comparison
+          tests/e2e/benchmark_comparison.sh --run || true
+
+      - name: Upload benchmark results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: |
+            /tmp/satlas-test-cache-*/benchmarks.log
+          retention-days: 7

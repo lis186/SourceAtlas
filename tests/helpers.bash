@@ -135,22 +135,252 @@ count_jsonl_records() {
 get_timestamp() {
     # Test if millisecond precision works by checking actual output format
     local test_output
-    test_output=$(date +%s%3N 2>/dev/null)
+    local fallback_output
+    
+    # First attempt: Try millisecond precision
+    if ! test_output=$(date +%s%3N 2>/dev/null); then
+        echo "TIMING_ERROR:date_command_failed:millisecond_attempt" >&2
+        return 1
+    fi
+    
+    # Validate output format and content
+    if [[ -z "$test_output" ]]; then
+        echo "TIMING_ERROR:empty_output:millisecond_attempt" >&2
+        return 1
+    fi
     
     # If output doesn't contain 'N' (meaning %3N was expanded to digits), use it
-    if [[ "$test_output" != *"N"* ]] && [[ -n "$test_output" ]]; then
-        echo "$test_output"
-    else
-        # Fall back to second precision converted to milliseconds (macOS/BSD date)
-        echo "$(($(date +%s) * 1000))"
+    if [[ "$test_output" != *"N"* ]]; then
+        # Validate it's a reasonable timestamp (13 digits for milliseconds since epoch)
+        if [[ "$test_output" =~ ^[0-9]{10,13}$ ]]; then
+            echo "$test_output"
+            return 0
+        else
+            echo "TIMING_ERROR:invalid_millisecond_format:$test_output" >&2
+            return 1
+        fi
     fi
+    
+    # Fall back to second precision converted to milliseconds (macOS/BSD date)
+    if ! fallback_output=$(date +%s 2>/dev/null); then
+        echo "TIMING_ERROR:date_command_failed:second_fallback" >&2
+        return 1
+    fi
+    
+    # Validate fallback output
+    if [[ -z "$fallback_output" ]] || ! [[ "$fallback_output" =~ ^[0-9]{10}$ ]]; then
+        echo "TIMING_ERROR:invalid_second_format:$fallback_output" >&2
+        return 1
+    fi
+    
+    # Convert to milliseconds with overflow protection
+    local result=$((fallback_output * 1000))
+    if [ "$result" -lt 0 ]; then
+        echo "TIMING_ERROR:overflow_in_conversion:$fallback_output" >&2
+        return 1
+    fi
+    
+    echo "$result"
 }
 
-# Calculate duration in milliseconds
+# Enhanced test isolation with automatic resource tracking
+# 
+# TEST ISOLATION FRAMEWORK:
+# ========================
+# 
+# Purpose: Ensure complete cleanup of test resources even on failures
+# Features:
+# - Automatic tracking of created resources
+# - Cleanup on exit/failure via trap
+# - Nested directory cleanup with safety checks
+# - Process cleanup for background operations
+# 
+# Usage: Call setup_enhanced_isolation() in test setup
+setup_enhanced_isolation() {
+    # Track all resources created during test execution
+    export TEST_CREATED_DIRS=()
+    export TEST_CREATED_FILES=()
+    export TEST_BACKGROUND_PIDS=()
+    
+    # Set trap for automatic cleanup on test failure/exit
+    trap 'cleanup_test_resources_on_exit' EXIT INT TERM
+}
+
+# Create tracked temporary directory
+create_tracked_temp_dir() {
+    local prefix="${1:-sourceatlas-test}"
+    local temp_dir
+    
+    if ! temp_dir=$(mktemp -d -t "${prefix}-XXXXXX" 2>/dev/null); then
+        echo "ISOLATION_ERROR:failed_to_create_temp_dir:$prefix" >&2
+        return 1
+    fi
+    
+    # Validate created directory
+    if [[ ! -d "$temp_dir" ]]; then
+        echo "ISOLATION_ERROR:temp_dir_not_created:$temp_dir" >&2
+        return 1
+    fi
+    
+    # Track for cleanup
+    TEST_CREATED_DIRS+=("$temp_dir")
+    echo "$temp_dir"
+}
+
+# Create tracked temporary file
+create_tracked_temp_file() {
+    local prefix="${1:-sourceatlas-test}"
+    local suffix="${2:-}"
+    local temp_file
+    
+    if [[ -n "$suffix" ]]; then
+        temp_file=$(mktemp -t "${prefix}-XXXXXX${suffix}" 2>/dev/null)
+    else
+        temp_file=$(mktemp -t "${prefix}-XXXXXX" 2>/dev/null)
+    fi
+    
+    if [[ -z "$temp_file" ]] || [[ ! -f "$temp_file" ]]; then
+        echo "ISOLATION_ERROR:failed_to_create_temp_file:$prefix" >&2
+        return 1
+    fi
+    
+    # Track for cleanup
+    TEST_CREATED_FILES+=("$temp_file")
+    echo "$temp_file"
+}
+
+# Start tracked background process
+start_tracked_background_process() {
+    local command="$1"
+    shift
+    local args=("$@")
+    
+    # Start process in background
+    "$command" "${args[@]}" &
+    local pid=$!
+    
+    # Validate process started
+    if ! kill -0 "$pid" 2>/dev/null; then
+        echo "ISOLATION_ERROR:background_process_failed:$command" >&2
+        return 1
+    fi
+    
+    # Track for cleanup
+    TEST_BACKGROUND_PIDS+=("$pid")
+    echo "$pid"
+}
+
+# Safe cleanup with comprehensive error handling
+cleanup_test_resources_on_exit() {
+    local exit_code=$?
+    
+    # Cleanup background processes
+    if [[ -n "${TEST_BACKGROUND_PIDS:-}" ]]; then
+        for pid in "${TEST_BACKGROUND_PIDS[@]}"; do
+            if kill -0 "$pid" 2>/dev/null; then
+                kill "$pid" 2>/dev/null || true
+                # Give process time to terminate gracefully
+                sleep 0.1
+                # Force kill if still running
+                if kill -0 "$pid" 2>/dev/null; then
+                    kill -9 "$pid" 2>/dev/null || true
+                fi
+            fi
+        done
+    fi
+    
+    # Cleanup temporary files
+    if [[ -n "${TEST_CREATED_FILES:-}" ]]; then
+        for file in "${TEST_CREATED_FILES[@]}"; do
+            if [[ -f "$file" ]]; then
+                rm -f "$file" 2>/dev/null || true
+            fi
+        done
+    fi
+    
+    # Cleanup temporary directories (most destructive operation last)
+    if [[ -n "${TEST_CREATED_DIRS:-}" ]]; then
+        for dir in "${TEST_CREATED_DIRS[@]}"; do
+            # Safety checks before destructive operations
+            if [[ -d "$dir" ]] && [[ "$dir" == /tmp/* ]] || [[ "$dir" == /var/* ]]; then
+                # Additional safety: ensure it's actually a temp directory we created
+                if [[ "$(basename "$dir")" == sourceatlas-test-* ]]; then
+                    rm -rf "$dir" 2>/dev/null || true
+                fi
+            fi
+        done
+    fi
+    
+    # Clear tracking arrays
+    unset TEST_CREATED_DIRS
+    unset TEST_CREATED_FILES  
+    unset TEST_BACKGROUND_PIDS
+    
+    # Remove trap to avoid recursive calls
+    trap - EXIT INT TERM
+    
+    # Preserve original exit code
+    return $exit_code
+}
+
+# Calculate duration in milliseconds with comprehensive error handling
 calculate_duration_ms() {
     local start_ms="$1"
     local end_ms="$2"
-    echo $((end_ms - start_ms))
+    
+    # Validate input parameters
+    if [[ -z "$start_ms" ]]; then
+        echo "DURATION_ERROR:missing_start_timestamp" >&2
+        return 1
+    fi
+    
+    if [[ -z "$end_ms" ]]; then
+        echo "DURATION_ERROR:missing_end_timestamp" >&2
+        return 1
+    fi
+    
+    # Validate numeric format (timestamps should be positive integers)
+    if ! [[ "$start_ms" =~ ^[0-9]+$ ]]; then
+        echo "DURATION_ERROR:invalid_start_format:$start_ms" >&2
+        return 1
+    fi
+    
+    if ! [[ "$end_ms" =~ ^[0-9]+$ ]]; then
+        echo "DURATION_ERROR:invalid_end_format:$end_ms" >&2
+        return 1
+    fi
+    
+    # Validate timestamp values are reasonable (after year 2020, before year 2100)
+    local min_timestamp=1577836800000  # 2020-01-01 in milliseconds
+    local max_timestamp=4102444800000  # 2100-01-01 in milliseconds
+    
+    if [ "$start_ms" -lt "$min_timestamp" ] || [ "$start_ms" -gt "$max_timestamp" ]; then
+        echo "DURATION_ERROR:unreasonable_start_timestamp:$start_ms" >&2
+        return 1
+    fi
+    
+    if [ "$end_ms" -lt "$min_timestamp" ] || [ "$end_ms" -gt "$max_timestamp" ]; then
+        echo "DURATION_ERROR:unreasonable_end_timestamp:$end_ms" >&2
+        return 1
+    fi
+    
+    # Check for negative duration (time travel detection)
+    if [ "$end_ms" -lt "$start_ms" ]; then
+        echo "DURATION_ERROR:negative_duration:start=$start_ms:end=$end_ms" >&2
+        return 1
+    fi
+    
+    # Calculate duration with overflow detection
+    local duration=$((end_ms - start_ms))
+    
+    # Sanity check: duration shouldn't exceed 1 hour (3600000ms) for test operations
+    local max_duration=3600000
+    if [ "$duration" -gt "$max_duration" ]; then
+        echo "DURATION_ERROR:excessive_duration:${duration}ms:exceeds_1hour" >&2
+        return 1
+    fi
+    
+    echo "$duration"
 }
 
 # Skip test if feature not implemented
