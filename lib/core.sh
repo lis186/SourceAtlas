@@ -191,22 +191,61 @@ extract_symbols() {
             done | jq -s .
             ;;
         kotlin)
-            # Extract class, object, interface, fun definitions with line numbers
-            grep -n -E '^\s*(class|object|interface|fun|data class|sealed class)\s+' "$file" | \
-            head -5 | \
+            # Extract class, object, interface, fun, data class, sealed class, companion object definitions with line numbers
+            # Also capture annotations like @AndroidEntryPoint
+            grep -n -E '^\s*(@[A-Za-z0-9_]+|((public|private|internal|protected)\s+)?(class|object|interface|fun|data class|sealed class|companion object)\s+)' "$file" | \
+            head -10 | \
             while IFS=':' read -r line_num content; do
-                local kind=$(echo "$content" | sed 's/^\s*\([a-z]*\).*/\1/')
-                local name=$(echo "$content" | sed 's/^\s*[a-z]*\s*class\s*\([^({[:space:]]*\).*/\1/')
-                if [[ "$kind" == "fun" ]]; then
-                    name=$(echo "$content" | sed 's/^\s*fun\s*\([^({[:space:]]*\).*/\1/')
-                fi
+                local kind=""
+                local name=""
                 local visibility="internal"  # Default for Kotlin
                 
-                # Try to detect visibility
-                if echo "$content" | grep -q "public"; then
-                    visibility="public"
-                elif echo "$content" | grep -q "private"; then
-                    visibility="private"
+                # Handle annotations
+                if echo "$content" | grep -q "^@"; then
+                    kind="annotation"
+                    name=$(echo "$content" | awk '{print $1}' | sed 's/@//')
+                # Handle visibility modifiers
+                elif echo "$content" | grep -qE '^\s*(public|private|internal|protected)\s+'; then
+                    visibility=$(echo "$content" | awk '{print $1}')
+                    # Extract kind and name after visibility modifier
+                    if echo "$content" | grep -q "class"; then
+                        kind="class"
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="class") print $(i+1)}' | sed 's/[:{(].*//')
+                    elif echo "$content" | grep -q "object"; then
+                        kind="object"
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="object") print $(i+1)}' | sed 's/[:{(].*//')
+                    elif echo "$content" | grep -q "interface"; then
+                        kind="interface"
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="interface") print $(i+1)}' | sed 's/[:{(].*//')
+                    elif echo "$content" | grep -q "fun"; then
+                        kind="fun"
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="fun") print $(i+1)}' | sed 's/[:{(].*//')
+                    fi
+                # Handle declarations without explicit visibility modifiers
+                else
+                    if echo "$content" | grep -q "data class"; then
+                        kind="data_class"
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="class") print $(i+1)}' | sed 's/[:{(].*//')
+                    elif echo "$content" | grep -q "sealed class"; then
+                        kind="sealed_class"  
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="class") print $(i+1)}' | sed 's/[:{(].*//')
+                    elif echo "$content" | grep -q "companion object"; then
+                        kind="companion_object"
+                        # companion object usually doesn't have a name, use "Companion" as default
+                        name="Companion"
+                    elif echo "$content" | grep -q "class"; then
+                        kind="class"
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="class") print $(i+1)}' | sed 's/[:{(].*//')
+                    elif echo "$content" | grep -q "object"; then
+                        kind="object"
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="object") print $(i+1)}' | sed 's/[:{(].*//')
+                    elif echo "$content" | grep -q "interface"; then
+                        kind="interface" 
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="interface") print $(i+1)}' | sed 's/[:{(].*//')
+                    elif echo "$content" | grep -q "fun"; then
+                        kind="fun"
+                        name=$(echo "$content" | awk '{for(i=1;i<=NF;i++) if($i=="fun") print $(i+1)}' | sed 's/[:{(].*//')
+                    fi
                 fi
                 
                 echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
