@@ -83,13 +83,11 @@ teardown() {
     # Get equivalent JSON content
     local json_content="$(cat "${TEST_TEMP_DIR}/.sourceatlas/sourceatlas.index.jsonl")"
     
-    # Compare sizes (DSL should be shorter)
-    local dsl_length=${#dsl_output}
-    local json_length=${#json_content}
+    # Validate DSL compression meets minimum requirements (≥10% reduction)
+    local compression_result=$(validate_dsl_compression "$dsl_output" "$json_content" "strict")
     
-    # DSL should be more compact (at least somewhat smaller)
-    # Allow some flexibility since this is a measurement test
-    [ "$dsl_length" -le "$json_length" ] || [ $((dsl_length * 100 / json_length)) -lt 120 ]
+    # Should achieve at least strict compression (≥10% reduction)
+    [[ "$compression_result" == valid:* ]]
 }
 
 @test "segment extraction timing is measured" {
@@ -207,17 +205,14 @@ teardown() {
 @test "DSL format maintains symbol information accuracy" {
     run satlas export-dsl
     assert_success
+    local dsl_output="$output"
     
-    # DSL output should contain key symbol information
-    local dsl_fields=("SYM" "FILE" "class" "func" "F:" "S:")
-    local found_dsl_content=false
+    # Get original JSON content for comparison
+    local json_content="$(cat "${TEST_TEMP_DIR}/.sourceatlas/sourceatlas.index.jsonl")"
     
-    for field in "${dsl_fields[@]}"; do
-        if [[ "$output" == *"$field"* ]]; then
-            found_dsl_content=true
-            break
-        fi
-    done
+    # Validate DSL format maintains key structural elements
+    local format_result=$(validate_dsl_format "$dsl_output" "$json_content")
     
-    [ "$found_dsl_content" = true ]
+    # Should pass format validation (≥2 of 4 key markers present)
+    [[ "$format_result" == valid:* ]]
 }
