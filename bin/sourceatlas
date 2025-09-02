@@ -934,8 +934,278 @@ EOF
 
 # Command: shard
 cmd_shard() {
-    echo "Error: shard command not yet implemented"
-    exit 1
+    local out_dir=".sourceatlas"
+    local shard_strategy="directory"  # directory, language, or auto
+    local max_size_bytes=2097152      # 2MB default
+    local max_records=10000           # 10k records default
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --by-directory)
+                shard_strategy="directory"
+                shift
+                ;;
+            --by-language)
+                shard_strategy="language"
+                shift
+                ;;
+            --max-size)
+                max_size_bytes="$2"
+                shift 2
+                ;;
+            --max-records)
+                max_records="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} shard [options]
+
+Split index into shards by directory or language.
+
+Options:
+  --out DIR           Output directory (default: .sourceatlas)
+  --by-directory      Shard by directory structure (default)
+  --by-language       Shard by programming language
+  --max-size BYTES    Maximum shard size in bytes (default: 2097152)
+  --max-records NUM   Maximum records per shard (default: 10000)
+  --help, -h          Show this help message
+
+Examples:
+  ${PROG_NAME} shard
+  ${PROG_NAME} shard --by-language --max-records 5000
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                echo "Run '${PROG_NAME} shard --help' for usage." >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    local index_file="${out_dir}/sourceatlas.index.jsonl"
+    local manifest_file="${out_dir}/sourceatlas.manifest.json"
+    
+    # Check if index file exists
+    if [[ ! -f "$index_file" ]]; then
+        echo "Error: Index file not found: $index_file" >&2
+        echo "Run '${PROG_NAME} scan' first to generate the index." >&2
+        exit 1
+    fi
+    
+    # Create output directory
+    mkdir -p "$out_dir"
+    
+    echo "Sharding index: $index_file"
+    echo "Strategy: $shard_strategy"
+    echo "Max size: $max_size_bytes bytes"
+    echo "Max records: $max_records"
+    
+    # Remove existing shard files
+    rm -f "${out_dir}"/sourceatlas.index.*.jsonl
+    
+    # Determine sharding strategy
+    case "$shard_strategy" in
+        directory)
+            shard_by_directory "$index_file" "$out_dir" "$max_size_bytes" "$max_records"
+            ;;
+        language)
+            shard_by_language "$index_file" "$out_dir" "$max_size_bytes" "$max_records"
+            ;;
+        *)
+            echo "Error: Unknown sharding strategy: $shard_strategy" >&2
+            exit 1
+            ;;
+    esac
+    
+    # Update manifest with shard information
+    update_manifest_with_shards "$out_dir"
+    
+    local shard_count=$(ls "${out_dir}"/sourceatlas.index.*.jsonl 2>/dev/null | wc -l)
+    echo "Created $shard_count shard files"
+    echo "Manifest updated: $manifest_file"
+}
+
+# Shard by directory structure
+shard_by_directory() {
+    local index_file="$1"
+    local out_dir="$2"
+    local max_size="$3"
+    local max_records="$4"
+    
+    # Group files by top-level directory
+    local current_shard=""
+    local current_records=0
+    local current_size=0
+    local shard_counter=1
+    
+    while IFS= read -r line; do
+        [[ -z "$line" ]] && continue
+        
+        local path=$(echo "$line" | jq -r '.path // ""')
+        local size_bytes=$(echo "$line" | jq -r '.size_bytes // 0')
+        
+        # Extract top-level directory
+        local top_dir=$(echo "$path" | cut -d'/' -f2)
+        [[ -z "$top_dir" ]] && top_dir="root"
+        
+        # Sanitize directory name for filename
+        local shard_name=$(echo "$top_dir" | tr '/' '_' | tr -cd '[:alnum:]_-')
+        [[ -z "$shard_name" ]] && shard_name="misc"
+        
+        local target_shard="${out_dir}/sourceatlas.index.${shard_name}.jsonl"
+        
+        # Check if we need to start a new shard due to size/record limits
+        if [[ "$current_shard" != "$target_shard" ]] || 
+           [[ $current_records -ge $max_records ]] || 
+           [[ $current_size -ge $max_size ]]; then
+            
+            # If hitting limits, create numbered shard
+            if [[ $current_records -ge $max_records ]] || [[ $current_size -ge $max_size ]]; then
+                target_shard="${out_dir}/sourceatlas.index.${shard_name}-${shard_counter}.jsonl"
+                ((shard_counter++))
+            fi
+            
+            current_shard="$target_shard"
+            current_records=0
+            current_size=0
+        fi
+        
+        # Write to shard
+        echo "$line" >> "$current_shard"
+        ((current_records++))
+        current_size=$((current_size + size_bytes))
+        
+    done < "$index_file"
+}
+
+# Shard by programming language
+shard_by_language() {
+    local index_file="$1"
+    local out_dir="$2"
+    local max_size="$3"
+    local max_records="$4"
+    
+    # Group files by language (without associative arrays for compatibility)
+    while IFS= read -r line; do
+        [[ -z "$line" ]] && continue
+        
+        local lang=$(echo "$line" | jq -r '.lang // "unknown"')
+        local size_bytes=$(echo "$line" | jq -r '.size_bytes // 0')
+        
+        # Sanitize language name for filename
+        local shard_name=$(echo "$lang" | tr -cd '[:alnum:]_-')
+        [[ -z "$shard_name" ]] && shard_name="unknown"
+        
+        local target_shard="${out_dir}/sourceatlas.index.${shard_name}.jsonl"
+        
+        # Check limits and create numbered shards if needed
+        if [[ -f "$target_shard" ]]; then
+            local current_records=$(count_lines "$target_shard")
+            local current_size=$(get_file_size "$target_shard")
+            
+            if [[ $current_records -ge $max_records ]] || [[ $current_size -ge $max_size ]]; then
+                local counter=1
+                while [[ -f "${out_dir}/sourceatlas.index.${shard_name}-${counter}.jsonl" ]]; do
+                    ((counter++))
+                done
+                target_shard="${out_dir}/sourceatlas.index.${shard_name}-${counter}.jsonl"
+            fi
+        fi
+        
+        # Write to shard
+        echo "$line" >> "$target_shard"
+        
+    done < "$index_file"
+}
+
+# Update manifest with shard information
+update_manifest_with_shards() {
+    local out_dir="$1"
+    local manifest_file="${out_dir}/sourceatlas.manifest.json"
+    
+    # Get repository info
+    local repo_name="$(basename "$(pwd)")"
+    local timestamp
+    if command -v date >/dev/null 2>&1; then
+        timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    else
+        timestamp="unknown"
+    fi
+    
+    # Create shards array
+    local shards_json="["
+    local first_shard=true
+    
+    for shard_file in "${out_dir}"/sourceatlas.index.*.jsonl; do
+        [[ ! -f "$shard_file" ]] && continue
+        
+        local shard_name=$(basename "$shard_file" .jsonl | sed 's/sourceatlas\.index\.//')
+        local shard_size=$(get_file_size "$shard_file")
+        local shard_hash=$(calculate_hash "$shard_file")
+        local shard_records=$(count_lines "$shard_file")
+        
+        # Determine languages in this shard
+        local langs=$(cat "$shard_file" | jq -r '.lang // "unknown"' | sort -u | tr '\n' ',' | sed 's/,$//')
+        local langs_json=""
+        if [[ -n "$langs" ]]; then
+            IFS=',' read -ra lang_array <<< "$langs"
+            local first_lang=true
+            for lang in "${lang_array[@]}"; do
+                if [[ "$first_lang" == true ]]; then
+                    first_lang=false
+                else
+                    langs_json="${langs_json}, "
+                fi
+                langs_json="${langs_json}\"$lang\""
+            done
+        fi
+        
+        if [[ "$first_shard" == true ]]; then
+            first_shard=false
+        else
+            shards_json="${shards_json}, "
+        fi
+        
+        shards_json="${shards_json}{
+      \"id\": \"$shard_name\",
+      \"path\": \"$(basename "$shard_file")\",
+      \"files\": $shard_records,
+      \"size_bytes\": $shard_size,
+      \"lang\": [$langs_json],
+      \"hash\": \"$shard_hash\"
+    }"
+    done
+    
+    shards_json="${shards_json}]"
+    
+    # Create manifest
+    cat > "$manifest_file" <<EOF
+{
+  "version": "1.0.0",
+  "schema_version": $SCHEMA_VERSION,
+  "generated_at": "$timestamp",
+  "repository": {
+    "name": "$repo_name"
+  },
+  "shards": $shards_json,
+  "shard_rules": {
+    "by_dir": [
+      {"prefix": "ios/", "description": "iOS source files"},
+      {"prefix": "android/", "description": "Android source files"},
+      {"prefix": "scripts/", "description": "Build and utility scripts"},
+      {"prefix": "config/", "description": "Configuration files"}
+    ]
+  }
+}
+EOF
 }
 
 # Command: delta

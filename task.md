@@ -61,7 +61,7 @@ Deps：Phase 0 完成
   - 驗證標準：生成 `.sourceatlas/sourceatlas.stats.json`；包含檔案數、語言分佈、平均 LOC、索引時間
 - [x] Step 1.6 `satlas manifest` Root Manifest 測試（完成：2025-09-02 02:54 UTC+8）
   - 驗證標準：生成 `sourceatlas.manifest.json`；分片列表、hash、檔數、語言與路徑存在
-- [ ] Step 1.7 `satlas shard` 分片測試
+- [x] Step 1.7 `satlas shard` 分片測試（完成：2025-09-02 02:58 UTC+8）
   - 驗證標準：依目錄/語言切分多個 `sourceatlas.index.[shard].jsonl[.gz]`；大小/筆數不超過預設上限
 - [ ] Step 1.8 `satlas delta` 增量更新測試
   - 驗證標準：修改 fixtures 後僅重建受影響分片；產生 `delta.report.json`
