@@ -1037,6 +1037,7 @@ readonly UAT_MIN_QUERIES=30           # Minimum test queries required
 readonly UAT_MAX_QUERIES=50           # Maximum test queries allowed
 
 # Create UAT test queries file with dynamic generation based on count
+# Optional caching: If UAT_CACHE_DIR is set, reuse cached files when possible
 create_uat_queries_file() {
     local queries_file="$1"
     local query_count="${2:-35}"  # Default to 35 queries
@@ -1044,6 +1045,18 @@ create_uat_queries_file() {
     if [[ -z "$queries_file" ]]; then
         echo "ERROR: queries_file parameter required" >&2
         return 1
+    fi
+    
+    # Check for cached version if caching is enabled
+    if [[ -n "${UAT_CACHE_DIR:-}" ]] && [[ -d "$UAT_CACHE_DIR" ]]; then
+        local cache_file="$UAT_CACHE_DIR/queries_${query_count}.tsv"
+        if [[ -f "$cache_file" ]]; then
+            # Use cached file if it exists and is recent (less than 1 hour old)
+            if [[ $(find "$cache_file" -mmin -60 2>/dev/null) ]]; then
+                cp "$cache_file" "$queries_file"
+                return 0
+            fi
+        fi
     fi
     
     # Validate query count is within acceptable range
@@ -1137,16 +1150,35 @@ create_uat_queries_file() {
         return 1
     fi
     
+    # Cache the generated file if caching is enabled
+    if [[ -n "${UAT_CACHE_DIR:-}" ]] && [[ -d "$UAT_CACHE_DIR" ]]; then
+        local cache_file="$UAT_CACHE_DIR/queries_${query_count}.tsv"
+        cp "$queries_file" "$cache_file" 2>/dev/null || true
+    fi
+    
     return 0
 }
 
-# Create UAT ground truth file with fixture-based approach  
+# Create UAT ground truth file with fixture-based approach
+# Optional caching: If UAT_CACHE_DIR is set, reuse cached files when possible  
 create_uat_truth_file() {
     local truth_file="$1"
     
     if [[ -z "$truth_file" ]]; then
         echo "ERROR: truth_file parameter required" >&2
         return 1
+    fi
+    
+    # Check for cached version if caching is enabled
+    if [[ -n "${UAT_CACHE_DIR:-}" ]] && [[ -d "$UAT_CACHE_DIR" ]]; then
+        local cache_file="$UAT_CACHE_DIR/truth.tsv"
+        if [[ -f "$cache_file" ]]; then
+            # Use cached file if it exists and is recent (less than 1 hour old)
+            if [[ $(find "$cache_file" -mmin -60 2>/dev/null) ]]; then
+                cp "$cache_file" "$truth_file"
+                return 0
+            fi
+        fi
     fi
     
     cat > "$truth_file" << 'EOF'
@@ -1167,6 +1199,12 @@ EOF
     if [[ ! -f "$truth_file" ]]; then
         echo "ERROR: Failed to create truth file: $truth_file" >&2
         return 1
+    fi
+    
+    # Cache the generated file if caching is enabled
+    if [[ -n "${UAT_CACHE_DIR:-}" ]] && [[ -d "$UAT_CACHE_DIR" ]]; then
+        local cache_file="$UAT_CACHE_DIR/truth.tsv"
+        cp "$truth_file" "$cache_file" 2>/dev/null || true
     fi
     
     return 0
@@ -1337,8 +1375,8 @@ extract_json_value() {
     }
 }
 
-# Validate that expected files exist in fixtures or index
-# Simplifies the complex nested conditional logic from the test
+# Validate that expected files exist in fixtures or index (optimized batch version)
+# Reduces file I/O by batching operations
 validate_expected_files_exist() {
     local queries_file="$1"
     local index_file="${2:-${TEST_TEMP_DIR}/.sourceatlas/sourceatlas.index.jsonl}"
@@ -1356,8 +1394,27 @@ validate_expected_files_exist() {
     local all_found=true
     local missing_files=()
     
-    # Extract unique expected files from queries
-    tail -n +2 "$queries_file" | cut -f4 | tr ',' '\n' | sort -u | while read expected_file; do
+    # Batch extract all unique expected files at once
+    local expected_files_list=$(tail -n +2 "$queries_file" | cut -f4 | tr ',' '\n' | sort -u | grep -v '^$')
+    
+    # Batch find all matching files in filesystem (single find operation)
+    local found_files=""
+    if [[ -n "$expected_files_list" ]]; then
+        found_files=$(find . -type f 2>/dev/null | xargs -I {} basename {} | sort -u)
+    fi
+    
+    # If index file exists, batch extract all file references from it
+    local index_files=""
+    if [[ -f "$index_file" ]]; then
+        # Extract both file_name and path fields in one pass
+        index_files=$(grep -o '"file_name":"[^"]*"\|"path":"[^"]*"' "$index_file" 2>/dev/null | \
+                      sed 's/.*:"\([^"]*\)"/\1/' | \
+                      xargs -I {} basename {} | \
+                      sort -u)
+    fi
+    
+    # Check each expected file against both lists
+    while IFS= read -r expected_file; do
         # Skip empty entries
         if [[ -z "$expected_file" ]]; then
             continue
@@ -1365,30 +1422,28 @@ validate_expected_files_exist() {
         
         local found=false
         
-        # Method 1: Check if file exists in current directory structure
-        if find . -name "$expected_file" -type f 2>/dev/null | grep -q .; then
+        # Check against filesystem results
+        if echo "$found_files" | grep -q "^${expected_file}$"; then
             found=true
-        fi
-        
-        # Method 2: If not found in filesystem, check in index file if it exists
-        if [[ "$found" != true ]] && [[ -f "$index_file" ]]; then
-            if grep -q "\"file_name\":\"$expected_file\"" "$index_file" 2>/dev/null || \
-               grep -q "\"path\":.*$expected_file" "$index_file" 2>/dev/null; then
-                found=true
-            fi
+        # Check against index results
+        elif echo "$index_files" | grep -q "^${expected_file}$"; then
+            found=true
         fi
         
         # Report missing files
         if [[ "$found" != true ]]; then
             echo "WARNING: Expected file not found in fixtures or index: $expected_file" >&2
+            missing_files+=("$expected_file")
             all_found=false
         fi
-    done
+    done <<< "$expected_files_list"
     
     # Return success if all files were found
     if [[ "$all_found" == true ]]; then
         return 0
     else
+        # Optionally report summary
+        echo "INFO: ${#missing_files[@]} files not found" >&2
         return 1
     fi
 }
