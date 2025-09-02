@@ -9,7 +9,8 @@
       "Bash(bats:*)",
       "Bash(chmod:*)",
       "Bash(ln:*)",
-      "Bash(PATH:*)"
+      "Bash(PATH:*)",
+      "Read(/private/tmp/test_stats/**)"
     ],
     "deny": [],
     "ask": []

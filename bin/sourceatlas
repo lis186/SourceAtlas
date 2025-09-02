@@ -508,8 +508,261 @@ EOF
 
 # Command: stats
 cmd_stats() {
-    echo "Error: stats command not yet implemented"
-    exit 1
+    local out_dir=".sourceatlas"
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} stats [options]
+
+Generate statistics from index.
+
+Options:
+  --out DIR       Output directory (default: .sourceatlas)
+  --help, -h      Show this help message
+
+Examples:
+  ${PROG_NAME} stats
+  ${PROG_NAME} stats --out .sourceatlas
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                echo "Run '${PROG_NAME} stats --help' for usage." >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    local index_file="${out_dir}/sourceatlas.index.jsonl"
+    local stats_file="${out_dir}/sourceatlas.stats.json"
+    
+    # Check if index file exists
+    if [[ ! -f "$index_file" ]]; then
+        echo "Error: Index file not found: $index_file" >&2
+        echo "Run '${PROG_NAME} scan' first to generate the index." >&2
+        exit 1
+    fi
+    
+    # Create output directory
+    mkdir -p "$out_dir"
+    
+    echo "Generating statistics from: $index_file"
+    echo "Output: $stats_file"
+    
+    # Initialize counters
+    local total_files=0
+    local total_lines=0
+    local total_bytes=0
+    local total_symbols=0
+    local max_lines=0
+    local min_lines=999999
+    local max_bytes=0
+    local largest_file=""
+    
+    # Language and role tracking (using simple variables)
+    local lang_list=""
+    local role_list=""
+    local symbol_kind_list=""
+    
+    local repo_name=""
+    local lines_array=()
+    local bytes_array=()
+    
+    # Process each line of the index
+    while IFS= read -r line; do
+        # Skip empty lines
+        [[ -z "$line" ]] && continue
+        
+        # Parse JSON line
+        local repo=$(echo "$line" | jq -r '.repo // ""')
+        local path=$(echo "$line" | jq -r '.path // ""')
+        local lang=$(echo "$line" | jq -r '.lang // ""')
+        local loc=$(echo "$line" | jq -r '.loc // 0')
+        local size_bytes=$(echo "$line" | jq -r '.size_bytes // 0')
+        local roles=$(echo "$line" | jq -r '.roles[]? // "unknown"')
+        local symbols_array=$(echo "$line" | jq -c '.symbols // []')
+        
+        # Set repo name from first entry
+        if [[ -z "$repo_name" ]] && [[ -n "$repo" ]]; then
+            repo_name="$repo"
+        fi
+        
+        # Update counters
+        ((total_files++))
+        total_lines=$((total_lines + loc))
+        total_bytes=$((total_bytes + size_bytes))
+        
+        # Track arrays for median calculation
+        lines_array+=("$loc")
+        bytes_array+=("$size_bytes")
+        
+        # Update min/max
+        if [[ $loc -gt $max_lines ]]; then
+            max_lines=$loc
+        fi
+        if [[ $loc -lt $min_lines ]] && [[ $loc -gt 0 ]]; then
+            min_lines=$loc
+        fi
+        if [[ $size_bytes -gt $max_bytes ]]; then
+            max_bytes=$size_bytes
+            largest_file="$path"
+        fi
+        
+        # Language distribution
+        if [[ -n "$lang" ]]; then
+            if [[ "$lang_list" != *"$lang"* ]]; then
+                lang_list="${lang_list} $lang"
+            fi
+        fi
+        
+        # Role distribution
+        if [[ -n "$roles" ]]; then
+            if [[ "$role_list" != *"$roles"* ]]; then
+                role_list="${role_list} $roles"
+            fi
+        fi
+        
+        # Symbol counting
+        local symbol_count=$(echo "$symbols_array" | jq -r 'length')
+        total_symbols=$((total_symbols + symbol_count))
+        
+        # Symbol kind distribution
+        local kinds=$(echo "$symbols_array" | jq -r '.[].kind // "unknown"' | tr '\n' ' ')
+        for kind in $kinds; do
+            if [[ -n "$kind" ]] && [[ "$symbol_kind_list" != *"$kind"* ]]; then
+                symbol_kind_list="${symbol_kind_list} $kind"
+            fi
+        done
+        
+    done < "$index_file"
+    
+    # Calculate averages
+    local avg_lines=0
+    local avg_bytes=0
+    if [[ $total_files -gt 0 ]]; then
+        avg_lines=$((total_lines / total_files))
+        avg_bytes=$((total_bytes / total_files))
+    fi
+    
+    # Calculate median lines (simplified)
+    local median_lines=0
+    if [[ ${#lines_array[@]} -gt 0 ]]; then
+        IFS=$'\n' sorted_lines=($(sort -n <<<"${lines_array[*]}"))
+        local mid_idx=$(( ${#sorted_lines[@]} / 2 ))
+        median_lines=${sorted_lines[$mid_idx]}
+    fi
+    
+    # Reset min if no files
+    if [[ $min_lines -eq 999999 ]]; then
+        min_lines=0
+    fi
+    
+    # Generate timestamp
+    local timestamp
+    if command -v date >/dev/null 2>&1; then
+        timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    else
+        timestamp="unknown"
+    fi
+    
+    # Create stats JSON
+    cat > "$stats_file" <<EOF
+{
+  "generated_at": "$timestamp",
+  "repository": {
+    "name": "$repo_name",
+    "schema_version": $SCHEMA_VERSION
+  },
+  "files": {
+    "total_count": $total_files,
+    "indexed_at": "$timestamp"
+  },
+  "languages": {
+EOF
+    
+    # Create language distribution using jq for accuracy
+    local lang_json_array=""
+    if [[ -n "$lang_list" ]]; then
+        for lang in $lang_list; do
+            if [[ -n "$lang" ]]; then
+                local count=$(cat "$index_file" | jq -r --arg lang "$lang" 'select(.lang == $lang)' | wc -l | tr -d ' ')
+                if [[ -n "$lang_json_array" ]]; then
+                    lang_json_array="${lang_json_array}, "
+                fi
+                lang_json_array="${lang_json_array}\"$lang\": $count"
+            fi
+        done
+    fi
+    
+    # Create role distribution using jq for accuracy  
+    local role_json_array=""
+    if [[ -n "$role_list" ]]; then
+        for role in $role_list; do
+            if [[ -n "$role" ]]; then
+                local count=$(cat "$index_file" | jq -r --arg role "$role" 'select(.roles[]? == $role)' | wc -l | tr -d ' ')
+                if [[ -n "$role_json_array" ]]; then
+                    role_json_array="${role_json_array}, "
+                fi
+                role_json_array="${role_json_array}\"$role\": $count"
+            fi
+        done
+    fi
+    
+    # Create symbol kind distribution using jq for accuracy
+    local kind_json_array=""
+    if [[ -n "$symbol_kind_list" ]]; then
+        for kind in $symbol_kind_list; do
+            if [[ -n "$kind" ]]; then
+                local count=$(cat "$index_file" | jq -r --arg kind "$kind" '.symbols[]? | select(.kind == $kind)' | wc -l | tr -d ' ')
+                if [[ -n "$kind_json_array" ]]; then
+                    kind_json_array="${kind_json_array}, "
+                fi
+                kind_json_array="${kind_json_array}\"$kind\": $count"
+            fi
+        done
+    fi
+    
+    # Complete the JSON structure
+    cat >> "$stats_file" <<EOF
+    ${lang_json_array:-}
+  },
+  "roles": {
+    ${role_json_array:-}
+  },
+  "lines_of_code": {
+    "total": $total_lines,
+    "average": $avg_lines,
+    "median": $median_lines,
+    "max": $max_lines,
+    "min": $min_lines
+  },
+  "file_sizes": {
+    "total_bytes": $total_bytes,
+    "average_bytes": $avg_bytes,
+    "largest_file": "$largest_file",
+    "max_bytes": $max_bytes
+  },
+  "symbols": {
+    "total_count": $total_symbols,
+    "by_kind": {
+      ${kind_json_array:-}
+    }
+  }
+}
+EOF
+    
+    echo "Generated statistics for $total_files files"
+    echo "Total lines of code: $total_lines"
+    echo "Total symbols: $total_symbols"
+    echo "Statistics created: $stats_file"
 }
 
 # Command: manifest
