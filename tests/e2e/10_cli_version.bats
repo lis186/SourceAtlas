@@ -2,6 +2,14 @@
 
 load ../helpers
 
+setup() {
+    setup_test_env
+}
+
+teardown() {
+    cleanup_test_env
+}
+
 @test "satlas command exists" {
     run which satlas
     assert_success
