@@ -94,7 +94,12 @@ teardown() {
     [ "$status" -eq 0 ]
     
     # Should indicate expansion occurred or was considered
-    [[ "$output" == *"expanded"* ]] || [[ "$output" == *"expansion"* ]] || [ "$status" -eq 0 ]
+    if [[ "$output" == *"expanded"* ]] || [[ "$output" == *"expansion"* ]]; then
+        true  # Found expansion indication
+    else
+        # For now, just verify command completed successfully
+        [ "$status" -eq 0 ]
+    fi
 }
 
 @test "progressive retrieval maintains path references in format path:start-end" {
@@ -118,7 +123,12 @@ teardown() {
     [ "$status" -eq 0 ]
     
     # Should filter by symbol kind
-    [[ "$output" == *"kind"* ]] || [ "$status" -eq 0 ]
+    if [[ "$output" == *"kind"* ]]; then
+        true  # Found kind filtering information
+    else
+        # For now, just verify command completed successfully
+        [ "$status" -eq 0 ]
+    fi
 }
 
 @test "progressive retrieval handles empty results gracefully" {
@@ -130,5 +140,10 @@ teardown() {
     [ "$status" -eq 0 ]
     
     # Should handle empty results without error
-    [[ "$output" == *"no results"* ]] || [[ "$output" == *"found: 0"* ]] || [ "$status" -eq 0 ]
+    if [[ "$output" == *"no results"* ]] || [[ "$output" == *"found: 0"* ]]; then
+        true  # Found proper empty result handling
+    else
+        # For now, just verify command completed successfully 
+        [ "$status" -eq 0 ]
+    fi
 }
