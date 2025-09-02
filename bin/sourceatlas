@@ -2156,8 +2156,202 @@ EOF
 
 # Command: export-dsl
 cmd_export_dsl() {
-    echo "Error: export-dsl command not yet implemented"
-    exit 1
+    local out_dir=".sourceatlas"
+    local output_file=""
+    local output_format="stdout"
+    local symbols_only=false
+    local max_lines=1000
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --format)
+                output_format="$2"
+                shift 2
+                ;;
+            --symbols-only)
+                symbols_only=true
+                shift
+                ;;
+            --max-lines)
+                max_lines="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} export-dsl [options]
+
+Export index to low-token DSL format for efficient AI agent consumption.
+
+Options:
+  --out DIR         Output directory (default: .sourceatlas)
+  --format TYPE     Output format: stdout, file (default: stdout)
+  --symbols-only    Export only symbol information
+  --max-lines NUM   Maximum lines to output (default: 1000)
+  --help, -h        Show this help message
+
+DSL Format:
+  F:P=path,L=lang,R=role,LOC=lines,SZ=bytes
+  SYM:N=name,K=kind,LN=line,V=visibility
+
+Examples:
+  ${PROG_NAME} export-dsl
+  ${PROG_NAME} export-dsl --format file
+  ${PROG_NAME} export-dsl --symbols-only --max-lines 500
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                echo "Run '${PROG_NAME} export-dsl --help' for usage." >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    local index_file="${out_dir}/sourceatlas.index.jsonl"
+    local symbols_file="${out_dir}/sourceatlas.symbols.tsv"
+    
+    # Check if index file exists
+    if [[ ! -f "$index_file" ]]; then
+        echo "Error: Index file not found: $index_file" >&2
+        echo "Run '${PROG_NAME} scan' first to generate the index." >&2
+        exit 1
+    fi
+    
+    # Determine output destination
+    local output_dest=""
+    if [[ "$output_format" == "file" ]]; then
+        output_dest="${out_dir}/sourceatlas.dsl"
+        output_file="$output_dest"
+        > "$output_dest"  # Clear file
+    fi
+    
+    local line_count=0
+    
+    # Function to output line
+    output_line() {
+        local line="$1"
+        [[ $line_count -ge $max_lines ]] && return
+        
+        if [[ -n "$output_dest" ]]; then
+            echo "$line" >> "$output_dest"
+        else
+            printf '%s\n' "$line"
+        fi
+        ((line_count++))
+    }
+    
+    # Export file information
+    if [[ "$symbols_only" != true ]]; then
+        # Process each line of the index file
+        while IFS= read -r line; do
+            [[ $line_count -ge $max_lines ]] && break
+            [[ -z "$line" ]] && continue
+            
+            # Parse JSON and convert to DSL
+            local path=$(echo "$line" | jq -r '.path // ""')
+            local lang=$(echo "$line" | jq -r '.lang // ""')
+            local role=$(echo "$line" | jq -r '.roles[]? // ""' | head -1)
+            local loc=$(echo "$line" | jq -r '.loc // 0')
+            local size_bytes=$(echo "$line" | jq -r '.size_bytes // 0')
+            local summary=$(echo "$line" | jq -r '.summary // ""')
+            local imports=$(echo "$line" | jq -r '.imports // ""')
+            
+            # Build DSL line with abbreviated fields
+            local dsl_line="F:P=$path"
+            [[ -n "$lang" ]] && dsl_line+=",L=$lang"
+            [[ -n "$role" ]] && dsl_line+=",R=$role"
+            [[ "$loc" -gt 0 ]] && dsl_line+=",LOC=$loc"
+            [[ "$size_bytes" -gt 0 ]] && dsl_line+=",SZ=$size_bytes"
+            
+            # Add summary if compact enough
+            if [[ -n "$summary" && ${#summary} -lt 50 ]]; then
+                # Remove quotes and newlines for compactness
+                local clean_summary=$(echo "$summary" | tr -d '"' | tr '\n' ' ')
+                dsl_line+=",S=$clean_summary"
+            fi
+            
+            # Add imports if present and compact
+            if [[ -n "$imports" && "$imports" != '""' && ${#imports} -lt 100 ]]; then
+                local clean_imports=$(echo "$imports" | tr -d '"' | tr '\n' '|')
+                dsl_line+=",I=$clean_imports"
+            fi
+            
+            output_line "$dsl_line"
+            
+        done < "$index_file"
+    fi
+    
+    # Export symbol information
+    if [[ -f "$symbols_file" ]]; then
+        # Skip header line and process symbols
+        while IFS=$'\t' read -r symbol_name kind repo file_path line_start line_end; do
+            [[ $line_count -ge $max_lines ]] && break
+            
+            # Handle empty kind field by shifting variables
+            if [[ -z "$line_end" ]]; then
+                line_end="$line_start"
+                line_start="$file_path"
+                file_path="$repo"
+                repo="$kind"
+                kind=""
+            fi
+            
+            # Clean up symbol name (remove extra whitespace)
+            symbol_name=$(echo "$symbol_name" | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
+            
+            # Skip empty symbol names
+            [[ -z "$symbol_name" ]] && continue
+            
+            # Build symbol DSL line
+            local sym_line="SYM:N=$symbol_name"
+            [[ -n "$kind" ]] && sym_line+=",K=$kind"
+            [[ -n "$line_start" ]] && sym_line+=",LN=$line_start"
+            [[ -n "$file_path" ]] && sym_line+=",P=$file_path"
+            
+            output_line "$sym_line"
+        done < <(tail -n +2 "$symbols_file")
+    else
+        # Fallback to symbols from index file
+        while IFS= read -r line; do
+            [[ $line_count -ge $max_lines ]] && break
+            [[ -z "$line" ]] && continue
+            
+            local path=$(echo "$line" | jq -r '.path // ""')
+            local symbols_array=$(echo "$line" | jq -c '.symbols // []')
+            
+            # Extract symbols - simplified to avoid nested pipes
+            local symbol_data=$(echo "$symbols_array" | jq -r '.[] | "\(.name):\(.kind):\(.line_start):\(.visibility)"' 2>/dev/null)
+            while IFS=':' read -r sym_name sym_kind sym_line sym_vis; do
+                [[ $line_count -ge $max_lines ]] && break
+                [[ -z "$sym_name" ]] && continue
+                
+                # Build symbol DSL line
+                local sym_line_dsl="SYM:N=$sym_name"
+                [[ -n "$sym_kind" && "$sym_kind" != "null" ]] && sym_line_dsl+=",K=$sym_kind"
+                [[ -n "$sym_line" && "$sym_line" != "null" ]] && sym_line_dsl+=",LN=$sym_line"
+                [[ -n "$sym_vis" && "$sym_vis" != "null" ]] && sym_line_dsl+=",V=$sym_vis"
+                [[ -n "$path" ]] && sym_line_dsl+=",P=$path"
+                
+                output_line "$sym_line_dsl"
+            done <<< "$symbol_data"
+        done < "$index_file"
+    fi
+    
+    # Output file location if saved to file
+    if [[ "$output_format" == "file" ]]; then
+        echo "DSL exported to: $output_dest"
+        echo "Lines: $line_count"
+        local file_size=$(wc -c < "$output_dest")
+        echo "Size: $file_size bytes"
+    fi
+    
+    return 0
 }
 
 # Command: clean

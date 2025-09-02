@@ -69,7 +69,7 @@ Deps：Phase 0 完成
   - 驗證標準：支援 symbol/role/path/lang 關鍵字或正則查詢；回傳文件清單
 - [x] Step 1.10 `satlas segment` 片段擷取測試（完成：2025-09-02 04:35 UTC+8）
   - 驗證標準：`get_segment(path,start,end,pad)` 行數限制（預設 ≤400）且自動 pad 上下文
-- [ ] Step 1.11 `satlas export-dsl` 低 token DSL 測試
+- [x] Step 1.11 `satlas export-dsl` 低 token DSL 測試（完成：2025-09-02 04:55 UTC+8）
   - 驗證標準：輸出符合 `F/SYM` 格式，欄位縮寫與範例一致
 - [ ] Step 1.12 `satlas clean` 清理測試
   - 驗證標準：清除輸出產物且不影響原始碼
