@@ -1,8 +1,41 @@
 #!/usr/bin/env bash
 # Test helpers for SourceAtlas E2E tests
 
+# Check for required tools and provide warnings
+check_required_tools() {
+    local missing_tools=()
+    local optional_tools=()
+    
+    # Required tools (tests will fail without these)
+    command -v jq >/dev/null 2>&1 || missing_tools+=("jq")
+    
+    # Optional but recommended tools (functionality degraded without these)
+    command -v awk >/dev/null 2>&1 || optional_tools+=("awk")
+    
+    # Report missing required tools
+    if [[ ${#missing_tools[@]} -gt 0 ]]; then
+        echo "ERROR: Required tools missing: ${missing_tools[*]}" >&2
+        echo "Please install missing tools before running tests" >&2
+        return 1
+    fi
+    
+    # Warn about missing optional tools
+    if [[ ${#optional_tools[@]} -gt 0 ]]; then
+        echo "WARNING: Optional tools missing: ${optional_tools[*]}" >&2
+        echo "Some functionality may use fallback implementations" >&2
+    fi
+    
+    return 0
+}
+
 # Setup test environment with comprehensive cleanup and unique namespacing
 setup_test_env() {
+    # Check for required tools on first run
+    if [[ -z "${TOOLS_CHECKED:-}" ]]; then
+        check_required_tools || true  # Warn but don't fail
+        export TOOLS_CHECKED=1
+    fi
+    
     # Create unique test namespace for parallel execution safety
     local test_id="${BATS_TEST_NUMBER:-$$}-$(date +%s%3N 2>/dev/null || date +%s)"
     export TEST_TEMP_DIR="$(mktemp -d -t sourceatlas-test-${test_id}-XXXXXX)"
@@ -1140,12 +1173,13 @@ EOF
 }
 
 # Execute UAT queries with proper variable handling (avoiding subshell issues)
+# Returns results as JSON in a temporary file for safer parsing
 execute_uat_queries() {
     local queries_file="$1"
-    local results_var="$2"  # Variable name to store results
+    local results_file="${2:-$(mktemp -t uat_results.XXXXXX.json)}"  # Output file for JSON results
     
-    if [[ -z "$queries_file" ]] || [[ -z "$results_var" ]]; then
-        echo "ERROR: Both queries_file and results_var parameters required" >&2
+    if [[ -z "$queries_file" ]]; then
+        echo "ERROR: queries_file parameter required" >&2
         return 1
     fi
     
@@ -1156,7 +1190,12 @@ execute_uat_queries() {
     
     local passed_queries=0
     local total_queries=0
-    local temp_results_file="$(mktemp)"
+    local temp_details_file="$(mktemp -t uat_details.XXXXXX.csv)"
+    
+    # Register temp files for cleanup if using global tracking
+    if [[ -n "${TEST_TEMP_FILES:-}" ]]; then
+        TEST_TEMP_FILES+=("$results_file" "$temp_details_file")
+    fi
     
     # Process queries without using subshell to avoid variable scope issues
     while IFS=$'\t' read -r query_id query_text query_type expected_files priority; do
@@ -1184,18 +1223,27 @@ execute_uat_queries() {
         esac
         
         # Log result to temp file for debugging
-        echo "$query_id,$query_text,$query_type,$query_success" >> "$temp_results_file"
+        echo "$query_id,$query_text,$query_type,$query_success" >> "$temp_details_file"
         
     done < "$queries_file"
     
-    # Store results in associative array format string
-    local results="total_queries=$total_queries;passed_queries=$passed_queries;temp_file=$temp_results_file"
-    printf -v "$results_var" "%s" "$results"
+    # Create JSON output for safer parsing (no eval needed)
+    cat > "$results_file" << EOF
+{
+    "total_queries": $total_queries,
+    "passed_queries": $passed_queries,
+    "success_rate": $(awk -v p="$passed_queries" -v t="$total_queries" 'BEGIN {if(t>0) printf "%.2f", p/t; else print "0.00"}'),
+    "details_file": "$temp_details_file"
+}
+EOF
+    
+    # Output the results file path
+    echo "$results_file"
     
     return 0
 }
 
-# Calculate floating point percentage with error handling
+# Calculate floating point percentage with error handling and fallback
 calculate_percentage() {
     local numerator="$1"
     local denominator="$2"
@@ -1211,9 +1259,26 @@ calculate_percentage() {
         return 1
     fi
     
-    # Use awk for reliable floating point arithmetic
-    awk -v num="$numerator" -v denom="$denominator" -v prec="$precision" \
-        'BEGIN { printf "%.*f", prec, (num * 100.0) / denom }'
+    # Check if awk is available
+    if command -v awk >/dev/null 2>&1; then
+        # Use awk for reliable floating point arithmetic
+        awk -v num="$numerator" -v denom="$denominator" -v prec="$precision" \
+            'BEGIN { printf "%.*f", prec, (num * 100.0) / denom }'
+    elif command -v bc >/dev/null 2>&1; then
+        # Fallback to bc if available
+        echo "scale=$precision; ($numerator * 100) / $denominator" | bc
+    elif command -v python3 >/dev/null 2>&1; then
+        # Fallback to python3 if available
+        python3 -c "print(f'{($numerator * 100.0 / $denominator):.${precision}f}')"
+    elif command -v perl >/dev/null 2>&1; then
+        # Fallback to perl if available
+        perl -e "printf '%.${precision}f', ($numerator * 100.0 / $denominator)"
+    else
+        # Last resort: bash integer arithmetic (less precise)
+        echo "WARNING: No floating point calculator available, using integer math" >&2
+        local result=$(( (numerator * 100) / denominator ))
+        echo "$result"
+    fi
 }
 
 # Validate JSON with jq and robust error handling

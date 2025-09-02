@@ -63,19 +63,30 @@ EOF
     # Create test queries using helper function
     create_uat_queries_file "$queries_file" 10  # Smaller set for test execution
     
-    # Execute queries using helper function (avoids subshell variable issues)
-    local query_results
-    execute_uat_queries "$queries_file" query_results
+    # Execute queries and get JSON results file path (no eval needed)
+    local results_file
+    results_file=$(execute_uat_queries "$queries_file")
     
-    # Parse results from helper function
-    local total_queries passed_queries
-    eval "$query_results"
-    
-    # At least some queries should execute successfully
-    [ "$total_queries" -gt 0 ]
-    
-    # Validate that some queries passed (realistic expectation)
-    [ "$passed_queries" -ge 0 ]  # At minimum, no failures in execution
+    # Parse results from JSON using jq for safety
+    if [[ -f "$results_file" ]]; then
+        local total_queries passed_queries
+        total_queries=$(jq -r '.total_queries' "$results_file")
+        passed_queries=$(jq -r '.passed_queries' "$results_file")
+        
+        # At least some queries should execute successfully
+        [ "$total_queries" -gt 0 ]
+        
+        # Validate that some queries passed (realistic expectation)
+        [ "$passed_queries" -ge 0 ]  # At minimum, no failures in execution
+        
+        # Clean up temporary files properly
+        local details_file=$(jq -r '.details_file' "$results_file" 2>/dev/null)
+        [[ -f "$details_file" ]] && rm -f "$details_file"
+        rm -f "$results_file"
+    else
+        echo "ERROR: Failed to get query execution results"
+        return 1
+    fi
 }
 
 @test "Hit@5 metric calculation and validation" {
