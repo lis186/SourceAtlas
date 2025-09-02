@@ -1504,8 +1504,425 @@ EOF
 
 # Command: query
 cmd_query() {
-    echo "Error: query command not yet implemented"
-    exit 1
+    local out_dir=".sourceatlas"
+    local query_pattern=""
+    local search_type="content"  # content, symbol, path, lang, role
+    local use_regex=false
+    local ignore_case=false
+    local limit=50
+    local output_format="text"  # text, json
+    local verbose=false
+    local show_scores=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --type)
+                search_type="$2"
+                shift 2
+                ;;
+            --regex|-r)
+                use_regex=true
+                shift
+                ;;
+            --ignore-case|-i)
+                ignore_case=true
+                shift
+                ;;
+            --limit|-l)
+                limit="$2"
+                shift 2
+                ;;
+            --format|-f)
+                output_format="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
+            --scores|-s)
+                show_scores=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} query [options] PATTERN
+
+Search for files, symbols, or content in the index.
+
+Arguments:
+  PATTERN         Search pattern (string or regex)
+
+Options:
+  --out DIR       Output directory (default: .sourceatlas)
+  --type TYPE     Search type: content, symbol, path, lang, role (default: content)
+  --regex, -r     Use regex pattern matching
+  --ignore-case, -i   Case insensitive search
+  --limit NUM     Limit results (default: 50)
+  --format FORMAT Output format: text, json (default: text)
+  --verbose, -v   Show detailed information
+  --scores, -s    Show relevance scores
+  --help, -h      Show this help message
+
+Examples:
+  ${PROG_NAME} query "AppDelegate"
+  ${PROG_NAME} query --type symbol "class.*View"
+  ${PROG_NAME} query --type path "ios/"
+  ${PROG_NAME} query --type lang "swift"
+  ${PROG_NAME} query --regex --ignore-case "app.*delegate"
+EOF
+                exit 0
+                ;;
+            -*)
+                echo "Error: Unknown option: $1" >&2
+                echo "Run '${PROG_NAME} query --help' for usage." >&2
+                exit 1
+                ;;
+            *)
+                query_pattern="$1"
+                shift
+                ;;
+        esac
+    done
+    
+    if [[ -z "$query_pattern" ]]; then
+        echo "Error: Search pattern is required" >&2
+        echo "Run '${PROG_NAME} query --help' for usage." >&2
+        exit 1
+    fi
+    
+    local index_file="${out_dir}/sourceatlas.index.jsonl"
+    local symbols_file="${out_dir}/sourceatlas.symbols.tsv"
+    
+    # Check if index file exists
+    if [[ ! -f "$index_file" ]]; then
+        echo "Error: Index file not found: $index_file" >&2
+        echo "Run '${PROG_NAME} scan' first to generate the index." >&2
+        exit 1
+    fi
+    
+    local results=()
+    local match_count=0
+    
+    # Prepare grep options
+    local grep_opts=""
+    [[ "$ignore_case" == true ]] && grep_opts+="-i "
+    [[ "$use_regex" != true ]] && grep_opts+="-F "
+    
+    # Search based on type
+    case "$search_type" in
+        symbol)
+            # Search in symbols file if available
+            if [[ -f "$symbols_file" ]]; then
+                # Skip header line and parse TSV format: symbol	kind	repo	path	line_start	line_end
+                # Note: kind field is often empty, so repo becomes kind, path becomes repo, etc.
+                while IFS=$'\t' read -r symbol_name kind repo file_path line_start line_end; do
+                    # Handle empty kind field by shifting variables
+                    if [[ -z "$line_end" ]]; then
+                        line_end="$line_start"
+                        line_start="$file_path"  
+                        file_path="$repo"
+                        repo="$kind"
+                        kind=""
+                    fi
+                    [[ "$match_count" -ge "$limit" ]] && break
+                    
+                    local match=false
+                    if [[ "$use_regex" == true ]]; then
+                        if [[ "$ignore_case" == true ]]; then
+                            echo "$symbol_name" | grep -qi "$query_pattern" && match=true
+                        else
+                            echo "$symbol_name" | grep -q "$query_pattern" && match=true
+                        fi
+                    else
+                        if [[ "$ignore_case" == true ]]; then
+                            echo "$symbol_name" | grep -Fqi "$query_pattern" && match=true
+                        else
+                            echo "$symbol_name" | grep -Fq "$query_pattern" && match=true
+                        fi
+                    fi
+                    
+                    if [[ "$match" == true ]]; then
+                        local score=100
+                        results+=("$file_path:$line_start:$symbol_name ($kind):$score")
+                        ((match_count++))
+                    fi
+                done < <(tail -n +2 "$symbols_file")
+            else
+                # Fallback to searching in index symbols
+                while IFS= read -r line; do
+                    [[ "$match_count" -ge "$limit" ]] && break
+                    [[ -z "$line" ]] && continue
+                    
+                    local path=$(echo "$line" | jq -r '.path // ""')
+                    local symbols_array=$(echo "$line" | jq -c '.symbols // []')
+                    
+                    echo "$symbols_array" | jq -r '.[] | "\(.name):\(.line):\(.kind)"' | while IFS=':' read -r symbol_name line_num kind; do
+                        [[ "$match_count" -ge "$limit" ]] && break
+                        
+                        local match=false
+                        if [[ "$use_regex" == true ]]; then
+                            if [[ "$ignore_case" == true ]]; then
+                                echo "$symbol_name" | grep -qi "$query_pattern" && match=true
+                            else
+                                echo "$symbol_name" | grep -q "$query_pattern" && match=true
+                            fi
+                        else
+                            if [[ "$ignore_case" == true ]]; then
+                                echo "$symbol_name" | grep -Fqi "$query_pattern" && match=true
+                            else
+                                echo "$symbol_name" | grep -Fq "$query_pattern" && match=true
+                            fi
+                        fi
+                        
+                        if [[ "$match" == true ]]; then
+                            local score=100
+                            results+=("$path:$line_num:$symbol_name ($kind):$score")
+                            ((match_count++))
+                        fi
+                    done
+                done < "$index_file"
+            fi
+            ;;
+        path)
+            # Search file paths
+            while IFS= read -r line; do
+                [[ "$match_count" -ge "$limit" ]] && break
+                [[ -z "$line" ]] && continue
+                
+                local path=$(echo "$line" | jq -r '.path // ""')
+                
+                local match=false
+                if [[ "$use_regex" == true ]]; then
+                    if [[ "$ignore_case" == true ]]; then
+                        echo "$path" | grep -qi "$query_pattern" && match=true
+                    else
+                        echo "$path" | grep -q "$query_pattern" && match=true
+                    fi
+                else
+                    if [[ "$ignore_case" == true ]]; then
+                        echo "$path" | grep -Fqi "$query_pattern" && match=true
+                    else
+                        echo "$path" | grep -Fq "$query_pattern" && match=true
+                    fi
+                fi
+                
+                if [[ "$match" == true ]]; then
+                    local score=100
+                    local lang=$(echo "$line" | jq -r '.lang // ""')
+                    local loc=$(echo "$line" | jq -r '.loc // 0')
+                    results+=("$path:0:Path match ($lang, $loc lines):$score")
+                    ((match_count++))
+                fi
+            done < "$index_file"
+            ;;
+        lang)
+            # Search by language
+            while IFS= read -r line; do
+                [[ "$match_count" -ge "$limit" ]] && break
+                [[ -z "$line" ]] && continue
+                
+                local path=$(echo "$line" | jq -r '.path // ""')
+                local lang=$(echo "$line" | jq -r '.lang // ""')
+                
+                local match=false
+                if [[ "$use_regex" == true ]]; then
+                    if [[ "$ignore_case" == true ]]; then
+                        echo "$lang" | grep -qi "$query_pattern" && match=true
+                    else
+                        echo "$lang" | grep -q "$query_pattern" && match=true
+                    fi
+                else
+                    if [[ "$ignore_case" == true ]]; then
+                        echo "$lang" | grep -Fqi "$query_pattern" && match=true
+                    else
+                        echo "$lang" | grep -Fq "$query_pattern" && match=true
+                    fi
+                fi
+                
+                if [[ "$match" == true ]]; then
+                    local score=100
+                    local loc=$(echo "$line" | jq -r '.loc // 0')
+                    results+=("$path:0:Language: $lang ($loc lines):$score")
+                    ((match_count++))
+                fi
+            done < "$index_file"
+            ;;
+        role)
+            # Search by role
+            while IFS= read -r line; do
+                [[ "$match_count" -ge "$limit" ]] && break
+                [[ -z "$line" ]] && continue
+                
+                local path=$(echo "$line" | jq -r '.path // ""')
+                local roles_array=$(echo "$line" | jq -r '.roles[]? // ""')
+                
+                local match=false
+                for role in $roles_array; do
+                    if [[ "$use_regex" == true ]]; then
+                        if [[ "$ignore_case" == true ]]; then
+                            echo "$role" | grep -qi "$query_pattern" && match=true && break
+                        else
+                            echo "$role" | grep -q "$query_pattern" && match=true && break
+                        fi
+                    else
+                        if [[ "$ignore_case" == true ]]; then
+                            echo "$role" | grep -Fqi "$query_pattern" && match=true && break
+                        else
+                            echo "$role" | grep -Fq "$query_pattern" && match=true && break
+                        fi
+                    fi
+                done
+                
+                if [[ "$match" == true ]]; then
+                    local score=100
+                    local lang=$(echo "$line" | jq -r '.lang // ""')
+                    results+=("$path:0:Role match ($lang):$score")
+                    ((match_count++))
+                fi
+            done < "$index_file"
+            ;;
+        content|*)
+            # Search content (summary, imports, or full content)
+            while IFS= read -r line; do
+                [[ "$match_count" -ge "$limit" ]] && break
+                [[ -z "$line" ]] && continue
+                
+                local path=$(echo "$line" | jq -r '.path // ""')
+                local summary=$(echo "$line" | jq -r '.summary // ""')
+                local imports=$(echo "$line" | jq -r '.imports // ""')
+                
+                local match=false
+                local match_context=""
+                
+                # Check summary
+                if [[ "$use_regex" == true ]]; then
+                    if [[ "$ignore_case" == true ]]; then
+                        echo "$summary" | grep -qi "$query_pattern" && match=true && match_context="Summary"
+                    else
+                        echo "$summary" | grep -q "$query_pattern" && match=true && match_context="Summary"
+                    fi
+                else
+                    if [[ "$ignore_case" == true ]]; then
+                        echo "$summary" | grep -Fqi "$query_pattern" && match=true && match_context="Summary"
+                    else
+                        echo "$summary" | grep -Fq "$query_pattern" && match=true && match_context="Summary"
+                    fi
+                fi
+                
+                # Check imports if no match yet
+                if [[ "$match" != true ]]; then
+                    if [[ "$use_regex" == true ]]; then
+                        if [[ "$ignore_case" == true ]]; then
+                            echo "$imports" | grep -qi "$query_pattern" && match=true && match_context="Imports"
+                        else
+                            echo "$imports" | grep -q "$query_pattern" && match=true && match_context="Imports"
+                        fi
+                    else
+                        if [[ "$ignore_case" == true ]]; then
+                            echo "$imports" | grep -Fqi "$query_pattern" && match=true && match_context="Imports"
+                        else
+                            echo "$imports" | grep -Fq "$query_pattern" && match=true && match_context="Imports"
+                        fi
+                    fi
+                fi
+                
+                # Check path as fallback
+                if [[ "$match" != true ]]; then
+                    if [[ "$use_regex" == true ]]; then
+                        if [[ "$ignore_case" == true ]]; then
+                            echo "$path" | grep -qi "$query_pattern" && match=true && match_context="Path"
+                        else
+                            echo "$path" | grep -q "$query_pattern" && match=true && match_context="Path"
+                        fi
+                    else
+                        if [[ "$ignore_case" == true ]]; then
+                            echo "$path" | grep -Fqi "$query_pattern" && match=true && match_context="Path"
+                        else
+                            echo "$path" | grep -Fq "$query_pattern" && match=true && match_context="Path"
+                        fi
+                    fi
+                fi
+                
+                if [[ "$match" == true ]]; then
+                    local score=80
+                    [[ "$match_context" == "Summary" ]] && score=100
+                    [[ "$match_context" == "Path" ]] && score=60
+                    local lang=$(echo "$line" | jq -r '.lang // ""')
+                    results+=("$path:0:Content match in $match_context ($lang):$score")
+                    ((match_count++))
+                fi
+            done < "$index_file"
+            ;;
+    esac
+    
+    # Output results
+    if [[ ${#results[@]} -eq 0 ]]; then
+        echo "No matches found for pattern: $query_pattern"
+        return 0
+    fi
+    
+    if [[ "$output_format" == "json" ]]; then
+        echo "{"
+        echo "  \"query\": \"$query_pattern\","
+        echo "  \"type\": \"$search_type\","
+        echo "  \"total_matches\": ${#results[@]},"
+        echo "  \"results\": ["
+        
+        for i in "${!results[@]}"; do
+            local result="${results[$i]}"
+            local path=$(echo "$result" | cut -d':' -f1)
+            local line_num=$(echo "$result" | cut -d':' -f2)
+            local description=$(echo "$result" | cut -d':' -f3)
+            local score=$(echo "$result" | cut -d':' -f4)
+            
+            echo -n "    {"
+            echo -n "\"path\": \"$path\", \"line\": $line_num, \"description\": \"$description\", \"score\": $score"
+            if [[ $i -lt $((${#results[@]} - 1)) ]]; then
+                echo "},"
+            else
+                echo "}"
+            fi
+        done
+        
+        echo "  ]"
+        echo "}"
+    else
+        # Text format
+        echo "Found ${#results[@]} matches for pattern: $query_pattern"
+        echo ""
+        
+        for result in "${results[@]}"; do
+            local path=$(echo "$result" | cut -d':' -f1)
+            local line_num=$(echo "$result" | cut -d':' -f2)
+            local description=$(echo "$result" | cut -d':' -f3)
+            local score=$(echo "$result" | cut -d':' -f4)
+            
+            if [[ "$verbose" == true ]]; then
+                if [[ "$show_scores" == true ]]; then
+                    echo "$path:$line_num - $description (Score: $score)"
+                else
+                    echo "$path:$line_num - $description"
+                fi
+                
+                # Show additional file details
+                local file_info=$(jq -r "select(.path == \"$path\") | \"  Language: \" + (.lang // \"unknown\") + \", Lines: \" + (.loc // 0 | tostring) + \", Role: \" + (.roles[]? // \"unknown\" | tostring)" "$index_file" | head -1)
+                [[ -n "$file_info" ]] && echo "$file_info"
+                echo ""
+            else
+                if [[ "$show_scores" == true ]]; then
+                    echo "$path:$line_num - $description (Score: $score)"
+                else
+                    echo "$path:$line_num"
+                fi
+            fi
+        done
+    fi
 }
 
 # Command: segment

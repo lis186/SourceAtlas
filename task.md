@@ -65,7 +65,7 @@ Deps：Phase 0 完成
   - 驗證標準：依目錄/語言切分多個 `sourceatlas.index.[shard].jsonl[.gz]`；大小/筆數不超過預設上限
 - [x] Step 1.8 `satlas delta` 增量更新測試（完成：2025-09-02 03:45 UTC+8）
   - 驗證標準：修改 fixtures 後僅重建受影響分片；產生 `delta.report.json`
-- [ ] Step 1.9 `satlas query` 查詢測試
+- [x] Step 1.9 `satlas query` 查詢測試（完成：2025-09-02 04:10 UTC+8）
   - 驗證標準：支援 symbol/role/path/lang 關鍵字或正則查詢；回傳文件清單
 - [ ] Step 1.10 `satlas segment` 片段擷取測試
   - 驗證標準：`get_segment(path,start,end,pad)` 行數限制（預設 ≤400）且自動 pad 上下文
