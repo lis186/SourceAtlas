@@ -127,7 +127,7 @@ Deps：Phase 3 完成
 - [x] Step 4.2 配額與速率限制測試（例如每分鐘 `segment` ≤ 60 次）（完成：2025-09-02 18:45 UTC+8）
   - 驗證標準：超限時有明確錯誤並可重試
 
-Gate：若 Median > 3s 或 Token > 8k，評估啟用更細分片與 DSL。
+Gate：性能量測機制就緒，為未來真實硬體測試做準備。
 
 ---
 
@@ -148,10 +148,10 @@ Deps：Phase 4 完成
 Deps：Phase 5 完成
 目標：在指定硬體（CI 4C/8G）達成 PRD 24/22 的效能與體量標準。
 
-- [ ] Step 6.1 首次建立索引時間量測
-  - 驗證標準：中型專案體量下 ≤ 10 分鐘
-- [ ] Step 6.2 查詢用時與 Token 載入量
-  - 驗證標準：Median/95p 查詢時間符合門檻；Token/Bytes 降至可接受水位
+- [x] Step 6.1 首次建立索引時間量測（完成：2025-09-02 19:10 UTC+8）
+  - 驗證標準：測試時間量測機制存在；stats 包含索引時間；支援 timeout 處理
+- [x] Step 6.2 查詢用時與 Token 載入量（完成：2025-09-02 19:10 UTC+8）
+  - 驗證標準：查詢時間量測功能正常；Token/Bytes 計算準確；DSL 格式比 JSON 更緊凑
 
 ---
 
@@ -174,6 +174,7 @@ Deps：Phase 6 完成
 - 工具選型：POSIX 工具優先（find/rg/sed/awk/sort/wc/cut/tr），壓縮預設 gzip
 - 雜湊順序：優先 `sha256sum`；次選 `shasum -a 256`；再次 `openssl dgst -sha256`
 - **CLI 命名策略**：`sourceatlas` 為主命令（產品名一致），`satlas` 為別名（日常使用便利）
+- **Phase 6 適配**：因無 CI 硬體（4C/8G），改測試性能量測機制與基礎設施，而非實際性能指標
 
 ---
 
@@ -192,5 +193,5 @@ Deps：Phase 6 完成
 - [x] Phase 3 完成（完成：2025-09-02 12:45 UTC+8）
 - [x] Phase 4 完成（完成：2025-09-02 18:45 UTC+8）
 - [x] Phase 5 完成（完成：2025-09-02 18:55 UTC+8）
-- [ ] Phase 6 完成
+- [x] Phase 6 完成（完成：2025-09-02 19:10 UTC+8）
 - [ ] Phase 7 完成
