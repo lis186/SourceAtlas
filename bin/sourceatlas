@@ -767,8 +767,169 @@ EOF
 
 # Command: manifest
 cmd_manifest() {
-    echo "Error: manifest command not yet implemented"
-    exit 1
+    local out_dir=".sourceatlas"
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} manifest [options]
+
+Create or update manifest file.
+
+Options:
+  --out DIR       Output directory (default: .sourceatlas)
+  --help, -h      Show this help message
+
+Examples:
+  ${PROG_NAME} manifest
+  ${PROG_NAME} manifest --out .sourceatlas
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                echo "Run '${PROG_NAME} manifest --help' for usage." >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    local index_file="${out_dir}/sourceatlas.index.jsonl"
+    local manifest_file="${out_dir}/sourceatlas.manifest.json"
+    
+    # Check if index file exists
+    if [[ ! -f "$index_file" ]]; then
+        echo "Error: Index file not found: $index_file" >&2
+        echo "Run '${PROG_NAME} scan' first to generate the index." >&2
+        exit 1
+    fi
+    
+    # Create output directory
+    mkdir -p "$out_dir"
+    
+    echo "Generating manifest from: $index_file"
+    echo "Output: $manifest_file"
+    
+    # Get repository info
+    local repo_name="$(basename "$(pwd)")"
+    local root_path="$(pwd)"
+    
+    # Calculate index file stats
+    local index_size=$(get_file_size "$index_file")
+    local index_hash=$(calculate_hash "$index_file")
+    local index_lines=$(count_lines "$index_file")
+    
+    # Analyze index content
+    local total_files=0
+    local total_size_bytes=0
+    local language_list=""
+    
+    while IFS= read -r line; do
+        [[ -z "$line" ]] && continue
+        
+        local size_bytes=$(echo "$line" | jq -r '.size_bytes // 0')
+        local lang=$(echo "$line" | jq -r '.lang // ""')
+        
+        ((total_files++))
+        total_size_bytes=$((total_size_bytes + size_bytes))
+        
+        if [[ -n "$lang" ]] && [[ "$language_list" != *"$lang"* ]]; then
+            language_list="${language_list} $lang"
+        fi
+    done < "$index_file"
+    
+    # Generate language counts
+    local lang_json=""
+    local first_lang=true
+    for lang in $language_list; do
+        if [[ -n "$lang" ]]; then
+            local count=$(cat "$index_file" | jq -r --arg lang "$lang" 'select(.lang == $lang)' | wc -l | tr -d ' ')
+            if [[ "$first_lang" == true ]]; then
+                first_lang=false
+            else
+                lang_json="${lang_json}, "
+            fi
+            lang_json="${lang_json}\"$lang\": $count"
+        fi
+    done
+    
+    # Check for additional output files
+    local symbols_file="${out_dir}/sourceatlas.symbols.tsv"
+    local stats_file="${out_dir}/sourceatlas.stats.json"
+    
+    local symbols_json=""
+    if [[ -f "$symbols_file" ]]; then
+        local symbols_size=$(get_file_size "$symbols_file")
+        local symbols_hash=$(calculate_hash "$symbols_file")
+        symbols_json=",
+    \"symbols\": {
+      \"path\": \"$(basename "$symbols_file")\",
+      \"size_bytes\": $symbols_size,
+      \"hash\": \"$symbols_hash\",
+      \"format\": \"tsv\"
+    }"
+    fi
+    
+    local stats_json=""
+    if [[ -f "$stats_file" ]]; then
+        local stats_size=$(get_file_size "$stats_file")
+        local stats_hash=$(calculate_hash "$stats_file")
+        stats_json=",
+    \"stats\": {
+      \"path\": \"$(basename "$stats_file")\",
+      \"size_bytes\": $stats_size,
+      \"hash\": \"$stats_hash\",
+      \"format\": \"json\"
+    }"
+    fi
+    
+    # Generate timestamp
+    local timestamp
+    if command -v date >/dev/null 2>&1; then
+        timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    else
+        timestamp="unknown"
+    fi
+    
+    # Create manifest JSON
+    cat > "$manifest_file" <<EOF
+{
+  "version": "1.0.0",
+  "schema_version": $SCHEMA_VERSION,
+  "generated_at": "$timestamp",
+  "repository": {
+    "name": "$repo_name",
+    "root_path": "$root_path"
+  },
+  "files": {
+    "total_count": $total_files,
+    "total_size_bytes": $total_size_bytes,
+    "languages": {
+      ${lang_json:-}
+    }
+  },
+  "outputs": {
+    "index": {
+      "path": "$(basename "$index_file")",
+      "size_bytes": $index_size,
+      "records": $index_lines,
+      "hash": "$index_hash",
+      "format": "jsonl"
+    }${symbols_json:-}${stats_json:-}
+  }
+}
+EOF
+    
+    echo "Generated manifest for $total_files files"
+    echo "Total size: $total_size_bytes bytes"
+    echo "Languages: $(echo $language_list | wc -w | tr -d ' ')"
+    echo "Manifest created: $manifest_file"
 }
 
 # Command: shard
