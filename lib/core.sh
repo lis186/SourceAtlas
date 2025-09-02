@@ -163,19 +163,24 @@ extract_symbols() {
     
     case "$lang" in
         swift)
-            # Extract class, struct, enum, protocol, func definitions with line numbers
-            grep -n -E '^\s*(class|struct|enum|protocol|extension|actor|func)\s+' "$file" | \
-            head -5 | \
+            # Extract class, struct, enum, protocol, extension, actor, func definitions with line numbers
+            # Include visibility modifiers (public, private, internal, fileprivate, open)
+            grep -n -E '^\s*((public|private|internal|fileprivate|open)\s+)?(class|struct|enum|protocol|extension|actor|func)\s+' "$file" | \
+            head -10 | \
             while IFS=':' read -r line_num content; do
-                local kind=$(echo "$content" | sed 's/^\s*\([a-z]*\).*/\1/')
-                local name=$(echo "$content" | sed 's/^\s*[a-z]*\s*\([^({[:space:]]*\).*/\1/')
+                # Extract visibility, kind and name
                 local visibility="internal"  # Default for Swift
+                local kind=""
+                local name=""
                 
-                # Try to detect visibility
-                if echo "$content" | grep -q "public"; then
-                    visibility="public"
-                elif echo "$content" | grep -q "private"; then
-                    visibility="private"
+                # Check if line starts with visibility modifier
+                if echo "$content" | grep -qE '^\s*(public|private|internal|fileprivate|open)\s+'; then
+                    visibility=$(echo "$content" | awk '{print $1}')
+                    kind=$(echo "$content" | awk '{print $2}')
+                    name=$(echo "$content" | awk '{print $3}' | sed 's/[:{(].*//')
+                else
+                    kind=$(echo "$content" | awk '{print $1}')
+                    name=$(echo "$content" | awk '{print $2}' | sed 's/[:{(].*//')
                 fi
                 
                 echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
