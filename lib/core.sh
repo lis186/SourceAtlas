@@ -148,6 +148,10 @@ extract_imports() {
         javascript|typescript)
             imports=$(grep -E '^(import|require)\s*\(' "$file" | sed 's/.*[("'\'']\([^"'\'']*\)[)"'\''].*/\1/' | tr '\n' ',' | sed 's/,$//')
             ;;
+        objc)
+            # Extract #import and @import statements
+            imports=$(grep -E '^#import\s*[<"]|^@import\s+' "$file" | sed 's/.*[<"]\([^>"]*\)[>"].*/\1/' | sed 's/^@import\s\+\([^;]*\);.*/\1/' | tr '\n' ',' | sed 's/,$//')
+            ;;
         *)
             imports=""
             ;;
@@ -216,6 +220,43 @@ extract_symbols() {
                 local kind=$(echo "$content" | sed 's/^\([a-z]*\).*/\1/')
                 local name=$(echo "$content" | sed 's/^[a-z]*\s*\([^([:space:]]*\).*/\1/')
                 local visibility="public"  # Python default
+                
+                echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
+            done | jq -s .
+            ;;
+        objc)
+            # Extract @interface, @implementation, @property, and method definitions with line numbers
+            # Include both instance methods (-) and class methods (+)
+            grep -n -E '^\s*(@interface|@implementation|@property|[-+]\s*\(|@protocol)\s*' "$file" | \
+            head -10 | \
+            while IFS=':' read -r line_num content; do
+                local kind=""
+                local name=""
+                local visibility="public"  # Default for Objective-C
+                
+                # Extract different types of Objective-C symbols
+                if echo "$content" | grep -q "@interface"; then
+                    kind="interface"
+                    name=$(echo "$content" | awk '{print $2}')
+                elif echo "$content" | grep -q "@implementation"; then
+                    kind="implementation" 
+                    name=$(echo "$content" | awk '{print $2}')
+                elif echo "$content" | grep -q "@property"; then
+                    kind="property"
+                    name=$(echo "$content" | awk '{print $NF}' | sed 's/[;*]//g')
+                elif echo "$content" | grep -q "@protocol"; then
+                    kind="protocol"
+                    name=$(echo "$content" | awk '{print $2}' | sed 's/[;<].*$//')
+                elif echo "$content" | grep -qE '^\s*[-+]\s*\('; then
+                    # Method definition
+                    if echo "$content" | grep -q "\-"; then
+                        kind="instance_method"
+                    else
+                        kind="class_method"
+                    fi
+                    # Extract method name (first part before colon or semicolon)
+                    name=$(echo "$content" | awk -F'[)(]' '{print $3}' | awk '{print $1}' | sed 's/[:;].*//')
+                fi
                 
                 echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
             done | jq -s .

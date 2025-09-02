@@ -90,7 +90,7 @@ Gate：完成後依測試結果調整 Phase 2 的語言覆蓋與抽取規則優�
 Deps：Phase 1 基本 CLI 契約已就緒
 目標：以正則/ctags 驗證頂層符號抽取、匯入/依賴、可見性與行號範圍。
 
-- [ ] Step 2.1 Swift 符號抽取測試（class/struct/enum/protocol/extension/actor/func）
+- [x] Step 2.1 Swift 符號抽取測試（class/struct/enum/protocol/extension/actor/func）（完成：2025-09-02 11:45 UTC+8）
   - 驗證標準：symbols 行號範圍與可見性（public/internal/private）正確；imports 正確
 - [ ] Step 2.2 Objective‑C 抽取測試（@interface/@implementation/@property/方法 -/+）
   - 驗證標準：interface/implementation 區段與方法行號對位正確；imports 正確
