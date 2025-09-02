@@ -92,7 +92,7 @@ Deps：Phase 1 基本 CLI 契約已就緒
 
 - [x] Step 2.1 Swift 符號抽取測試（class/struct/enum/protocol/extension/actor/func）（完成：2025-09-02 11:45 UTC+8）
   - 驗證標準：symbols 行號範圍與可見性（public/internal/private）正確；imports 正確
-- [ ] Step 2.2 Objective‑C 抽取測試（@interface/@implementation/@property/方法 -/+）
+- [x] Step 2.2 Objective‑C 抽取測試（@interface/@implementation/@property/方法 -/+）（完成：2025-09-02 12:00 UTC+8）
   - 驗證標準：interface/implementation 區段與方法行號對位正確；imports 正確
 - [ ] Step 2.3 Kotlin 抽取測試（class/object/interface/fun/annotations）
   - 驗證標準：頂層宣告與註解標記（如 @AndroidEntryPoint）正確
