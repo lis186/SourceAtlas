@@ -36,16 +36,15 @@ get_cached_fixtures() {
     local cache_key="${2:-default}"
     local cached_dir="$SATLAS_TEST_CACHE_DIR/fixtures/$cache_key"
     
-    if [[ ! -d "$cached_dir" ]]; then
-        (
-            flock -x 200
-            if [[ ! -d "$cached_dir" ]]; then
-                mkdir -p "$cached_dir"
-                cp -r "${BATS_TEST_DIRNAME}/../fixtures/${fixture_name}"/* "$cached_dir/"
-                echo "cached:$(date +%s)" > "$cached_dir/.cache_metadata"
-            fi
-        ) 200>"$SATLAS_TEST_CACHE_LOCK"
-    fi
+    # Always acquire lock to avoid TOCTOU race condition
+    (
+        flock -x 200
+        if [[ ! -d "$cached_dir" ]]; then
+            mkdir -p "$cached_dir"
+            cp -r "${BATS_TEST_DIRNAME}/../fixtures/${fixture_name}"/* "$cached_dir/"
+            echo "cached:$(date +%s)" > "$cached_dir/.cache_metadata"
+        fi
+    ) 200>"$SATLAS_TEST_CACHE_LOCK"
     
     echo "$cached_dir"
 }

@@ -87,9 +87,10 @@ jobs:
         run: |
           echo "🚀 Running performance test group with timing validation"
           
-          # Test framework functionality only for now
+          # Run actual Phase 6 performance tests
           bats --jobs 2 --tap \
-            tests/e2e/00_framework.bats
+            tests/e2e/60_phase6_index_performance.bats \
+            tests/e2e/61_phase6_query_performance.bats
 
       - name: Collect test results
         if: always()

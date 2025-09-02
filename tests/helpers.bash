@@ -970,24 +970,6 @@ validate_helper_function() {
     return 0
 }
 
-# Validate timing fields exist in stats content
-has_timing_fields() {
-    local stats_content="$1"
-    
-    # Validate helper function is being called correctly
-    validate_helper_function "has_timing_fields" || return 1
-    
-    local timing_fields=("index_time" "processing_time" "elapsed" "duration_ms" "timing")
-    
-    for field in "${timing_fields[@]}"; do
-        if [[ "$stats_content" == *"$field"* ]]; then
-            return 0
-        fi
-    done
-    
-    return 1
-}
-
 # Validate phase timing information exists
 has_phase_timing() {
     local stats_content="$1"
