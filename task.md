@@ -136,9 +136,9 @@ Gate：若 Median > 3s 或 Token > 8k，評估啟用更細分片與 DSL。
 Deps：Phase 4 完成
 目標：敏感檔案與目錄排除，產出僅含必要摘要與片段。
 
-- [ ] Step 5.1 排除清單測試（Pods/.git/build/vendor/.gradle/PrebuiltFrameworks 等）
+- [x] Step 5.1 排除清單測試（Pods/.git/build/vendor/.gradle/PrebuiltFrameworks 等）（完成：2025-09-02 18:55 UTC+8）
   - 驗證標準：被排除目錄不會出現在任何輸出中
-- [ ] Step 5.2 憑證/簽章檔過濾（\*.mobileprovision, \*.cer, \*.p12）
+- [x] Step 5.2 憑證/簽章檔過濾（\*.mobileprovision, \*.cer, \*.p12）（完成：2025-09-02 18:55 UTC+8）
   - 驗證標準：敏感檔不索引；報告中有統計被排除數量（可選）
 
 ---
@@ -191,6 +191,6 @@ Deps：Phase 6 完成
 - [x] Phase 2 完成（完成：2025-09-02 12:15 UTC+8）
 - [x] Phase 3 完成（完成：2025-09-02 12:45 UTC+8）
 - [x] Phase 4 完成（完成：2025-09-02 18:45 UTC+8）
-- [ ] Phase 5 完成
+- [x] Phase 5 完成（完成：2025-09-02 18:55 UTC+8）
 - [ ] Phase 6 完成
 - [ ] Phase 7 完成
