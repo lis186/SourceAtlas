@@ -995,3 +995,246 @@ has_phase_timing() {
     
     return 1
 }
+
+# Phase 7 UAT Quality Metrics - Configuration Constants
+readonly UAT_HIT_AT_5_THRESHOLD=80    # Hit@5 threshold percentage (≥80%)
+readonly UAT_COVERAGE_THRESHOLD=95    # Coverage threshold percentage (≥95%)
+readonly UAT_FPR_THRESHOLD=20         # False Positive Rate threshold percentage (<20%)
+readonly UAT_MIN_QUERIES=30           # Minimum test queries required
+readonly UAT_MAX_QUERIES=50           # Maximum test queries allowed
+
+# Create UAT test queries file with fixture-based approach
+create_uat_queries_file() {
+    local queries_file="$1"
+    local query_count="${2:-35}"  # Default to 35 queries
+    
+    if [[ -z "$queries_file" ]]; then
+        echo "ERROR: queries_file parameter required" >&2
+        return 1
+    fi
+    
+    # Validate query count is within acceptable range
+    if [[ "$query_count" -lt "$UAT_MIN_QUERIES" ]] || [[ "$query_count" -gt "$UAT_MAX_QUERIES" ]]; then
+        echo "ERROR: query_count must be between $UAT_MIN_QUERIES and $UAT_MAX_QUERIES" >&2
+        return 1
+    fi
+    
+    # Create queries TSV with header
+    cat > "$queries_file" << 'EOF'
+query_id	query_text	query_type	expected_files	priority
+1	AppDelegate	symbol	AppDelegate.swift	high
+2	MainActivity	symbol	MainActivity.kt	high
+3	ConfigLoader	symbol	utils.py	high
+4	TestHelper	symbol	test_helper.rb	high
+5	build_ios	symbol	build.sh	medium
+6	class.*Delegate	regex	AppDelegate.swift	high
+7	func.*init	regex	AppDelegate.swift,MainActivity.kt	medium
+8	def.*process	regex	utils.py	medium
+9	module.*Helper	regex	test_helper.rb	low
+10	function.*main	regex	build.sh	low
+11	import.*UIKit	import	AppDelegate.swift	high
+12	import.*androidx	import	MainActivity.kt	high
+13	import.*json	import	utils.py	medium
+14	require.*spec	import	test_helper.rb	low
+15	source.*common	import	build.sh	low
+16	@AndroidEntryPoint	annotation	MainActivity.kt	high
+17	@UIApplicationMain	annotation	AppDelegate.swift	high
+18	@dataclass	annotation	utils.py	medium
+19	*.swift	file_extension	AppDelegate.swift	medium
+20	*.kt	file_extension	MainActivity.kt	medium
+21	*.py	file_extension	utils.py	medium
+22	*.rb	file_extension	test_helper.rb	low
+23	*.sh	file_extension	build.sh	low
+24	ios/AppDelegate	path	AppDelegate.swift	high
+25	android/MainActivity	path	MainActivity.kt	high
+26	scripts/utils	path	utils.py	medium
+27	scripts/test_helper	path	test_helper.rb	low
+28	scripts/build	path	build.sh	low
+29	networking.*error	semantic	AppDelegate.swift	low
+30	database.*query	semantic	utils.py	low
+31	test.*assertion	semantic	test_helper.rb	low
+32	build.*configuration	semantic	build.sh	low
+33	user.*interface	semantic	AppDelegate.swift	medium
+34	data.*processing	semantic	utils.py	medium
+35	configuration.*management	semantic	build.sh	low
+EOF
+
+    # Validate file was created successfully
+    if [[ ! -f "$queries_file" ]]; then
+        echo "ERROR: Failed to create queries file: $queries_file" >&2
+        return 1
+    fi
+    
+    # Verify correct number of queries (excluding header)
+    local actual_count=$(($(wc -l < "$queries_file") - 1))
+    if [[ "$actual_count" -ne "$query_count" ]]; then
+        echo "WARNING: Expected $query_count queries, but created $actual_count" >&2
+    fi
+    
+    return 0
+}
+
+# Create UAT ground truth file with fixture-based approach  
+create_uat_truth_file() {
+    local truth_file="$1"
+    
+    if [[ -z "$truth_file" ]]; then
+        echo "ERROR: truth_file parameter required" >&2
+        return 1
+    fi
+    
+    cat > "$truth_file" << 'EOF'
+query_id	relevant_file	rank	relevance_score	file_path	line_numbers	context
+1	AppDelegate.swift	1	1.0	ios/AppDelegate.swift	1-50	Main application delegate
+2	MainActivity.kt	1	1.0	android/MainActivity.kt	1-45	Main Android activity
+3	utils.py	1	1.0	scripts/utils.py	15-20	ConfigLoader class definition
+4	test_helper.rb	1	1.0	scripts/test_helper.rb	10-15	TestHelper module
+5	build.sh	1	1.0	scripts/build.sh	25-30	build_ios function
+6	AppDelegate.swift	1	0.9	ios/AppDelegate.swift	12-15	class AppDelegate definition
+7	AppDelegate.swift	1	0.8	ios/AppDelegate.swift	20-25	init function
+8	AppDelegate.swift	1	1.0	ios/AppDelegate.swift	1-3	UIKit import statement
+9	MainActivity.kt	1	1.0	android/MainActivity.kt	3-4	AndroidEntryPoint annotation
+10	AppDelegate.swift	1	1.0	ios/AppDelegate.swift	1-50	Swift file extension match
+EOF
+
+    # Validate file was created successfully
+    if [[ ! -f "$truth_file" ]]; then
+        echo "ERROR: Failed to create truth file: $truth_file" >&2
+        return 1
+    fi
+    
+    return 0
+}
+
+# Execute UAT queries with proper variable handling (avoiding subshell issues)
+execute_uat_queries() {
+    local queries_file="$1"
+    local results_var="$2"  # Variable name to store results
+    
+    if [[ -z "$queries_file" ]] || [[ -z "$results_var" ]]; then
+        echo "ERROR: Both queries_file and results_var parameters required" >&2
+        return 1
+    fi
+    
+    if [[ ! -f "$queries_file" ]]; then
+        echo "ERROR: Queries file not found: $queries_file" >&2
+        return 1
+    fi
+    
+    local passed_queries=0
+    local total_queries=0
+    local temp_results_file="$(mktemp)"
+    
+    # Process queries without using subshell to avoid variable scope issues
+    while IFS=$'\t' read -r query_id query_text query_type expected_files priority; do
+        # Skip header row
+        if [[ "$query_id" == "query_id" ]]; then
+            continue
+        fi
+        
+        total_queries=$((total_queries + 1))
+        
+        # Execute query based on type with proper error handling
+        local query_success=false
+        case "$query_type" in
+            "symbol"|"import"|"regex"|"annotation"|"file_extension"|"path"|"semantic")
+                if run satlas query "$query_text" 2>/dev/null; then
+                    if [[ "$status" -eq 0 ]]; then
+                        query_success=true
+                        passed_queries=$((passed_queries + 1))
+                    fi
+                fi
+                ;;
+            *)
+                echo "WARNING: Unknown query type: $query_type for query $query_id" >&2
+                ;;
+        esac
+        
+        # Log result to temp file for debugging
+        echo "$query_id,$query_text,$query_type,$query_success" >> "$temp_results_file"
+        
+    done < "$queries_file"
+    
+    # Store results in associative array format string
+    local results="total_queries=$total_queries;passed_queries=$passed_queries;temp_file=$temp_results_file"
+    printf -v "$results_var" "%s" "$results"
+    
+    return 0
+}
+
+# Calculate floating point percentage with error handling
+calculate_percentage() {
+    local numerator="$1"
+    local denominator="$2"
+    local precision="${3:-2}"  # Default to 2 decimal places
+    
+    if [[ -z "$numerator" ]] || [[ -z "$denominator" ]]; then
+        echo "ERROR: Both numerator and denominator required" >&2
+        return 1
+    fi
+    
+    if [[ "$denominator" -eq 0 ]]; then
+        echo "ERROR: Division by zero" >&2
+        return 1
+    fi
+    
+    # Use awk for reliable floating point arithmetic
+    awk -v num="$numerator" -v denom="$denominator" -v prec="$precision" \
+        'BEGIN { printf "%.*f", prec, (num * 100.0) / denom }'
+}
+
+# Validate JSON with jq and robust error handling
+validate_json_field() {
+    local json_file="$1"
+    local field_path="$2"
+    local expected_type="${3:-}"  # Optional: number, string, boolean, array, object
+    
+    if [[ -z "$json_file" ]] || [[ -z "$field_path" ]]; then
+        echo "ERROR: Both json_file and field_path required" >&2
+        return 1
+    fi
+    
+    if [[ ! -f "$json_file" ]]; then
+        echo "ERROR: JSON file not found: $json_file" >&2
+        return 1
+    fi
+    
+    # First validate JSON syntax
+    if ! jq empty "$json_file" 2>/dev/null; then
+        echo "ERROR: Invalid JSON syntax in file: $json_file" >&2
+        return 1
+    fi
+    
+    # Check if field exists
+    if ! jq -e "$field_path" "$json_file" >/dev/null 2>&1; then
+        echo "ERROR: Field not found: $field_path in $json_file" >&2
+        return 1
+    fi
+    
+    # Validate field type if specified
+    if [[ -n "$expected_type" ]]; then
+        local actual_type
+        actual_type=$(jq -r "type" <<< "$(jq "$field_path" "$json_file")")
+        if [[ "$actual_type" != "$expected_type" ]]; then
+            echo "ERROR: Field $field_path expected type $expected_type, got $actual_type" >&2
+            return 1
+        fi
+    fi
+    
+    return 0
+}
+
+# Extract JSON field value with error handling
+extract_json_value() {
+    local json_file="$1"
+    local field_path="$2"
+    
+    if ! validate_json_field "$json_file" "$field_path"; then
+        return 1
+    fi
+    
+    jq -r "$field_path" "$json_file" 2>/dev/null || {
+        echo "ERROR: Failed to extract value for field: $field_path" >&2
+        return 1
+    }
+}
