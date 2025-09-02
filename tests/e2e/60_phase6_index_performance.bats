@@ -28,12 +28,14 @@ teardown() {
     
     # Stats should include timing information  
     local stats_content="$(cat "$stats_file")"
-    # Test that at least one timing field exists
-    local has_timing=false
-    if [[ "$stats_content" == *"index_time"* ]] || [[ "$stats_content" == *"scan_time"* ]] || [[ "$stats_content" == *"duration"* ]] || [[ "$stats_content" == *"elapsed"* ]]; then
-        has_timing=true
+    # Use helper function for cleaner timing field detection
+    if has_timing_fields "$stats_content"; then
+        # Found timing fields - test passes
+        true
+    else
+        # No timing fields found - test should fail  
+        false
     fi
-    [ "$has_timing" = true ]
 }
 
 @test "scan command reports execution time" {
@@ -50,15 +52,15 @@ teardown() {
 }
 
 @test "timing measurement works for individual commands" {
-    # Test timing for scan command
-    start_time=$(date +%s)
+    # Test timing for scan command - use millisecond precision helper
+    start_time=$(get_timestamp)
     run satlas scan
     assert_success
-    end_time=$(date +%s)
+    end_time=$(get_timestamp)
     
-    # Should complete in reasonable time for test fixtures (< 30 seconds)
-    duration=$((end_time - start_time))
-    [ "$duration" -lt 30 ]
+    # Should complete in reasonable time for test fixtures (< 30 seconds = 30000ms)
+    duration_ms=$(calculate_duration_ms "$start_time" "$end_time")
+    [ "$duration_ms" -lt 30000 ]
 }
 
 @test "run command includes breakdown timing in stats" {
@@ -68,13 +70,14 @@ teardown() {
     local stats_file="${TEST_TEMP_DIR}/.sourceatlas/sourceatlas.stats.json"
     local stats_content="$(cat "$stats_file")"
     
-    # Should include timing for different phases - check if any exist
-    local has_phase_timing=false
-    if [[ "$stats_content" == *"scan"* ]] && [[ "$stats_content" == *"shard"* ]] && [[ "$stats_content" == *"symbols"* ]]; then
-        has_phase_timing=true
+    # Should include timing for different phases - use helper function
+    if has_phase_timing "$stats_content"; then
+        # Found phase timing information
+        true
+    else
+        # For now, just ensure stats file exists as minimum requirement
+        [ -f "$stats_file" ]
     fi
-    # For now, just ensure stats file exists as minimum requirement
-    [ -f "$stats_file" ]
 }
 
 @test "timeout handling is configurable" {
@@ -132,15 +135,23 @@ teardown() {
 }
 
 @test "performance measurement scales with file count" {
-    # Test with fixture files (small scale)
-    start_time=$(date +%s)
+    # Test with fixture files (small scale) - use precision timing
+    start_time=$(get_timestamp)
     run satlas run
     assert_success
-    end_time=$(date +%s)
+    end_time=$(get_timestamp)
     
-    small_duration=$((end_time - start_time))
+    small_duration_ms=$(calculate_duration_ms "$start_time" "$end_time")
     
-    # Create additional files to simulate larger project (with cleanup)
+    # Create isolated test subdirectory for complete cleanup
+    local scale_test_dir="${TEST_TEMP_DIR}/scale_test"
+    mkdir -p "$scale_test_dir"
+    cd "$scale_test_dir"
+    
+    # Initialize separate instance to avoid contaminating main test
+    satlas init
+    
+    # Create additional files to simulate larger project
     local temp_files=()
     for i in {1..10}; do
         local temp_file="test_file_$i.swift"
@@ -149,22 +160,21 @@ teardown() {
         temp_files+=("$temp_file")
     done
     
-    # Run again with more files
-    start_time=$(date +%s)
+    # Run in isolated environment
+    start_time=$(get_timestamp)
     run satlas run
     assert_success
-    end_time=$(date +%s)
+    end_time=$(get_timestamp)
     
-    larger_duration=$((end_time - start_time))
+    larger_duration_ms=$(calculate_duration_ms "$start_time" "$end_time")
     
-    # Clean up temporary files
-    for temp_file in "${temp_files[@]}"; do
-        rm -f "$temp_file"
-    done
+    # Return to original directory and clean up completely
+    cd "${TEST_TEMP_DIR}"
+    rm -rf "$scale_test_dir"
     
-    # Both should complete in reasonable time, larger may take more time
-    [ "$small_duration" -lt 30 ]
-    [ "$larger_duration" -lt 60 ]
+    # Both should complete in reasonable time, larger may take more time (in milliseconds)
+    [ "$small_duration_ms" -lt 30000 ]   # < 30 seconds
+    [ "$larger_duration_ms" -lt 60000 ]  # < 60 seconds
 }
 
 @test "stats report file processing rates" {

@@ -35,25 +35,25 @@ teardown() {
 }
 
 @test "query timing scales appropriately with result size" {
-    # Test simple query (should be fast) - use portable timing
-    start_time=$(date +%s)  # seconds only for portability
+    # Test simple query (should be fast) - use precision timing
+    start_time=$(get_timestamp)
     run satlas query "AppDelegate"
     assert_success
-    end_time=$(date +%s)
+    end_time=$(get_timestamp)
     
-    simple_duration=$((end_time - start_time))
+    simple_duration_ms=$(calculate_duration_ms "$start_time" "$end_time")
     
     # Test broader query (may take slightly longer)
-    start_time=$(date +%s)
+    start_time=$(get_timestamp)
     run satlas query "class"
     assert_success  
-    end_time=$(date +%s)
+    end_time=$(get_timestamp)
     
-    broad_duration=$((end_time - start_time))
+    broad_duration_ms=$(calculate_duration_ms "$start_time" "$end_time")
     
-    # Both should complete quickly (< 10 seconds for test data with second precision)
-    [ "$simple_duration" -lt 10 ]
-    [ "$broad_duration" -lt 10 ]
+    # Both should complete quickly (< 10 seconds = 10000ms for test data)
+    [ "$simple_duration_ms" -lt 10000 ]
+    [ "$broad_duration_ms" -lt 10000 ]
 }
 
 @test "token and byte counting is accurate" {
@@ -157,26 +157,26 @@ teardown() {
 }
 
 @test "query caching improves repeated query performance" {
-    # First query (cold) - use portable timing
-    start_time=$(date +%s)
+    # First query (cold) - use precision timing
+    start_time=$(get_timestamp)
     run satlas query "AppDelegate"
     assert_success
-    end_time=$(date +%s)
-    cold_duration=$((end_time - start_time))
+    end_time=$(get_timestamp)
+    cold_duration_ms=$(calculate_duration_ms "$start_time" "$end_time")
     
     # Second identical query (potentially warm)
-    start_time=$(date +%s)
+    start_time=$(get_timestamp)
     run satlas query "AppDelegate"
     assert_success
-    end_time=$(date +%s)
-    warm_duration=$((end_time - start_time))
+    end_time=$(get_timestamp)
+    warm_duration_ms=$(calculate_duration_ms "$start_time" "$end_time")
     
-    # Both should complete quickly (within 10 seconds for test environment)
-    [ "$cold_duration" -lt 10 ]
-    [ "$warm_duration" -lt 10 ]
+    # Both should complete quickly (within 10 seconds = 10000ms for test environment)
+    [ "$cold_duration_ms" -lt 10000 ]
+    [ "$warm_duration_ms" -lt 10000 ]
     
-    # Warm should not be significantly slower than cold
-    [ "$warm_duration" -le "$((cold_duration + 5))" ]
+    # Warm should not be significantly slower than cold (allow 5s = 5000ms variance)
+    [ "$warm_duration_ms" -le "$((cold_duration_ms + 5000))" ]
 }
 
 @test "memory usage stays reasonable during queries" {

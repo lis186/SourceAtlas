@@ -108,11 +108,15 @@ count_jsonl_records() {
 
 # Platform-aware timing function
 get_timestamp() {
-    # Try millisecond precision first (GNU date)
-    if date +%s%3N >/dev/null 2>&1; then
-        date +%s%3N
+    # Test if millisecond precision works by checking output format
+    local test_output
+    test_output=$(date +%s%3N 2>/dev/null)
+    
+    # If output doesn't contain 'N' (meaning %3N was expanded), use it
+    if [[ "$test_output" != *"N"* ]] && [[ -n "$test_output" ]]; then
+        echo "$test_output"
     else
-        # Fall back to second precision (macOS/BSD date)
+        # Fall back to second precision converted to milliseconds (macOS/BSD date)
         echo "$(($(date +%s) * 1000))"
     fi
 }
@@ -132,4 +136,33 @@ skip_if_not_implemented() {
     if [[ "$output" == *"Unknown option"* ]] || [[ "$output" == *"not implemented"* ]] || [[ "$output" == *"unsupported"* ]]; then
         skip "$feature not implemented yet"
     fi
+}
+
+# Check if content contains any timing fields
+has_timing_fields() {
+    local content="$1"
+    local timing_fields=("index_time" "scan_time" "duration" "elapsed" "timing" "time_ms")
+    
+    for field in "${timing_fields[@]}"; do
+        if [[ "$content" == *"$field"* ]]; then
+            return 0  # Found timing field
+        fi
+    done
+    return 1  # No timing fields found
+}
+
+# Check if content contains phase timing info
+has_phase_timing() {
+    local content="$1"
+    local phase_fields=("scan" "shard" "symbols" "manifest" "phase")
+    local found_count=0
+    
+    for field in "${phase_fields[@]}"; do
+        if [[ "$content" == *"$field"* ]]; then
+            ((found_count++))
+        fi
+    done
+    
+    # Consider it phase timing if at least 2 phases are mentioned
+    [ "$found_count" -ge 2 ]
 }
