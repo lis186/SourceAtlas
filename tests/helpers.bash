@@ -85,12 +85,20 @@ cleanup_test_env() {
 # Copy fixtures to test directory
 copy_fixtures() {
     local fixture_name="$1"
-    local fixture_path="${BATS_TEST_DIRNAME}/../fixtures/${fixture_name}"
+    
+    # Determine fixture path - works both in BATS and standalone
+    local fixture_path
+    if [[ -n "${BATS_TEST_DIRNAME:-}" ]]; then
+        fixture_path="${BATS_TEST_DIRNAME}/../fixtures/${fixture_name}"
+    else
+        # Fallback for standalone execution
+        fixture_path="$(dirname "${BASH_SOURCE[0]}")/fixtures/${fixture_name}"
+    fi
     
     if [[ -d "${fixture_path}" ]]; then
         cp -r "${fixture_path}"/* "${TEST_TEMP_DIR}/"
     else
-        echo "Fixture not found: ${fixture_name}" >&2
+        echo "Fixture not found: ${fixture_name} (tried: ${fixture_path})" >&2
         return 1
     fi
 }
