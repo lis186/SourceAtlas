@@ -105,3 +105,31 @@ count_jsonl_records() {
     
     echo "${count}"
 }
+
+# Platform-aware timing function
+get_timestamp() {
+    # Try millisecond precision first (GNU date)
+    if date +%s%3N >/dev/null 2>&1; then
+        date +%s%3N
+    else
+        # Fall back to second precision (macOS/BSD date)
+        echo "$(($(date +%s) * 1000))"
+    fi
+}
+
+# Calculate duration in milliseconds
+calculate_duration_ms() {
+    local start_ms="$1"
+    local end_ms="$2"
+    echo $((end_ms - start_ms))
+}
+
+# Skip test if feature not implemented
+skip_if_not_implemented() {
+    local output="$1"
+    local feature="$2"
+    
+    if [[ "$output" == *"Unknown option"* ]] || [[ "$output" == *"not implemented"* ]] || [[ "$output" == *"unsupported"* ]]; then
+        skip "$feature not implemented yet"
+    fi
+}
