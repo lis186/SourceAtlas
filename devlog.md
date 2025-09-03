@@ -189,3 +189,177 @@ Let me investigate this issue...
 - Users can navigate to correct line numbers in their editors
 
 **Summary**: RESOLVED. Query line number accuracy fixed across all search types.
+
+---
+
+## Iteration 3: Swift-Algorithms Repository Exploration Simulation
+**Date**: 2024-09-03
+**Goal**: Simulate real-world usage by exploring Apple's swift-algorithms repository
+
+### User Simulation
+
+#### Scenario: Developer wants to explore and understand the swift-algorithms codebase
+
+**Setup:**
+```bash
+# Cloned https://github.com/apple/swift-algorithms to /tmp/sourceatlas-simulation/
+cd /tmp/sourceatlas-simulation/swift-algorithms
+satlas init    # Initialize SourceAtlas
+satlas scan    # Create index
+```
+
+**User Actions & Observations:**
+
+1. **Initialization Experience**
+   ```bash
+   satlas init
+   ```
+   **User feeling**: "Clear next steps provided - shows exactly what to do next"
+   **Observation**: ✅ Excellent onboarding UX with helpful guidance
+
+2. **Scanning Experience**
+   ```bash
+   satlas scan
+   ```
+   **Output**: Scanned 109 files in 19 seconds with detailed progress tracking
+   **User feeling**: "Great progress visibility, I can see exactly what's happening and how long it takes"
+   **Observation**: ✅ Excellent progress UX with ETA and file-by-file visibility
+
+3. **Query Discovery Attempt**
+   ```bash
+   satlas query --symbol "permutations"    # Failed - Unknown option
+   satlas query --help                     # Had to check help
+   satlas query --type symbol "permutation"  # No matches
+   ```
+   **User feeling**: "Frustrating - I assumed --symbol was the option, and then case-sensitivity tripped me up"
+   **Observation**: 🔴 CRITICAL UX issues with query discovery
+
+4. **Case-Sensitive Search Issues**
+   ```bash
+   satlas query --type symbol "permutation"     # No matches (lowercase)
+   satlas query --type symbol "Permutation"     # Still no matches
+   satlas query "Permutation"                   # Found 5 matches!
+   ```
+   **User feeling**: "Why does content search work but symbol search doesn't? Very confusing."
+   **Observation**: 🔴 CRITICAL - Symbol search appears broken or incomplete
+
+5. **Successful Content Discovery**
+   ```bash
+   satlas query "swift"       # Found 50+ matches with clear file paths
+   satlas query "Permutation" # Found relevant files
+   ```
+   **User feeling**: "Good - I can find files containing terms I'm interested in"
+   **Observation**: ✅ Content search works well with relevant results
+
+6. **Code Segment Extraction**
+   ```bash
+   satlas segment Sources/Algorithms/Permutations.swift 1 20 --line-numbers
+   ```
+   **User feeling**: "Excellent! I can quickly preview code without opening files"
+   **Observation**: ✅ Segment feature works great for code exploration
+
+7. **Statistics Generation**
+   ```bash
+   satlas stats
+   ```
+   **Output**: 109 files, 17494 LOC, 442 symbols
+   **User feeling**: "Useful overview, gives me a sense of codebase size"
+   **Observation**: ✅ Stats provide helpful high-level metrics
+
+### Issues Identified
+
+| Issue | Impact | Effort | Leverage | Priority |
+|-------|---------|--------|----------|----------|
+| **Symbol search broken/incomplete** | 🔴 CRITICAL - Core functionality doesn't work for Swift | ⚠️ Medium - Need to debug symbol extraction | 🎯 HIGH - High impact, medium effort | P0 |
+| **Confusing query syntax** | 🟡 Medium - Users expect --symbol option | ✅ Low - Add alias/shorthand | 🎯 HIGH - Low effort, good UX improvement | P1 |
+| **Case-sensitivity issues** | 🟡 Medium - Hard to discover right search terms | ✅ Low - Default to case-insensitive | 🎯 HIGH - Easy fix, big UX win | P2 |
+| **No symbol browsing capability** | 🟡 Medium - Can't explore what symbols exist | ⚠️ Medium - Need symbol listing command | 🎯 MEDIUM - Good discoverability feature | P3 |
+
+### Selected Improvement: Symbol Search Functionality (P0)
+
+**Problem**: Symbol search returns no results even for clearly existing symbols (e.g., Swift algorithms)  
+**Root Cause**: Symbol extraction may not be working correctly for Swift files, or symbol search logic has issues  
+**User Impact**: Tool appears broken for primary use case - finding code symbols  
+**Business Impact**: Users cannot leverage core SourceAtlas value proposition
+
+### Acceptance Criteria
+- [ ] Swift class/struct/enum declarations are found with `--type symbol` searches
+- [ ] Swift function declarations are found with `--type symbol` searches  
+- [ ] Symbol search is case-insensitive by default or provides clear case-insensitive option
+- [ ] Symbol results show accurate file paths and line numbers
+- [ ] Test with swift-algorithms repository confirms symbols are discoverable
+
+### Investigation Plan
+1. **Check Symbol Extraction**: Examine actual symbol data in generated index
+2. **Verify Symbol Search Logic**: Test symbol search parsing and matching
+3. **Debug Swift Language Support**: Ensure Swift symbols are properly extracted
+4. **Fix Root Issues**: Address extraction or search problems
+5. **Validate End-to-End**: Confirm symbols are discoverable via query
+
+### Investigation Results
+
+✅ **Root Cause Found**: Bash pipeline subshell bug in symbol search  
+
+**Analysis:**
+1. **Symbol Extraction Works**: Swift symbols are correctly extracted (verified in `.sourceatlas/sourceatlas.index.jsonl`)  
+   - `Permutations.swift` contains symbols like `"permutations"`, `"PermutationsSequence"`
+   - Test files contain symbols like `"testUnique"`, `"testUniqueOn"`
+
+2. **Symbol Search Logic Issue**: The fallback symbol search (lines 1834-1865) uses a bash pipeline:
+   ```bash
+   echo "$symbols_array" | jq -r '.[] | ...' | while IFS=':' read -r symbol_name line_num kind; do
+   ```
+   
+3. **Subshell Problem**: The `while` loop runs in a subshell due to the pipeline. Variables modified inside (`match_count++`, `results+=()`) are not visible to the parent shell, so matches are found but never recorded.
+
+**Evidence:**
+```bash
+# These searches should work but return "No matches found":
+satlas query --type symbol "permutations"  # exists in index
+satlas query --type symbol "testUnique"    # exists in index
+```
+
+### Implementation Results
+
+✅ **FIXED**: Symbol search functionality now works correctly!
+
+**Changes Made:**
+- **Line 1841-1865**: Replaced problematic pipeline `echo "$symbols_array" | jq ... | while` with process substitution `while ... done < <(echo "$symbols_array" | jq ...)`
+- **Root Cause**: Fixed bash subshell variable scope issue that prevented matches from being recorded
+
+**Test Results:**
+```bash
+# Before: All returned "No matches found"
+# After: Symbol search works perfectly
+
+satlas query --type symbol "permutations"
+# Found 2 matches for pattern: permutations
+# ./Sources/Algorithms/Permutations.swift:339
+# ./Sources/Algorithms/Permutations.swift:396
+
+satlas query --type symbol "testUnique"  
+# Found 3 matches for pattern: testUnique
+# ./Tests/SwiftAlgorithmsTests/UniqueTests.swift:16
+# ./Tests/SwiftAlgorithmsTests/UniqueTests.swift:29
+# ./Tests/SwiftAlgorithmsTests/KeyedTests.swift:18
+
+satlas query --type symbol --ignore-case "PERMUTATION" --verbose
+# Found 10 matches with detailed metadata
+# Shows functions, structs, extensions with accurate line numbers
+```
+
+**User Impact:**
+- ✅ Core symbol search functionality restored  
+- ✅ Case-insensitive searches work with `--ignore-case`
+- ✅ Accurate line numbers for navigation
+- ✅ Detailed metadata with `--verbose` option
+- ✅ Swift developers can now discover code symbols effectively
+
+### Acceptance Criteria Status
+- [x] Swift class/struct/enum declarations are found with `--type symbol` searches ✅
+- [x] Swift function declarations are found with `--type symbol` searches ✅  
+- [x] Symbol search is case-insensitive by default or provides clear case-insensitive option ✅
+- [x] Symbol results show accurate file paths and line numbers ✅
+- [x] Test with swift-algorithms repository confirms symbols are discoverable ✅
+
+**Summary**: RESOLVED. Symbol search functionality fully restored and working correctly across all symbol types.

@@ -1838,7 +1838,8 @@ EOF
                     local path=$(echo "$line" | jq -r '.path // ""')
                     local symbols_array=$(echo "$line" | jq -c '.symbols // []')
                     
-                    echo "$symbols_array" | jq -r '.[] | "\(.name):\(.line_start):\(.kind)"' | while IFS=':' read -r symbol_name line_num kind; do
+                    # Use process substitution to avoid subshell issue
+                    while IFS=':' read -r symbol_name line_num kind; do
                         [[ "$match_count" -ge "$limit" ]] && break
                         
                         local match=false
@@ -1861,7 +1862,7 @@ EOF
                             results+=("$path:$line_num:$symbol_name ($kind):$score")
                             ((match_count++))
                         fi
-                    done
+                    done < <(echo "$symbols_array" | jq -r '.[] | "\(.name):\(.line_start):\(.kind)"')
                 done < "$index_file"
             fi
             ;;
