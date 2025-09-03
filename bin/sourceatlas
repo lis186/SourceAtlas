@@ -291,6 +291,7 @@ EOF
 cmd_scan() {
     local root_dir="."
     local out_dir=".sourceatlas"
+    local debug_mode=false
     
     # Parse arguments
     while [[ $# -gt 0 ]]; do
@@ -303,6 +304,10 @@ cmd_scan() {
                 out_dir="$2"
                 shift 2
                 ;;
+            --debug)
+                debug_mode=true
+                shift
+                ;;
             --help|-h)
                 cat <<EOF
 Usage: ${PROG_NAME} scan [options]
@@ -312,6 +317,7 @@ Scan directory and generate index.
 Options:
   --root DIR      Root directory to scan (default: current directory)
   --out DIR       Output directory (default: .sourceatlas)
+  --debug         Enable debug mode to show detailed processing information
   --help, -h      Show this help message
 
 Examples:
@@ -347,10 +353,50 @@ EOF
     echo "Scanning directory: $root_dir"
     echo "Output: $index_file"
     
-    local file_count=0
+    # First pass: count total files to process
+    echo "Calculating total files..."
+    local total_files=0
+    local files_to_process=""
     
-    # Find all files and process them
-    find "$root_dir" -type f -name "*" 2>/dev/null | while read -r file; do
+    while IFS= read -r file; do
+        # Skip if file matches exclude patterns
+        if is_excluded "$file" "$exclude_file"; then
+            continue
+        fi
+        
+        # Skip hidden files and directories
+        if [[ "$file" == *"/."* ]]; then
+            continue
+        fi
+        
+        # Skip the atlas directory itself
+        if [[ "$file" == *"/.sourceatlas/"* ]]; then
+            continue
+        fi
+        
+        ((total_files++))
+        files_to_process="${files_to_process}${file}"$'\n'
+    done < <(find "$root_dir" -type f -name "*" 2>/dev/null)
+    
+    echo "Total files to process: $total_files"
+    echo "----------------------------------------"
+    
+    # Check if there are files to process
+    if [[ $total_files -eq 0 ]]; then
+        echo "No files to process."
+        echo "Index created: $index_file"
+        return 0
+    fi
+    
+    local file_count=0
+    local start_time=$(date +%s)
+    local total_processing_time=0
+    
+    # Process files with progress tracking
+    while IFS= read -r file; do
+        [[ -z "$file" ]] && continue
+        
+        local file_start_time=$(date +%s%N)
         # Skip if file matches exclude patterns
         if is_excluded "$file" "$exclude_file"; then
             continue
@@ -370,10 +416,18 @@ EOF
         local ext="$(get_extension "$file")"
         local lang="$(get_language "$ext")"
         
+        # Debug output
+        if [[ "$debug_mode" == "true" ]]; then
+            echo "Processing: $file (lang: $lang, ext: $ext)" >&2
+        fi
+        
         # Skip binary and unknown files
         if [[ "$lang" == "unknown" ]]; then
             case "$ext" in
                 .png|.jpg|.jpeg|.gif|.svg|.ico|.pdf|.zip|.tar|.gz|.exe|.dll|.so|.dylib|.a|.o|.class|.jar)
+                    if [[ "$debug_mode" == "true" ]]; then
+                        echo "  Skipping binary file: $file" >&2
+                    fi
                     continue
                     ;;
             esac
@@ -386,6 +440,12 @@ EOF
         local imports="$(extract_imports "$file" "$lang")"
         local symbols_json="$(extract_symbols "$file" "$lang")"
         local summary="$(generate_summary "$file" "$lang" "$role")"
+        
+        # Debug output for extracted data
+        if [[ "$debug_mode" == "true" ]]; then
+            echo "  size_bytes: $size_bytes, loc: $loc, role: $role" >&2
+            echo "  symbols_json: $symbols_json" >&2
+        fi
         
         # Create JSON object
         local json_obj=$(cat <<EOF
@@ -408,13 +468,74 @@ EOF
         )
         
         # Write JSON object as single line
-        echo "$json_obj" | jq -c . >> "$index_file"
+        if ! echo "$json_obj" | jq -c . >> "$index_file" 2>/dev/null; then
+            echo "ERROR: Failed to parse JSON for file: $file" >&2
+            if [[ "$debug_mode" == "true" ]]; then
+                echo "Raw JSON:" >&2
+                echo "$json_obj" >&2
+                echo "Testing with jq:" >&2
+                echo "$json_obj" | jq . >&2 || true
+            fi
+            exit 1
+        fi
+        
+        if [[ "$debug_mode" == "true" ]]; then
+            echo "  Successfully processed: $file" >&2
+        fi
         
         ((file_count++))
-    done
+        
+        # Calculate progress and timing
+        local file_end_time=$(date +%s%N)
+        local file_processing_time=$(( (file_end_time - file_start_time) / 1000000 )) # Convert to milliseconds
+        total_processing_time=$((total_processing_time + file_processing_time))
+        
+        local current_time=$(date +%s)
+        local elapsed_time=$((current_time - start_time))
+        local percentage=$((file_count * 100 / total_files))
+        
+        # Calculate estimated time remaining
+        local avg_time_per_file=$((total_processing_time / file_count))
+        local remaining_files=$((total_files - file_count))
+        local estimated_remaining=$((remaining_files * avg_time_per_file / 1000)) # Convert to seconds
+        
+        # Format elapsed time
+        local elapsed_min=$((elapsed_time / 60))
+        local elapsed_sec=$((elapsed_time % 60))
+        
+        # Format estimated remaining time
+        local remaining_min=$((estimated_remaining / 60))
+        local remaining_sec=$((estimated_remaining % 60))
+        
+        # Progress display
+        if [[ "$debug_mode" != "true" ]]; then
+            printf "\r[%3d%%] Processing %d/%d files | File: %-50s | Time: %dms | Elapsed: %02d:%02d | ETA: %02d:%02d" \
+                "$percentage" "$file_count" "$total_files" \
+                "$(basename "$file" | cut -c1-50)" \
+                "$file_processing_time" \
+                "$elapsed_min" "$elapsed_sec" \
+                "$remaining_min" "$remaining_sec"
+        fi
+    done <<< "$files_to_process"
     
-    echo "Indexed $file_count files"
-    echo "Index created: $index_file"
+    # Clear the progress line and show final results
+    if [[ "$debug_mode" != "true" ]]; then
+        printf "\r%-120s\r" " "  # Clear the line
+    fi
+    
+    local final_time=$(date +%s)
+    local total_elapsed=$((final_time - start_time))
+    local total_min=$((total_elapsed / 60))
+    local total_sec=$((total_elapsed % 60))
+    
+    echo "----------------------------------------"
+    echo "Scan completed!"
+    echo "  Indexed files: $file_count"
+    echo "  Total time: ${total_min}m ${total_sec}s"
+    if [[ $file_count -gt 0 ]]; then
+        echo "  Average time per file: $((total_processing_time / file_count))ms"
+    fi
+    echo "  Index created: $index_file"
 }
 
 # Command: symbols
@@ -468,15 +589,23 @@ EOF
     echo "Generating symbol table from: $index_file"
     echo "Output: $symbols_file"
     
+    # Count total lines first
+    local total_lines=$(wc -l < "$index_file")
+    echo "Processing $total_lines files for symbols..."
+    
     # Write TSV header
     echo -e "symbol\tkind\trepo\tpath\tline_start\tline_end" > "$symbols_file"
     
     # Process each line of the index
     local symbol_count=0
+    local line_count=0
+    local start_time=$(date +%s)
     
     while IFS= read -r line; do
         # Skip empty lines
         [[ -z "$line" ]] && continue
+        
+        ((line_count++))
         
         # Parse JSON line
         local repo=$(echo "$line" | jq -r '.repo // ""')
@@ -485,6 +614,12 @@ EOF
         
         # Skip if no symbols
         if [[ "$symbols_array" == "[]" ]] || [[ "$symbols_array" == "null" ]]; then
+            # Still show progress even for files without symbols
+            if [[ $((line_count % 50)) -eq 0 ]] || [[ $line_count -eq $total_lines ]]; then
+                local percentage=$((line_count * 100 / total_lines))
+                printf "\r[%3d%%] Processing symbols: %d/%d files | Found %d symbols" \
+                    "$percentage" "$line_count" "$total_lines" "$symbol_count"
+            fi
             continue
         fi
         
@@ -494,7 +629,17 @@ EOF
         local symbols_in_file=$(echo "$symbols_array" | jq -r '. | length')
         symbol_count=$((symbol_count + symbols_in_file))
         
+        # Update progress every 50 files or at the end
+        if [[ $((line_count % 50)) -eq 0 ]] || [[ $line_count -eq $total_lines ]]; then
+            local percentage=$((line_count * 100 / total_lines))
+            printf "\r[%3d%%] Processing symbols: %d/%d files | Found %d symbols" \
+                "$percentage" "$line_count" "$total_lines" "$symbol_count"
+        fi
+        
     done < "$index_file"
+    
+    # Clear progress line
+    printf "\r%-80s\r" " "
     
     # Sort the symbols file (skip header)
     {
@@ -557,6 +702,10 @@ EOF
     echo "Generating statistics from: $index_file"
     echo "Output: $stats_file"
     
+    # Count total lines first
+    local total_index_lines=$(wc -l < "$index_file")
+    echo "Processing $total_index_lines files for statistics..."
+    
     # Initialize counters
     local total_files=0
     local total_lines=0
@@ -575,11 +724,14 @@ EOF
     local repo_name=""
     local lines_array=()
     local bytes_array=()
+    local start_time=$(date +%s)
     
     # Process each line of the index
     while IFS= read -r line; do
         # Skip empty lines
         [[ -z "$line" ]] && continue
+        
+        ((total_files++))
         
         # Parse JSON line
         local repo=$(echo "$line" | jq -r '.repo // ""')
@@ -589,6 +741,13 @@ EOF
         local size_bytes=$(echo "$line" | jq -r '.size_bytes // 0')
         local roles=$(echo "$line" | jq -r '.roles[]? // "unknown"')
         local symbols_array=$(echo "$line" | jq -c '.symbols // []')
+        
+        # Update progress every 100 files or at the end
+        if [[ $((total_files % 100)) -eq 0 ]] || [[ $total_files -eq $total_index_lines ]]; then
+            local percentage=$((total_files * 100 / total_index_lines))
+            printf "\r[%3d%%] Calculating statistics: %d/%d files | %d LOC | %d symbols" \
+                "$percentage" "$total_files" "$total_index_lines" "$total_lines" "$total_symbols"
+        fi
         
         # Set repo name from first entry
         if [[ -z "$repo_name" ]] && [[ -n "$repo" ]]; then
@@ -643,6 +802,9 @@ EOF
         done
         
     done < "$index_file"
+    
+    # Clear progress line
+    printf "\r%-80s\r" " "
     
     # Calculate averages
     local avg_lines=0
@@ -825,24 +987,38 @@ EOF
     local index_hash=$(calculate_hash "$index_file")
     local index_lines=$(count_lines "$index_file")
     
+    echo "Processing $index_lines files for manifest..."
+    
     # Analyze index content
     local total_files=0
     local total_size_bytes=0
     local language_list=""
+    local start_time=$(date +%s)
     
     while IFS= read -r line; do
         [[ -z "$line" ]] && continue
         
+        ((total_files++))
+        
         local size_bytes=$(echo "$line" | jq -r '.size_bytes // 0')
         local lang=$(echo "$line" | jq -r '.lang // ""')
         
-        ((total_files++))
         total_size_bytes=$((total_size_bytes + size_bytes))
         
         if [[ -n "$lang" ]] && [[ "$language_list" != *"$lang"* ]]; then
             language_list="${language_list} $lang"
         fi
+        
+        # Update progress every 100 files or at the end
+        if [[ $((total_files % 100)) -eq 0 ]] || [[ $total_files -eq $index_lines ]]; then
+            local percentage=$((total_files * 100 / index_lines))
+            printf "\r[%3d%%] Building manifest: %d/%d files | Total size: %d bytes" \
+                "$percentage" "$total_files" "$index_lines" "$total_size_bytes"
+        fi
     done < "$index_file"
+    
+    # Clear progress line
+    printf "\r%-80s\r" " "
     
     # Generate language counts
     local lang_json=""
@@ -1662,7 +1838,7 @@ EOF
                     local path=$(echo "$line" | jq -r '.path // ""')
                     local symbols_array=$(echo "$line" | jq -c '.symbols // []')
                     
-                    echo "$symbols_array" | jq -r '.[] | "\(.name):\(.line):\(.kind)"' | while IFS=':' read -r symbol_name line_num kind; do
+                    echo "$symbols_array" | jq -r '.[] | "\(.name):\(.line_start):\(.kind)"' | while IFS=':' read -r symbol_name line_num kind; do
                         [[ "$match_count" -ge "$limit" ]] && break
                         
                         local match=false
@@ -1716,7 +1892,7 @@ EOF
                     local score=100
                     local lang=$(echo "$line" | jq -r '.lang // ""')
                     local loc=$(echo "$line" | jq -r '.loc // 0')
-                    results+=("$path:0:Path match ($lang, $loc lines):$score")
+                    results+=("$path:1:Path match ($lang, $loc lines):$score")
                     ((match_count++))
                 fi
             done < "$index_file"
@@ -1748,7 +1924,7 @@ EOF
                 if [[ "$match" == true ]]; then
                     local score=100
                     local loc=$(echo "$line" | jq -r '.loc // 0')
-                    results+=("$path:0:Language: $lang ($loc lines):$score")
+                    results+=("$path:1:Language: $lang ($loc lines):$score")
                     ((match_count++))
                 fi
             done < "$index_file"
@@ -1782,7 +1958,7 @@ EOF
                 if [[ "$match" == true ]]; then
                     local score=100
                     local lang=$(echo "$line" | jq -r '.lang // ""')
-                    results+=("$path:0:Role match ($lang):$score")
+                    results+=("$path:1:Role match ($lang):$score")
                     ((match_count++))
                 fi
             done < "$index_file"
@@ -1851,10 +2027,11 @@ EOF
                 
                 if [[ "$match" == true ]]; then
                     local score=80
+                    local line_num=1  # Default to line 1 instead of 0 for file-level matches
                     [[ "$match_context" == "Summary" ]] && score=100
                     [[ "$match_context" == "Path" ]] && score=60
                     local lang=$(echo "$line" | jq -r '.lang // ""')
-                    results+=("$path:0:Content match in $match_context ($lang):$score")
+                    results+=("$path:$line_num:Content match in $match_context ($lang):$score")
                     ((match_count++))
                 fi
             done < "$index_file"
@@ -2834,6 +3011,8 @@ EOF
     fi
     
     # Step 2: Scan
+    echo ""
+    echo "=== Phase 1/4: Scanning files ==="
     if [[ "$verbose" == true ]]; then
         echo "Step 2: Scanning directory..."
     fi
@@ -2846,6 +3025,8 @@ EOF
     }
     
     # Step 3: Generate symbols
+    echo ""
+    echo "=== Phase 2/4: Extracting symbols ==="
     if [[ "$verbose" == true ]]; then
         echo "Step 3: Generating symbol table..."
     fi
@@ -2855,6 +3036,8 @@ EOF
     }
     
     # Step 4: Calculate stats
+    echo ""
+    echo "=== Phase 3/4: Calculating statistics ==="
     if [[ "$verbose" == true ]]; then
         echo "Step 4: Calculating statistics..."
     fi
@@ -2864,6 +3047,8 @@ EOF
     }
     
     # Step 5: Create manifest
+    echo ""
+    echo "=== Phase 4/4: Building manifest ==="
     if [[ "$verbose" == true ]]; then
         echo "Step 5: Creating manifest..."
     fi
@@ -2891,21 +3076,37 @@ EOF
         compress_output_files "$out_dir"
     fi
     
-    if [[ "$verbose" == true ]]; then
-        echo "=== Pipeline Complete ==="
-        echo "Output directory: $out_dir"
-        ls -la "$out_dir"
-        echo "========================"
-    fi
-    
-    echo "Pipeline completed successfully"
+    echo ""
+    echo "========================================="
+    echo "✓ Pipeline completed successfully!"
+    echo "========================================="
+    echo ""
     echo "Output directory: $out_dir"
     
     # Show summary
     local index_file="${out_dir}/sourceatlas.index.jsonl"
     if [[ -f "$index_file" ]]; then
         local file_count=$(count_lines "$index_file")
-        echo "Indexed $file_count files"
+        local index_size=$(get_file_size "$index_file")
+        echo "Summary:"
+        echo "  - Indexed files: $file_count"
+        echo "  - Index size: $(( index_size / 1024 / 1024 )) MB"
+        
+        if [[ -f "$out_dir/sourceatlas.symbols.tsv" ]]; then
+            local symbol_count=$(wc -l < "$out_dir/sourceatlas.symbols.tsv")
+            echo "  - Symbols extracted: $((symbol_count - 1))"  # Minus header
+        fi
+    fi
+    
+    echo ""
+    echo "Files created:"
+    ls -lh "$out_dir"/sourceatlas.* 2>/dev/null | awk '{print "  - " $9 ": " $5}'
+    
+    if [[ "$verbose" == true ]]; then
+        echo ""
+        echo "=== Detailed file listing ==="
+        ls -la "$out_dir"
+        echo "========================"
     fi
 }
 
