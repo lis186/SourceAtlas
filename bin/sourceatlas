@@ -1927,7 +1927,7 @@ EOF
                             ((match_count++))
                         fi
                     done < <(echo "$symbols_array" | jq -r '.[] | "\(.name):\(.line_start):\(.kind)"')
-                done < "$index_file"
+                done < <(eval "$grep_cmd" "$index_file")
                 fi
             fi
             ;;
@@ -2030,29 +2030,48 @@ EOF
             done < "$index_file"
             ;;
         content|*)
-            # Search content (summary, imports, or full content)
+            # Search content using grep-first optimization like symbol search
             echo "Searching file contents..." >&2
             
-            # Count total files for progress tracking
-            local total_files=$(wc -l < "$index_file")
-            local processed_files=0
-            local last_progress_update=0
-            
-            while IFS= read -r line; do
-                [[ "$match_count" -ge "$limit" ]] && break
-                [[ -z "$line" ]] && continue
-                
-                ((processed_files++))
-                
-                # Show progress every 50 files or every 10% for smaller datasets
-                local progress_interval=$((total_files > 500 ? 50 : total_files / 10))
-                [[ $progress_interval -lt 10 ]] && progress_interval=10
-                
-                if (( processed_files % progress_interval == 0 || processed_files == total_files )); then
-                    local progress_percent=$(( processed_files * 100 / total_files ))
-                    printf "\r[%3d%%] Searching: %d/%d files | Found %d matches" "$progress_percent" "$processed_files" "$total_files" "$match_count" >&2
-                    last_progress_update=$processed_files
+            # Use grep to pre-filter the index for much better performance
+            local grep_cmd
+            if [[ "$use_regex" == true ]]; then
+                if [[ "$ignore_case" == true ]]; then
+                    grep_cmd="grep -i"
+                else
+                    grep_cmd="grep"
                 fi
+                grep_cmd="$grep_cmd '$query_pattern'"
+            else
+                if [[ "$ignore_case" == true ]]; then
+                    grep_cmd="grep -Fi"
+                else
+                    grep_cmd="grep -F"
+                fi
+                grep_cmd="$grep_cmd '$query_pattern'"
+            fi
+            
+            # Count matching lines for progress tracking
+            local matching_lines
+            matching_lines=$(eval "$grep_cmd" "$index_file" | wc -l)
+            
+            if [[ $matching_lines -eq 0 ]]; then
+                echo "No potential matches found in index" >&2
+            else
+                echo "Found $matching_lines potential matches, analyzing..." >&2
+                local processed_files=0
+                
+                while IFS= read -r line; do
+                    [[ "$match_count" -ge "$limit" ]] && break
+                    [[ -z "$line" ]] && continue
+                    
+                    ((processed_files++))
+                    
+                    # Show progress for matched lines
+                    if (( matching_lines > 20 && processed_files % 10 == 0 )); then
+                        local progress_percent=$(( processed_files * 100 / matching_lines ))
+                        printf "\r[%3d%%] Analyzing: %d/%d candidates | Found %d matches" "$progress_percent" "$processed_files" "$matching_lines" "$match_count" >&2
+                    fi
                 
                 local path=$(echo "$line" | jq -r '.path // ""')
                 local summary=$(echo "$line" | jq -r '.summary // ""')
@@ -2119,10 +2138,13 @@ EOF
                     results+=("$path:$line_num:Content match in $match_context ($lang):$score")
                     ((match_count++))
                 fi
-            done < "$index_file"
-            
-            # Clear progress line and show completion
-            printf "\r%s\r" "$(printf '%*s' 80 '')" >&2
+                done < <(eval "$grep_cmd" "$index_file")
+                
+                # Clear progress line
+                if (( matching_lines > 20 )); then
+                    printf "\r%s\r" "$(printf '%*s' 80 '')" >&2
+                fi
+            fi
             ;;
     esac
     
