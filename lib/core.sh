@@ -164,6 +164,7 @@ extract_imports() {
 extract_symbols() {
     local file="$1"
     local lang="$2"
+    local result=""
     
     case "$lang" in
         swift)
@@ -188,12 +189,12 @@ extract_symbols() {
                 fi
                 
                 echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
-            done | jq -s .
+            done | jq -s . 2>/dev/null || echo "[]"
             ;;
         kotlin)
             # Extract class, object, interface, fun, data class, sealed class, companion object definitions with line numbers
             # Also capture annotations like @AndroidEntryPoint
-            grep -n -E '^\s*(@[A-Za-z0-9_]+|((public|private|internal|protected)\s+)?(class|object|interface|fun|data class|sealed class|companion object)\s+)' "$file" | \
+            result=$(grep -n -E '^\s*(@[A-Za-z0-9_]+|((public|private|internal|protected)\s+)?(class|object|interface|fun|data class|sealed class|companion object)\s+)' "$file" 2>/dev/null | \
             head -10 | \
             while IFS=':' read -r line_num content; do
                 local kind=""
@@ -249,7 +250,14 @@ extract_symbols() {
                 fi
                 
                 echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
-            done | jq -s .
+            done | jq -s . 2>/dev/null || echo "[]")
+            
+            # Ensure we always return valid JSON array
+            if [[ -z "$result" ]] || [[ "$result" == "null" ]]; then
+                echo "[]"
+            else
+                echo "$result"
+            fi
             ;;
         python)
             # Extract class and def definitions with line numbers
@@ -352,7 +360,56 @@ extract_symbols() {
                 fi
                 
                 echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
-            done | jq -s .
+            done | jq -s . 2>/dev/null || echo "[]"
+            ;;
+        java)
+            # Extract Java class, interface, enum, method, and constructor definitions with line numbers
+            # Include visibility modifiers (public, private, protected, package-private)
+            grep -n -E '^\s*((public|private|protected|static|final|abstract)\s+)*(class|interface|enum)\s+|^\s*((public|private|protected|static|final|abstract)\s+)*\w+\s*\(' "$file" | \
+            head -20 | \
+            while IFS=':' read -r line_num content; do
+                local kind=""
+                local name=""
+                local visibility="package-private"  # Default for Java
+                
+                # Clean up content for easier parsing
+                local clean_content=$(echo "$content" | sed 's/^\s*//')
+                
+                # Extract visibility modifier
+                if echo "$clean_content" | grep -qE '^(public|private|protected)\s+'; then
+                    visibility=$(echo "$clean_content" | awk '{print $1}')
+                fi
+                
+                # Extract class, interface, enum declarations
+                if echo "$clean_content" | grep -qE '\b(class|interface|enum)\s+'; then
+                    if echo "$clean_content" | grep -q "class"; then
+                        kind="class"
+                        name=$(echo "$clean_content" | awk '{for(i=1;i<=NF;i++) if($i=="class") print $(i+1)}' | sed 's/[<{].*//')
+                    elif echo "$clean_content" | grep -q "interface"; then
+                        kind="interface"
+                        name=$(echo "$clean_content" | awk '{for(i=1;i<=NF;i++) if($i=="interface") print $(i+1)}' | sed 's/[<{].*//')
+                    elif echo "$clean_content" | grep -q "enum"; then
+                        kind="enum"
+                        name=$(echo "$clean_content" | awk '{for(i=1;i<=NF;i++) if($i=="enum") print $(i+1)}' | sed 's/[<{].*//')
+                    fi
+                # Extract method and constructor declarations
+                elif echo "$clean_content" | grep -qE '\w+\s*\(' && ! echo "$clean_content" | grep -qE '\b(if|for|while|catch|switch)\s*\('; then
+                    # Skip common control structures that aren't methods
+                    kind="method"
+                    # Extract method name (word before the opening parenthesis)
+                    name=$(echo "$clean_content" | sed -E 's/.*\b([a-zA-Z_][a-zA-Z0-9_]*)\s*\(.*/\1/')
+                    
+                    # Check if it's a constructor (method name matches class name pattern)
+                    if echo "$name" | grep -qE '^[A-Z]'; then
+                        kind="constructor"
+                    fi
+                fi
+                
+                # Only output if we found a valid symbol
+                if [[ -n "$name" ]]; then
+                    echo "{\"name\":\"$name\",\"kind\":\"$kind\",\"visibility\":\"$visibility\",\"line_start\":$line_num,\"line_end\":$((line_num + 5))}"
+                fi
+            done | jq -s . 2>/dev/null || echo "[]"
             ;;
         *)
             echo "[]"
