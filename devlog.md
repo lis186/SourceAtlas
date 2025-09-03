@@ -539,3 +539,111 @@ Search completed in 0.027s
 - ✅ **Debug Capability**: Timing helps identify performance issues
 
 **Summary**: RESOLVED. Query command now provides real-time progress feedback and precise execution timing, significantly improving user experience and tool transparency.
+
+---
+
+## Iteration 6: Auto-Generate Symbol Tables for Optimal Performance
+**Date**: 2024-09-03  
+**Goal**: Automatically generate missing symbol tables during symbol searches for optimal performance
+
+### User Experience Problem
+
+#### Issue Identified
+- Users performing `satlas query --type symbol` with missing symbol tables get slow fallback performance
+- No automatic optimization - users must manually run `satlas symbols` first
+- Poor discovery: users don't know symbol table improves performance dramatically
+
+**Example Problem:**
+```bash
+satlas query --type symbol "DCAppNodeView"
+Searching for pattern: DCAppNodeView
+Search type: symbol
+----------------------------------------
+Symbol table not found, using index fallback...
+# Takes 4.6s instead of 0.02s
+```
+
+### Solution Implementation
+
+✅ **Smart Auto-Generation**: Automatically creates symbol tables when missing during symbol searches!
+
+**New Workflow:**
+1. **Detection**: Query detects missing symbol table
+2. **Generation**: Automatically runs `satlas symbols` 
+3. **Retry**: Re-runs search with newly created symbol table
+4. **Optimization**: Subsequent searches use fast symbol table path
+
+### Implementation Results
+
+**Enhanced Symbol Search Experience:**
+```bash
+# First symbol search (no symbol table exists)
+satlas query --type symbol "permutations"
+
+Searching for pattern: permutations
+Search type: symbol
+----------------------------------------
+Symbol table not found, generating it for faster searches...
+Running: satlas symbols
+
+Processing 109 files for symbols...
+[100%] Processing symbols: 109/109 files | Found 442 symbols
+Generated 442 symbols
+Symbol table created: .sourceatlas/sourceatlas.symbols.tsv
+
+Symbol table generated successfully!
+Retrying search with symbol table...
+Using symbol table: sourceatlas.symbols.tsv
+
+Found 2 matches for pattern: permutations
+./Sources/Algorithms/Permutations.swift:396  
+./Sources/Algorithms/Permutations.swift:339
+
+Search completed in 3.218s
+```
+
+```bash  
+# Subsequent symbol searches (symbol table exists)
+satlas query --type symbol "unique"
+
+Searching for pattern: unique
+Search type: symbol
+----------------------------------------
+Using symbol table: sourceatlas.symbols.tsv
+
+Found 2 matches for pattern: unique
+./Sources/Algorithms/Unique.swift:87
+./Sources/Algorithms/Unique.swift:115
+
+Search completed in 0.020s  # 160x faster!
+```
+
+### User Experience Benefits
+
+- ✅ **Zero Configuration**: Symbol searches automatically optimize themselves
+- ✅ **Progressive Performance**: First search sets up optimization for all future searches
+- ✅ **Transparent Operation**: Clear messaging about what's happening and why
+- ✅ **Graceful Fallback**: If generation fails, still works with index fallback
+- ✅ **One-Time Cost**: Symbol table generation only happens once per codebase
+
+### Technical Implementation
+
+**Auto-Generation Logic (bin/sourceatlas:1843-1897):**
+1. **Detection**: Check if `$symbols_file` exists
+2. **Generation**: Call `cmd_symbols` to create symbol table with progress
+3. **Retry**: Re-run symbol search with new table using same grep optimization
+4. **Fallback**: Use index search only if symbol generation fails
+
+**Performance Impact:**
+- **First search**: 3.2s (includes generation time ~3s + search ~0.2s)
+- **Subsequent searches**: 0.02s (pure symbol table performance)
+- **ROI**: Pays for itself after 2-3 symbol searches
+
+### User Impact Summary
+
+**Before**: Users had to discover and manually run `satlas symbols`, or suffer slow searches  
+**After**: Symbol searches automatically optimize themselves with clear progress feedback
+
+This eliminates a major usability barrier and ensures all users get optimal symbol search performance without needing to understand the internal optimization details.
+
+**Summary**: RESOLVED. Symbol searches now automatically generate missing symbol tables, providing optimal performance with zero user configuration required.

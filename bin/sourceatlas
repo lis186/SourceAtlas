@@ -1840,8 +1840,61 @@ EOF
                     ((match_count++))
                 done < <(tail -n +2 "$symbols_file" | eval "$grep_cmd")
             else
-                echo "Symbol table not found, using index fallback..." >&2
-                # Fallback to searching in index symbols
+                echo "Symbol table not found, generating it for faster searches..." >&2
+                echo "Running: satlas symbols" >&2
+                
+                # Auto-generate symbol table for better performance
+                if cmd_symbols; then
+                    echo "Symbol table generated successfully!" >&2
+                    echo "Retrying search with symbol table..." >&2
+                    
+                    # Retry the search with the newly generated symbol table
+                    if [[ -f "$symbols_file" ]]; then
+                        echo "Using symbol table: $(basename "$symbols_file")" >&2
+                        
+                        local grep_cmd
+                        if [[ "$use_regex" == true ]]; then
+                            if [[ "$ignore_case" == true ]]; then
+                                grep_cmd="grep -i"
+                            else
+                                grep_cmd="grep"
+                            fi
+                            grep_cmd="$grep_cmd '$query_pattern'"
+                        else
+                            if [[ "$ignore_case" == true ]]; then
+                                grep_cmd="grep -Fi"
+                            else
+                                grep_cmd="grep -F"
+                            fi
+                            grep_cmd="$grep_cmd '$query_pattern'"
+                        fi
+                        
+                        while IFS=$'\t' read -r symbol_name kind repo file_path line_start line_end; do
+                            # Handle empty kind field by shifting variables
+                            if [[ -z "$line_end" ]]; then
+                                line_end="$line_start"
+                                line_start="$file_path"  
+                                file_path="$repo"
+                                repo="$kind"
+                                kind=""
+                            fi
+                            [[ "$match_count" -ge "$limit" ]] && break
+                            
+                            local score=100
+                            results+=("$file_path:$line_start:$symbol_name ($kind):$score")
+                            ((match_count++))
+                        done < <(tail -n +2 "$symbols_file" | eval "$grep_cmd")
+                    else
+                        echo "Failed to generate symbol table, using index fallback..." >&2
+                        # Fallback to searching in index symbols
+                    fi
+                else
+                    echo "Failed to generate symbol table, using index fallback..." >&2
+                    # Fallback to searching in index symbols
+                fi
+                
+                # Only use index fallback if symbol table generation failed
+                if [[ ! -f "$symbols_file" ]]; then
                 while IFS= read -r line; do
                     [[ "$match_count" -ge "$limit" ]] && break
                     [[ -z "$line" ]] && continue
@@ -1875,6 +1928,7 @@ EOF
                         fi
                     done < <(echo "$symbols_array" | jq -r '.[] | "\(.name):\(.line_start):\(.kind)"')
                 done < "$index_file"
+                fi
             fi
             ;;
         path)
