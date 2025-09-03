@@ -445,3 +445,97 @@ done < <(tail -n +2 "$symbols_file" | grep -F "$pattern")
 - ✅ **Automatic Optimization**: Symbol table generation via `satlas symbols` or `satlas run`
 
 **Summary**: RESOLVED. Symbol search performance optimized from 4.6s to 1.0s (~5x faster) through grep-first filtering and symbol table usage.
+
+---
+
+## Iteration 5: Query Progress Indicators and Timing
+**Date**: 2024-09-03
+**Goal**: Add progress indicators and execution time display to query command
+
+### User Experience Enhancement
+
+#### Problem Statement
+- Users had no feedback during query execution
+- No visibility into search progress or performance
+- Difficult to understand why some searches take longer than others
+
+#### Implementation
+
+**Progress Indicators Added:**
+1. **Search Status Display**: Shows search parameters and configuration
+2. **Search Method Feedback**: Indicates whether using symbol table or index fallback
+3. **Execution Time**: Displays precise timing in seconds
+
+### Implementation Results
+
+✅ **Enhanced Query User Experience**: Real-time feedback and performance metrics!
+
+**New Query Output Format:**
+```bash
+# Status indicators (stderr)
+Searching for pattern: permutations
+Search type: symbol
+----------------------------------------
+Using symbol table: sourceatlas.symbols.tsv
+
+# Results (stdout)
+Found 2 matches for pattern: permutations
+./Sources/Algorithms/Permutations.swift:396
+./Sources/Algorithms/Permutations.swift:339
+
+# Completion timing (stderr)
+Search completed in 0.027s
+```
+
+**Test Results Across Search Types:**
+
+1. **Fast Symbol Search** (with symbol table):
+   ```bash
+   satlas query --type symbol "permutations"
+   # Shows: Using symbol table, completed in 0.027s
+   ```
+
+2. **Content Search** (slower, full index):
+   ```bash
+   satlas query --type content "swift"  
+   # Shows: 50 matches, completed in 3.298s
+   ```
+
+3. **Verbose Output** (detailed metadata):
+   ```bash
+   satlas query --type symbol --verbose "test"
+   # Shows: File details + completed in 0.018s
+   ```
+
+4. **JSON Format** (includes timing):
+   ```json
+   {
+     "query": "unique",
+     "type": "symbol", 
+     "total_matches": 2,
+     "execution_time": "0.012s",
+     "results": [...]
+   }
+   ```
+
+### Technical Implementation
+
+**Progress Indicators (bin/sourceatlas:1789-1794):**
+- Start time capture: `local start_time=$(date +%s.%N)`
+- Search configuration display to stderr
+- Method selection feedback (symbol table vs index)
+
+**Timing Display (bin/sourceatlas:2053-2060, 2121-2122):**
+- End time calculation with microsecond precision
+- Both text and JSON format support
+- Consistent timing display across all search results
+
+### User Experience Impact
+
+- ✅ **Immediate Feedback**: Users see search progress immediately
+- ✅ **Performance Transparency**: Clear timing helps users understand speed
+- ✅ **Method Awareness**: Shows whether symbol table optimization is active
+- ✅ **Professional Feel**: Progress indicators make tool feel responsive and polished
+- ✅ **Debug Capability**: Timing helps identify performance issues
+
+**Summary**: RESOLVED. Query command now provides real-time progress feedback and precise execution timing, significantly improving user experience and tool transparency.

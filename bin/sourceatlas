@@ -1784,6 +1784,14 @@ EOF
     
     local results=()
     local match_count=0
+    local start_time=$(date +%s.%N)
+    
+    # Show search status
+    echo "Searching for pattern: $query_pattern" >&2
+    echo "Search type: $search_type" >&2
+    [[ "$ignore_case" == true ]] && echo "Case insensitive: enabled" >&2
+    [[ "$use_regex" == true ]] && echo "Regex mode: enabled" >&2
+    echo "----------------------------------------" >&2
     
     # Prepare grep options
     local grep_opts=""
@@ -1795,6 +1803,7 @@ EOF
         symbol)
             # Search in symbols file if available
             if [[ -f "$symbols_file" ]]; then
+                echo "Using symbol table: $(basename "$symbols_file")" >&2
                 # Skip header line and parse TSV format: symbol	kind	repo	path	line_start	line_end
                 # Note: kind field is often empty, so repo becomes kind, path becomes repo, etc.
                 # Use grep to filter symbol table efficiently
@@ -1831,6 +1840,7 @@ EOF
                     ((match_count++))
                 done < <(tail -n +2 "$symbols_file" | eval "$grep_cmd")
             else
+                echo "Symbol table not found, using index fallback..." >&2
                 # Fallback to searching in index symbols
                 while IFS= read -r line; do
                     [[ "$match_count" -ge "$limit" ]] && break
@@ -2040,9 +2050,14 @@ EOF
             ;;
     esac
     
+    # Calculate execution time
+    local end_time=$(date +%s.%N)
+    local execution_time=$(echo "$end_time - $start_time" | bc -l | xargs printf "%.3f")
+    
     # Output results
     if [[ ${#results[@]} -eq 0 ]]; then
         echo "No matches found for pattern: $query_pattern"
+        echo "Search completed in ${execution_time}s" >&2
         return 0
     fi
     
@@ -2051,6 +2066,7 @@ EOF
         echo "  \"query\": \"$query_pattern\","
         echo "  \"type\": \"$search_type\","
         echo "  \"total_matches\": ${#results[@]},"
+        echo "  \"execution_time\": \"${execution_time}s\","
         echo "  \"results\": ["
         
         for i in "${!results[@]}"; do
@@ -2101,6 +2117,9 @@ EOF
                 fi
             fi
         done
+        
+        echo "" >&2
+        echo "Search completed in ${execution_time}s" >&2
     fi
 }
 
