@@ -1797,6 +1797,24 @@ EOF
             if [[ -f "$symbols_file" ]]; then
                 # Skip header line and parse TSV format: symbol	kind	repo	path	line_start	line_end
                 # Note: kind field is often empty, so repo becomes kind, path becomes repo, etc.
+                # Use grep to filter symbol table efficiently
+                local grep_cmd
+                if [[ "$use_regex" == true ]]; then
+                    if [[ "$ignore_case" == true ]]; then
+                        grep_cmd="grep -i"
+                    else
+                        grep_cmd="grep"
+                    fi
+                    grep_cmd="$grep_cmd '$query_pattern'"
+                else
+                    if [[ "$ignore_case" == true ]]; then
+                        grep_cmd="grep -Fi"
+                    else
+                        grep_cmd="grep -F"
+                    fi
+                    grep_cmd="$grep_cmd '$query_pattern'"
+                fi
+                
                 while IFS=$'\t' read -r symbol_name kind repo file_path line_start line_end; do
                     # Handle empty kind field by shifting variables
                     if [[ -z "$line_end" ]]; then
@@ -1808,27 +1826,10 @@ EOF
                     fi
                     [[ "$match_count" -ge "$limit" ]] && break
                     
-                    local match=false
-                    if [[ "$use_regex" == true ]]; then
-                        if [[ "$ignore_case" == true ]]; then
-                            echo "$symbol_name" | grep -qi "$query_pattern" && match=true
-                        else
-                            echo "$symbol_name" | grep -q "$query_pattern" && match=true
-                        fi
-                    else
-                        if [[ "$ignore_case" == true ]]; then
-                            echo "$symbol_name" | grep -Fqi "$query_pattern" && match=true
-                        else
-                            echo "$symbol_name" | grep -Fq "$query_pattern" && match=true
-                        fi
-                    fi
-                    
-                    if [[ "$match" == true ]]; then
-                        local score=100
-                        results+=("$file_path:$line_start:$symbol_name ($kind):$score")
-                        ((match_count++))
-                    fi
-                done < <(tail -n +2 "$symbols_file")
+                    local score=100
+                    results+=("$file_path:$line_start:$symbol_name ($kind):$score")
+                    ((match_count++))
+                done < <(tail -n +2 "$symbols_file" | eval "$grep_cmd")
             else
                 # Fallback to searching in index symbols
                 while IFS= read -r line; do
