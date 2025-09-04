@@ -37,14 +37,30 @@ generate_uuid() {
         uuidgen | tr '[:upper:]' '[:lower:]'
     elif [[ -e /proc/sys/kernel/random/uuid ]]; then
         cat /proc/sys/kernel/random/uuid
+    elif [[ -r /dev/urandom ]]; then
+        # More efficient: use /dev/urandom for better entropy
+        local hex=$(od -x /dev/urandom | head -1 | awk '{OFS=""; print $2$3$4$5$6$7$8$9}')
+        printf "%s-%s-%s-%s-%s" \
+            "${hex:0:8}" \
+            "${hex:8:4}" \
+            "4${hex:12:3}" \
+            "${hex:15:4}" \
+            "${hex:19:12}"
     else
-        # Fallback: generate pseudo-UUID using date and random
-        printf "%08x-%04x-%04x-%04x-%012x" \
-            $((RANDOM * RANDOM)) \
-            $((RANDOM % 65536)) \
-            $((RANDOM % 65536)) \
-            $((RANDOM % 65536)) \
-            $((RANDOM * RANDOM * RANDOM))
+        # Fallback: optimized pseudo-UUID using fewer random calls
+        local timestamp=$(date +%s)
+        local nanos=$(($(date +%N) % 1000000))
+        local pid=$$
+        local rand1=$RANDOM
+        local rand2=$RANDOM
+        
+        printf "%08x-%04x-4%03x-%04x-%06x%06x" \
+            $((timestamp ^ pid)) \
+            $((nanos % 65536)) \
+            $((rand1 % 4096)) \
+            $(((rand2 % 16384) + 32768)) \
+            $((timestamp % 1000000)) \
+            $((pid * rand1 % 1000000))
     fi
 }
 
@@ -171,14 +187,92 @@ release_lock() {
     fi
 }
 
+# Path validation to prevent directory traversal attacks
+validate_path() {
+    local path="$1"
+    local param_name="${2:-path}"
+    local allow_absolute="${3:-false}"
+    
+    # Check if path is empty
+    if [[ -z "$path" ]]; then
+        echo "ERROR: $param_name cannot be empty" >&2
+        return 1
+    fi
+    
+    # Check for directory traversal patterns
+    if [[ "$path" =~ \.\./|\.\.\\ ]]; then
+        echo "ERROR: $param_name contains directory traversal sequences" >&2
+        return 1
+    fi
+    
+    # Check for null bytes (directory traversal via null byte injection)
+    if [[ "$path" =~ $'\0' ]]; then
+        echo "ERROR: $param_name contains null bytes" >&2
+        return 1
+    fi
+    
+    # Check for absolute paths if not allowed
+    if [[ "$allow_absolute" != "true" ]] && [[ "$path" =~ ^/ ]]; then
+        echo "ERROR: $param_name cannot be an absolute path" >&2
+        return 1
+    fi
+    
+    # Check for suspicious patterns
+    if [[ "$path" =~ ^\.\.$ ]] || [[ "$path" =~ /\.\.$ ]] || [[ "$path" =~ ^\.\./ ]] || [[ "$path" =~ /\.\./  ]]; then
+        echo "ERROR: $param_name contains suspicious path patterns" >&2
+        return 1
+    fi
+    
+    # Check for control characters and dangerous characters
+    if [[ "$path" =~ [\x00-\x1F\x7F] ]] || [[ "$path" =~ [\<\>\|\&] ]]; then
+        echo "ERROR: $param_name contains dangerous characters" >&2
+        return 1
+    fi
+    
+    return 0
+}
+
+# Sanitize and normalize path 
+normalize_path() {
+    local path="$1"
+    
+    # Remove duplicate slashes
+    path=$(echo "$path" | sed 's|/\+|/|g')
+    
+    # Remove trailing slash (except for root)
+    if [[ "$path" != "/" ]]; then
+        path="${path%/}"
+    fi
+    
+    # Handle empty path
+    if [[ -z "$path" ]]; then
+        path="."
+    fi
+    
+    echo "$path"
+}
+
 # Safe file append with locking
 safe_file_append() {
     local file="$1"
     local content="$2"
     local lock_timeout="${3:-5}"
     
+    # Path validation
+    if ! validate_path "$file" "file_path" "true"; then
+        return 1
+    fi
+    
+    # Normalize path
+    file=$(normalize_path "$file")
+    
     # Ensure directory exists
-    mkdir -p "$(dirname "$file")"
+    local dir_path=$(dirname "$file")
+    if ! validate_path "$dir_path" "directory_path" "true"; then
+        return 1
+    fi
+    
+    mkdir -p "$dir_path"
     
     # Acquire lock
     if ! acquire_lock "$file" "$lock_timeout"; then
