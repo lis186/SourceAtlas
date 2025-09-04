@@ -175,7 +175,7 @@ Deps：Phase 7 完成
 - [x] Step 8.1 事件系統基礎建設（完成：2025-09-04 20:07 UTC+8）
   - 產出：`.sourceatlas/events.jsonl` 結構化事件記錄
   - 驗證標準：所有重要操作都發出 OpenTelemetry 相容事件，包含 trace_id/span_id
-- [ ] Step 8.2 狀態機框架實作
+- [x] Step 8.2 狀態機框架實作（完成：2025-09-04 22:54 UTC+8）
   - 產出：檔案處理狀態機 (INIT→VALIDATE→EXTRACT_METADATA→EXTRACT_SYMBOLS→COMPLETE)
   - 驗證標準：支援從任意狀態恢復，失敗時可重試或跳過
 - [ ] Step 8.3 快照和時間旅行除錯

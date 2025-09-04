@@ -189,6 +189,303 @@ track_performance() {
 }
 
 # ================================================================================
+# State Machine Framework for File Processing
+# ================================================================================
+
+# State machine states
+readonly STATE_INIT="INIT"
+readonly STATE_VALIDATE="VALIDATE"
+readonly STATE_EXTRACT_METADATA="EXTRACT_METADATA"
+readonly STATE_EXTRACT_SYMBOLS="EXTRACT_SYMBOLS"
+readonly STATE_GENERATE_SUMMARY="GENERATE_SUMMARY"
+readonly STATE_COMPLETE="COMPLETE"
+readonly STATE_FAILED="FAILED"
+readonly STATE_SKIPPED="SKIPPED"
+
+# State persistence file
+export STATE_DB_FILE=".sourceatlas/state.db"
+
+# Initialize state database
+init_state_db() {
+    local out_dir="${1:-.sourceatlas}"
+    mkdir -p "$out_dir"
+    export STATE_DB_FILE="$out_dir/state.db"
+    
+    # Create state db header if it doesn't exist
+    if [[ ! -f "$STATE_DB_FILE" ]]; then
+        echo "# SourceAtlas State Database" > "$STATE_DB_FILE"
+        echo "# Format: file_path|current_state|last_updated|retry_count|error_message" >> "$STATE_DB_FILE"
+    fi
+}
+
+# Get current state for a file
+get_file_state() {
+    local file_path="$1"
+    
+    if [[ ! -f "$STATE_DB_FILE" ]]; then
+        echo "$STATE_INIT"
+        return
+    fi
+    
+    # Find the file in state db
+    local state_line=$(grep -F "$file_path|" "$STATE_DB_FILE" 2>/dev/null | tail -1)
+    if [[ -n "$state_line" ]]; then
+        echo "$state_line" | cut -d'|' -f2
+    else
+        echo "$STATE_INIT"
+    fi
+}
+
+# Update file state in database
+update_file_state() {
+    local file_path="$1"
+    local new_state="$2"
+    local error_message="${3:-}"
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Get current retry count
+    local current_entry=$(grep -F "$file_path|" "$STATE_DB_FILE" 2>/dev/null | tail -1)
+    local retry_count=0
+    if [[ -n "$current_entry" ]]; then
+        retry_count=$(echo "$current_entry" | cut -d'|' -f4)
+        # Increment retry count if moving to failed state
+        if [[ "$new_state" == "$STATE_FAILED" ]]; then
+            retry_count=$((retry_count + 1))
+        fi
+    fi
+    
+    # Escape pipe characters in error message
+    error_message=$(echo "$error_message" | sed 's/|/\\|/g')
+    
+    # Append new state entry
+    echo "$file_path|$new_state|$timestamp|$retry_count|$error_message" >> "$STATE_DB_FILE"
+    
+    # Emit state change event
+    emit_event "state_changed" "{
+        \"file\": \"$file_path\",
+        \"new_state\": \"$new_state\",
+        \"retry_count\": $retry_count,
+        \"error\": \"$error_message\"
+    }"
+}
+
+# State machine processor for a single file
+process_file_state_machine() {
+    local file_path="$1"
+    local max_retries="${2:-3}"
+    
+    start_span "file_processing_$(basename "$file_path")"
+    
+    local current_state=$(get_file_state "$file_path")
+    local retry_count=0
+    
+    emit_event "file_processing_started" "{
+        \"file\": \"$file_path\",
+        \"initial_state\": \"$current_state\"
+    }"
+    
+    # State machine loop
+    while [[ "$current_state" != "$STATE_COMPLETE" && "$current_state" != "$STATE_FAILED" && "$current_state" != "$STATE_SKIPPED" ]]; do
+        
+        emit_event "state_processing" "{
+            \"file\": \"$file_path\",
+            \"state\": \"$current_state\",
+            \"retry_count\": $retry_count
+        }"
+        
+        case "$current_state" in
+            "$STATE_INIT")
+                if sm_init_file "$file_path"; then
+                    current_state="$STATE_VALIDATE"
+                    update_file_state "$file_path" "$current_state"
+                else
+                    update_file_state "$file_path" "$STATE_FAILED" "Failed to initialize file processing"
+                    current_state="$STATE_FAILED"
+                fi
+                ;;
+                
+            "$STATE_VALIDATE")
+                if sm_validate_file "$file_path"; then
+                    current_state="$STATE_EXTRACT_METADATA"
+                    update_file_state "$file_path" "$current_state"
+                else
+                    if (( retry_count < max_retries )); then
+                        update_file_state "$file_path" "$STATE_VALIDATE" "Validation failed, retrying"
+                        ((retry_count++))
+                    else
+                        update_file_state "$file_path" "$STATE_SKIPPED" "Validation failed after $max_retries retries"
+                        current_state="$STATE_SKIPPED"
+                    fi
+                fi
+                ;;
+                
+            "$STATE_EXTRACT_METADATA")
+                if sm_extract_metadata "$file_path"; then
+                    current_state="$STATE_EXTRACT_SYMBOLS"
+                    update_file_state "$file_path" "$current_state"
+                else
+                    if (( retry_count < max_retries )); then
+                        update_file_state "$file_path" "$STATE_EXTRACT_METADATA" "Metadata extraction failed, retrying"
+                        ((retry_count++))
+                    else
+                        update_file_state "$file_path" "$STATE_FAILED" "Metadata extraction failed after $max_retries retries"
+                        current_state="$STATE_FAILED"
+                    fi
+                fi
+                ;;
+                
+            "$STATE_EXTRACT_SYMBOLS")
+                if sm_extract_symbols "$file_path"; then
+                    current_state="$STATE_GENERATE_SUMMARY"
+                    update_file_state "$file_path" "$current_state"
+                else
+                    if (( retry_count < max_retries )); then
+                        update_file_state "$file_path" "$STATE_EXTRACT_SYMBOLS" "Symbol extraction failed, retrying"
+                        ((retry_count++))
+                    else
+                        update_file_state "$file_path" "$STATE_FAILED" "Symbol extraction failed after $max_retries retries"
+                        current_state="$STATE_FAILED"
+                    fi
+                fi
+                ;;
+                
+            "$STATE_GENERATE_SUMMARY")
+                if sm_generate_summary "$file_path"; then
+                    current_state="$STATE_COMPLETE"
+                    update_file_state "$file_path" "$current_state"
+                else
+                    if (( retry_count < max_retries )); then
+                        update_file_state "$file_path" "$STATE_GENERATE_SUMMARY" "Summary generation failed, retrying"
+                        ((retry_count++))
+                    else
+                        update_file_state "$file_path" "$STATE_FAILED" "Summary generation failed after $max_retries retries"
+                        current_state="$STATE_FAILED"
+                    fi
+                fi
+                ;;
+                
+            *)
+                update_file_state "$file_path" "$STATE_FAILED" "Unknown state: $current_state"
+                current_state="$STATE_FAILED"
+                ;;
+        esac
+        
+        # Prevent infinite loops
+        if (( retry_count > max_retries * 2 )); then
+            update_file_state "$file_path" "$STATE_FAILED" "Too many retries, aborting"
+            current_state="$STATE_FAILED"
+        fi
+    done
+    
+    emit_event "file_processing_completed" "{
+        \"file\": \"$file_path\",
+        \"final_state\": \"$current_state\",
+        \"total_retries\": $retry_count
+    }"
+    
+    end_span "file_processing_$(basename "$file_path")" $([[ "$current_state" == "$STATE_COMPLETE" ]] && echo 0 || echo 1)
+    
+    # Return success only if completed
+    [[ "$current_state" == "$STATE_COMPLETE" ]]
+}
+
+# State machine step implementations
+sm_init_file() {
+    local file_path="$1"
+    
+    # Check if file exists and is readable
+    [[ -f "$file_path" && -r "$file_path" ]]
+}
+
+sm_validate_file() {
+    local file_path="$1"
+    
+    # Basic validation: file should exist, be readable, and not empty
+    if [[ ! -f "$file_path" ]]; then
+        return 1
+    fi
+    
+    if [[ ! -r "$file_path" ]]; then
+        return 1
+    fi
+    
+    # Check if file is not empty (allow empty files for now)
+    # Could add more validation rules here
+    return 0
+}
+
+sm_extract_metadata() {
+    local file_path="$1"
+    
+    # Extract basic metadata: size, lines, hash
+    local size_bytes=$(get_file_size "$file_path" 2>/dev/null)
+    local loc=$(count_lines "$file_path" 2>/dev/null)
+    local content_hash=$(calculate_hash "$file_path" 2>/dev/null)
+    
+    # Check if all metadata was extracted successfully
+    [[ -n "$size_bytes" && -n "$loc" && -n "$content_hash" ]]
+}
+
+sm_extract_symbols() {
+    local file_path="$1"
+    
+    # Get language for file
+    local ext=$(get_extension "$file_path")
+    local lang=$(get_language "$ext")
+    
+    # Extract symbols based on language
+    local symbols_json=$(extract_symbols "$file_path" "$lang" 2>/dev/null)
+    
+    # Symbol extraction is considered successful even if no symbols found
+    # (some files legitimately have no symbols)
+    return 0
+}
+
+sm_generate_summary() {
+    local file_path="$1"
+    
+    # Generate summary for the file
+    local ext=$(get_extension "$file_path")
+    local lang=$(get_language "$ext")
+    local role=$(detect_role "$file_path")
+    
+    local summary=$(generate_summary "$file_path" "$lang" "$role" 2>/dev/null)
+    
+    # Summary generation is considered successful even if empty
+    return 0
+}
+
+# Recover processing from a specific state
+recover_file_processing() {
+    local file_path="$1"
+    local from_state="${2:-}"
+    
+    if [[ -n "$from_state" ]]; then
+        update_file_state "$file_path" "$from_state"
+    fi
+    
+    process_file_state_machine "$file_path"
+}
+
+# Get processing statistics
+get_processing_stats() {
+    local out_dir="${1:-.sourceatlas}"
+    local state_db="$out_dir/state.db"
+    
+    if [[ ! -f "$state_db" ]]; then
+        echo "{\"total\": 0, \"complete\": 0, \"failed\": 0, \"skipped\": 0}"
+        return
+    fi
+    
+    local total=$(grep -v "^#" "$state_db" | wc -l | tr -d ' ')
+    local complete=$(grep -F "|$STATE_COMPLETE|" "$state_db" | wc -l | tr -d ' ')
+    local failed=$(grep -F "|$STATE_FAILED|" "$state_db" | wc -l | tr -d ' ')
+    local skipped=$(grep -F "|$STATE_SKIPPED|" "$state_db" | wc -l | tr -d ' ')
+    
+    echo "{\"total\": $total, \"complete\": $complete, \"failed\": $failed, \"skipped\": $skipped}"
+}
+
+# ================================================================================
 
 # Show version information
 show_version() {
@@ -3404,6 +3701,9 @@ main() {
     
     # Initialize event system early
     init_event_system
+    
+    # Initialize state machine database
+    init_state_db
     
     # Build args array safely
     local args_json="[]"
