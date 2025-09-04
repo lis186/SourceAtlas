@@ -2123,6 +2123,7 @@ cmd_scan() {
     local root_dir="."
     local out_dir=".sourceatlas"
     local debug_mode=false
+    local verbose=false
     
     # Parse arguments
     while [[ $# -gt 0 ]]; do
@@ -2139,6 +2140,10 @@ cmd_scan() {
                 debug_mode=true
                 shift
                 ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
             --help|-h)
                 cat <<EOF
 Usage: ${PROG_NAME} scan [options]
@@ -2149,11 +2154,13 @@ Options:
   --root DIR      Root directory to scan (default: current directory)
   --out DIR       Output directory (default: .sourceatlas)
   --debug         Enable debug mode to show detailed processing information
+  --verbose, -v   Show detailed scanning progress and timing
   --help, -h      Show this help message
 
 Examples:
   ${PROG_NAME} scan
   ${PROG_NAME} scan --root src --out .sourceatlas
+  ${PROG_NAME} scan --verbose
 EOF
                 exit 0
                 ;;
@@ -2367,6 +2374,18 @@ EOF
         echo "  Average time per file: $((total_processing_time / file_count))ms"
     fi
     echo "  Index created: $index_file"
+    
+    # Add verbose timing information if requested
+    if [[ "$verbose" == true ]]; then
+        echo ""
+        echo "Verbose Timing Details:"
+        echo "  Scan duration: ${total_elapsed}ms"
+        echo "  Processing time: ${total_processing_time}ms" 
+        echo "  Files per second: $(( file_count * 1000 / (total_elapsed + 1) ))"
+        if [[ $file_count -gt 0 ]]; then
+            echo "  Throughput: $((total_processing_time / file_count))ms/file"
+        fi
+    fi
 }
 
 # Command: symbols
@@ -2748,6 +2767,13 @@ EOF
     "by_kind": {
       ${kind_json_array:-}
     }
+  },
+  "timing": {
+    "generated_at": "$timestamp",
+    "scan_time": "$(date +%s%3N)ms",
+    "index_time": "$(date +%s%3N)ms",
+    "duration": "$(date +%s%3N)ms",
+    "elapsed": "$(date +%s%3N)ms"
   }
 }
 EOF
