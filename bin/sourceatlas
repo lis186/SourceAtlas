@@ -257,10 +257,23 @@ safe_file_append() {
     local file="$1"
     local content="$2"
     local lock_timeout="${3:-5}"
+    local skip_validation="${4:-false}"
     
-    # Path validation
-    if ! validate_path "$file" "file_path" "true"; then
-        return 1
+    # Only validate user-provided paths, not internal system paths
+    if [[ "$skip_validation" != "true" ]]; then
+        # For system files (.sourceatlas/*), allow absolute paths
+        if [[ "$file" =~ \.sourceatlas/ ]] || [[ "$file" =~ ^/tmp/ ]] || [[ "$file" =~ ^/var/tmp/ ]]; then
+            # System files - minimal validation
+            if [[ "$file" =~ \.\./|\.\.\\ ]] || [[ "$file" =~ $'\0' ]]; then
+                echo "ERROR: Invalid system file path: $file" >&2
+                return 1
+            fi
+        else
+            # User files - full validation
+            if ! validate_path "$file" "file_path" "true"; then
+                return 1
+            fi
+        fi
     fi
     
     # Normalize path
@@ -268,10 +281,6 @@ safe_file_append() {
     
     # Ensure directory exists
     local dir_path=$(dirname "$file")
-    if ! validate_path "$dir_path" "directory_path" "true"; then
-        return 1
-    fi
-    
     mkdir -p "$dir_path"
     
     # Acquire lock
@@ -632,11 +641,8 @@ record_performance_metric() {
         return 1
     fi
     
-    # Validate context is valid JSON
-    if ! echo "$context" | jq empty 2>/dev/null; then
-        echo "ERROR: context must be valid JSON" >&2
-        return 1
-    fi
+    # Normalize and validate context JSON (compact multiline JSON)
+    context=$(printf '%s' "$context" | jq -c . 2>/dev/null || echo "{\"raw_context\":\"$(sanitize_for_json "$context")\"}")
     
     local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
     local metric_id=$(generate_uuid)
@@ -1907,8 +1913,8 @@ EOF
     
     local atlas_dir=".sourceatlas"
     
-    # Check if already initialized
-    if [[ -d "${atlas_dir}" ]] && [[ "${force}" = false ]]; then
+    # Check if already initialized (look for config file, not just directory)
+    if [[ -f "${atlas_dir}/config.toml" ]] && [[ "${force}" = false ]]; then
         echo "SourceAtlas already initialized in this directory."
         echo "Use '${PROG_NAME} init --force' to reinitialize."
         exit 0
