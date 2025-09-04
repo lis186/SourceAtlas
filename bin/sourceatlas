@@ -518,7 +518,13 @@ Commands:
   clean           Remove generated files
   run             Run full indexing pipeline
   verify          Verify index consistency
+  snapshot        Create, restore, or list processing snapshots
   help            Show this help message
+
+Debugging and Observability:
+  snapshot create [name]    Create a processing state snapshot
+  snapshot restore <name>   Restore from a saved snapshot
+  snapshot list            List available snapshots
 
 Options:
   --help          Show help for a specific command
@@ -528,6 +534,8 @@ Examples:
   ${PROG_NAME} init
   ${PROG_NAME} scan --root . --out .sourceatlas/
   ${PROG_NAME} run
+  ${PROG_NAME} snapshot create before-scan
+  ${PROG_NAME} snapshot restore before-scan
 
 For more information, see: https://github.com/sourceatlas/sourceatlas
 EOF
@@ -3694,6 +3702,441 @@ compress_output_files() {
 # Command: verify (stub - real implementation is above)
 # The actual cmd_verify implementation is above at line ~2492
 
+# ================================================================================
+# Snapshot and Time Travel Debugging Functions
+# ================================================================================
+
+# Command: snapshot
+cmd_snapshot() {
+    local subcommand="${1:-}"
+    
+    case "$subcommand" in
+        create)
+            shift
+            snapshot_create "$@"
+            ;;
+        restore)
+            shift  
+            snapshot_restore "$@"
+            ;;
+        list)
+            shift
+            snapshot_list "$@"
+            ;;
+        --help|-h|"")
+            cat <<EOF
+Usage: ${PROG_NAME} snapshot <subcommand> [options]
+
+Snapshot and time travel debugging for processing state management.
+
+Subcommands:
+  create [name]     Create a processing state snapshot
+  restore <name>    Restore from a saved snapshot
+  list             List available snapshots
+
+Examples:
+  ${PROG_NAME} snapshot create before-scan
+  ${PROG_NAME} snapshot restore before-scan
+  ${PROG_NAME} snapshot list
+EOF
+            exit 0
+            ;;
+        *)
+            echo "Error: Unknown snapshot subcommand: $subcommand" >&2
+            echo "Run '${PROG_NAME} snapshot --help' for usage." >&2
+            exit 1
+            ;;
+    esac
+}
+
+# Create a processing state snapshot
+snapshot_create() {
+    local snapshot_name=""
+    local out_dir=".sourceatlas"
+    local timestamp=$(date -u +"%Y%m%d_%H%M%S")
+    local verbose=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} snapshot create [name] [options]
+
+Create a complete processing state snapshot for time travel debugging.
+
+Arguments:
+  name             Snapshot name (default: auto-generated timestamp)
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --verbose, -v    Show detailed progress
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} snapshot create
+  ${PROG_NAME} snapshot create before-scan
+  ${PROG_NAME} snapshot create milestone-1 --verbose
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                if [[ -z "$snapshot_name" ]]; then
+                    snapshot_name="$1"
+                else
+                    echo "Error: Unexpected argument: $1" >&2
+                    exit 1
+                fi
+                shift
+                ;;
+        esac
+    done
+    
+    # Generate snapshot name if not provided
+    if [[ -z "$snapshot_name" ]]; then
+        snapshot_name="snapshot_${timestamp}"
+    fi
+    
+    # Create snapshots directory
+    local snapshots_dir="${out_dir}/snapshots"
+    mkdir -p "$snapshots_dir"
+    
+    local snapshot_dir="${snapshots_dir}/${snapshot_name}"
+    
+    if [[ -d "$snapshot_dir" ]]; then
+        echo "Error: Snapshot '$snapshot_name' already exists" >&2
+        exit 1
+    fi
+    
+    mkdir -p "$snapshot_dir"
+    
+    emit_event "snapshot_create_started" "{
+        \"snapshot_name\": \"$snapshot_name\",
+        \"snapshot_dir\": \"$snapshot_dir\",
+        \"timestamp\": \"$timestamp\"
+    }"
+    
+    if [[ "$verbose" == true ]]; then
+        echo "Creating snapshot: $snapshot_name"
+        echo "Snapshot directory: $snapshot_dir"
+    fi
+    
+    local captured_files=0
+    
+    # Capture current state database
+    if [[ -f "${out_dir}/state.db" ]]; then
+        cp "${out_dir}/state.db" "${snapshot_dir}/state.db"
+        captured_files=$((captured_files + 1))
+        [[ "$verbose" == true ]] && echo "  ✓ Captured state database"
+    fi
+    
+    # Capture event stream
+    if [[ -f "${out_dir}/events.jsonl" ]]; then
+        cp "${out_dir}/events.jsonl" "${snapshot_dir}/events.jsonl"
+        captured_files=$((captured_files + 1))
+        [[ "$verbose" == true ]] && echo "  ✓ Captured event stream"
+    fi
+    
+    # Capture audit log
+    if [[ -f "${out_dir}/audit.log" ]]; then
+        cp "${out_dir}/audit.log" "${snapshot_dir}/audit.log"
+        captured_files=$((captured_files + 1))
+        [[ "$verbose" == true ]] && echo "  ✓ Captured audit log"
+    fi
+    
+    # Capture index files
+    for file in "${out_dir}"/*.jsonl "${out_dir}"/*.tsv "${out_dir}"/*.json; do
+        if [[ -f "$file" ]] && [[ "$(basename "$file")" != "events.jsonl" ]]; then
+            cp "$file" "${snapshot_dir}/"
+            captured_files=$((captured_files + 1))
+            [[ "$verbose" == true ]] && echo "  ✓ Captured $(basename "$file")"
+        fi
+    done
+    
+    # Capture configuration files
+    for config_file in "${out_dir}/config.json" "${out_dir}/exclude_patterns.txt"; do
+        if [[ -f "$config_file" ]]; then
+            cp "$config_file" "${snapshot_dir}/"
+            captured_files=$((captured_files + 1))
+            [[ "$verbose" == true ]] && echo "  ✓ Captured $(basename "$config_file")"
+        fi
+    done
+    
+    # Create snapshot metadata
+    cat > "${snapshot_dir}/metadata.json" <<EOF
+{
+  "name": "$snapshot_name",
+  "created_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+  "timestamp": "$timestamp",
+  "captured_files": $captured_files,
+  "working_directory": "$(pwd)",
+  "version": "$VERSION",
+  "schema_version": "$SCHEMA_VERSION"
+}
+EOF
+    
+    emit_event "snapshot_create_completed" "{
+        \"snapshot_name\": \"$snapshot_name\",
+        \"snapshot_dir\": \"$snapshot_dir\",
+        \"captured_files\": $captured_files
+    }"
+    
+    echo "Snapshot created: $snapshot_name"
+    echo "Files captured: $captured_files"
+    echo "Snapshot path: $snapshot_dir"
+}
+
+# Restore from a processing state snapshot
+snapshot_restore() {
+    local snapshot_name=""
+    local out_dir=".sourceatlas"
+    local verbose=false
+    local dry_run=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
+            --dry-run)
+                dry_run=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} snapshot restore <name> [options]
+
+Restore processing state from a saved snapshot for time travel debugging.
+
+Arguments:
+  name             Snapshot name to restore
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --dry-run        Show what would be restored without executing
+  --verbose, -v    Show detailed progress
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} snapshot restore before-scan
+  ${PROG_NAME} snapshot restore milestone-1 --dry-run
+  ${PROG_NAME} snapshot restore snapshot_20241201_143025 --verbose
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                if [[ -z "$snapshot_name" ]]; then
+                    snapshot_name="$1"
+                else
+                    echo "Error: Unexpected argument: $1" >&2
+                    exit 1
+                fi
+                shift
+                ;;
+        esac
+    done
+    
+    if [[ -z "$snapshot_name" ]]; then
+        echo "Error: Snapshot name required" >&2
+        echo "Run '${PROG_NAME} snapshot restore --help' for usage." >&2
+        exit 1
+    fi
+    
+    local snapshots_dir="${out_dir}/snapshots"
+    local snapshot_dir="${snapshots_dir}/${snapshot_name}"
+    
+    if [[ ! -d "$snapshot_dir" ]]; then
+        echo "Error: Snapshot '$snapshot_name' not found" >&2
+        echo "Available snapshots:" >&2
+        snapshot_list --out "$out_dir" | tail -n +2 >&2
+        exit 1
+    fi
+    
+    if [[ ! -f "${snapshot_dir}/metadata.json" ]]; then
+        echo "Error: Snapshot '$snapshot_name' is corrupted (missing metadata)" >&2
+        exit 1
+    fi
+    
+    # Read snapshot metadata
+    local metadata_json=$(cat "${snapshot_dir}/metadata.json")
+    local captured_files=$(echo "$metadata_json" | grep -o '"captured_files": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+    local created_at=$(echo "$metadata_json" | grep -o '"created_at": "[^"]*"' | cut -d'"' -f4)
+    
+    emit_event "snapshot_restore_started" "{
+        \"snapshot_name\": \"$snapshot_name\",
+        \"snapshot_dir\": \"$snapshot_dir\",
+        \"created_at\": \"$created_at\"
+    }"
+    
+    if [[ "$verbose" == true ]] || [[ "$dry_run" == true ]]; then
+        echo "Restoring snapshot: $snapshot_name"
+        echo "Created at: $created_at"
+        echo "Files to restore: $captured_files"
+        echo "Snapshot path: $snapshot_dir"
+        echo ""
+    fi
+    
+    if [[ "$dry_run" == true ]]; then
+        echo "Dry run - would restore these files:"
+        for file in "${snapshot_dir}"/*; do
+            if [[ -f "$file" ]] && [[ "$(basename "$file")" != "metadata.json" ]]; then
+                echo "  $(basename "$file") → ${out_dir}/$(basename "$file")"
+            fi
+        done
+        return 0
+    fi
+    
+    # Create backup of current state before restore
+    local backup_dir="${out_dir}/backup_$(date +%Y%m%d_%H%M%S)"
+    mkdir -p "$backup_dir"
+    
+    # Backup current files
+    local backed_up_files=0
+    for file in "${out_dir}"/*.jsonl "${out_dir}"/*.tsv "${out_dir}"/*.json "${out_dir}/state.db" "${out_dir}/events.jsonl" "${out_dir}/audit.log"; do
+        if [[ -f "$file" ]]; then
+            cp "$file" "$backup_dir/" 2>/dev/null && backed_up_files=$((backed_up_files + 1))
+        fi
+    done
+    
+    if [[ $backed_up_files -gt 0 ]]; then
+        [[ "$verbose" == true ]] && echo "Current state backed up to: $backup_dir ($backed_up_files files)"
+    fi
+    
+    # Restore files from snapshot
+    local restored_files=0
+    for file in "${snapshot_dir}"/*; do
+        if [[ -f "$file" ]] && [[ "$(basename "$file")" != "metadata.json" ]]; then
+            local dest_file="${out_dir}/$(basename "$file")"
+            cp "$file" "$dest_file"
+            restored_files=$((restored_files + 1))
+            [[ "$verbose" == true ]] && echo "  ✓ Restored $(basename "$file")"
+        fi
+    done
+    
+    emit_event "snapshot_restore_completed" "{
+        \"snapshot_name\": \"$snapshot_name\",
+        \"restored_files\": $restored_files,
+        \"backup_dir\": \"$backup_dir\"
+    }"
+    
+    echo "Snapshot restored: $snapshot_name"
+    echo "Files restored: $restored_files"
+    if [[ $backed_up_files -gt 0 ]]; then
+        echo "Previous state backed up to: $backup_dir"
+    fi
+}
+
+# List available processing state snapshots
+snapshot_list() {
+    local out_dir=".sourceatlas"
+    local verbose=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} snapshot list [options]
+
+List all available processing state snapshots.
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --verbose, -v    Show detailed information
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} snapshot list
+  ${PROG_NAME} snapshot list --verbose
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    local snapshots_dir="${out_dir}/snapshots"
+    
+    if [[ ! -d "$snapshots_dir" ]]; then
+        echo "No snapshots found (directory does not exist: $snapshots_dir)"
+        return 0
+    fi
+    
+    local snapshot_count=0
+    
+    echo "Available snapshots:"
+    echo "==================="
+    
+    for snapshot_dir in "${snapshots_dir}"/*; do
+        if [[ -d "$snapshot_dir" ]]; then
+            local snapshot_name=$(basename "$snapshot_dir")
+            snapshot_count=$((snapshot_count + 1))
+            
+            if [[ -f "${snapshot_dir}/metadata.json" ]]; then
+                local metadata_json=$(cat "${snapshot_dir}/metadata.json")
+                local created_at=$(echo "$metadata_json" | grep -o '"created_at": "[^"]*"' | cut -d'"' -f4 | sed 's/T/ /' | sed 's/Z$//')
+                local captured_files=$(echo "$metadata_json" | grep -o '"captured_files": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+                
+                if [[ "$verbose" == true ]]; then
+                    local working_dir=$(echo "$metadata_json" | grep -o '"working_directory": "[^"]*"' | cut -d'"' -f4)
+                    local version=$(echo "$metadata_json" | grep -o '"version": "[^"]*"' | cut -d'"' -f4)
+                    
+                    echo "$snapshot_name"
+                    echo "  Created: $created_at"
+                    echo "  Files: $captured_files"
+                    echo "  Directory: $working_dir"
+                    echo "  Version: $version"
+                    echo ""
+                else
+                    printf "%-30s %s (%s files)\\n" "$snapshot_name" "$created_at" "$captured_files"
+                fi
+            else
+                echo "$snapshot_name (corrupted - missing metadata)"
+            fi
+        fi
+    done
+    
+    if [[ $snapshot_count -eq 0 ]]; then
+        echo "No snapshots found in $snapshots_dir"
+    else
+        echo ""
+        echo "Total snapshots: $snapshot_count"
+    fi
+}
+
 # Main entry point
 main() {
     local command="${1:-}"
@@ -3781,6 +4224,10 @@ main() {
         verify)
             shift
             track_performance "cmd_verify" cmd_verify "$@" || exit_code=$?
+            ;;
+        snapshot)
+            shift
+            track_performance "cmd_snapshot" cmd_snapshot "$@" || exit_code=$?
             ;;
         *)
             emit_event "command_error" "{

@@ -178,7 +178,7 @@ Deps：Phase 7 完成
 - [x] Step 8.2 狀態機框架實作（完成：2025-09-04 22:54 UTC+8）
   - 產出：檔案處理狀態機 (INIT→VALIDATE→EXTRACT_METADATA→EXTRACT_SYMBOLS→COMPLETE)
   - 驗證標準：支援從任意狀態恢復，失敗時可重試或跳過
-- [ ] Step 8.3 快照和時間旅行除錯
+- [x] Step 8.3 快照和時間旅行除錯 (2025-09-04 23:03 UTC+8)
   - 產出：`satlas snapshot create/restore/list` 命令
   - 驗證標準：可完整恢復處理中的任意時間點狀態
 - [ ] Step 8.4 Circuit breaker 和自愈機制
@@ -270,4 +270,4 @@ Gate：在保持可觀測性的前提下，索引生成和查詢性能達到極�
 - [x] Phase 5 完成（完成：2025-09-02 18:55 UTC+8）
 - [x] Phase 6 完成（完成：2025-09-02 19:10 UTC+8）
 - [x] Phase 7 完成（完成：2025-09-02 19:15 UTC+8）
-- [ ] Phase 8 可觀測性與溯源系統（新增：2025-09-04 進行中 - Step 8.1 完成）
+- [ ] Phase 8 可觀測性與溯源系統（新增：2025-09-04 進行中 - Step 8.3 完成，Progress: 3/8 steps complete [37.5%]）
