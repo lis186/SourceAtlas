@@ -269,10 +269,350 @@ update_file_state() {
     }"
 }
 
+# ================================================================================
+# Circuit Breaker and Self-Healing Mechanisms
+# ================================================================================
+
+# Circuit breaker states
+readonly CB_CLOSED="CLOSED"     # Normal operation
+readonly CB_OPEN="OPEN"         # Failures detected, stop processing
+readonly CB_HALF_OPEN="HALF_OPEN" # Testing if service has recovered
+
+# Circuit breaker configuration
+readonly CB_FAILURE_THRESHOLD=5          # Failures before opening circuit
+readonly CB_SUCCESS_THRESHOLD=3          # Successes needed to close circuit
+readonly CB_TIMEOUT_SECONDS=60           # Time before trying half-open
+readonly CB_RECOVERY_WINDOW=300          # Window for counting failures (5 minutes)
+
+# Circuit breaker database file
+export CB_DB_FILE=".sourceatlas/circuit_breaker.db"
+
+# Initialize circuit breaker database
+init_circuit_breaker_db() {
+    local out_dir="${1:-.sourceatlas}"
+    mkdir -p "$out_dir"
+    export CB_DB_FILE="$out_dir/circuit_breaker.db"
+    
+    # Create circuit breaker db header if it doesn't exist
+    if [[ ! -f "$CB_DB_FILE" ]]; then
+        echo "# SourceAtlas Circuit Breaker Database" > "$CB_DB_FILE"
+        echo "# Format: operation|state|failure_count|success_count|last_failure|last_success|opened_at" >> "$CB_DB_FILE"
+        # Initialize default operations
+        local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        echo "file_processing|$CB_CLOSED|0|0|$timestamp|$timestamp|" >> "$CB_DB_FILE"
+        echo "symbol_extraction|$CB_CLOSED|0|0|$timestamp|$timestamp|" >> "$CB_DB_FILE"
+        echo "metadata_extraction|$CB_CLOSED|0|0|$timestamp|$timestamp|" >> "$CB_DB_FILE"
+    fi
+}
+
+# Get circuit breaker state for an operation
+get_circuit_breaker_state() {
+    local operation="$1"
+    
+    if [[ ! -f "$CB_DB_FILE" ]]; then
+        echo "$CB_CLOSED"
+        return
+    fi
+    
+    # Find the operation in circuit breaker db
+    local cb_line=$(grep "^$operation|" "$CB_DB_FILE" 2>/dev/null | tail -1)
+    if [[ -n "$cb_line" ]]; then
+        echo "$cb_line" | cut -d'|' -f2
+    else
+        echo "$CB_CLOSED"
+    fi
+}
+
+# Update circuit breaker state
+update_circuit_breaker_state() {
+    local operation="$1"
+    local new_state="$2"
+    local failure_count="$3"
+    local success_count="$4"
+    local last_failure="$5"
+    local last_success="$6"
+    local opened_at="$7"
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Remove old entry and add new one
+    if [[ -f "$CB_DB_FILE" ]]; then
+        grep -v "^$operation|" "$CB_DB_FILE" > "${CB_DB_FILE}.tmp" 2>/dev/null || touch "${CB_DB_FILE}.tmp"
+        mv "${CB_DB_FILE}.tmp" "$CB_DB_FILE"
+    fi
+    
+    echo "$operation|$new_state|$failure_count|$success_count|$last_failure|$last_success|$opened_at" >> "$CB_DB_FILE"
+    
+    emit_event "circuit_breaker_state_changed" "{
+        \"operation\": \"$operation\",
+        \"new_state\": \"$new_state\",
+        \"failure_count\": $failure_count,
+        \"success_count\": $success_count,
+        \"timestamp\": \"$timestamp\"
+    }"
+}
+
+# Record circuit breaker success
+record_circuit_breaker_success() {
+    local operation="$1"
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    if [[ ! -f "$CB_DB_FILE" ]]; then
+        init_circuit_breaker_db
+    fi
+    
+    # Get current circuit breaker data
+    local cb_line=$(grep "^$operation|" "$CB_DB_FILE" 2>/dev/null | tail -1)
+    if [[ -z "$cb_line" ]]; then
+        # Initialize new operation
+        update_circuit_breaker_state "$operation" "$CB_CLOSED" 0 1 "$timestamp" "$timestamp" ""
+        return
+    fi
+    
+    local current_state=$(echo "$cb_line" | cut -d'|' -f2)
+    local failure_count=$(echo "$cb_line" | cut -d'|' -f3)
+    local success_count=$(echo "$cb_line" | cut -d'|' -f4)
+    local last_failure=$(echo "$cb_line" | cut -d'|' -f5)
+    local opened_at=$(echo "$cb_line" | cut -d'|' -f7)
+    
+    success_count=$((success_count + 1))
+    
+    # State transitions based on success
+    case "$current_state" in
+        "$CB_OPEN")
+            # Don't change state on success while open (should not happen)
+            ;;
+        "$CB_HALF_OPEN")
+            if [[ $success_count -ge $CB_SUCCESS_THRESHOLD ]]; then
+                # Close the circuit - service has recovered
+                update_circuit_breaker_state "$operation" "$CB_CLOSED" 0 0 "$last_failure" "$timestamp" ""
+                emit_event "circuit_breaker_closed" "{
+                    \"operation\": \"$operation\",
+                    \"success_count\": $success_count,
+                    \"message\": \"Circuit breaker closed - service recovered\"
+                }"
+            else
+                # Still testing recovery
+                update_circuit_breaker_state "$operation" "$CB_HALF_OPEN" "$failure_count" "$success_count" "$last_failure" "$timestamp" "$opened_at"
+            fi
+            ;;
+        "$CB_CLOSED")
+            # Reset failure count on success
+            update_circuit_breaker_state "$operation" "$CB_CLOSED" 0 "$success_count" "$last_failure" "$timestamp" ""
+            ;;
+    esac
+}
+
+# Record circuit breaker failure
+record_circuit_breaker_failure() {
+    local operation="$1"
+    local error_message="$2"
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    if [[ ! -f "$CB_DB_FILE" ]]; then
+        init_circuit_breaker_db
+    fi
+    
+    # Get current circuit breaker data
+    local cb_line=$(grep "^$operation|" "$CB_DB_FILE" 2>/dev/null | tail -1)
+    if [[ -z "$cb_line" ]]; then
+        # Initialize new operation with failure
+        update_circuit_breaker_state "$operation" "$CB_CLOSED" 1 0 "$timestamp" "$timestamp" ""
+        return
+    fi
+    
+    local current_state=$(echo "$cb_line" | cut -d'|' -f2)
+    local failure_count=$(echo "$cb_line" | cut -d'|' -f3)
+    local success_count=$(echo "$cb_line" | cut -d'|' -f4)
+    local last_success=$(echo "$cb_line" | cut -d'|' -f6)
+    local opened_at=$(echo "$cb_line" | cut -d'|' -f7)
+    
+    failure_count=$((failure_count + 1))
+    
+    # State transitions based on failure
+    case "$current_state" in
+        "$CB_CLOSED")
+            if [[ $failure_count -ge $CB_FAILURE_THRESHOLD ]]; then
+                # Open the circuit - too many failures
+                update_circuit_breaker_state "$operation" "$CB_OPEN" "$failure_count" 0 "$timestamp" "$last_success" "$timestamp"
+                emit_event "circuit_breaker_opened" "{
+                    \"operation\": \"$operation\",
+                    \"failure_count\": $failure_count,
+                    \"threshold\": $CB_FAILURE_THRESHOLD,
+                    \"message\": \"Circuit breaker opened - too many failures\",
+                    \"error\": \"$error_message\"
+                }"
+            else
+                # Still closed, just increment failure count
+                update_circuit_breaker_state "$operation" "$CB_CLOSED" "$failure_count" "$success_count" "$timestamp" "$last_success" ""
+            fi
+            ;;
+        "$CB_HALF_OPEN")
+            # Failure during testing - reopen circuit
+            update_circuit_breaker_state "$operation" "$CB_OPEN" "$failure_count" 0 "$timestamp" "$last_success" "$timestamp"
+            emit_event "circuit_breaker_reopened" "{
+                \"operation\": \"$operation\",
+                \"message\": \"Circuit breaker reopened - failure during recovery test\",
+                \"error\": \"$error_message\"
+            }"
+            ;;
+        "$CB_OPEN")
+            # Already open, just update failure info
+            update_circuit_breaker_state "$operation" "$CB_OPEN" "$failure_count" "$success_count" "$timestamp" "$last_success" "$opened_at"
+            ;;
+    esac
+}
+
+# Check if circuit breaker allows operation
+circuit_breaker_allows_operation() {
+    local operation="$1"
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    local current_ts=$(date +%s)
+    
+    if [[ ! -f "$CB_DB_FILE" ]]; then
+        init_circuit_breaker_db
+        echo "true"
+        return
+    fi
+    
+    local cb_line=$(grep "^$operation|" "$CB_DB_FILE" 2>/dev/null | tail -1)
+    if [[ -z "$cb_line" ]]; then
+        echo "true"
+        return
+    fi
+    
+    local current_state=$(echo "$cb_line" | cut -d'|' -f2)
+    local opened_at=$(echo "$cb_line" | cut -d'|' -f7)
+    
+    case "$current_state" in
+        "$CB_CLOSED")
+            echo "true"
+            return
+            ;;
+        "$CB_HALF_OPEN")
+            echo "true"
+            return
+            ;;
+        "$CB_OPEN")
+            if [[ -n "$opened_at" ]]; then
+                # Check if timeout period has passed
+                local opened_ts=$(date -d "$opened_at" +%s 2>/dev/null || echo $current_ts)
+                local elapsed=$((current_ts - opened_ts))
+                
+                if [[ $elapsed -ge $CB_TIMEOUT_SECONDS ]]; then
+                    # Move to half-open state
+                    local failure_count=$(echo "$cb_line" | cut -d'|' -f3)
+                    local last_failure=$(echo "$cb_line" | cut -d'|' -f5)
+                    local last_success=$(echo "$cb_line" | cut -d'|' -f6)
+                    
+                    update_circuit_breaker_state "$operation" "$CB_HALF_OPEN" "$failure_count" 0 "$last_failure" "$last_success" "$opened_at"
+                    emit_event "circuit_breaker_half_opened" "{
+                        \"operation\": \"$operation\",
+                        \"message\": \"Circuit breaker moved to half-open - testing recovery\"
+                    }"
+                    echo "true"
+                    return
+                fi
+            fi
+            echo "false"
+            return
+            ;;
+    esac
+}
+
+# Execute operation with circuit breaker protection
+execute_with_circuit_breaker() {
+    local operation="$1"
+    local command="$2"
+    shift 2
+    local args=("$@")
+    
+    # Check if circuit breaker allows operation
+    local allowed=$(circuit_breaker_allows_operation "$operation")
+    if [[ "$allowed" != "true" ]]; then
+        emit_event "circuit_breaker_blocked_operation" "{
+            \"operation\": \"$operation\",
+            \"message\": \"Operation blocked by circuit breaker\"
+        }"
+        return 1
+    fi
+    
+    # Execute the operation
+    local start_time=$(get_timestamp_ms)
+    local exit_code=0
+    
+    if "$command" "${args[@]}"; then
+        # Success
+        record_circuit_breaker_success "$operation"
+        local end_time=$(get_timestamp_ms)
+        emit_event "circuit_breaker_operation_success" "{
+            \"operation\": \"$operation\",
+            \"duration_ms\": $((end_time - start_time))
+        }"
+        return 0
+    else
+        # Failure
+        exit_code=$?
+        record_circuit_breaker_failure "$operation" "Operation failed with exit code $exit_code"
+        local end_time=$(get_timestamp_ms)
+        emit_event "circuit_breaker_operation_failure" "{
+            \"operation\": \"$operation\",
+            \"exit_code\": $exit_code,
+            \"duration_ms\": $((end_time - start_time))
+        }"
+        return $exit_code
+    fi
+}
+
+# Get circuit breaker status for all operations
+get_circuit_breaker_status() {
+    local out_dir="${1:-.sourceatlas}"
+    local cb_db="$out_dir/circuit_breaker.db"
+    
+    if [[ ! -f "$cb_db" ]]; then
+        echo "[]"
+        return
+    fi
+    
+    echo "["
+    local first=true
+    while IFS='|' read -r operation state failure_count success_count last_failure last_success opened_at; do
+        # Skip comments and empty lines
+        [[ "$operation" =~ ^#.*$ ]] || [[ -z "$operation" ]] && continue
+        
+        if [[ "$first" != "true" ]]; then
+            echo ","
+        fi
+        first=false
+        
+        echo "  {"
+        echo "    \"operation\": \"$operation\","
+        echo "    \"state\": \"$state\","
+        echo "    \"failure_count\": $failure_count,"
+        echo "    \"success_count\": $success_count,"
+        echo "    \"last_failure\": \"$last_failure\","
+        echo "    \"last_success\": \"$last_success\","
+        echo "    \"opened_at\": \"$opened_at\""
+        echo -n "  }"
+    done < "$cb_db"
+    echo ""
+    echo "]"
+}
+
 # State machine processor for a single file
 process_file_state_machine() {
     local file_path="$1"
     local max_retries="${2:-3}"
+    
+    # Check if file processing is allowed by circuit breaker
+    local allowed=$(circuit_breaker_allows_operation "file_processing")
+    if [[ "$allowed" != "true" ]]; then
+        emit_event "file_processing_blocked" "{
+            \"file\": \"$file_path\",
+            \"message\": \"File processing blocked by circuit breaker\"
+        }"
+        update_file_state "$file_path" "$STATE_SKIPPED" "Processing blocked by circuit breaker"
+        return 1
+    fi
     
     start_span "file_processing_$(basename "$file_path")"
     
@@ -320,7 +660,7 @@ process_file_state_machine() {
                 ;;
                 
             "$STATE_EXTRACT_METADATA")
-                if sm_extract_metadata "$file_path"; then
+                if execute_with_circuit_breaker "metadata_extraction" sm_extract_metadata "$file_path"; then
                     current_state="$STATE_EXTRACT_SYMBOLS"
                     update_file_state "$file_path" "$current_state"
                 else
@@ -335,7 +675,7 @@ process_file_state_machine() {
                 ;;
                 
             "$STATE_EXTRACT_SYMBOLS")
-                if sm_extract_symbols "$file_path"; then
+                if execute_with_circuit_breaker "symbol_extraction" sm_extract_symbols "$file_path"; then
                     current_state="$STATE_GENERATE_SUMMARY"
                     update_file_state "$file_path" "$current_state"
                 else
@@ -383,10 +723,16 @@ process_file_state_machine() {
         \"total_retries\": $retry_count
     }"
     
-    end_span "file_processing_$(basename "$file_path")" $([[ "$current_state" == "$STATE_COMPLETE" ]] && echo 0 || echo 1)
-    
-    # Return success only if completed
-    [[ "$current_state" == "$STATE_COMPLETE" ]]
+    # Record circuit breaker result
+    if [[ "$current_state" == "$STATE_COMPLETE" ]]; then
+        record_circuit_breaker_success "file_processing"
+        end_span "file_processing_$(basename "$file_path")" 0
+        return 0
+    else
+        record_circuit_breaker_failure "file_processing" "File processing failed with state: $current_state"
+        end_span "file_processing_$(basename "$file_path")" 1
+        return 1
+    fi
 }
 
 # State machine step implementations
@@ -519,12 +865,14 @@ Commands:
   run             Run full indexing pipeline
   verify          Verify index consistency
   snapshot        Create, restore, or list processing snapshots
+  health          Show system health and circuit breaker status
   help            Show this help message
 
 Debugging and Observability:
   snapshot create [name]    Create a processing state snapshot
   snapshot restore <name>   Restore from a saved snapshot
   snapshot list            List available snapshots
+  health                   Check circuit breakers and system health
 
 Options:
   --help          Show help for a specific command
@@ -4137,6 +4485,150 @@ EOF
     fi
 }
 
+# Command: health
+cmd_health() {
+    local out_dir=".sourceatlas"
+    local verbose=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} health [options]
+
+Show system health status including circuit breaker states and recent failures.
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --verbose, -v    Show detailed information
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} health
+  ${PROG_NAME} health --verbose
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    echo "SourceAtlas System Health Report"
+    echo "================================="
+    echo ""
+    
+    local overall_health="HEALTHY"
+    
+    # Check circuit breaker status
+    echo "Circuit Breaker Status:"
+    echo "-----------------------"
+    
+    local cb_status_json=$(get_circuit_breaker_status "$out_dir")
+    if [[ "$cb_status_json" == "[]" ]]; then
+        echo "No circuit breakers initialized"
+    else
+        # Parse and display circuit breaker status
+        while IFS='|' read -r operation state failure_count success_count last_failure last_success opened_at; do
+            # Skip comments and empty lines
+            [[ "$operation" =~ ^#.*$ ]] || [[ -z "$operation" ]] && continue
+            
+            case "$state" in
+                "OPEN")
+                    echo "  ❌ $operation: $state (failures: $failure_count)"
+                    overall_health="DEGRADED"
+                    ;;
+                "HALF_OPEN")
+                    echo "  ⚠️  $operation: $state (failures: $failure_count, testing recovery)"
+                    [[ "$overall_health" == "HEALTHY" ]] && overall_health="RECOVERING"
+                    ;;
+                "CLOSED")
+                    echo "  ✅ $operation: $state (failures: $failure_count, successes: $success_count)"
+                    ;;
+                *)
+                    echo "  ❓ $operation: $state (unknown state)"
+                    [[ "$overall_health" == "HEALTHY" ]] && overall_health="UNKNOWN"
+                    ;;
+            esac
+        done < "$out_dir/circuit_breaker.db"
+        
+        # Update overall health based on circuit breaker states
+        if grep -q "|OPEN|" "$out_dir/circuit_breaker.db" 2>/dev/null; then
+            overall_health="DEGRADED"
+        elif grep -q "|HALF_OPEN|" "$out_dir/circuit_breaker.db" 2>/dev/null; then
+            [[ "$overall_health" == "HEALTHY" ]] && overall_health="RECOVERING"
+        fi
+    fi
+    
+    echo ""
+    
+    # Check file system status
+    echo "File System Status:"
+    echo "-------------------"
+    
+    if [[ -d "$out_dir" ]]; then
+        echo "  ✅ Output directory: $out_dir (exists)"
+        
+        # Check key files
+        local key_files=("state.db" "circuit_breaker.db" "events.jsonl" "audit.log")
+        for file in "${key_files[@]}"; do
+            if [[ -f "$out_dir/$file" ]]; then
+                local size=$(stat -f%z "$out_dir/$file" 2>/dev/null || stat -c%s "$out_dir/$file" 2>/dev/null || echo "unknown")
+                echo "  ✅ $file: exists ($size bytes)"
+            else
+                echo "  ⚠️  $file: missing"
+                [[ "$overall_health" == "HEALTHY" ]] && overall_health="DEGRADED"
+            fi
+        done
+    else
+        echo "  ❌ Output directory: $out_dir (does not exist)"
+        overall_health="DEGRADED"
+    fi
+    
+    echo ""
+    
+    # Show overall health
+    echo "Overall System Health: $overall_health"
+    case "$overall_health" in
+        "HEALTHY")
+            echo "  ✅ All systems operational"
+            ;;
+        "RECOVERING")
+            echo "  ⚠️  System recovering from failures"
+            ;;
+        "DEGRADED")
+            echo "  ❌ System experiencing issues"
+            ;;
+        "UNKNOWN")
+            echo "  ❓ System status unclear"
+            ;;
+    esac
+    
+    if [[ "$verbose" == true ]]; then
+        echo ""
+        echo "Detailed Circuit Breaker Information:"
+        echo "====================================="
+        echo "$cb_status_json" | python3 -m json.tool 2>/dev/null || echo "$cb_status_json"
+    fi
+    
+    # Exit with appropriate code
+    case "$overall_health" in
+        "HEALTHY"|"RECOVERING") exit 0 ;;
+        *) exit 1 ;;
+    esac
+}
+
 # Main entry point
 main() {
     local command="${1:-}"
@@ -4147,6 +4639,9 @@ main() {
     
     # Initialize state machine database
     init_state_db
+    
+    # Initialize circuit breaker database
+    init_circuit_breaker_db
     
     # Build args array safely
     local args_json="[]"
@@ -4228,6 +4723,10 @@ main() {
         snapshot)
             shift
             track_performance "cmd_snapshot" cmd_snapshot "$@" || exit_code=$?
+            ;;
+        health)
+            shift
+            track_performance "cmd_health" cmd_health "$@" || exit_code=$?
             ;;
         *)
             emit_event "command_error" "{

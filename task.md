@@ -181,8 +181,8 @@ Deps：Phase 7 完成
 - [x] Step 8.3 快照和時間旅行除錯 (2025-09-04 23:03 UTC+8)
   - 產出：`satlas snapshot create/restore/list` 命令
   - 驗證標準：可完整恢復處理中的任意時間點狀態
-- [ ] Step 8.4 Circuit breaker 和自愈機制
-  - 產出：故障檢測和自動重試機制
+- [x] Step 8.4 Circuit breaker 和自愈機制 (2025-09-04 23:25 UTC+8)
+  - 產出：故障檢測和自動重試機制 + `satlas health` 命令
   - 驗證標準：連續失敗時開啟斷路器，成功時自動恢復
 - [ ] Step 8.5 資料血緣追蹤
   - 產出：`.sourceatlas/lineage.jsonl` 完整資料流轉記錄
@@ -270,4 +270,4 @@ Gate：在保持可觀測性的前提下，索引生成和查詢性能達到極�
 - [x] Phase 5 完成（完成：2025-09-02 18:55 UTC+8）
 - [x] Phase 6 完成（完成：2025-09-02 19:10 UTC+8）
 - [x] Phase 7 完成（完成：2025-09-02 19:15 UTC+8）
-- [ ] Phase 8 可觀測性與溯源系統（新增：2025-09-04 進行中 - Step 8.3 完成，Progress: 3/8 steps complete [37.5%]）
+- [ ] Phase 8 可觀測性與溯源系統（新增：2025-09-04 進行中 - Step 8.4 完成，Progress: 4/8 steps complete [50%]）
