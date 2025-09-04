@@ -53,6 +53,14 @@ Config files: JSON, YAML, Gradle, plist
 - `verify` - Check consistency
 - `clean` - Remove outputs
 
+### Debugging and Observability Commands
+- `monitor` - Real-time processing status display
+- `events` - Query event stream by trace-id or time range
+- `snapshot` - Create/restore/list processing snapshots
+- `profile` - Performance bottleneck analysis
+- `health` - System health check and diagnostics
+- `debug` - Interactive step-by-step debugging mode
+
 ## Development Guidelines
 
 ### Development Philosophy
@@ -108,6 +116,17 @@ Config files: JSON, YAML, Gradle, plist
 - **Interfaces over singletons**: Enable testing and flexibility
 - **Singletons via DI when justified**: If a singleton is necessary, create and manage it via the DI/provider layer and expose only through interfaces
 - **Explicit over implicit**: Clear data flow and dependencies
+
+### Observability and Debugging
+
+- **Event-Driven Architecture**: All operations emit structured events for traceability
+- **State Machine Design**: Use explicit state transitions with recovery capabilities  
+- **Circuit Breaker Pattern**: Prevent cascade failures with automatic recovery
+- **Time Travel Debugging**: Complete snapshots and state restoration
+- **Distributed Tracing**: OpenTelemetry-compatible span tracking across operations
+- **Data Lineage Tracking**: Complete audit trail of data transformations
+- **Predictive Monitoring**: Anomaly detection based on historical performance
+- **Self-Healing Systems**: Automatic retry, fallback, and degradation mechanisms
 
 ### Testing Strategy
 - Test-first development (TDD)

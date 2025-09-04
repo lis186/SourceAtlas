@@ -567,6 +567,8 @@ SYM name=AppDelegate k=class v=int s=12 e=80
 - 大型專案 I/O 時間：以分片與增量（delta）降低全量重建成本
 - LLM 載入超標：以 DSL 與逐步檢索限制一次載入；必要再分片更細
 - 多 repo 同步：以全域 manifest 與 URI 命名管理；需制定更新流程
+- 操作溯源困難：複雜處理流程中問題定位困難；需建立完整可觀測性系統
+- 故障恢復能力：批次處理中斷後難以恢復；需要狀態機和檢查點機制
 
 ## 29. 詞彙表
 
@@ -622,7 +624,67 @@ SYM name=AppDelegate k=class v=int s=12 e=80
 - [x] Step 1.3 `saltas scan` 基本索引輸出測試（完成：2025-09-01 18:30 UTC+8）
 ```
 
-## 32. 開發與部署約束（獨立工具架構）
+## 32. 可觀測性與溯源設計
+
+### 32.1 設計原則
+
+- **可觀測性優先**：每個操作都可追蹤、可審計、可重現
+- **事件驅動架構**：所有重要操作發出結構化事件
+- **狀態機模式**：文件處理採用明確狀態轉換，支援恢復
+- **故障自愈**：Circuit breaker 模式，自動重試和降級
+- **時間旅行**：完整快照和狀態恢復能力
+
+### 32.2 事件記錄系統
+
+```text
+.sourceatlas/
+  events.jsonl          # 結構化事件流 (OpenTelemetry 相容)
+  audit.log            # 人類可讀的操作日誌
+  state.db             # 狀態機當前狀態
+  snapshots/           # 處理快照目錄
+    snapshot_YYYYMMDD_HHMMSS_PID/
+      environment.txt
+      shell_variables.txt  
+      *.jsonl           # 檔案狀態快照
+  lineage.jsonl        # 資料血緣追蹤
+  metrics_history.jsonl # 效能歷史資料
+```
+
+### 32.3 事件架構
+
+每個事件包含：
+- `timestamp`: ISO8601 時間戳
+- `trace_id`: 分散式追蹤 ID (UUID)
+- `span_id`: 當前操作 ID
+- `parent_span_id`: 父操作 ID
+- `type`: 事件類型 (file_processing_started, operation_failed, etc.)
+- `data`: 事件具體資料 (JSON)
+- `metadata`: 環境資訊 (host, user, pwd)
+
+### 32.4 狀態機設計
+
+文件處理狀態：
+- `INIT` → `VALIDATE` → `EXTRACT_METADATA` → `EXTRACT_SYMBOLS` → `GENERATE_SUMMARY` → `COMPLETE`
+- 每個狀態轉換都記錄事件
+- 失敗狀態支援重試或跳過
+- 支援從任意狀態恢復處理
+
+### 32.5 除錯介面
+
+- **即時監控**：`satlas monitor` 顯示當前處理狀態
+- **事件查詢**：`satlas events --trace-id UUID` 查看完整調用鏈
+- **快照管理**：`satlas snapshot create/restore/list`
+- **效能分析**：`satlas profile` 顯示瓶頸分析
+- **健康檢查**：`satlas health` 檢查系統狀態
+
+### 32.6 預測性監控
+
+- 基於歷史資料建立效能基線
+- 3-sigma 規則檢測異常 (處理時間、記憶體使用)
+- 自動觸發深度除錯當檢測到異常
+- 效能回歸警報和自動降級
+
+## 33. 開發與部署約束（獨立工具架構）
 
 ### SourceAtlas 工具專案的開發約束
 
