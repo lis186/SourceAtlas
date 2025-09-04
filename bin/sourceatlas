@@ -14,10 +14,181 @@ readonly PROG_NAME="$(basename "$0")"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly LIB_DIR="${SCRIPT_DIR}/../lib"
 
+# Event system globals
+export EVENTS_FILE=".sourceatlas/events.jsonl"
+export AUDIT_LOG=".sourceatlas/audit.log"
+export TRACE_ID=""
+export CURRENT_SPAN_ID=""
+export PARENT_SPAN_ID=""
+
 # Load core library if it exists
 if [[ -f "${LIB_DIR}/core.sh" ]]; then
     source "${LIB_DIR}/core.sh"
 fi
+
+# ================================================================================
+# Event System and Observability Functions
+# ================================================================================
+
+# Generate UUID (compatible across systems)
+generate_uuid() {
+    # Try different methods in order of preference
+    if command -v uuidgen >/dev/null 2>&1; then
+        uuidgen | tr '[:upper:]' '[:lower:]'
+    elif [[ -e /proc/sys/kernel/random/uuid ]]; then
+        cat /proc/sys/kernel/random/uuid
+    else
+        # Fallback: generate pseudo-UUID using date and random
+        printf "%08x-%04x-%04x-%04x-%012x" \
+            $((RANDOM * RANDOM)) \
+            $((RANDOM % 65536)) \
+            $((RANDOM % 65536)) \
+            $((RANDOM % 65536)) \
+            $((RANDOM * RANDOM * RANDOM))
+    fi
+}
+
+# Get timestamp in milliseconds (cross-platform)
+get_timestamp_ms() {
+    # Test if date supports nanoseconds by checking the output format
+    local test_output=$(date +%s%3N 2>/dev/null)
+    if [[ "$test_output" =~ ^[0-9]+$ ]]; then
+        # GNU date with nanoseconds - actually working
+        echo "$test_output"
+    else
+        # macOS/BSD date fallback - seconds only, append 000
+        echo "$(date +%s)000"
+    fi
+}
+
+# Initialize event system
+init_event_system() {
+    local out_dir="${1:-.sourceatlas}"
+    mkdir -p "$out_dir"
+    
+    # Initialize TRACE_ID if not set
+    if [[ -z "$TRACE_ID" ]]; then
+        export TRACE_ID="$(generate_uuid)"
+    fi
+    
+    # Update global paths
+    export EVENTS_FILE="$out_dir/events.jsonl"
+    export AUDIT_LOG="$out_dir/audit.log"
+    
+    # Create events file if it doesn't exist
+    if [[ ! -f "$EVENTS_FILE" ]]; then
+        touch "$EVENTS_FILE"
+    fi
+    
+    # Create audit log if it doesn't exist
+    if [[ ! -f "$AUDIT_LOG" ]]; then
+        touch "$AUDIT_LOG"
+    fi
+}
+
+# Emit structured event (OpenTelemetry compatible)
+emit_event() {
+    local event_type="$1"
+    local event_data="${2:-{}}"
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    local hostname="${HOSTNAME:-$(hostname 2>/dev/null || echo 'unknown')}"
+    
+    # Ensure event_data is valid JSON - if not, wrap it
+    if ! echo "$event_data" | jq empty 2>/dev/null; then
+        event_data="{\"raw_data\":\"$(echo "$event_data" | sed 's/"/\\"/g')\"}"
+    fi
+    
+    # Create simplified event first for debugging
+    local event=$(jq -n \
+        --arg timestamp "$timestamp" \
+        --arg trace_id "$TRACE_ID" \
+        --arg type "$event_type" \
+        --arg hostname "$hostname" \
+        --arg user "${USER:-unknown}" \
+        '{
+            timestamp: $timestamp,
+            trace_id: $trace_id,
+            type: $type,
+            hostname: $hostname,
+            user: $user
+        }')
+    
+    # Write to events file (create directory if needed)
+    local events_dir="$(dirname "$EVENTS_FILE")"
+    mkdir -p "$events_dir"
+    echo "$event" >> "$EVENTS_FILE" 2>/dev/null || true
+    
+    # Also write human-readable entry to audit log
+    printf "[%s] %s: %s (trace: %s)\n" \
+        "$timestamp" \
+        "$event_type" \
+        "event" \
+        "$TRACE_ID" \
+        >> "$AUDIT_LOG" 2>/dev/null || true
+}
+
+# Start a new span (for distributed tracing)
+start_span() {
+    local span_name="$1"
+    local parent_span="${CURRENT_SPAN_ID}"
+    
+    # Generate new span ID
+    export PARENT_SPAN_ID="$parent_span"
+    export CURRENT_SPAN_ID="$(generate_uuid | cut -c1-8)"
+    
+    # Emit span start event
+    emit_event "span_started" "{
+        \"span_name\": \"$span_name\",
+        \"parent_span_id\": \"$parent_span\",
+        \"start_time\": $(get_timestamp_ms)
+    }"
+}
+
+# End current span
+end_span() {
+    local span_name="${1:-unknown}"
+    local exit_code="${2:-0}"
+    
+    # Emit span end event
+    emit_event "span_ended" "{
+        \"span_name\": \"$span_name\",
+        \"exit_code\": $exit_code,
+        \"end_time\": $(get_timestamp_ms)
+    }"
+    
+    # Restore parent span
+    export CURRENT_SPAN_ID="$PARENT_SPAN_ID"
+    export PARENT_SPAN_ID=""
+}
+
+# Track performance of a command
+track_performance() {
+    local operation_name="$1"
+    shift
+    local start_time=$(get_timestamp_ms)
+    
+    start_span "$operation_name"
+    
+    # Execute command and capture exit code
+    local exit_code=0
+    "$@" || exit_code=$?
+    
+    local end_time=$(get_timestamp_ms)
+    local duration_ms=$((end_time - start_time))
+    
+    # Emit performance event
+    emit_event "performance_measured" "{
+        \"operation\": \"$operation_name\",
+        \"duration_ms\": $duration_ms,
+        \"exit_code\": $exit_code,
+        \"command\": \"$*\"
+    }"
+    
+    end_span "$operation_name" "$exit_code"
+    return $exit_code
+}
+
+# ================================================================================
 
 # Show version information
 show_version() {
@@ -3229,72 +3400,113 @@ compress_output_files() {
 # Main entry point
 main() {
     local command="${1:-}"
+    local session_start_time=$(get_timestamp_ms)
     
+    # Initialize event system early
+    init_event_system
+    
+    # Build args array safely
+    local args_json="[]"
+    if [[ $# -gt 0 ]]; then
+        args_json="[$(printf '"%s",' "$@" | sed 's/,$//' | sed 's/"/\\"/g')]"
+    fi
+    
+    # Emit session start event
+    emit_event "session_started" "{
+        \"command\": \"$command\",
+        \"args\": $args_json,
+        \"version\": \"$VERSION\",
+        \"schema_version\": \"$SCHEMA_VERSION\"
+    }"
+    
+    # Start main span
+    start_span "main_command_$command"
+    
+    local exit_code=0
     case "$command" in
         version|--version|-v)
-            show_version
+            track_performance "show_version" show_version || exit_code=$?
             ;;
         help|--help|-h|"")
-            show_help
+            track_performance "show_help" show_help || exit_code=$?
             ;;
         init)
             shift
-            cmd_init "$@"
+            track_performance "cmd_init" cmd_init "$@" || exit_code=$?
             ;;
         scan)
             shift
-            cmd_scan "$@"
+            track_performance "cmd_scan" cmd_scan "$@" || exit_code=$?
             ;;
         symbols)
             shift
-            cmd_symbols "$@"
+            track_performance "cmd_symbols" cmd_symbols "$@" || exit_code=$?
             ;;
         stats)
             shift
-            cmd_stats "$@"
+            track_performance "cmd_stats" cmd_stats "$@" || exit_code=$?
             ;;
         manifest)
             shift
-            cmd_manifest "$@"
+            track_performance "cmd_manifest" cmd_manifest "$@" || exit_code=$?
             ;;
         shard)
             shift
-            cmd_shard "$@"
+            track_performance "cmd_shard" cmd_shard "$@" || exit_code=$?
             ;;
         delta)
             shift
-            cmd_delta "$@"
+            track_performance "cmd_delta" cmd_delta "$@" || exit_code=$?
             ;;
         query)
             shift
-            cmd_query "$@"
+            track_performance "cmd_query" cmd_query "$@" || exit_code=$?
             ;;
         segment)
             shift
-            cmd_segment "$@"
+            track_performance "cmd_segment" cmd_segment "$@" || exit_code=$?
             ;;
         export-dsl)
             shift
-            cmd_export_dsl "$@"
+            track_performance "cmd_export_dsl" cmd_export_dsl "$@" || exit_code=$?
             ;;
         clean)
             shift
-            cmd_clean "$@"
+            track_performance "cmd_clean" cmd_clean "$@" || exit_code=$?
             ;;
         run)
             shift
-            cmd_run "$@"
+            track_performance "cmd_run" cmd_run "$@" || exit_code=$?
             ;;
         verify)
             shift
-            cmd_verify "$@"
+            track_performance "cmd_verify" cmd_verify "$@" || exit_code=$?
             ;;
         *)
+            emit_event "command_error" "{
+                \"error\": \"unknown_command\",
+                \"command\": \"$command\",
+                \"message\": \"Unknown command: $command\"
+            }"
             echo "Error: Unknown command: $command" >&2
             echo "Run '${PROG_NAME} help' for usage information." >&2
-            exit 1
+            exit_code=1
             ;;
     esac
+    
+    # End main span and emit session end event
+    end_span "main_command_$command" "$exit_code"
+    
+    local session_end_time=$(get_timestamp_ms)
+    local duration_ms=$((session_end_time - session_start_time))
+    
+    emit_event "session_ended" "{
+        \"command\": \"$command\",
+        \"exit_code\": $exit_code,
+        \"duration_ms\": $duration_ms
+    }"
+    
+    exit $exit_code
 }
 
 # Run main function
