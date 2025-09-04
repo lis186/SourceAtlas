@@ -184,8 +184,8 @@ Deps：Phase 7 完成
 - [x] Step 8.4 Circuit breaker 和自愈機制 (2025-09-04 23:25 UTC+8)
   - 產出：故障檢測和自動重試機制 + `satlas health` 命令
   - 驗證標準：連續失敗時開啟斷路器，成功時自動恢復
-- [ ] Step 8.5 資料血緣追蹤
-  - 產出：`.sourceatlas/lineage.jsonl` 完整資料流轉記錄
+- [x] Step 8.5 資料血緣追蹤 (2025-09-04 23:28 UTC+8)
+  - 產出：`.sourceatlas/lineage.jsonl` 完整資料流轉記錄 + `satlas lineage` 命令
   - 驗證標準：可追蹤任意輸出的完整產生過程
 - [ ] Step 8.6 預測性監控和異常檢測
   - 產出：基於歷史資料的效能異常檢測
@@ -270,4 +270,4 @@ Gate：在保持可觀測性的前提下，索引生成和查詢性能達到極�
 - [x] Phase 5 完成（完成：2025-09-02 18:55 UTC+8）
 - [x] Phase 6 完成（完成：2025-09-02 19:10 UTC+8）
 - [x] Phase 7 完成（完成：2025-09-02 19:15 UTC+8）
-- [ ] Phase 8 可觀測性與溯源系統（新增：2025-09-04 進行中 - Step 8.4 完成，Progress: 4/8 steps complete [50%]）
+- [ ] Phase 8 可觀測性與溯源系統（新增：2025-09-04 進行中 - Step 8.5 完成，Progress: 5/8 steps complete [62.5%]）

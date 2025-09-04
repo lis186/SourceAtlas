@@ -287,6 +287,267 @@ readonly CB_RECOVERY_WINDOW=300          # Window for counting failures (5 minut
 # Circuit breaker database file
 export CB_DB_FILE=".sourceatlas/circuit_breaker.db"
 
+# ================================================================================
+# Data Lineage Tracking System  
+# ================================================================================
+
+# Lineage tracking file
+export LINEAGE_FILE=".sourceatlas/lineage.jsonl"
+
+# Initialize lineage tracking
+init_lineage_tracking() {
+    local out_dir="${1:-.sourceatlas}"
+    mkdir -p "$out_dir"
+    export LINEAGE_FILE="$out_dir/lineage.jsonl"
+    
+    # Create lineage file if it doesn't exist
+    if [[ ! -f "$LINEAGE_FILE" ]]; then
+        touch "$LINEAGE_FILE"
+    fi
+}
+
+# Record lineage event
+record_lineage_event() {
+    local event_type="$1"
+    local source_entity="$2"
+    local target_entity="$3"
+    local operation="$4"
+    local metadata="${5:-{}}"
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    local event_id=$(generate_uuid)
+    
+    # Build lineage record
+    local lineage_record=$(cat <<EOF
+{
+  "event_id": "$event_id",
+  "timestamp": "$timestamp",
+  "event_type": "$event_type",
+  "operation": "$operation",
+  "source": {
+    "entity": "$source_entity",
+    "type": "$(determine_entity_type "$source_entity")"
+  },
+  "target": {
+    "entity": "$target_entity", 
+    "type": "$(determine_entity_type "$target_entity")"
+  },
+  "trace_id": "$TRACE_ID",
+  "span_id": "$CURRENT_SPAN_ID",
+  "metadata": $metadata
+}
+EOF
+)
+    
+    # Write to lineage file
+    echo "$lineage_record" >> "$LINEAGE_FILE"
+    
+    # Also emit as regular event
+    emit_event "lineage_recorded" "{
+        \"event_id\": \"$event_id\",
+        \"event_type\": \"$event_type\",
+        \"source\": \"$source_entity\",
+        \"target\": \"$target_entity\",
+        \"operation\": \"$operation\"
+    }"
+}
+
+# Determine entity type from path/name
+determine_entity_type() {
+    local entity="$1"
+    
+    if [[ -z "$entity" ]]; then
+        echo "unknown"
+        return
+    fi
+    
+    # Check if it's a file path
+    if [[ "$entity" =~ ^.*\.[a-zA-Z0-9]+$ ]]; then
+        if [[ "$entity" =~ \.jsonl$ ]]; then
+            echo "index_file"
+        elif [[ "$entity" =~ \.tsv$ ]]; then
+            echo "symbol_table"
+        elif [[ "$entity" =~ \.json$ ]]; then
+            echo "metadata_file"
+        elif [[ "$entity" =~ \.(swift|kt|m|h)$ ]]; then
+            echo "source_file"
+        else
+            echo "file"
+        fi
+    elif [[ "$entity" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+        echo "symbol"
+    elif [[ "$entity" =~ ^.*\/.*$ ]]; then
+        echo "path"
+    else
+        echo "entity"
+    fi
+}
+
+# Record data transformation lineage
+record_data_transformation() {
+    local input_file="$1"
+    local output_file="$2"
+    local transformation_type="$3"
+    local details="${4:-{}}"
+    
+    record_lineage_event "data_transformation" "$input_file" "$output_file" "$transformation_type" "$details"
+}
+
+# Record symbol extraction lineage
+record_symbol_extraction() {
+    local source_file="$1"
+    local symbol_name="$2"
+    local symbol_type="$3"
+    local line_number="$4"
+    
+    local metadata=$(cat <<EOF
+{
+  "symbol_type": "$symbol_type",
+  "line_number": $line_number,
+  "extraction_method": "ctags_with_regex_fallback"
+}
+EOF
+)
+    
+    record_lineage_event "symbol_extraction" "$source_file" "$symbol_name" "extract_symbol" "$metadata"
+}
+
+# Record aggregation lineage (multiple inputs -> one output)
+record_aggregation() {
+    local operation="$1"
+    local output_entity="$2"
+    shift 2
+    local input_entities=("$@")
+    
+    local inputs_json="["
+    local first=true
+    for input in "${input_entities[@]}"; do
+        if [[ "$first" != "true" ]]; then
+            inputs_json+=","
+        fi
+        first=false
+        inputs_json+="\"$input\""
+    done
+    inputs_json+="]"
+    
+    local metadata=$(cat <<EOF
+{
+  "input_count": ${#input_entities[@]},
+  "inputs": $inputs_json
+}
+EOF
+)
+    
+    # Record one event per input
+    for input in "${input_entities[@]}"; do
+        record_lineage_event "aggregation" "$input" "$output_entity" "$operation" "$metadata"
+    done
+}
+
+# Record file processing lineage
+record_file_processing_lineage() {
+    local file_path="$1"
+    local processing_stage="$2"
+    local input_data="$3"
+    local output_data="$4"
+    local success="$5"
+    
+    local metadata=$(cat <<EOF
+{
+  "processing_stage": "$processing_stage",
+  "success": $success,
+  "input_size": ${#input_data},
+  "output_size": ${#output_data},
+  "file_size": $(stat -f%z "$file_path" 2>/dev/null || stat -c%s "$file_path" 2>/dev/null || echo 0)
+}
+EOF
+)
+    
+    local event_type="file_processing"
+    if [[ "$success" == "true" ]]; then
+        event_type="successful_processing"
+    else
+        event_type="failed_processing"
+    fi
+    
+    record_lineage_event "$event_type" "$file_path" "${file_path}_${processing_stage}" "$processing_stage" "$metadata"
+}
+
+# Query lineage by entity
+query_lineage_by_entity() {
+    local entity="$1"
+    local direction="${2:-both}" # upstream, downstream, both
+    
+    if [[ ! -f "$LINEAGE_FILE" ]]; then
+        echo "[]"
+        return
+    fi
+    
+    case "$direction" in
+        "upstream")
+            grep "\"target\".*\"entity\":.*\"$entity\"" "$LINEAGE_FILE" 2>/dev/null || echo ""
+            ;;
+        "downstream")
+            grep "\"source\".*\"entity\":.*\"$entity\"" "$LINEAGE_FILE" 2>/dev/null || echo ""
+            ;;
+        "both")
+            (grep "\"target\".*\"entity\":.*\"$entity\"" "$LINEAGE_FILE" 2>/dev/null || echo "")
+            (grep "\"source\".*\"entity\":.*\"$entity\"" "$LINEAGE_FILE" 2>/dev/null || echo "")
+            ;;
+    esac
+}
+
+# Get lineage statistics
+get_lineage_stats() {
+    local out_dir="${1:-.sourceatlas}"
+    local lineage_file="$out_dir/lineage.jsonl"
+    
+    if [[ ! -f "$lineage_file" ]]; then
+        echo "{\"total_events\": 0, \"entities\": 0, \"operations\": 0}"
+        return
+    fi
+    
+    local total_events=$(wc -l < "$lineage_file" | tr -d ' ')
+    local unique_entities=$(grep -o '"entity": "[^"]*"' "$lineage_file" | sort -u | wc -l | tr -d ' ')
+    local unique_operations=$(grep -o '"operation": "[^"]*"' "$lineage_file" | sort -u | wc -l | tr -d ' ')
+    
+    echo "{\"total_events\": $total_events, \"entities\": $unique_entities, \"operations\": $unique_operations}"
+}
+
+# Trace full lineage path
+trace_lineage_path() {
+    local start_entity="$1"
+    local end_entity="$2" 
+    local max_depth="${3:-10}"
+    
+    if [[ ! -f "$LINEAGE_FILE" ]]; then
+        echo "[]"
+        return
+    fi
+    
+    # Simple implementation - trace downstream from start to end
+    # This is a basic version; a full implementation would use graph traversal
+    local path="[]"
+    local current_entity="$start_entity"
+    local depth=0
+    
+    while [[ $depth -lt $max_depth && "$current_entity" != "$end_entity" ]]; do
+        local next_entity=$(grep "\"source\".*\"entity\":.*\"$current_entity\"" "$LINEAGE_FILE" | head -1 | grep -o '"target".*"entity": "[^"]*"' | cut -d'"' -f4)
+        
+        if [[ -z "$next_entity" ]]; then
+            break
+        fi
+        
+        current_entity="$next_entity"
+        ((depth++))
+    done
+    
+    if [[ "$current_entity" == "$end_entity" ]]; then
+        echo "{\"path_found\": true, \"depth\": $depth}"
+    else
+        echo "{\"path_found\": false, \"depth\": $depth}"
+    fi
+}
+
 # Initialize circuit breaker database
 init_circuit_breaker_db() {
     local out_dir="${1:-.sourceatlas}"
@@ -763,17 +1024,38 @@ sm_validate_file() {
 sm_extract_metadata() {
     local file_path="$1"
     
+    # Record lineage for metadata extraction start
+    record_file_processing_lineage "$file_path" "metadata_extraction" "$file_path" "" "true"
+    
     # Extract basic metadata: size, lines, hash
     local size_bytes=$(get_file_size "$file_path" 2>/dev/null)
     local loc=$(count_lines "$file_path" 2>/dev/null)
     local content_hash=$(calculate_hash "$file_path" 2>/dev/null)
     
-    # Check if all metadata was extracted successfully
-    [[ -n "$size_bytes" && -n "$loc" && -n "$content_hash" ]]
+    if [[ -n "$size_bytes" && -n "$loc" && -n "$content_hash" ]]; then
+        # Record detailed lineage for extracted metadata
+        local metadata_output="size:$size_bytes,loc:$loc,hash:$content_hash"
+        record_file_processing_lineage "$file_path" "metadata_extraction" "$file_path" "$metadata_output" "true"
+        
+        # Record data transformation
+        record_data_transformation "$file_path" "${file_path}_metadata" "metadata_extraction" "{
+            \"size_bytes\": $size_bytes,
+            \"lines_of_code\": $loc,
+            \"content_hash\": \"$content_hash\"
+        }"
+        return 0
+    else
+        # Record failed extraction
+        record_file_processing_lineage "$file_path" "metadata_extraction" "$file_path" "" "false"
+        return 1
+    fi
 }
 
 sm_extract_symbols() {
     local file_path="$1"
+    
+    # Record lineage for symbol extraction start
+    record_file_processing_lineage "$file_path" "symbol_extraction" "$file_path" "" "true"
     
     # Get language for file
     local ext=$(get_extension "$file_path")
@@ -781,6 +1063,27 @@ sm_extract_symbols() {
     
     # Extract symbols based on language
     local symbols_json=$(extract_symbols "$file_path" "$lang" 2>/dev/null)
+    
+    # Record individual symbol lineage if symbols were found
+    if [[ -n "$symbols_json" && "$symbols_json" != "[]" ]]; then
+        # Parse symbols and record lineage for each
+        echo "$symbols_json" | sed -n 's/.*"name": *"\([^"]*\)".*/\1/p' | while read -r symbol_name; do
+            if [[ -n "$symbol_name" ]]; then
+                local symbol_type=$(echo "$symbols_json" | grep -A5 "\"name\": *\"$symbol_name\"" | grep -o '"kind": *"[^"]*"' | cut -d'"' -f4)
+                local line_number=$(echo "$symbols_json" | grep -A5 "\"name\": *\"$symbol_name\"" | grep -o '"line_start": *[0-9]*' | cut -d':' -f2 | tr -d ' ')
+                record_symbol_extraction "$file_path" "$symbol_name" "$symbol_type" "$line_number"
+            fi
+        done
+        
+        # Record successful symbol extraction transformation
+        record_data_transformation "$file_path" "${file_path}_symbols" "symbol_extraction" "{
+            \"language\": \"$lang\",
+            \"symbols_count\": $(echo "$symbols_json" | grep -o '"name":' | wc -l | tr -d ' ')
+        }"
+    fi
+    
+    # Record final lineage
+    record_file_processing_lineage "$file_path" "symbol_extraction" "$file_path" "$symbols_json" "true"
     
     # Symbol extraction is considered successful even if no symbols found
     # (some files legitimately have no symbols)
@@ -866,6 +1169,7 @@ Commands:
   verify          Verify index consistency
   snapshot        Create, restore, or list processing snapshots
   health          Show system health and circuit breaker status
+  lineage         Query and analyze data lineage
   help            Show this help message
 
 Debugging and Observability:
@@ -873,6 +1177,8 @@ Debugging and Observability:
   snapshot restore <name>   Restore from a saved snapshot
   snapshot list            List available snapshots
   health                   Check circuit breakers and system health
+  lineage query <entity>   Query lineage for specific entity
+  lineage stats           Show lineage statistics
 
 Options:
   --help          Show help for a specific command
@@ -4581,7 +4887,7 @@ EOF
         echo "  ✅ Output directory: $out_dir (exists)"
         
         # Check key files
-        local key_files=("state.db" "circuit_breaker.db" "events.jsonl" "audit.log")
+        local key_files=("state.db" "circuit_breaker.db" "events.jsonl" "audit.log" "lineage.jsonl")
         for file in "${key_files[@]}"; do
             if [[ -f "$out_dir/$file" ]]; then
                 local size=$(stat -f%z "$out_dir/$file" 2>/dev/null || stat -c%s "$out_dir/$file" 2>/dev/null || echo "unknown")
@@ -4629,6 +4935,321 @@ EOF
     esac
 }
 
+# Command: lineage
+cmd_lineage() {
+    local subcommand="${1:-}"
+    
+    case "$subcommand" in
+        query)
+            shift
+            lineage_query "$@"
+            ;;
+        stats)
+            shift
+            lineage_stats "$@"
+            ;;
+        trace)
+            shift
+            lineage_trace "$@"
+            ;;
+        --help|-h|"")
+            cat <<EOF
+Usage: ${PROG_NAME} lineage <subcommand> [options]
+
+Query and analyze data lineage for comprehensive data flow understanding.
+
+Subcommands:
+  query <entity>       Query lineage for a specific entity
+  stats               Show lineage statistics
+  trace <start> <end> Trace lineage path between entities
+
+Examples:
+  ${PROG_NAME} lineage query ./src/main.swift
+  ${PROG_NAME} lineage stats --verbose
+  ${PROG_NAME} lineage trace ./input.swift ./output.jsonl
+EOF
+            exit 0
+            ;;
+        *)
+            echo "Error: Unknown lineage subcommand: $subcommand" >&2
+            echo "Run '${PROG_NAME} lineage --help' for usage." >&2
+            exit 1
+            ;;
+    esac
+}
+
+# Query lineage for entity
+lineage_query() {
+    local entity="$1"
+    local out_dir=".sourceatlas"
+    local direction="both"
+    local verbose=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --direction)
+                direction="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} lineage query <entity> [options]
+
+Query lineage relationships for a specific entity.
+
+Arguments:
+  entity           Entity to query (file path, symbol name, etc.)
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --direction DIR  Query direction: upstream, downstream, both (default: both)
+  --verbose, -v    Show detailed lineage information
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} lineage query ./src/main.swift
+  ${PROG_NAME} lineage query MainViewModel --direction upstream
+  ${PROG_NAME} lineage query ./output.jsonl --verbose
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                if [[ -z "$entity" ]]; then
+                    entity="$1"
+                else
+                    echo "Error: Unexpected argument: $1" >&2
+                    exit 1
+                fi
+                shift
+                ;;
+        esac
+    done
+    
+    if [[ -z "$entity" ]]; then
+        echo "Error: Entity name required" >&2
+        echo "Run '${PROG_NAME} lineage query --help' for usage." >&2
+        exit 1
+    fi
+    
+    export LINEAGE_FILE="$out_dir/lineage.jsonl"
+    
+    echo "Lineage Query Results for: $entity"
+    echo "=================================="
+    echo "Direction: $direction"
+    echo ""
+    
+    local results=$(query_lineage_by_entity "$entity" "$direction")
+    
+    if [[ -z "$results" ]]; then
+        echo "No lineage relationships found for '$entity'"
+        return 0
+    fi
+    
+    local count=0
+    echo "$results" | while IFS= read -r line; do
+        if [[ -n "$line" ]]; then
+            count=$((count + 1))
+            
+            if [[ "$verbose" == "true" ]]; then
+                echo "Record $count:"
+                echo "$line" | python3 -m json.tool 2>/dev/null || echo "$line"
+                echo ""
+            else
+                # Extract key information for summary display
+                local event_type=$(echo "$line" | grep -o '"event_type": "[^"]*"' | cut -d'"' -f4)
+                local operation=$(echo "$line" | grep -o '"operation": "[^"]*"' | cut -d'"' -f4)
+                local source=$(echo "$line" | grep -o '"source"[^}]*"entity": "[^"]*"' | tail -1 | cut -d'"' -f4)
+                local target=$(echo "$line" | grep -o '"target"[^}]*"entity": "[^"]*"' | tail -1 | cut -d'"' -f4)
+                local timestamp=$(echo "$line" | grep -o '"timestamp": "[^"]*"' | cut -d'"' -f4)
+                
+                printf "%s [%s] %s → %s (%s)\\n" "$timestamp" "$event_type" "$source" "$target" "$operation"
+            fi
+        fi
+    done
+}
+
+# Show lineage statistics
+lineage_stats() {
+    local out_dir=".sourceatlas"
+    local verbose=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} lineage stats [options]
+
+Show comprehensive lineage statistics and analytics.
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --verbose, -v    Show detailed breakdown
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} lineage stats
+  ${PROG_NAME} lineage stats --verbose
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    echo "Data Lineage Statistics"
+    echo "======================="
+    echo ""
+    
+    local stats=$(get_lineage_stats "$out_dir")
+    local total_events=$(echo "$stats" | grep -o '"total_events": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+    local unique_entities=$(echo "$stats" | grep -o '"entities": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+    local unique_operations=$(echo "$stats" | grep -o '"operations": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+    
+    echo "Overall Statistics:"
+    echo "  Total Events: $total_events"
+    echo "  Unique Entities: $unique_entities"
+    echo "  Unique Operations: $unique_operations"
+    
+    if [[ -f "$out_dir/lineage.jsonl" ]]; then
+        local file_size=$(stat -f%z "$out_dir/lineage.jsonl" 2>/dev/null || stat -c%s "$out_dir/lineage.jsonl" 2>/dev/null || echo 0)
+        echo "  Lineage File Size: $file_size bytes"
+    fi
+    
+    if [[ "$verbose" == "true" ]]; then
+        echo ""
+        echo "Operation Breakdown:"
+        grep -o '"operation": "[^"]*"' "$out_dir/lineage.jsonl" 2>/dev/null | sort | uniq -c | sort -nr | while read count op; do
+            operation=$(echo "$op" | cut -d'"' -f4)
+            echo "  $operation: $count events"
+        done
+        
+        echo ""
+        echo "Event Type Breakdown:"
+        grep -o '"event_type": "[^"]*"' "$out_dir/lineage.jsonl" 2>/dev/null | sort | uniq -c | sort -nr | while read count type; do
+            event_type=$(echo "$type" | cut -d'"' -f4)
+            echo "  $event_type: $count events"
+        done
+        
+        echo ""
+        echo "Entity Type Breakdown:"
+        grep -o '"type": "[^"]*"' "$out_dir/lineage.jsonl" 2>/dev/null | sort | uniq -c | sort -nr | while read count type; do
+            entity_type=$(echo "$type" | cut -d'"' -f4)
+            echo "  $entity_type: $count references"
+        done
+    fi
+}
+
+# Trace lineage path
+lineage_trace() {
+    local start_entity="$1"
+    local end_entity="$2"
+    local out_dir=".sourceatlas"
+    local max_depth=10
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --max-depth)
+                max_depth="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} lineage trace <start> <end> [options]
+
+Trace lineage path between two entities.
+
+Arguments:
+  start            Starting entity
+  end              Target entity
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --max-depth NUM  Maximum search depth (default: 10)
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} lineage trace ./input.swift ./output.jsonl
+  ${PROG_NAME} lineage trace MainViewModel symbols_table --max-depth 5
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                if [[ -z "$start_entity" ]]; then
+                    start_entity="$1"
+                elif [[ -z "$end_entity" ]]; then
+                    end_entity="$1"
+                else
+                    echo "Error: Unexpected argument: $1" >&2
+                    exit 1
+                fi
+                shift
+                ;;
+        esac
+    done
+    
+    if [[ -z "$start_entity" || -z "$end_entity" ]]; then
+        echo "Error: Both start and end entities required" >&2
+        echo "Run '${PROG_NAME} lineage trace --help' for usage." >&2
+        exit 1
+    fi
+    
+    export LINEAGE_FILE="$out_dir/lineage.jsonl"
+    
+    echo "Tracing Lineage Path"
+    echo "==================="
+    echo "From: $start_entity"
+    echo "To:   $end_entity"
+    echo "Max Depth: $max_depth"
+    echo ""
+    
+    local result=$(trace_lineage_path "$start_entity" "$end_entity" "$max_depth")
+    local path_found=$(echo "$result" | grep -o '"path_found": [^,}]*' | cut -d':' -f2 | tr -d ' ')
+    local depth=$(echo "$result" | grep -o '"depth": [^,}]*' | cut -d':' -f2 | tr -d ' ')
+    
+    if [[ "$path_found" == "true" ]]; then
+        echo "✅ Path found!"
+        echo "   Depth: $depth steps"
+    else
+        echo "❌ No path found"
+        echo "   Searched depth: $depth steps"
+        echo "   Try increasing --max-depth or check if entities are connected"
+    fi
+}
+
 # Main entry point
 main() {
     local command="${1:-}"
@@ -4642,6 +5263,9 @@ main() {
     
     # Initialize circuit breaker database
     init_circuit_breaker_db
+    
+    # Initialize lineage tracking
+    init_lineage_tracking
     
     # Build args array safely
     local args_json="[]"
@@ -4727,6 +5351,10 @@ main() {
         health)
             shift
             track_performance "cmd_health" cmd_health "$@" || exit_code=$?
+            ;;
+        lineage)
+            shift
+            track_performance "cmd_lineage" cmd_lineage "$@" || exit_code=$?
             ;;
         *)
             emit_event "command_error" "{
