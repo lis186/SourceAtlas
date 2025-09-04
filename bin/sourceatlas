@@ -361,6 +361,11 @@ emit_event() {
     local event_type="$1"
     local event_data="${2:-{}}"
     
+    # Skip if running in CI environment (observability disabled)
+    if [[ "${CI:-}" == "true" ]]; then
+        return 0
+    fi
+    
     # Input validation
     if ! validate_input "$event_type" 100 "event_type"; then
         return 1
@@ -417,6 +422,11 @@ emit_event() {
 
 # Start a new span (for distributed tracing)
 start_span() {
+    # Skip if running in CI environment (observability disabled)
+    if [[ "${CI:-}" == "true" ]]; then
+        return 0
+    fi
+    
     local span_name="$1"
     local parent_span="${CURRENT_SPAN_ID}"
     
@@ -434,6 +444,11 @@ start_span() {
 
 # End current span
 end_span() {
+    # Skip if running in CI environment (observability disabled)
+    if [[ "${CI:-}" == "true" ]]; then
+        return 0
+    fi
+    
     local span_name="${1:-unknown}"
     local exit_code="${2:-0}"
     
@@ -940,6 +955,11 @@ init_lineage_tracking() {
 
 # Record lineage event
 record_lineage_event() {
+    # Skip if running in CI environment (observability disabled)
+    if [[ "${CI:-}" == "true" ]]; then
+        return 0
+    fi
+    
     local event_type="$1"
     local source_entity="$2"
     local target_entity="$3"
@@ -6305,20 +6325,23 @@ main() {
     local command="${1:-}"
     local session_start_time=$(get_timestamp_ms)
     
-    # Initialize event system early
-    init_event_system
-    
-    # Initialize state machine database
-    init_state_db
-    
-    # Initialize circuit breaker database
-    init_circuit_breaker_db
-    
-    # Initialize lineage tracking
-    init_lineage_tracking
-    
-    # Initialize monitoring system
-    init_monitoring_system
+    # Initialize observability systems (skip in CI environment)
+    if [[ "${CI:-}" != "true" ]]; then
+        # Initialize event system early
+        init_event_system
+        
+        # Initialize state machine database
+        init_state_db
+        
+        # Initialize circuit breaker database
+        init_circuit_breaker_db
+        
+        # Initialize lineage tracking
+        init_lineage_tracking
+        
+        # Initialize monitoring system
+        init_monitoring_system
+    fi
     
     # Build args array safely
     local args_json="[]"
