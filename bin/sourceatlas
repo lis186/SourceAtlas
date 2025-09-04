@@ -86,25 +86,213 @@ init_event_system() {
     fi
 }
 
+# Security and validation functions
+validate_input() {
+    local input="$1"
+    local max_length="${2:-1000}"
+    local param_name="${3:-parameter}"
+    
+    # Check if input is empty
+    if [[ -z "$input" ]]; then
+        echo "ERROR: $param_name cannot be empty" >&2
+        return 1
+    fi
+    
+    # Check length bounds
+    if [[ ${#input} -gt $max_length ]]; then
+        echo "ERROR: $param_name exceeds maximum length of $max_length characters" >&2
+        return 1
+    fi
+    
+    # Check for dangerous characters (but allow JSON-safe characters)
+    if [[ "$input" =~ \$\( ]] || [[ "$input" =~ \`.*\` ]] || [[ "$input" =~ '&&' ]] || [[ "$input" =~ '\|\|' ]]; then
+        echo "ERROR: $param_name contains dangerous shell injection patterns" >&2
+        return 1
+    fi
+    
+    return 0
+}
+
+# Sanitize data for JSON embedding
+sanitize_for_json() {
+    local input="$1"
+    
+    # Escape dangerous characters properly
+    printf '%s' "$input" | sed \
+        -e 's/\\/\\\\/g' \
+        -e 's/"/\\"/g' \
+        -e 's/\t/\\t/g' \
+        -e 's/\n/\\n/g' \
+        -e 's/\r/\\r/g' \
+        -e $'s/\x0c/\\f/g' \
+        -e $'s/\x08/\\b/g'
+}
+
+# Redact sensitive data from paths and filenames
+redact_sensitive_data() {
+    local input="$1"
+    
+    # Redact common sensitive patterns
+    echo "$input" | sed \
+        -e 's/[0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}/[UUID]/gi' \
+        -e 's/[a-zA-Z0-9+/]\{20,\}=*/[TOKEN]/g' \
+        -e 's/ssh-[a-z0-9]\+ [A-Za-z0-9+/]\+/[SSH-KEY]/g' \
+        -e 's/BEGIN [A-Z ]*PRIVATE KEY/[PRIVATE-KEY]/g' \
+        -e 's/password[=:][^[:space:]]\+/password=[REDACTED]/gi' \
+        -e 's/token[=:][^[:space:]]\+/token=[REDACTED]/gi' \
+        -e 's/key[=:][^[:space:]]\+/key=[REDACTED]/gi'
+}
+
+# File locking mechanism
+acquire_lock() {
+    local lockfile="$1"
+    local timeout="${2:-10}"
+    local counter=0
+    
+    while (( counter < timeout )); do
+        if mkdir "${lockfile}.lock" 2>/dev/null; then
+            echo $$ > "${lockfile}.lock/pid"
+            return 0
+        fi
+        sleep 0.1
+        ((counter++))
+    done
+    
+    echo "ERROR: Failed to acquire lock on $lockfile after ${timeout}s" >&2
+    return 1
+}
+
+# Release file lock
+release_lock() {
+    local lockfile="$1"
+    
+    if [[ -d "${lockfile}.lock" ]]; then
+        rm -rf "${lockfile}.lock"
+    fi
+}
+
+# Safe file append with locking
+safe_file_append() {
+    local file="$1"
+    local content="$2"
+    local lock_timeout="${3:-5}"
+    
+    # Ensure directory exists
+    mkdir -p "$(dirname "$file")"
+    
+    # Acquire lock
+    if ! acquire_lock "$file" "$lock_timeout"; then
+        return 1
+    fi
+    
+    # Append content
+    echo "$content" >> "$file"
+    local result=$?
+    
+    # Release lock
+    release_lock "$file"
+    
+    return $result
+}
+
+# Event batching system for improved performance
+readonly EVENT_BATCH_SIZE=10
+readonly EVENT_BATCH_TIMEOUT=5
+declare -a EVENT_BATCH
+declare -i EVENT_BATCH_COUNT=0
+declare -i LAST_BATCH_FLUSH=0
+
+# Flush event batch to disk
+flush_event_batch() {
+    if [[ $EVENT_BATCH_COUNT -eq 0 ]]; then
+        return 0
+    fi
+    
+    local batch_content=""
+    for ((i=0; i<EVENT_BATCH_COUNT; i++)); do
+        batch_content+="${EVENT_BATCH[$i]}"$'\n'
+    done
+    
+    # Write entire batch atomically
+    if safe_file_append "$EVENTS_FILE" "$batch_content"; then
+        EVENT_BATCH=()
+        EVENT_BATCH_COUNT=0
+        LAST_BATCH_FLUSH=$(date +%s)
+        return 0
+    else
+        echo "ERROR: Failed to flush event batch to $EVENTS_FILE" >&2
+        return 1
+    fi
+}
+
+# Add event to batch (non-blocking)
+add_event_to_batch() {
+    local event="$1"
+    local audit_entry="$2"
+    local current_time=$(date +%s)
+    
+    # Add to batch
+    EVENT_BATCH[$EVENT_BATCH_COUNT]="$event"
+    ((EVENT_BATCH_COUNT++))
+    
+    # Write audit entry immediately (critical for debugging)
+    safe_file_append "$AUDIT_LOG" "$audit_entry" || true
+    
+    # Flush if batch is full or timeout reached
+    if [[ $EVENT_BATCH_COUNT -ge $EVENT_BATCH_SIZE ]] || \
+       [[ $((current_time - LAST_BATCH_FLUSH)) -ge $EVENT_BATCH_TIMEOUT ]]; then
+        flush_event_batch
+    fi
+}
+
+# Ensure batch is flushed on exit
+cleanup_event_batch() {
+    flush_event_batch 2>/dev/null || true
+}
+
+# Register cleanup function
+trap cleanup_event_batch EXIT
+
 # Emit structured event (OpenTelemetry compatible)
 emit_event() {
     local event_type="$1"
     local event_data="${2:-{}}"
+    
+    # Input validation
+    if ! validate_input "$event_type" 100 "event_type"; then
+        return 1
+    fi
+    
+    if ! validate_input "$event_data" 10000 "event_data"; then
+        return 1
+    fi
+    
     local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
     local hostname="${HOSTNAME:-$(hostname 2>/dev/null || echo 'unknown')}"
     
-    # Ensure event_data is valid JSON - if not, wrap it
+    # Sanitize and redact sensitive data
+    local safe_event_type=$(sanitize_for_json "$(redact_sensitive_data "$event_type")")
+    local safe_hostname=$(sanitize_for_json "$(redact_sensitive_data "$hostname")")
+    local safe_user=$(sanitize_for_json "$(redact_sensitive_data "${USER:-unknown}")")
+    
+    # Ensure event_data is valid JSON - if not, sanitize and wrap it
     if ! echo "$event_data" | jq empty 2>/dev/null; then
-        event_data="{\"raw_data\":\"$(echo "$event_data" | sed 's/"/\\"/g')\"}"
+        local sanitized_data=$(sanitize_for_json "$(redact_sensitive_data "$event_data")")
+        event_data="{\"raw_data\":\"$sanitized_data\"}"
+    else
+        # Even valid JSON might contain sensitive data - redact it
+        event_data=$(echo "$event_data" | sed 's/"[^"]*password[^"]*":[^,}]*/"password":"[REDACTED]"/gi' | \
+                    sed 's/"[^"]*token[^"]*":[^,}]*/"token":"[REDACTED]"/gi' | \
+                    sed 's/"[^"]*key[^"]*":[^,}]*/"key":"[REDACTED]"/gi')
     fi
     
     # Create simplified event first for debugging
     local event=$(jq -n \
         --arg timestamp "$timestamp" \
         --arg trace_id "$TRACE_ID" \
-        --arg type "$event_type" \
-        --arg hostname "$hostname" \
-        --arg user "${USER:-unknown}" \
+        --arg type "$safe_event_type" \
+        --arg hostname "$safe_hostname" \
+        --arg user "$safe_user" \
         '{
             timestamp: $timestamp,
             trace_id: $trace_id,
@@ -113,18 +301,15 @@ emit_event() {
             user: $user
         }')
     
-    # Write to events file (create directory if needed)
-    local events_dir="$(dirname "$EVENTS_FILE")"
-    mkdir -p "$events_dir"
-    echo "$event" >> "$EVENTS_FILE" 2>/dev/null || true
-    
-    # Also write human-readable entry to audit log
-    printf "[%s] %s: %s (trace: %s)\n" \
+    # Create human-readable audit entry with redaction
+    local audit_entry=$(printf "[%s] %s: %s (trace: %s)" \
         "$timestamp" \
-        "$event_type" \
+        "$safe_event_type" \
         "event" \
-        "$TRACE_ID" \
-        >> "$AUDIT_LOG" 2>/dev/null || true
+        "$TRACE_ID")
+    
+    # Use batching for events (better performance), immediate write for audit (debugging)
+    add_event_to_batch "$event" "$audit_entry"
 }
 
 # Start a new span (for distributed tracing)
@@ -337,29 +522,65 @@ record_performance_metric() {
     local value="$2"
     local unit="${3:-ms}"
     local context="${4:-{}}"
+    
+    # Input validation
+    if ! validate_input "$metric_name" 100 "metric_name"; then
+        return 1
+    fi
+    
+    if ! validate_input "$unit" 20 "unit"; then
+        return 1
+    fi
+    
+    # Validate numeric value
+    if [[ ! "$value" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+        echo "ERROR: metric value must be numeric" >&2
+        return 1
+    fi
+    
+    # Validate context is valid JSON
+    if ! echo "$context" | jq empty 2>/dev/null; then
+        echo "ERROR: context must be valid JSON" >&2
+        return 1
+    fi
+    
     local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
     local metric_id=$(generate_uuid)
+    
+    # Sanitize inputs for JSON
+    local safe_metric_name=$(sanitize_for_json "$(redact_sensitive_data "$metric_name")")
+    local safe_unit=$(sanitize_for_json "$unit")
+    local safe_trace_id=$(sanitize_for_json "$TRACE_ID")
+    local safe_span_id=$(sanitize_for_json "$CURRENT_SPAN_ID")
+    
+    # Redact sensitive data from context
+    local safe_context=$(echo "$context" | sed 's/"[^"]*password[^"]*":[^,}]*/"password":"[REDACTED]"/gi' | \
+                        sed 's/"[^"]*token[^"]*":[^,}]*/"token":"[REDACTED]"/gi' | \
+                        sed 's/"[^"]*key[^"]*":[^,}]*/"key":"[REDACTED]"/gi')
     
     # Build metric record
     local metric_record=$(cat <<EOF
 {
   "metric_id": "$metric_id",
   "timestamp": "$timestamp",
-  "metric_name": "$metric_name",
+  "metric_name": "$safe_metric_name",
   "value": $value,
-  "unit": "$unit",
-  "trace_id": "$TRACE_ID",
-  "span_id": "$CURRENT_SPAN_ID",
-  "context": $context
+  "unit": "$safe_unit",
+  "trace_id": "$safe_trace_id",
+  "span_id": "$safe_span_id",
+  "context": $safe_context
 }
 EOF
 )
     
-    # Write to metrics file
-    echo "$metric_record" >> "$METRICS_FILE"
+    # Write to metrics file safely
+    if ! safe_file_append "$METRICS_FILE" "$metric_record"; then
+        echo "ERROR: Failed to write metric to $METRICS_FILE" >&2
+        return 1
+    fi
     
     # Check for anomalies
-    check_performance_anomaly "$metric_name" "$value" "$timestamp"
+    check_performance_anomaly "$safe_metric_name" "$value" "$timestamp"
 }
 
 # Check if a performance value is anomalous
@@ -906,21 +1127,55 @@ update_circuit_breaker_state() {
     local opened_at="$7"
     local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
     
-    # Remove old entry and add new one
-    if [[ -f "$CB_DB_FILE" ]]; then
-        grep -v "^$operation|" "$CB_DB_FILE" > "${CB_DB_FILE}.tmp" 2>/dev/null || touch "${CB_DB_FILE}.tmp"
-        mv "${CB_DB_FILE}.tmp" "$CB_DB_FILE"
+    # Input validation
+    if ! validate_input "$operation" 50 "operation"; then
+        return 1
     fi
     
-    echo "$operation|$new_state|$failure_count|$success_count|$last_failure|$last_success|$opened_at" >> "$CB_DB_FILE"
+    if ! validate_input "$new_state" 20 "new_state"; then
+        return 1
+    fi
     
-    emit_event "circuit_breaker_state_changed" "{
-        \"operation\": \"$operation\",
-        \"new_state\": \"$new_state\",
-        \"failure_count\": $failure_count,
-        \"success_count\": $success_count,
-        \"timestamp\": \"$timestamp\"
-    }"
+    # Validate numeric inputs
+    if [[ ! "$failure_count" =~ ^[0-9]+$ ]] || [[ ! "$success_count" =~ ^[0-9]+$ ]]; then
+        echo "ERROR: failure_count and success_count must be numeric" >&2
+        return 1
+    fi
+    
+    # Safe atomic update with file locking
+    if ! acquire_lock "$CB_DB_FILE" 10; then
+        echo "ERROR: Failed to acquire lock for circuit breaker update" >&2
+        return 1
+    fi
+    
+    # Remove old entry and add new one atomically
+    local temp_file="${CB_DB_FILE}.tmp.$$"
+    if [[ -f "$CB_DB_FILE" ]]; then
+        grep -v "^$operation|" "$CB_DB_FILE" > "$temp_file" 2>/dev/null || touch "$temp_file"
+    else
+        touch "$temp_file"
+    fi
+    
+    echo "$operation|$new_state|$failure_count|$success_count|$last_failure|$last_success|$opened_at" >> "$temp_file"
+    
+    # Atomic move
+    mv "$temp_file" "$CB_DB_FILE"
+    local result=$?
+    
+    # Release lock
+    release_lock "$CB_DB_FILE"
+    
+    if [[ $result -eq 0 ]]; then
+        emit_event "circuit_breaker_state_changed" "{
+            \"operation\": \"$(sanitize_for_json "$operation")\",
+            \"new_state\": \"$(sanitize_for_json "$new_state")\",
+            \"failure_count\": $failure_count,
+            \"success_count\": $success_count,
+            \"timestamp\": \"$timestamp\"
+        }"
+    fi
+    
+    return $result
 }
 
 # Record circuit breaker success
