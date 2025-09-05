@@ -14,10 +14,1813 @@ readonly PROG_NAME="$(basename "$0")"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly LIB_DIR="${SCRIPT_DIR}/../lib"
 
+# Event system globals
+export EVENTS_FILE=".sourceatlas/events.jsonl"
+export AUDIT_LOG=".sourceatlas/audit.log"
+export TRACE_ID=""
+export CURRENT_SPAN_ID=""
+export PARENT_SPAN_ID=""
+
 # Load core library if it exists
 if [[ -f "${LIB_DIR}/core.sh" ]]; then
     source "${LIB_DIR}/core.sh"
 fi
+
+# ================================================================================
+# Event System and Observability Functions
+# ================================================================================
+
+# Generate UUID (compatible across systems)
+generate_uuid() {
+    # Try different methods in order of preference
+    if command -v uuidgen >/dev/null 2>&1; then
+        uuidgen | tr '[:upper:]' '[:lower:]'
+    elif [[ -e /proc/sys/kernel/random/uuid ]]; then
+        cat /proc/sys/kernel/random/uuid
+    elif [[ -r /dev/urandom ]]; then
+        # More efficient: use /dev/urandom for better entropy
+        local hex=$(od -x /dev/urandom | head -1 | awk '{OFS=""; print $2$3$4$5$6$7$8$9}')
+        printf "%s-%s-%s-%s-%s" \
+            "${hex:0:8}" \
+            "${hex:8:4}" \
+            "4${hex:12:3}" \
+            "${hex:15:4}" \
+            "${hex:19:12}"
+    else
+        # Fallback: optimized pseudo-UUID using fewer random calls
+        local timestamp=$(date +%s)
+        local nanos=$(($(date +%N) % 1000000))
+        local pid=$$
+        local rand1=$RANDOM
+        local rand2=$RANDOM
+        
+        printf "%08x-%04x-4%03x-%04x-%06x%06x" \
+            $((timestamp ^ pid)) \
+            $((nanos % 65536)) \
+            $((rand1 % 4096)) \
+            $(((rand2 % 16384) + 32768)) \
+            $((timestamp % 1000000)) \
+            $((pid * rand1 % 1000000))
+    fi
+}
+
+# Get timestamp in milliseconds (cross-platform)
+get_timestamp_ms() {
+    # Test if date supports nanoseconds by checking the output format
+    local test_output=$(date +%s%3N 2>/dev/null)
+    if [[ "$test_output" =~ ^[0-9]+$ ]]; then
+        # GNU date with nanoseconds - actually working
+        echo "$test_output"
+    else
+        # macOS/BSD date fallback - seconds only, append 000
+        echo "$(date +%s)000"
+    fi
+}
+
+# Initialize event system
+init_event_system() {
+    local out_dir="${1:-.sourceatlas}"
+    mkdir -p "$out_dir"
+    
+    # Initialize TRACE_ID if not set
+    if [[ -z "$TRACE_ID" ]]; then
+        export TRACE_ID="$(generate_uuid)"
+    fi
+    
+    # Update global paths
+    export EVENTS_FILE="$out_dir/events.jsonl"
+    export AUDIT_LOG="$out_dir/audit.log"
+    
+    # Create events file if it doesn't exist
+    if [[ ! -f "$EVENTS_FILE" ]]; then
+        touch "$EVENTS_FILE"
+    fi
+    
+    # Create audit log if it doesn't exist
+    if [[ ! -f "$AUDIT_LOG" ]]; then
+        touch "$AUDIT_LOG"
+    fi
+}
+
+# Security and validation functions
+validate_input() {
+    local input="$1"
+    local max_length="${2:-1000}"
+    local param_name="${3:-parameter}"
+    
+    # Check if input is empty
+    if [[ -z "$input" ]]; then
+        echo "ERROR: $param_name cannot be empty" >&2
+        return 1
+    fi
+    
+    # Check length bounds
+    if [[ ${#input} -gt $max_length ]]; then
+        echo "ERROR: $param_name exceeds maximum length of $max_length characters" >&2
+        return 1
+    fi
+    
+    # Check for dangerous characters (but allow JSON-safe characters)
+    if [[ "$input" =~ \$\( ]] || [[ "$input" =~ \`.*\` ]] || [[ "$input" =~ '&&' ]] || [[ "$input" =~ '\|\|' ]]; then
+        echo "ERROR: $param_name contains dangerous shell injection patterns" >&2
+        return 1
+    fi
+    
+    return 0
+}
+
+# Sanitize data for JSON embedding
+sanitize_for_json() {
+    local input="$1"
+    
+    # Escape dangerous characters properly
+    printf '%s' "$input" | sed \
+        -e 's/\\/\\\\/g' \
+        -e 's/"/\\"/g' \
+        -e 's/\t/\\t/g' \
+        -e 's/\n/\\n/g' \
+        -e 's/\r/\\r/g' \
+        -e $'s/\x0c/\\f/g' \
+        -e $'s/\x08/\\b/g'
+}
+
+# Redact sensitive data from paths and filenames
+redact_sensitive_data() {
+    local input="$1"
+    
+    # Redact common sensitive patterns
+    echo "$input" | sed \
+        -e 's/[0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}/[UUID]/gi' \
+        -e 's/[a-zA-Z0-9+/]\{20,\}=*/[TOKEN]/g' \
+        -e 's/ssh-[a-z0-9]\+ [A-Za-z0-9+/]\+/[SSH-KEY]/g' \
+        -e 's/BEGIN [A-Z ]*PRIVATE KEY/[PRIVATE-KEY]/g' \
+        -e 's/password[=:][^[:space:]]\+/password=[REDACTED]/gi' \
+        -e 's/token[=:][^[:space:]]\+/token=[REDACTED]/gi' \
+        -e 's/key[=:][^[:space:]]\+/key=[REDACTED]/gi'
+}
+
+# File locking mechanism
+acquire_lock() {
+    local lockfile="$1"
+    local timeout="${2:-10}"
+    local counter=0
+    
+    while (( counter < timeout )); do
+        if mkdir "${lockfile}.lock" 2>/dev/null; then
+            echo $$ > "${lockfile}.lock/pid"
+            return 0
+        fi
+        sleep 0.1
+        ((counter++))
+    done
+    
+    echo "ERROR: Failed to acquire lock on $lockfile after ${timeout}s" >&2
+    return 1
+}
+
+# Release file lock
+release_lock() {
+    local lockfile="$1"
+    
+    if [[ -d "${lockfile}.lock" ]]; then
+        rm -rf "${lockfile}.lock"
+    fi
+}
+
+# Path validation to prevent directory traversal attacks
+validate_path() {
+    local path="$1"
+    local param_name="${2:-path}"
+    local allow_absolute="${3:-false}"
+    
+    # Check if path is empty
+    if [[ -z "$path" ]]; then
+        echo "ERROR: $param_name cannot be empty" >&2
+        return 1
+    fi
+    
+    # Check for directory traversal patterns
+    if [[ "$path" =~ \.\./|\.\.\\ ]]; then
+        echo "ERROR: $param_name contains directory traversal sequences" >&2
+        return 1
+    fi
+    
+    # Check for null bytes (directory traversal via null byte injection)
+    if [[ "$path" =~ $'\0' ]]; then
+        echo "ERROR: $param_name contains null bytes" >&2
+        return 1
+    fi
+    
+    # Check for absolute paths if not allowed
+    if [[ "$allow_absolute" != "true" ]] && [[ "$path" =~ ^/ ]]; then
+        echo "ERROR: $param_name cannot be an absolute path" >&2
+        return 1
+    fi
+    
+    # Check for suspicious patterns
+    if [[ "$path" =~ ^\.\.$ ]] || [[ "$path" =~ /\.\.$ ]] || [[ "$path" =~ ^\.\./ ]] || [[ "$path" =~ /\.\./  ]]; then
+        echo "ERROR: $param_name contains suspicious path patterns" >&2
+        return 1
+    fi
+    
+    # Check for control characters and dangerous characters
+    if [[ "$path" =~ [\x00-\x1F\x7F] ]] || [[ "$path" =~ [\<\>\|\&] ]]; then
+        echo "ERROR: $param_name contains dangerous characters" >&2
+        return 1
+    fi
+    
+    return 0
+}
+
+# Sanitize and normalize path 
+normalize_path() {
+    local path="$1"
+    
+    # Remove duplicate slashes
+    path=$(echo "$path" | sed 's|/\+|/|g')
+    
+    # Remove trailing slash (except for root)
+    if [[ "$path" != "/" ]]; then
+        path="${path%/}"
+    fi
+    
+    # Handle empty path
+    if [[ -z "$path" ]]; then
+        path="."
+    fi
+    
+    echo "$path"
+}
+
+# Safe file append with locking
+safe_file_append() {
+    local file="$1"
+    local content="$2"
+    local lock_timeout="${3:-5}"
+    local skip_validation="${4:-false}"
+    
+    # Only validate user-provided paths, not internal system paths
+    if [[ "$skip_validation" != "true" ]]; then
+        # For system files (.sourceatlas/*), allow absolute paths
+        if [[ "$file" =~ \.sourceatlas/ ]] || [[ "$file" =~ ^/tmp/ ]] || [[ "$file" =~ ^/var/tmp/ ]]; then
+            # System files - minimal validation
+            if [[ "$file" =~ \.\./|\.\.\\ ]] || [[ "$file" =~ $'\0' ]]; then
+                echo "ERROR: Invalid system file path: $file" >&2
+                return 1
+            fi
+        else
+            # User files - full validation
+            if ! validate_path "$file" "file_path" "true"; then
+                return 1
+            fi
+        fi
+    fi
+    
+    # Normalize path
+    file=$(normalize_path "$file")
+    
+    # Ensure directory exists
+    local dir_path=$(dirname "$file")
+    mkdir -p "$dir_path"
+    
+    # Acquire lock
+    if ! acquire_lock "$file" "$lock_timeout"; then
+        return 1
+    fi
+    
+    # Append content
+    echo "$content" >> "$file"
+    local result=$?
+    
+    # Release lock
+    release_lock "$file"
+    
+    return $result
+}
+
+# Event batching system for improved performance
+readonly EVENT_BATCH_SIZE=10
+readonly EVENT_BATCH_TIMEOUT=5
+declare -a EVENT_BATCH
+declare -i EVENT_BATCH_COUNT=0
+declare -i LAST_BATCH_FLUSH=0
+
+# Flush event batch to disk
+flush_event_batch() {
+    if [[ $EVENT_BATCH_COUNT -eq 0 ]]; then
+        return 0
+    fi
+    
+    local batch_content=""
+    for ((i=0; i<EVENT_BATCH_COUNT; i++)); do
+        batch_content+="${EVENT_BATCH[$i]}"$'\n'
+    done
+    
+    # Write entire batch atomically
+    if safe_file_append "$EVENTS_FILE" "$batch_content"; then
+        EVENT_BATCH=()
+        EVENT_BATCH_COUNT=0
+        LAST_BATCH_FLUSH=$(date +%s)
+        return 0
+    else
+        echo "ERROR: Failed to flush event batch to $EVENTS_FILE" >&2
+        return 1
+    fi
+}
+
+# Add event to batch (non-blocking)
+add_event_to_batch() {
+    local event="$1"
+    local audit_entry="$2"
+    local current_time=$(date +%s)
+    
+    # Add to batch
+    EVENT_BATCH[$EVENT_BATCH_COUNT]="$event"
+    ((EVENT_BATCH_COUNT++))
+    
+    # Write audit entry immediately (critical for debugging)
+    safe_file_append "$AUDIT_LOG" "$audit_entry" || true
+    
+    # Flush if batch is full or timeout reached
+    if [[ $EVENT_BATCH_COUNT -ge $EVENT_BATCH_SIZE ]] || \
+       [[ $((current_time - LAST_BATCH_FLUSH)) -ge $EVENT_BATCH_TIMEOUT ]]; then
+        flush_event_batch
+    fi
+}
+
+# Ensure batch is flushed on exit
+cleanup_event_batch() {
+    flush_event_batch 2>/dev/null || true
+}
+
+# Register cleanup function
+trap cleanup_event_batch EXIT
+
+# Emit structured event (OpenTelemetry compatible)
+emit_event() {
+    local event_type="$1"
+    local event_data="${2:-{}}"
+    
+    # Skip if running in CI environment (observability disabled)
+    if [[ "${CI:-}" == "true" ]]; then
+        return 0
+    fi
+    
+    # Input validation
+    if ! validate_input "$event_type" 100 "event_type"; then
+        return 1
+    fi
+    
+    if ! validate_input "$event_data" 10000 "event_data"; then
+        return 1
+    fi
+    
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    local hostname="${HOSTNAME:-$(hostname 2>/dev/null || echo 'unknown')}"
+    
+    # Sanitize and redact sensitive data
+    local safe_event_type=$(sanitize_for_json "$(redact_sensitive_data "$event_type")")
+    local safe_hostname=$(sanitize_for_json "$(redact_sensitive_data "$hostname")")
+    local safe_user=$(sanitize_for_json "$(redact_sensitive_data "${USER:-unknown}")")
+    
+    # Ensure event_data is valid JSON - if not, sanitize and wrap it
+    if ! echo "$event_data" | jq empty 2>/dev/null; then
+        local sanitized_data=$(sanitize_for_json "$(redact_sensitive_data "$event_data")")
+        event_data="{\"raw_data\":\"$sanitized_data\"}"
+    else
+        # Even valid JSON might contain sensitive data - redact it
+        event_data=$(echo "$event_data" | sed 's/"[^"]*password[^"]*":[^,}]*/"password":"[REDACTED]"/gi' | \
+                    sed 's/"[^"]*token[^"]*":[^,}]*/"token":"[REDACTED]"/gi' | \
+                    sed 's/"[^"]*key[^"]*":[^,}]*/"key":"[REDACTED]"/gi')
+    fi
+    
+    # Create simplified event first for debugging
+    local event=$(jq -n \
+        --arg timestamp "$timestamp" \
+        --arg trace_id "$TRACE_ID" \
+        --arg type "$safe_event_type" \
+        --arg hostname "$safe_hostname" \
+        --arg user "$safe_user" \
+        '{
+            timestamp: $timestamp,
+            trace_id: $trace_id,
+            type: $type,
+            hostname: $hostname,
+            user: $user
+        }')
+    
+    # Create human-readable audit entry with redaction
+    local audit_entry=$(printf "[%s] %s: %s (trace: %s)" \
+        "$timestamp" \
+        "$safe_event_type" \
+        "event" \
+        "$TRACE_ID")
+    
+    # Use batching for events (better performance), immediate write for audit (debugging)
+    add_event_to_batch "$event" "$audit_entry"
+}
+
+# Start a new span (for distributed tracing)
+start_span() {
+    # Skip if running in CI environment (observability disabled)
+    if [[ "${CI:-}" == "true" ]]; then
+        return 0
+    fi
+    
+    local span_name="$1"
+    local parent_span="${CURRENT_SPAN_ID}"
+    
+    # Generate new span ID
+    export PARENT_SPAN_ID="$parent_span"
+    export CURRENT_SPAN_ID="$(generate_uuid | cut -c1-8)"
+    
+    # Emit span start event
+    emit_event "span_started" "{
+        \"span_name\": \"$span_name\",
+        \"parent_span_id\": \"$parent_span\",
+        \"start_time\": $(get_timestamp_ms)
+    }"
+}
+
+# End current span
+end_span() {
+    # Skip if running in CI environment (observability disabled)
+    if [[ "${CI:-}" == "true" ]]; then
+        return 0
+    fi
+    
+    local span_name="${1:-unknown}"
+    local exit_code="${2:-0}"
+    
+    # Emit span end event
+    emit_event "span_ended" "{
+        \"span_name\": \"$span_name\",
+        \"exit_code\": $exit_code,
+        \"end_time\": $(get_timestamp_ms)
+    }"
+    
+    # Restore parent span
+    export CURRENT_SPAN_ID="$PARENT_SPAN_ID"
+    export PARENT_SPAN_ID=""
+}
+
+# Track performance of a command
+track_performance() {
+    local operation_name="$1"
+    shift
+    local start_time=$(get_timestamp_ms)
+    
+    start_span "$operation_name"
+    
+    # Execute command and capture exit code
+    local exit_code=0
+    "$@" || exit_code=$?
+    
+    local end_time=$(get_timestamp_ms)
+    local duration_ms=$((end_time - start_time))
+    
+    # Emit performance event
+    emit_event "performance_measured" "{
+        \"operation\": \"$operation_name\",
+        \"duration_ms\": $duration_ms,
+        \"exit_code\": $exit_code,
+        \"command\": \"$*\"
+    }"
+    
+    # Record performance metric with anomaly detection
+    record_performance_metric "operation_duration_${operation_name}" "$duration_ms" "ms" "{
+        \"operation\": \"$operation_name\",
+        \"exit_code\": $exit_code,
+        \"success\": $([ $exit_code -eq 0 ] && echo "true" || echo "false")
+    }"
+    
+    end_span "$operation_name" "$exit_code"
+    return $exit_code
+}
+
+# ================================================================================
+# State Machine Framework for File Processing
+# ================================================================================
+
+# State machine states
+readonly STATE_INIT="INIT"
+readonly STATE_VALIDATE="VALIDATE"
+readonly STATE_EXTRACT_METADATA="EXTRACT_METADATA"
+readonly STATE_EXTRACT_SYMBOLS="EXTRACT_SYMBOLS"
+readonly STATE_GENERATE_SUMMARY="GENERATE_SUMMARY"
+readonly STATE_COMPLETE="COMPLETE"
+readonly STATE_FAILED="FAILED"
+readonly STATE_SKIPPED="SKIPPED"
+
+# State persistence file
+export STATE_DB_FILE=".sourceatlas/state.db"
+
+# Initialize state database
+init_state_db() {
+    local out_dir="${1:-.sourceatlas}"
+    mkdir -p "$out_dir"
+    export STATE_DB_FILE="$out_dir/state.db"
+    
+    # Create state db header if it doesn't exist
+    if [[ ! -f "$STATE_DB_FILE" ]]; then
+        echo "# SourceAtlas State Database" > "$STATE_DB_FILE"
+        echo "# Format: file_path|current_state|last_updated|retry_count|error_message" >> "$STATE_DB_FILE"
+    fi
+}
+
+# Get current state for a file
+get_file_state() {
+    local file_path="$1"
+    
+    if [[ ! -f "$STATE_DB_FILE" ]]; then
+        echo "$STATE_INIT"
+        return
+    fi
+    
+    # Find the file in state db
+    local state_line=$(grep -F "$file_path|" "$STATE_DB_FILE" 2>/dev/null | tail -1)
+    if [[ -n "$state_line" ]]; then
+        echo "$state_line" | cut -d'|' -f2
+    else
+        echo "$STATE_INIT"
+    fi
+}
+
+# Update file state in database
+update_file_state() {
+    local file_path="$1"
+    local new_state="$2"
+    local error_message="${3:-}"
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Get current retry count
+    local current_entry=$(grep -F "$file_path|" "$STATE_DB_FILE" 2>/dev/null | tail -1)
+    local retry_count=0
+    if [[ -n "$current_entry" ]]; then
+        retry_count=$(echo "$current_entry" | cut -d'|' -f4)
+        # Increment retry count if moving to failed state
+        if [[ "$new_state" == "$STATE_FAILED" ]]; then
+            retry_count=$((retry_count + 1))
+        fi
+    fi
+    
+    # Escape pipe characters in error message
+    error_message=$(echo "$error_message" | sed 's/|/\\|/g')
+    
+    # Append new state entry
+    echo "$file_path|$new_state|$timestamp|$retry_count|$error_message" >> "$STATE_DB_FILE"
+    
+    # Emit state change event
+    emit_event "state_changed" "{
+        \"file\": \"$file_path\",
+        \"new_state\": \"$new_state\",
+        \"retry_count\": $retry_count,
+        \"error\": \"$error_message\"
+    }"
+}
+
+# ================================================================================
+# Circuit Breaker and Self-Healing Mechanisms
+# ================================================================================
+
+# Circuit breaker states
+readonly CB_CLOSED="CLOSED"     # Normal operation
+readonly CB_OPEN="OPEN"         # Failures detected, stop processing
+readonly CB_HALF_OPEN="HALF_OPEN" # Testing if service has recovered
+
+# Circuit breaker configuration
+readonly CB_FAILURE_THRESHOLD=5          # Failures before opening circuit
+readonly CB_SUCCESS_THRESHOLD=3          # Successes needed to close circuit
+readonly CB_TIMEOUT_SECONDS=60           # Time before trying half-open
+readonly CB_RECOVERY_WINDOW=300          # Window for counting failures (5 minutes)
+
+# Circuit breaker database file
+export CB_DB_FILE=".sourceatlas/circuit_breaker.db"
+
+# ================================================================================
+# Data Lineage Tracking System  
+# ================================================================================
+
+# Lineage tracking file
+export LINEAGE_FILE=".sourceatlas/lineage.jsonl"
+
+# ================================================================================
+# Predictive Monitoring and Anomaly Detection System
+# ================================================================================
+
+# Performance metrics file
+export METRICS_FILE=".sourceatlas/metrics.jsonl"
+export ANOMALIES_FILE=".sourceatlas/anomalies.jsonl"
+
+# Anomaly detection configuration
+readonly SIGMA_THRESHOLD=3          # 3-sigma rule for anomaly detection
+readonly MIN_SAMPLES=5             # Minimum samples needed for baseline
+readonly ANOMALY_WINDOW=100        # Window size for rolling statistics
+
+# Initialize monitoring system
+init_monitoring_system() {
+    local out_dir="${1:-.sourceatlas}"
+    mkdir -p "$out_dir"
+    export METRICS_FILE="$out_dir/metrics.jsonl"
+    export ANOMALIES_FILE="$out_dir/anomalies.jsonl"
+    
+    # Create metrics files if they don't exist
+    if [[ ! -f "$METRICS_FILE" ]]; then
+        touch "$METRICS_FILE"
+    fi
+    
+    if [[ ! -f "$ANOMALIES_FILE" ]]; then
+        touch "$ANOMALIES_FILE"
+    fi
+}
+
+# Record performance metric
+record_performance_metric() {
+    local metric_name="$1"
+    local value="$2"
+    local unit="${3:-ms}"
+    local context="${4:-{}}"
+    
+    # Input validation
+    if ! validate_input "$metric_name" 100 "metric_name"; then
+        return 1
+    fi
+    
+    if ! validate_input "$unit" 20 "unit"; then
+        return 1
+    fi
+    
+    # Validate numeric value
+    if [[ ! "$value" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+        echo "ERROR: metric value must be numeric" >&2
+        return 1
+    fi
+    
+    # Normalize and validate context JSON (compact multiline JSON)
+    context=$(printf '%s' "$context" | jq -c . 2>/dev/null || echo "{\"raw_context\":\"$(sanitize_for_json "$context")\"}")
+    
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    local metric_id=$(generate_uuid)
+    
+    # Sanitize inputs for JSON
+    local safe_metric_name=$(sanitize_for_json "$(redact_sensitive_data "$metric_name")")
+    local safe_unit=$(sanitize_for_json "$unit")
+    local safe_trace_id=$(sanitize_for_json "$TRACE_ID")
+    local safe_span_id=$(sanitize_for_json "$CURRENT_SPAN_ID")
+    
+    # Redact sensitive data from context
+    local safe_context=$(echo "$context" | sed 's/"[^"]*password[^"]*":[^,}]*/"password":"[REDACTED]"/gi' | \
+                        sed 's/"[^"]*token[^"]*":[^,}]*/"token":"[REDACTED]"/gi' | \
+                        sed 's/"[^"]*key[^"]*":[^,}]*/"key":"[REDACTED]"/gi')
+    
+    # Build metric record
+    local metric_record=$(cat <<EOF
+{
+  "metric_id": "$metric_id",
+  "timestamp": "$timestamp",
+  "metric_name": "$safe_metric_name",
+  "value": $value,
+  "unit": "$safe_unit",
+  "trace_id": "$safe_trace_id",
+  "span_id": "$safe_span_id",
+  "context": $safe_context
+}
+EOF
+)
+    
+    # Write to metrics file safely
+    if ! safe_file_append "$METRICS_FILE" "$metric_record"; then
+        echo "ERROR: Failed to write metric to $METRICS_FILE" >&2
+        return 1
+    fi
+    
+    # Check for anomalies
+    check_performance_anomaly "$safe_metric_name" "$value" "$timestamp"
+}
+
+# Check if a performance value is anomalous
+check_performance_anomaly() {
+    local metric_name="$1"
+    local current_value="$2"
+    local timestamp="$3"
+    
+    if [[ ! -f "$METRICS_FILE" ]]; then
+        return 0
+    fi
+    
+    # Get historical data for this metric
+    local historical_data=$(grep "\"metric_name\": \"$metric_name\"" "$METRICS_FILE" | tail -$ANOMALY_WINDOW)
+    local sample_count=$(echo "$historical_data" | wc -l | tr -d ' ')
+    
+    # Need minimum samples for baseline
+    if [[ $sample_count -lt $MIN_SAMPLES ]]; then
+        return 0
+    fi
+    
+    # Calculate statistics
+    local stats=$(echo "$historical_data" | calculate_statistics)
+    local mean=$(echo "$stats" | grep -o '"mean": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+    local std_dev=$(echo "$stats" | grep -o '"std_dev": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+    
+    # Check if current value is anomalous (3-sigma rule)
+    local anomaly_result=$(is_anomalous "$current_value" "$mean" "$std_dev" "$SIGMA_THRESHOLD")
+    
+    if [[ "$anomaly_result" == "true" ]]; then
+        record_anomaly "$metric_name" "$current_value" "$mean" "$std_dev" "$timestamp"
+        emit_event "performance_anomaly_detected" "{
+            \"metric_name\": \"$metric_name\",
+            \"current_value\": $current_value,
+            \"baseline_mean\": $mean,
+            \"std_deviation\": $std_dev,
+            \"sigma_threshold\": $SIGMA_THRESHOLD,
+            \"sample_count\": $sample_count
+        }"
+    fi
+}
+
+# Calculate statistics for a set of metric values
+calculate_statistics() {
+    local sum=0
+    local count=0
+    local values=()
+    
+    # Extract values and calculate sum
+    while IFS= read -r line; do
+        if [[ -n "$line" ]]; then
+            local value=$(echo "$line" | grep -o '"value": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+            if [[ -n "$value" ]]; then
+                values+=($value)
+                sum=$(echo "$sum + $value" | bc -l 2>/dev/null || echo "$sum")
+                count=$((count + 1))
+            fi
+        fi
+    done
+    
+    if [[ $count -eq 0 ]]; then
+        echo '{"mean": 0, "std_dev": 0, "count": 0}'
+        return
+    fi
+    
+    # Calculate mean
+    local mean=$(echo "scale=6; $sum / $count" | bc -l 2>/dev/null || echo "0")
+    
+    # Calculate standard deviation
+    local variance_sum=0
+    for value in "${values[@]}"; do
+        local diff=$(echo "scale=6; $value - $mean" | bc -l 2>/dev/null || echo "0")
+        local squared=$(echo "scale=6; $diff * $diff" | bc -l 2>/dev/null || echo "0")
+        variance_sum=$(echo "scale=6; $variance_sum + $squared" | bc -l 2>/dev/null || echo "$variance_sum")
+    done
+    
+    local variance=$(echo "scale=6; $variance_sum / $count" | bc -l 2>/dev/null || echo "0")
+    local std_dev=$(echo "scale=6; sqrt($variance)" | bc -l 2>/dev/null || echo "0")
+    
+    echo "{\"mean\": $mean, \"std_dev\": $std_dev, \"count\": $count, \"variance\": $variance}"
+}
+
+# Check if a value is anomalous using sigma threshold
+is_anomalous() {
+    local value="$1"
+    local mean="$2"
+    local std_dev="$3"
+    local threshold="${4:-3}"
+    
+    if [[ "$std_dev" == "0" ]]; then
+        echo "false"
+        return
+    fi
+    
+    # Calculate z-score
+    local z_score=$(echo "scale=6; ($value - $mean) / $std_dev" | bc -l 2>/dev/null || echo "0")
+    local abs_z_score=$(echo "scale=6; if ($z_score < 0) -1 * $z_score else $z_score" | bc -l 2>/dev/null || echo "0")
+    
+    # Check if absolute z-score exceeds threshold
+    local is_anomaly=$(echo "$abs_z_score > $threshold" | bc -l 2>/dev/null || echo "0")
+    
+    if [[ "$is_anomaly" == "1" ]]; then
+        echo "true"
+    else
+        echo "false"
+    fi
+}
+
+# Record anomaly event
+record_anomaly() {
+    local metric_name="$1"
+    local current_value="$2"
+    local baseline_mean="$3"
+    local std_dev="$4"
+    local timestamp="$5"
+    local anomaly_id=$(generate_uuid)
+    
+    # Calculate severity based on z-score
+    local z_score=$(echo "scale=6; ($current_value - $baseline_mean) / $std_dev" | bc -l 2>/dev/null || echo "0")
+    local abs_z_score=$(echo "scale=6; if ($z_score < 0) -1 * $z_score else $z_score" | bc -l 2>/dev/null || echo "0")
+    
+    local severity="medium"
+    if (( $(echo "$abs_z_score > 5" | bc -l) )); then
+        severity="critical"
+    elif (( $(echo "$abs_z_score > 4" | bc -l) )); then
+        severity="high"
+    fi
+    
+    # Build anomaly record
+    local anomaly_record=$(cat <<EOF
+{
+  "anomaly_id": "$anomaly_id",
+  "timestamp": "$timestamp",
+  "metric_name": "$metric_name",
+  "current_value": $current_value,
+  "baseline_mean": $baseline_mean,
+  "std_deviation": $std_dev,
+  "z_score": $z_score,
+  "severity": "$severity",
+  "sigma_threshold": $SIGMA_THRESHOLD,
+  "trace_id": "$TRACE_ID",
+  "span_id": "$CURRENT_SPAN_ID",
+  "detection_method": "three_sigma_rule"
+}
+EOF
+)
+    
+    # Write to anomalies file
+    echo "$anomaly_record" >> "$ANOMALIES_FILE"
+    
+    # Trigger deep debugging if critical
+    if [[ "$severity" == "critical" ]]; then
+        trigger_deep_debugging "$metric_name" "$anomaly_id"
+    fi
+}
+
+# Trigger deep debugging for critical anomalies
+trigger_deep_debugging() {
+    local metric_name="$1"
+    local anomaly_id="$2"
+    
+    emit_event "deep_debugging_triggered" "{
+        \"trigger_type\": \"performance_anomaly\",
+        \"metric_name\": \"$metric_name\",
+        \"anomaly_id\": \"$anomaly_id\",
+        \"debug_actions\": [
+            \"snapshot_current_state\",
+            \"collect_system_metrics\",
+            \"analyze_recent_events\",
+            \"check_circuit_breakers\"
+        ]
+    }"
+    
+    # Auto-create debugging snapshot
+    if command -v snapshot_create >/dev/null 2>&1; then
+        snapshot_create "anomaly_debug_${anomaly_id}" 2>/dev/null &
+    fi
+}
+
+# Get performance baseline for metric
+get_performance_baseline() {
+    local metric_name="$1"
+    local window_size="${2:-$ANOMALY_WINDOW}"
+    
+    if [[ ! -f "$METRICS_FILE" ]]; then
+        echo '{"error": "no_metrics_data"}'
+        return
+    fi
+    
+    local historical_data=$(grep "\"metric_name\": \"$metric_name\"" "$METRICS_FILE" | tail -$window_size)
+    local sample_count=$(echo "$historical_data" | wc -l | tr -d ' ')
+    
+    if [[ $sample_count -lt $MIN_SAMPLES ]]; then
+        echo "{\"error\": \"insufficient_samples\", \"count\": $sample_count, \"required\": $MIN_SAMPLES}"
+        return
+    fi
+    
+    local stats=$(echo "$historical_data" | calculate_statistics)
+    echo "$stats"
+}
+
+# Get recent anomalies
+get_recent_anomalies() {
+    local hours="${1:-24}"
+    local cutoff_time=$(date -u -d "$hours hours ago" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u -v-${hours}H +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    if [[ ! -f "$ANOMALIES_FILE" ]]; then
+        echo "[]"
+        return
+    fi
+    
+    # Filter anomalies within time window
+    grep "\"timestamp\": \"[^\"]*\"" "$ANOMALIES_FILE" | while IFS= read -r line; do
+        local timestamp=$(echo "$line" | grep -o '"timestamp": "[^"]*"' | cut -d'"' -f4)
+        if [[ "$timestamp" > "$cutoff_time" ]]; then
+            echo "$line"
+        fi
+    done
+}
+
+# Monitor performance with anomaly detection
+monitor_performance() {
+    local operation="$1"
+    local start_time="$2"
+    local end_time="$3"
+    
+    local duration=$((end_time - start_time))
+    
+    # Record the metric
+    record_performance_metric "operation_duration_${operation}" "$duration" "ms" "{
+        \"operation\": \"$operation\",
+        \"start_time\": $start_time,
+        \"end_time\": $end_time
+    }"
+    
+    # Also record memory usage if available
+    local memory_usage=$(ps -o rss= -p $$ 2>/dev/null | tr -d ' ')
+    if [[ -n "$memory_usage" ]]; then
+        record_performance_metric "memory_usage_${operation}" "$memory_usage" "kb" "{
+            \"operation\": \"$operation\",
+            \"process_id\": $$
+        }"
+    fi
+}
+
+# Initialize lineage tracking
+init_lineage_tracking() {
+    local out_dir="${1:-.sourceatlas}"
+    mkdir -p "$out_dir"
+    export LINEAGE_FILE="$out_dir/lineage.jsonl"
+    
+    # Create lineage file if it doesn't exist
+    if [[ ! -f "$LINEAGE_FILE" ]]; then
+        touch "$LINEAGE_FILE"
+    fi
+}
+
+# Record lineage event
+record_lineage_event() {
+    # Skip if running in CI environment (observability disabled)
+    if [[ "${CI:-}" == "true" ]]; then
+        return 0
+    fi
+    
+    local event_type="$1"
+    local source_entity="$2"
+    local target_entity="$3"
+    local operation="$4"
+    local metadata="${5:-{}}"
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    local event_id=$(generate_uuid)
+    
+    # Build lineage record
+    local lineage_record=$(cat <<EOF
+{
+  "event_id": "$event_id",
+  "timestamp": "$timestamp",
+  "event_type": "$event_type",
+  "operation": "$operation",
+  "source": {
+    "entity": "$source_entity",
+    "type": "$(determine_entity_type "$source_entity")"
+  },
+  "target": {
+    "entity": "$target_entity", 
+    "type": "$(determine_entity_type "$target_entity")"
+  },
+  "trace_id": "$TRACE_ID",
+  "span_id": "$CURRENT_SPAN_ID",
+  "metadata": $metadata
+}
+EOF
+)
+    
+    # Write to lineage file
+    echo "$lineage_record" >> "$LINEAGE_FILE"
+    
+    # Also emit as regular event
+    emit_event "lineage_recorded" "{
+        \"event_id\": \"$event_id\",
+        \"event_type\": \"$event_type\",
+        \"source\": \"$source_entity\",
+        \"target\": \"$target_entity\",
+        \"operation\": \"$operation\"
+    }"
+}
+
+# Determine entity type from path/name
+determine_entity_type() {
+    local entity="$1"
+    
+    if [[ -z "$entity" ]]; then
+        echo "unknown"
+        return
+    fi
+    
+    # Check if it's a file path
+    if [[ "$entity" =~ ^.*\.[a-zA-Z0-9]+$ ]]; then
+        if [[ "$entity" =~ \.jsonl$ ]]; then
+            echo "index_file"
+        elif [[ "$entity" =~ \.tsv$ ]]; then
+            echo "symbol_table"
+        elif [[ "$entity" =~ \.json$ ]]; then
+            echo "metadata_file"
+        elif [[ "$entity" =~ \.(swift|kt|m|h)$ ]]; then
+            echo "source_file"
+        else
+            echo "file"
+        fi
+    elif [[ "$entity" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+        echo "symbol"
+    elif [[ "$entity" =~ ^.*\/.*$ ]]; then
+        echo "path"
+    else
+        echo "entity"
+    fi
+}
+
+# Record data transformation lineage
+record_data_transformation() {
+    local input_file="$1"
+    local output_file="$2"
+    local transformation_type="$3"
+    local details="${4:-{}}"
+    
+    record_lineage_event "data_transformation" "$input_file" "$output_file" "$transformation_type" "$details"
+}
+
+# Record symbol extraction lineage
+record_symbol_extraction() {
+    local source_file="$1"
+    local symbol_name="$2"
+    local symbol_type="$3"
+    local line_number="$4"
+    
+    local metadata=$(cat <<EOF
+{
+  "symbol_type": "$symbol_type",
+  "line_number": $line_number,
+  "extraction_method": "ctags_with_regex_fallback"
+}
+EOF
+)
+    
+    record_lineage_event "symbol_extraction" "$source_file" "$symbol_name" "extract_symbol" "$metadata"
+}
+
+# Record aggregation lineage (multiple inputs -> one output)
+record_aggregation() {
+    local operation="$1"
+    local output_entity="$2"
+    shift 2
+    local input_entities=("$@")
+    
+    local inputs_json="["
+    local first=true
+    for input in "${input_entities[@]}"; do
+        if [[ "$first" != "true" ]]; then
+            inputs_json+=","
+        fi
+        first=false
+        inputs_json+="\"$input\""
+    done
+    inputs_json+="]"
+    
+    local metadata=$(cat <<EOF
+{
+  "input_count": ${#input_entities[@]},
+  "inputs": $inputs_json
+}
+EOF
+)
+    
+    # Record one event per input
+    for input in "${input_entities[@]}"; do
+        record_lineage_event "aggregation" "$input" "$output_entity" "$operation" "$metadata"
+    done
+}
+
+# Record file processing lineage
+record_file_processing_lineage() {
+    local file_path="$1"
+    local processing_stage="$2"
+    local input_data="$3"
+    local output_data="$4"
+    local success="$5"
+    
+    local metadata=$(cat <<EOF
+{
+  "processing_stage": "$processing_stage",
+  "success": $success,
+  "input_size": ${#input_data},
+  "output_size": ${#output_data},
+  "file_size": $(stat -f%z "$file_path" 2>/dev/null || stat -c%s "$file_path" 2>/dev/null || echo 0)
+}
+EOF
+)
+    
+    local event_type="file_processing"
+    if [[ "$success" == "true" ]]; then
+        event_type="successful_processing"
+    else
+        event_type="failed_processing"
+    fi
+    
+    record_lineage_event "$event_type" "$file_path" "${file_path}_${processing_stage}" "$processing_stage" "$metadata"
+}
+
+# Query lineage by entity
+query_lineage_by_entity() {
+    local entity="$1"
+    local direction="${2:-both}" # upstream, downstream, both
+    
+    if [[ ! -f "$LINEAGE_FILE" ]]; then
+        echo "[]"
+        return
+    fi
+    
+    case "$direction" in
+        "upstream")
+            grep "\"target\".*\"entity\":.*\"$entity\"" "$LINEAGE_FILE" 2>/dev/null || echo ""
+            ;;
+        "downstream")
+            grep "\"source\".*\"entity\":.*\"$entity\"" "$LINEAGE_FILE" 2>/dev/null || echo ""
+            ;;
+        "both")
+            (grep "\"target\".*\"entity\":.*\"$entity\"" "$LINEAGE_FILE" 2>/dev/null || echo "")
+            (grep "\"source\".*\"entity\":.*\"$entity\"" "$LINEAGE_FILE" 2>/dev/null || echo "")
+            ;;
+    esac
+}
+
+# Get lineage statistics
+get_lineage_stats() {
+    local out_dir="${1:-.sourceatlas}"
+    local lineage_file="$out_dir/lineage.jsonl"
+    
+    if [[ ! -f "$lineage_file" ]]; then
+        echo "{\"total_events\": 0, \"entities\": 0, \"operations\": 0}"
+        return
+    fi
+    
+    local total_events=$(wc -l < "$lineage_file" | tr -d ' ')
+    local unique_entities=$(grep -o '"entity": "[^"]*"' "$lineage_file" | sort -u | wc -l | tr -d ' ')
+    local unique_operations=$(grep -o '"operation": "[^"]*"' "$lineage_file" | sort -u | wc -l | tr -d ' ')
+    
+    echo "{\"total_events\": $total_events, \"entities\": $unique_entities, \"operations\": $unique_operations}"
+}
+
+# Trace full lineage path
+trace_lineage_path() {
+    local start_entity="$1"
+    local end_entity="$2" 
+    local max_depth="${3:-10}"
+    
+    if [[ ! -f "$LINEAGE_FILE" ]]; then
+        echo "[]"
+        return
+    fi
+    
+    # Simple implementation - trace downstream from start to end
+    # This is a basic version; a full implementation would use graph traversal
+    local path="[]"
+    local current_entity="$start_entity"
+    local depth=0
+    
+    while [[ $depth -lt $max_depth && "$current_entity" != "$end_entity" ]]; do
+        local next_entity=$(grep "\"source\".*\"entity\":.*\"$current_entity\"" "$LINEAGE_FILE" | head -1 | grep -o '"target".*"entity": "[^"]*"' | cut -d'"' -f4)
+        
+        if [[ -z "$next_entity" ]]; then
+            break
+        fi
+        
+        current_entity="$next_entity"
+        ((depth++))
+    done
+    
+    if [[ "$current_entity" == "$end_entity" ]]; then
+        echo "{\"path_found\": true, \"depth\": $depth}"
+    else
+        echo "{\"path_found\": false, \"depth\": $depth}"
+    fi
+}
+
+# Initialize circuit breaker database
+init_circuit_breaker_db() {
+    local out_dir="${1:-.sourceatlas}"
+    mkdir -p "$out_dir"
+    export CB_DB_FILE="$out_dir/circuit_breaker.db"
+    
+    # Create circuit breaker db header if it doesn't exist
+    if [[ ! -f "$CB_DB_FILE" ]]; then
+        echo "# SourceAtlas Circuit Breaker Database" > "$CB_DB_FILE"
+        echo "# Format: operation|state|failure_count|success_count|last_failure|last_success|opened_at" >> "$CB_DB_FILE"
+        # Initialize default operations
+        local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        echo "file_processing|$CB_CLOSED|0|0|$timestamp|$timestamp|" >> "$CB_DB_FILE"
+        echo "symbol_extraction|$CB_CLOSED|0|0|$timestamp|$timestamp|" >> "$CB_DB_FILE"
+        echo "metadata_extraction|$CB_CLOSED|0|0|$timestamp|$timestamp|" >> "$CB_DB_FILE"
+    fi
+}
+
+# Get circuit breaker state for an operation
+get_circuit_breaker_state() {
+    local operation="$1"
+    
+    if [[ ! -f "$CB_DB_FILE" ]]; then
+        echo "$CB_CLOSED"
+        return
+    fi
+    
+    # Find the operation in circuit breaker db
+    local cb_line=$(grep "^$operation|" "$CB_DB_FILE" 2>/dev/null | tail -1)
+    if [[ -n "$cb_line" ]]; then
+        echo "$cb_line" | cut -d'|' -f2
+    else
+        echo "$CB_CLOSED"
+    fi
+}
+
+# Update circuit breaker state
+update_circuit_breaker_state() {
+    local operation="$1"
+    local new_state="$2"
+    local failure_count="$3"
+    local success_count="$4"
+    local last_failure="$5"
+    local last_success="$6"
+    local opened_at="$7"
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Input validation
+    if ! validate_input "$operation" 50 "operation"; then
+        return 1
+    fi
+    
+    if ! validate_input "$new_state" 20 "new_state"; then
+        return 1
+    fi
+    
+    # Validate numeric inputs
+    if [[ ! "$failure_count" =~ ^[0-9]+$ ]] || [[ ! "$success_count" =~ ^[0-9]+$ ]]; then
+        echo "ERROR: failure_count and success_count must be numeric" >&2
+        return 1
+    fi
+    
+    # Safe atomic update with file locking
+    if ! acquire_lock "$CB_DB_FILE" 10; then
+        echo "ERROR: Failed to acquire lock for circuit breaker update" >&2
+        return 1
+    fi
+    
+    # Remove old entry and add new one atomically
+    local temp_file="${CB_DB_FILE}.tmp.$$"
+    if [[ -f "$CB_DB_FILE" ]]; then
+        grep -v "^$operation|" "$CB_DB_FILE" > "$temp_file" 2>/dev/null || touch "$temp_file"
+    else
+        touch "$temp_file"
+    fi
+    
+    echo "$operation|$new_state|$failure_count|$success_count|$last_failure|$last_success|$opened_at" >> "$temp_file"
+    
+    # Atomic move
+    mv "$temp_file" "$CB_DB_FILE"
+    local result=$?
+    
+    # Release lock
+    release_lock "$CB_DB_FILE"
+    
+    if [[ $result -eq 0 ]]; then
+        emit_event "circuit_breaker_state_changed" "{
+            \"operation\": \"$(sanitize_for_json "$operation")\",
+            \"new_state\": \"$(sanitize_for_json "$new_state")\",
+            \"failure_count\": $failure_count,
+            \"success_count\": $success_count,
+            \"timestamp\": \"$timestamp\"
+        }"
+    fi
+    
+    return $result
+}
+
+# Record circuit breaker success
+record_circuit_breaker_success() {
+    local operation="$1"
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    if [[ ! -f "$CB_DB_FILE" ]]; then
+        init_circuit_breaker_db
+    fi
+    
+    # Get current circuit breaker data
+    local cb_line=$(grep "^$operation|" "$CB_DB_FILE" 2>/dev/null | tail -1)
+    if [[ -z "$cb_line" ]]; then
+        # Initialize new operation
+        update_circuit_breaker_state "$operation" "$CB_CLOSED" 0 1 "$timestamp" "$timestamp" ""
+        return
+    fi
+    
+    local current_state=$(echo "$cb_line" | cut -d'|' -f2)
+    local failure_count=$(echo "$cb_line" | cut -d'|' -f3)
+    local success_count=$(echo "$cb_line" | cut -d'|' -f4)
+    local last_failure=$(echo "$cb_line" | cut -d'|' -f5)
+    local opened_at=$(echo "$cb_line" | cut -d'|' -f7)
+    
+    success_count=$((success_count + 1))
+    
+    # State transitions based on success
+    case "$current_state" in
+        "$CB_OPEN")
+            # Don't change state on success while open (should not happen)
+            ;;
+        "$CB_HALF_OPEN")
+            if [[ $success_count -ge $CB_SUCCESS_THRESHOLD ]]; then
+                # Close the circuit - service has recovered
+                update_circuit_breaker_state "$operation" "$CB_CLOSED" 0 0 "$last_failure" "$timestamp" ""
+                emit_event "circuit_breaker_closed" "{
+                    \"operation\": \"$operation\",
+                    \"success_count\": $success_count,
+                    \"message\": \"Circuit breaker closed - service recovered\"
+                }"
+            else
+                # Still testing recovery
+                update_circuit_breaker_state "$operation" "$CB_HALF_OPEN" "$failure_count" "$success_count" "$last_failure" "$timestamp" "$opened_at"
+            fi
+            ;;
+        "$CB_CLOSED")
+            # Reset failure count on success
+            update_circuit_breaker_state "$operation" "$CB_CLOSED" 0 "$success_count" "$last_failure" "$timestamp" ""
+            ;;
+    esac
+}
+
+# Record circuit breaker failure
+record_circuit_breaker_failure() {
+    local operation="$1"
+    local error_message="$2"
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    if [[ ! -f "$CB_DB_FILE" ]]; then
+        init_circuit_breaker_db
+    fi
+    
+    # Get current circuit breaker data
+    local cb_line=$(grep "^$operation|" "$CB_DB_FILE" 2>/dev/null | tail -1)
+    if [[ -z "$cb_line" ]]; then
+        # Initialize new operation with failure
+        update_circuit_breaker_state "$operation" "$CB_CLOSED" 1 0 "$timestamp" "$timestamp" ""
+        return
+    fi
+    
+    local current_state=$(echo "$cb_line" | cut -d'|' -f2)
+    local failure_count=$(echo "$cb_line" | cut -d'|' -f3)
+    local success_count=$(echo "$cb_line" | cut -d'|' -f4)
+    local last_success=$(echo "$cb_line" | cut -d'|' -f6)
+    local opened_at=$(echo "$cb_line" | cut -d'|' -f7)
+    
+    failure_count=$((failure_count + 1))
+    
+    # State transitions based on failure
+    case "$current_state" in
+        "$CB_CLOSED")
+            if [[ $failure_count -ge $CB_FAILURE_THRESHOLD ]]; then
+                # Open the circuit - too many failures
+                update_circuit_breaker_state "$operation" "$CB_OPEN" "$failure_count" 0 "$timestamp" "$last_success" "$timestamp"
+                emit_event "circuit_breaker_opened" "{
+                    \"operation\": \"$operation\",
+                    \"failure_count\": $failure_count,
+                    \"threshold\": $CB_FAILURE_THRESHOLD,
+                    \"message\": \"Circuit breaker opened - too many failures\",
+                    \"error\": \"$error_message\"
+                }"
+            else
+                # Still closed, just increment failure count
+                update_circuit_breaker_state "$operation" "$CB_CLOSED" "$failure_count" "$success_count" "$timestamp" "$last_success" ""
+            fi
+            ;;
+        "$CB_HALF_OPEN")
+            # Failure during testing - reopen circuit
+            update_circuit_breaker_state "$operation" "$CB_OPEN" "$failure_count" 0 "$timestamp" "$last_success" "$timestamp"
+            emit_event "circuit_breaker_reopened" "{
+                \"operation\": \"$operation\",
+                \"message\": \"Circuit breaker reopened - failure during recovery test\",
+                \"error\": \"$error_message\"
+            }"
+            ;;
+        "$CB_OPEN")
+            # Already open, just update failure info
+            update_circuit_breaker_state "$operation" "$CB_OPEN" "$failure_count" "$success_count" "$timestamp" "$last_success" "$opened_at"
+            ;;
+    esac
+}
+
+# Check if circuit breaker allows operation
+circuit_breaker_allows_operation() {
+    local operation="$1"
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    local current_ts=$(date +%s)
+    
+    if [[ ! -f "$CB_DB_FILE" ]]; then
+        init_circuit_breaker_db
+        echo "true"
+        return
+    fi
+    
+    local cb_line=$(grep "^$operation|" "$CB_DB_FILE" 2>/dev/null | tail -1)
+    if [[ -z "$cb_line" ]]; then
+        echo "true"
+        return
+    fi
+    
+    local current_state=$(echo "$cb_line" | cut -d'|' -f2)
+    local opened_at=$(echo "$cb_line" | cut -d'|' -f7)
+    
+    case "$current_state" in
+        "$CB_CLOSED")
+            echo "true"
+            return
+            ;;
+        "$CB_HALF_OPEN")
+            echo "true"
+            return
+            ;;
+        "$CB_OPEN")
+            if [[ -n "$opened_at" ]]; then
+                # Check if timeout period has passed
+                local opened_ts=$(date -d "$opened_at" +%s 2>/dev/null || echo $current_ts)
+                local elapsed=$((current_ts - opened_ts))
+                
+                if [[ $elapsed -ge $CB_TIMEOUT_SECONDS ]]; then
+                    # Move to half-open state
+                    local failure_count=$(echo "$cb_line" | cut -d'|' -f3)
+                    local last_failure=$(echo "$cb_line" | cut -d'|' -f5)
+                    local last_success=$(echo "$cb_line" | cut -d'|' -f6)
+                    
+                    update_circuit_breaker_state "$operation" "$CB_HALF_OPEN" "$failure_count" 0 "$last_failure" "$last_success" "$opened_at"
+                    emit_event "circuit_breaker_half_opened" "{
+                        \"operation\": \"$operation\",
+                        \"message\": \"Circuit breaker moved to half-open - testing recovery\"
+                    }"
+                    echo "true"
+                    return
+                fi
+            fi
+            echo "false"
+            return
+            ;;
+    esac
+}
+
+# Execute operation with circuit breaker protection
+execute_with_circuit_breaker() {
+    local operation="$1"
+    local command="$2"
+    shift 2
+    local args=("$@")
+    
+    # Check if circuit breaker allows operation
+    local allowed=$(circuit_breaker_allows_operation "$operation")
+    if [[ "$allowed" != "true" ]]; then
+        emit_event "circuit_breaker_blocked_operation" "{
+            \"operation\": \"$operation\",
+            \"message\": \"Operation blocked by circuit breaker\"
+        }"
+        return 1
+    fi
+    
+    # Execute the operation
+    local start_time=$(get_timestamp_ms)
+    local exit_code=0
+    
+    if "$command" "${args[@]}"; then
+        # Success
+        record_circuit_breaker_success "$operation"
+        local end_time=$(get_timestamp_ms)
+        emit_event "circuit_breaker_operation_success" "{
+            \"operation\": \"$operation\",
+            \"duration_ms\": $((end_time - start_time))
+        }"
+        return 0
+    else
+        # Failure
+        exit_code=$?
+        record_circuit_breaker_failure "$operation" "Operation failed with exit code $exit_code"
+        local end_time=$(get_timestamp_ms)
+        emit_event "circuit_breaker_operation_failure" "{
+            \"operation\": \"$operation\",
+            \"exit_code\": $exit_code,
+            \"duration_ms\": $((end_time - start_time))
+        }"
+        return $exit_code
+    fi
+}
+
+# Get circuit breaker status for all operations
+get_circuit_breaker_status() {
+    local out_dir="${1:-.sourceatlas}"
+    local cb_db="$out_dir/circuit_breaker.db"
+    
+    if [[ ! -f "$cb_db" ]]; then
+        echo "[]"
+        return
+    fi
+    
+    echo "["
+    local first=true
+    while IFS='|' read -r operation state failure_count success_count last_failure last_success opened_at; do
+        # Skip comments and empty lines
+        [[ "$operation" =~ ^#.*$ ]] || [[ -z "$operation" ]] && continue
+        
+        if [[ "$first" != "true" ]]; then
+            echo ","
+        fi
+        first=false
+        
+        echo "  {"
+        echo "    \"operation\": \"$operation\","
+        echo "    \"state\": \"$state\","
+        echo "    \"failure_count\": $failure_count,"
+        echo "    \"success_count\": $success_count,"
+        echo "    \"last_failure\": \"$last_failure\","
+        echo "    \"last_success\": \"$last_success\","
+        echo "    \"opened_at\": \"$opened_at\""
+        echo -n "  }"
+    done < "$cb_db"
+    echo ""
+    echo "]"
+}
+
+# State machine processor for a single file
+process_file_state_machine() {
+    local file_path="$1"
+    local max_retries="${2:-3}"
+    
+    # Check if file processing is allowed by circuit breaker
+    local allowed=$(circuit_breaker_allows_operation "file_processing")
+    if [[ "$allowed" != "true" ]]; then
+        emit_event "file_processing_blocked" "{
+            \"file\": \"$file_path\",
+            \"message\": \"File processing blocked by circuit breaker\"
+        }"
+        update_file_state "$file_path" "$STATE_SKIPPED" "Processing blocked by circuit breaker"
+        return 1
+    fi
+    
+    start_span "file_processing_$(basename "$file_path")"
+    
+    local current_state=$(get_file_state "$file_path")
+    local retry_count=0
+    
+    emit_event "file_processing_started" "{
+        \"file\": \"$file_path\",
+        \"initial_state\": \"$current_state\"
+    }"
+    
+    # State machine loop
+    while [[ "$current_state" != "$STATE_COMPLETE" && "$current_state" != "$STATE_FAILED" && "$current_state" != "$STATE_SKIPPED" ]]; do
+        
+        emit_event "state_processing" "{
+            \"file\": \"$file_path\",
+            \"state\": \"$current_state\",
+            \"retry_count\": $retry_count
+        }"
+        
+        case "$current_state" in
+            "$STATE_INIT")
+                if sm_init_file "$file_path"; then
+                    current_state="$STATE_VALIDATE"
+                    update_file_state "$file_path" "$current_state"
+                else
+                    update_file_state "$file_path" "$STATE_FAILED" "Failed to initialize file processing"
+                    current_state="$STATE_FAILED"
+                fi
+                ;;
+                
+            "$STATE_VALIDATE")
+                if sm_validate_file "$file_path"; then
+                    current_state="$STATE_EXTRACT_METADATA"
+                    update_file_state "$file_path" "$current_state"
+                else
+                    if (( retry_count < max_retries )); then
+                        update_file_state "$file_path" "$STATE_VALIDATE" "Validation failed, retrying"
+                        ((retry_count++))
+                    else
+                        update_file_state "$file_path" "$STATE_SKIPPED" "Validation failed after $max_retries retries"
+                        current_state="$STATE_SKIPPED"
+                    fi
+                fi
+                ;;
+                
+            "$STATE_EXTRACT_METADATA")
+                if execute_with_circuit_breaker "metadata_extraction" sm_extract_metadata "$file_path"; then
+                    current_state="$STATE_EXTRACT_SYMBOLS"
+                    update_file_state "$file_path" "$current_state"
+                else
+                    if (( retry_count < max_retries )); then
+                        update_file_state "$file_path" "$STATE_EXTRACT_METADATA" "Metadata extraction failed, retrying"
+                        ((retry_count++))
+                    else
+                        update_file_state "$file_path" "$STATE_FAILED" "Metadata extraction failed after $max_retries retries"
+                        current_state="$STATE_FAILED"
+                    fi
+                fi
+                ;;
+                
+            "$STATE_EXTRACT_SYMBOLS")
+                if execute_with_circuit_breaker "symbol_extraction" sm_extract_symbols "$file_path"; then
+                    current_state="$STATE_GENERATE_SUMMARY"
+                    update_file_state "$file_path" "$current_state"
+                else
+                    if (( retry_count < max_retries )); then
+                        update_file_state "$file_path" "$STATE_EXTRACT_SYMBOLS" "Symbol extraction failed, retrying"
+                        ((retry_count++))
+                    else
+                        update_file_state "$file_path" "$STATE_FAILED" "Symbol extraction failed after $max_retries retries"
+                        current_state="$STATE_FAILED"
+                    fi
+                fi
+                ;;
+                
+            "$STATE_GENERATE_SUMMARY")
+                if sm_generate_summary "$file_path"; then
+                    current_state="$STATE_COMPLETE"
+                    update_file_state "$file_path" "$current_state"
+                else
+                    if (( retry_count < max_retries )); then
+                        update_file_state "$file_path" "$STATE_GENERATE_SUMMARY" "Summary generation failed, retrying"
+                        ((retry_count++))
+                    else
+                        update_file_state "$file_path" "$STATE_FAILED" "Summary generation failed after $max_retries retries"
+                        current_state="$STATE_FAILED"
+                    fi
+                fi
+                ;;
+                
+            *)
+                update_file_state "$file_path" "$STATE_FAILED" "Unknown state: $current_state"
+                current_state="$STATE_FAILED"
+                ;;
+        esac
+        
+        # Prevent infinite loops
+        if (( retry_count > max_retries * 2 )); then
+            update_file_state "$file_path" "$STATE_FAILED" "Too many retries, aborting"
+            current_state="$STATE_FAILED"
+        fi
+    done
+    
+    emit_event "file_processing_completed" "{
+        \"file\": \"$file_path\",
+        \"final_state\": \"$current_state\",
+        \"total_retries\": $retry_count
+    }"
+    
+    # Record circuit breaker result
+    if [[ "$current_state" == "$STATE_COMPLETE" ]]; then
+        record_circuit_breaker_success "file_processing"
+        end_span "file_processing_$(basename "$file_path")" 0
+        return 0
+    else
+        record_circuit_breaker_failure "file_processing" "File processing failed with state: $current_state"
+        end_span "file_processing_$(basename "$file_path")" 1
+        return 1
+    fi
+}
+
+# State machine step implementations
+sm_init_file() {
+    local file_path="$1"
+    
+    # Check if file exists and is readable
+    [[ -f "$file_path" && -r "$file_path" ]]
+}
+
+sm_validate_file() {
+    local file_path="$1"
+    
+    # Basic validation: file should exist, be readable, and not empty
+    if [[ ! -f "$file_path" ]]; then
+        return 1
+    fi
+    
+    if [[ ! -r "$file_path" ]]; then
+        return 1
+    fi
+    
+    # Check if file is not empty (allow empty files for now)
+    # Could add more validation rules here
+    return 0
+}
+
+sm_extract_metadata() {
+    local file_path="$1"
+    
+    # Record lineage for metadata extraction start
+    record_file_processing_lineage "$file_path" "metadata_extraction" "$file_path" "" "true"
+    
+    # Extract basic metadata: size, lines, hash
+    local size_bytes=$(get_file_size "$file_path" 2>/dev/null)
+    local loc=$(count_lines "$file_path" 2>/dev/null)
+    local content_hash=$(calculate_hash "$file_path" 2>/dev/null)
+    
+    if [[ -n "$size_bytes" && -n "$loc" && -n "$content_hash" ]]; then
+        # Record detailed lineage for extracted metadata
+        local metadata_output="size:$size_bytes,loc:$loc,hash:$content_hash"
+        record_file_processing_lineage "$file_path" "metadata_extraction" "$file_path" "$metadata_output" "true"
+        
+        # Record data transformation
+        record_data_transformation "$file_path" "${file_path}_metadata" "metadata_extraction" "{
+            \"size_bytes\": $size_bytes,
+            \"lines_of_code\": $loc,
+            \"content_hash\": \"$content_hash\"
+        }"
+        return 0
+    else
+        # Record failed extraction
+        record_file_processing_lineage "$file_path" "metadata_extraction" "$file_path" "" "false"
+        return 1
+    fi
+}
+
+sm_extract_symbols() {
+    local file_path="$1"
+    
+    # Record lineage for symbol extraction start
+    record_file_processing_lineage "$file_path" "symbol_extraction" "$file_path" "" "true"
+    
+    # Get language for file
+    local ext=$(get_extension "$file_path")
+    local lang=$(get_language "$ext")
+    
+    # Extract symbols based on language
+    local symbols_json=$(extract_symbols "$file_path" "$lang" 2>/dev/null)
+    
+    # Record individual symbol lineage if symbols were found
+    if [[ -n "$symbols_json" && "$symbols_json" != "[]" ]]; then
+        # Parse symbols and record lineage for each
+        echo "$symbols_json" | sed -n 's/.*"name": *"\([^"]*\)".*/\1/p' | while read -r symbol_name; do
+            if [[ -n "$symbol_name" ]]; then
+                local symbol_type=$(echo "$symbols_json" | grep -A5 "\"name\": *\"$symbol_name\"" | grep -o '"kind": *"[^"]*"' | cut -d'"' -f4)
+                local line_number=$(echo "$symbols_json" | grep -A5 "\"name\": *\"$symbol_name\"" | grep -o '"line_start": *[0-9]*' | cut -d':' -f2 | tr -d ' ')
+                record_symbol_extraction "$file_path" "$symbol_name" "$symbol_type" "$line_number"
+            fi
+        done
+        
+        # Record successful symbol extraction transformation
+        record_data_transformation "$file_path" "${file_path}_symbols" "symbol_extraction" "{
+            \"language\": \"$lang\",
+            \"symbols_count\": $(echo "$symbols_json" | grep -o '"name":' | wc -l | tr -d ' ')
+        }"
+    fi
+    
+    # Record final lineage
+    record_file_processing_lineage "$file_path" "symbol_extraction" "$file_path" "$symbols_json" "true"
+    
+    # Symbol extraction is considered successful even if no symbols found
+    # (some files legitimately have no symbols)
+    return 0
+}
+
+sm_generate_summary() {
+    local file_path="$1"
+    
+    # Generate summary for the file
+    local ext=$(get_extension "$file_path")
+    local lang=$(get_language "$ext")
+    local role=$(detect_role "$file_path")
+    
+    local summary=$(generate_summary "$file_path" "$lang" "$role" 2>/dev/null)
+    
+    # Summary generation is considered successful even if empty
+    return 0
+}
+
+# Recover processing from a specific state
+recover_file_processing() {
+    local file_path="$1"
+    local from_state="${2:-}"
+    
+    if [[ -n "$from_state" ]]; then
+        update_file_state "$file_path" "$from_state"
+    fi
+    
+    process_file_state_machine "$file_path"
+}
+
+# Get processing statistics
+get_processing_stats() {
+    local out_dir="${1:-.sourceatlas}"
+    local state_db="$out_dir/state.db"
+    
+    if [[ ! -f "$state_db" ]]; then
+        echo "{\"total\": 0, \"complete\": 0, \"failed\": 0, \"skipped\": 0}"
+        return
+    fi
+    
+    local total=$(grep -v "^#" "$state_db" | wc -l | tr -d ' ')
+    local complete=$(grep -F "|$STATE_COMPLETE|" "$state_db" | wc -l | tr -d ' ')
+    local failed=$(grep -F "|$STATE_FAILED|" "$state_db" | wc -l | tr -d ' ')
+    local skipped=$(grep -F "|$STATE_SKIPPED|" "$state_db" | wc -l | tr -d ' ')
+    
+    echo "{\"total\": $total, \"complete\": $complete, \"failed\": $failed, \"skipped\": $skipped}"
+}
+
+# ================================================================================
 
 # Show version information
 show_version() {
@@ -50,7 +1853,33 @@ Commands:
   clean           Remove generated files
   run             Run full indexing pipeline
   verify          Verify index consistency
+  snapshot        Create, restore, or list processing snapshots
+  health          Show system health and circuit breaker status
+  lineage         Query and analyze data lineage
+  monitor         Performance monitoring and anomaly detection
+  profile         Performance analysis and bottleneck detection
+  events          Query and analyze event streams
+  debug           Interactive debugging and troubleshooting
   help            Show this help message
+
+Debugging and Observability:
+  snapshot create [name]    Create a processing state snapshot
+  snapshot restore <name>   Restore from a saved snapshot
+  snapshot list            List available snapshots
+  health                   Check circuit breakers and system health
+  lineage query <entity>   Query lineage for specific entity
+  lineage stats           Show lineage statistics
+  monitor metrics         Show performance metrics and baselines
+  monitor anomalies       Show recent anomaly detections
+  profile analyze         General performance analysis
+  profile bottlenecks     Identify performance bottlenecks
+  profile timeline        Show operation timeline analysis
+  events query            Query events by criteria
+  events tail             Follow event stream in real-time
+  events trace <id>       Query events by trace ID
+  debug session           Start interactive debugging session
+  debug step              Step-by-step operation debugging
+  debug inspect           Inspect system state and data
 
 Options:
   --help          Show help for a specific command
@@ -60,6 +1889,8 @@ Examples:
   ${PROG_NAME} init
   ${PROG_NAME} scan --root . --out .sourceatlas/
   ${PROG_NAME} run
+  ${PROG_NAME} snapshot create before-scan
+  ${PROG_NAME} snapshot restore before-scan
 
 For more information, see: https://github.com/sourceatlas/sourceatlas
 EOF
@@ -102,8 +1933,8 @@ EOF
     
     local atlas_dir=".sourceatlas"
     
-    # Check if already initialized
-    if [[ -d "${atlas_dir}" ]] && [[ "${force}" = false ]]; then
+    # Check if already initialized (look for config file, not just directory)
+    if [[ -f "${atlas_dir}/config.toml" ]] && [[ "${force}" = false ]]; then
         echo "SourceAtlas already initialized in this directory."
         echo "Use '${PROG_NAME} init --force' to reinitialize."
         exit 0
@@ -292,6 +2123,7 @@ cmd_scan() {
     local root_dir="."
     local out_dir=".sourceatlas"
     local debug_mode=false
+    local verbose=false
     
     # Parse arguments
     while [[ $# -gt 0 ]]; do
@@ -308,6 +2140,10 @@ cmd_scan() {
                 debug_mode=true
                 shift
                 ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
             --help|-h)
                 cat <<EOF
 Usage: ${PROG_NAME} scan [options]
@@ -318,11 +2154,13 @@ Options:
   --root DIR      Root directory to scan (default: current directory)
   --out DIR       Output directory (default: .sourceatlas)
   --debug         Enable debug mode to show detailed processing information
+  --verbose, -v   Show detailed scanning progress and timing
   --help, -h      Show this help message
 
 Examples:
   ${PROG_NAME} scan
   ${PROG_NAME} scan --root src --out .sourceatlas
+  ${PROG_NAME} scan --verbose
 EOF
                 exit 0
                 ;;
@@ -536,6 +2374,18 @@ EOF
         echo "  Average time per file: $((total_processing_time / file_count))ms"
     fi
     echo "  Index created: $index_file"
+    
+    # Add verbose timing information if requested
+    if [[ "$verbose" == true ]]; then
+        echo ""
+        echo "Verbose Timing Details:"
+        echo "  Scan duration: ${total_elapsed}ms"
+        echo "  Processing time: ${total_processing_time}ms" 
+        echo "  Files per second: $(( file_count * 1000 / (total_elapsed + 1) ))"
+        if [[ $file_count -gt 0 ]]; then
+            echo "  Throughput: $((total_processing_time / file_count))ms/file"
+        fi
+    fi
 }
 
 # Command: symbols
@@ -917,6 +2767,13 @@ EOF
     "by_kind": {
       ${kind_json_array:-}
     }
+  },
+  "timing": {
+    "generated_at": "$timestamp",
+    "scan_time": "$(date +%s%3N)ms",
+    "index_time": "$(date +%s%3N)ms",
+    "duration": "$(date +%s%3N)ms",
+    "elapsed": "$(date +%s%3N)ms"
   }
 }
 EOF
@@ -3226,75 +5083,2974 @@ compress_output_files() {
 # Command: verify (stub - real implementation is above)
 # The actual cmd_verify implementation is above at line ~2492
 
-# Main entry point
-main() {
-    local command="${1:-}"
+# ================================================================================
+# Snapshot and Time Travel Debugging Functions
+# ================================================================================
+
+# Command: snapshot
+cmd_snapshot() {
+    local subcommand="${1:-}"
     
-    case "$command" in
-        version|--version|-v)
-            show_version
-            ;;
-        help|--help|-h|"")
-            show_help
-            ;;
-        init)
+    case "$subcommand" in
+        create)
             shift
-            cmd_init "$@"
+            snapshot_create "$@"
             ;;
-        scan)
-            shift
-            cmd_scan "$@"
+        restore)
+            shift  
+            snapshot_restore "$@"
             ;;
-        symbols)
+        list)
             shift
-            cmd_symbols "$@"
+            snapshot_list "$@"
             ;;
-        stats)
-            shift
-            cmd_stats "$@"
-            ;;
-        manifest)
-            shift
-            cmd_manifest "$@"
-            ;;
-        shard)
-            shift
-            cmd_shard "$@"
-            ;;
-        delta)
-            shift
-            cmd_delta "$@"
-            ;;
-        query)
-            shift
-            cmd_query "$@"
-            ;;
-        segment)
-            shift
-            cmd_segment "$@"
-            ;;
-        export-dsl)
-            shift
-            cmd_export_dsl "$@"
-            ;;
-        clean)
-            shift
-            cmd_clean "$@"
-            ;;
-        run)
-            shift
-            cmd_run "$@"
-            ;;
-        verify)
-            shift
-            cmd_verify "$@"
+        --help|-h|"")
+            cat <<EOF
+Usage: ${PROG_NAME} snapshot <subcommand> [options]
+
+Snapshot and time travel debugging for processing state management.
+
+Subcommands:
+  create [name]     Create a processing state snapshot
+  restore <name>    Restore from a saved snapshot
+  list             List available snapshots
+
+Examples:
+  ${PROG_NAME} snapshot create before-scan
+  ${PROG_NAME} snapshot restore before-scan
+  ${PROG_NAME} snapshot list
+EOF
+            exit 0
             ;;
         *)
-            echo "Error: Unknown command: $command" >&2
-            echo "Run '${PROG_NAME} help' for usage information." >&2
+            echo "Error: Unknown snapshot subcommand: $subcommand" >&2
+            echo "Run '${PROG_NAME} snapshot --help' for usage." >&2
             exit 1
             ;;
     esac
+}
+
+# Create a processing state snapshot
+snapshot_create() {
+    local snapshot_name=""
+    local out_dir=".sourceatlas"
+    local timestamp=$(date -u +"%Y%m%d_%H%M%S")
+    local verbose=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} snapshot create [name] [options]
+
+Create a complete processing state snapshot for time travel debugging.
+
+Arguments:
+  name             Snapshot name (default: auto-generated timestamp)
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --verbose, -v    Show detailed progress
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} snapshot create
+  ${PROG_NAME} snapshot create before-scan
+  ${PROG_NAME} snapshot create milestone-1 --verbose
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                if [[ -z "$snapshot_name" ]]; then
+                    snapshot_name="$1"
+                else
+                    echo "Error: Unexpected argument: $1" >&2
+                    exit 1
+                fi
+                shift
+                ;;
+        esac
+    done
+    
+    # Generate snapshot name if not provided
+    if [[ -z "$snapshot_name" ]]; then
+        snapshot_name="snapshot_${timestamp}"
+    fi
+    
+    # Create snapshots directory
+    local snapshots_dir="${out_dir}/snapshots"
+    mkdir -p "$snapshots_dir"
+    
+    local snapshot_dir="${snapshots_dir}/${snapshot_name}"
+    
+    if [[ -d "$snapshot_dir" ]]; then
+        echo "Error: Snapshot '$snapshot_name' already exists" >&2
+        exit 1
+    fi
+    
+    mkdir -p "$snapshot_dir"
+    
+    emit_event "snapshot_create_started" "{
+        \"snapshot_name\": \"$snapshot_name\",
+        \"snapshot_dir\": \"$snapshot_dir\",
+        \"timestamp\": \"$timestamp\"
+    }"
+    
+    if [[ "$verbose" == true ]]; then
+        echo "Creating snapshot: $snapshot_name"
+        echo "Snapshot directory: $snapshot_dir"
+    fi
+    
+    local captured_files=0
+    
+    # Capture current state database
+    if [[ -f "${out_dir}/state.db" ]]; then
+        cp "${out_dir}/state.db" "${snapshot_dir}/state.db"
+        captured_files=$((captured_files + 1))
+        [[ "$verbose" == true ]] && echo "  ✓ Captured state database"
+    fi
+    
+    # Capture event stream
+    if [[ -f "${out_dir}/events.jsonl" ]]; then
+        cp "${out_dir}/events.jsonl" "${snapshot_dir}/events.jsonl"
+        captured_files=$((captured_files + 1))
+        [[ "$verbose" == true ]] && echo "  ✓ Captured event stream"
+    fi
+    
+    # Capture audit log
+    if [[ -f "${out_dir}/audit.log" ]]; then
+        cp "${out_dir}/audit.log" "${snapshot_dir}/audit.log"
+        captured_files=$((captured_files + 1))
+        [[ "$verbose" == true ]] && echo "  ✓ Captured audit log"
+    fi
+    
+    # Capture index files
+    for file in "${out_dir}"/*.jsonl "${out_dir}"/*.tsv "${out_dir}"/*.json; do
+        if [[ -f "$file" ]] && [[ "$(basename "$file")" != "events.jsonl" ]]; then
+            cp "$file" "${snapshot_dir}/"
+            captured_files=$((captured_files + 1))
+            [[ "$verbose" == true ]] && echo "  ✓ Captured $(basename "$file")"
+        fi
+    done
+    
+    # Capture configuration files
+    for config_file in "${out_dir}/config.json" "${out_dir}/exclude_patterns.txt"; do
+        if [[ -f "$config_file" ]]; then
+            cp "$config_file" "${snapshot_dir}/"
+            captured_files=$((captured_files + 1))
+            [[ "$verbose" == true ]] && echo "  ✓ Captured $(basename "$config_file")"
+        fi
+    done
+    
+    # Create snapshot metadata
+    cat > "${snapshot_dir}/metadata.json" <<EOF
+{
+  "name": "$snapshot_name",
+  "created_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+  "timestamp": "$timestamp",
+  "captured_files": $captured_files,
+  "working_directory": "$(pwd)",
+  "version": "$VERSION",
+  "schema_version": "$SCHEMA_VERSION"
+}
+EOF
+    
+    emit_event "snapshot_create_completed" "{
+        \"snapshot_name\": \"$snapshot_name\",
+        \"snapshot_dir\": \"$snapshot_dir\",
+        \"captured_files\": $captured_files
+    }"
+    
+    echo "Snapshot created: $snapshot_name"
+    echo "Files captured: $captured_files"
+    echo "Snapshot path: $snapshot_dir"
+}
+
+# Restore from a processing state snapshot
+snapshot_restore() {
+    local snapshot_name=""
+    local out_dir=".sourceatlas"
+    local verbose=false
+    local dry_run=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
+            --dry-run)
+                dry_run=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} snapshot restore <name> [options]
+
+Restore processing state from a saved snapshot for time travel debugging.
+
+Arguments:
+  name             Snapshot name to restore
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --dry-run        Show what would be restored without executing
+  --verbose, -v    Show detailed progress
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} snapshot restore before-scan
+  ${PROG_NAME} snapshot restore milestone-1 --dry-run
+  ${PROG_NAME} snapshot restore snapshot_20241201_143025 --verbose
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                if [[ -z "$snapshot_name" ]]; then
+                    snapshot_name="$1"
+                else
+                    echo "Error: Unexpected argument: $1" >&2
+                    exit 1
+                fi
+                shift
+                ;;
+        esac
+    done
+    
+    if [[ -z "$snapshot_name" ]]; then
+        echo "Error: Snapshot name required" >&2
+        echo "Run '${PROG_NAME} snapshot restore --help' for usage." >&2
+        exit 1
+    fi
+    
+    local snapshots_dir="${out_dir}/snapshots"
+    local snapshot_dir="${snapshots_dir}/${snapshot_name}"
+    
+    if [[ ! -d "$snapshot_dir" ]]; then
+        echo "Error: Snapshot '$snapshot_name' not found" >&2
+        echo "Available snapshots:" >&2
+        snapshot_list --out "$out_dir" | tail -n +2 >&2
+        exit 1
+    fi
+    
+    if [[ ! -f "${snapshot_dir}/metadata.json" ]]; then
+        echo "Error: Snapshot '$snapshot_name' is corrupted (missing metadata)" >&2
+        exit 1
+    fi
+    
+    # Read snapshot metadata
+    local metadata_json=$(cat "${snapshot_dir}/metadata.json")
+    local captured_files=$(echo "$metadata_json" | grep -o '"captured_files": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+    local created_at=$(echo "$metadata_json" | grep -o '"created_at": "[^"]*"' | cut -d'"' -f4)
+    
+    emit_event "snapshot_restore_started" "{
+        \"snapshot_name\": \"$snapshot_name\",
+        \"snapshot_dir\": \"$snapshot_dir\",
+        \"created_at\": \"$created_at\"
+    }"
+    
+    if [[ "$verbose" == true ]] || [[ "$dry_run" == true ]]; then
+        echo "Restoring snapshot: $snapshot_name"
+        echo "Created at: $created_at"
+        echo "Files to restore: $captured_files"
+        echo "Snapshot path: $snapshot_dir"
+        echo ""
+    fi
+    
+    if [[ "$dry_run" == true ]]; then
+        echo "Dry run - would restore these files:"
+        for file in "${snapshot_dir}"/*; do
+            if [[ -f "$file" ]] && [[ "$(basename "$file")" != "metadata.json" ]]; then
+                echo "  $(basename "$file") → ${out_dir}/$(basename "$file")"
+            fi
+        done
+        return 0
+    fi
+    
+    # Create backup of current state before restore
+    local backup_dir="${out_dir}/backup_$(date +%Y%m%d_%H%M%S)"
+    mkdir -p "$backup_dir"
+    
+    # Backup current files
+    local backed_up_files=0
+    for file in "${out_dir}"/*.jsonl "${out_dir}"/*.tsv "${out_dir}"/*.json "${out_dir}/state.db" "${out_dir}/events.jsonl" "${out_dir}/audit.log"; do
+        if [[ -f "$file" ]]; then
+            cp "$file" "$backup_dir/" 2>/dev/null && backed_up_files=$((backed_up_files + 1))
+        fi
+    done
+    
+    if [[ $backed_up_files -gt 0 ]]; then
+        [[ "$verbose" == true ]] && echo "Current state backed up to: $backup_dir ($backed_up_files files)"
+    fi
+    
+    # Restore files from snapshot
+    local restored_files=0
+    for file in "${snapshot_dir}"/*; do
+        if [[ -f "$file" ]] && [[ "$(basename "$file")" != "metadata.json" ]]; then
+            local dest_file="${out_dir}/$(basename "$file")"
+            cp "$file" "$dest_file"
+            restored_files=$((restored_files + 1))
+            [[ "$verbose" == true ]] && echo "  ✓ Restored $(basename "$file")"
+        fi
+    done
+    
+    emit_event "snapshot_restore_completed" "{
+        \"snapshot_name\": \"$snapshot_name\",
+        \"restored_files\": $restored_files,
+        \"backup_dir\": \"$backup_dir\"
+    }"
+    
+    echo "Snapshot restored: $snapshot_name"
+    echo "Files restored: $restored_files"
+    if [[ $backed_up_files -gt 0 ]]; then
+        echo "Previous state backed up to: $backup_dir"
+    fi
+}
+
+# List available processing state snapshots
+snapshot_list() {
+    local out_dir=".sourceatlas"
+    local verbose=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} snapshot list [options]
+
+List all available processing state snapshots.
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --verbose, -v    Show detailed information
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} snapshot list
+  ${PROG_NAME} snapshot list --verbose
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    local snapshots_dir="${out_dir}/snapshots"
+    
+    if [[ ! -d "$snapshots_dir" ]]; then
+        echo "No snapshots found (directory does not exist: $snapshots_dir)"
+        return 0
+    fi
+    
+    local snapshot_count=0
+    
+    echo "Available snapshots:"
+    echo "==================="
+    
+    for snapshot_dir in "${snapshots_dir}"/*; do
+        if [[ -d "$snapshot_dir" ]]; then
+            local snapshot_name=$(basename "$snapshot_dir")
+            snapshot_count=$((snapshot_count + 1))
+            
+            if [[ -f "${snapshot_dir}/metadata.json" ]]; then
+                local metadata_json=$(cat "${snapshot_dir}/metadata.json")
+                local created_at=$(echo "$metadata_json" | grep -o '"created_at": "[^"]*"' | cut -d'"' -f4 | sed 's/T/ /' | sed 's/Z$//')
+                local captured_files=$(echo "$metadata_json" | grep -o '"captured_files": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+                
+                if [[ "$verbose" == true ]]; then
+                    local working_dir=$(echo "$metadata_json" | grep -o '"working_directory": "[^"]*"' | cut -d'"' -f4)
+                    local version=$(echo "$metadata_json" | grep -o '"version": "[^"]*"' | cut -d'"' -f4)
+                    
+                    echo "$snapshot_name"
+                    echo "  Created: $created_at"
+                    echo "  Files: $captured_files"
+                    echo "  Directory: $working_dir"
+                    echo "  Version: $version"
+                    echo ""
+                else
+                    printf "%-30s %s (%s files)\\n" "$snapshot_name" "$created_at" "$captured_files"
+                fi
+            else
+                echo "$snapshot_name (corrupted - missing metadata)"
+            fi
+        fi
+    done
+    
+    if [[ $snapshot_count -eq 0 ]]; then
+        echo "No snapshots found in $snapshots_dir"
+    else
+        echo ""
+        echo "Total snapshots: $snapshot_count"
+    fi
+}
+
+# Command: health
+cmd_health() {
+    local out_dir=".sourceatlas"
+    local verbose=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} health [options]
+
+Show system health status including circuit breaker states and recent failures.
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --verbose, -v    Show detailed information
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} health
+  ${PROG_NAME} health --verbose
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    echo "SourceAtlas System Health Report"
+    echo "================================="
+    echo ""
+    
+    local overall_health="HEALTHY"
+    
+    # Check circuit breaker status
+    echo "Circuit Breaker Status:"
+    echo "-----------------------"
+    
+    local cb_status_json=$(get_circuit_breaker_status "$out_dir")
+    if [[ "$cb_status_json" == "[]" ]]; then
+        echo "No circuit breakers initialized"
+    else
+        # Parse and display circuit breaker status
+        while IFS='|' read -r operation state failure_count success_count last_failure last_success opened_at; do
+            # Skip comments and empty lines
+            [[ "$operation" =~ ^#.*$ ]] || [[ -z "$operation" ]] && continue
+            
+            case "$state" in
+                "OPEN")
+                    echo "  ❌ $operation: $state (failures: $failure_count)"
+                    overall_health="DEGRADED"
+                    ;;
+                "HALF_OPEN")
+                    echo "  ⚠️  $operation: $state (failures: $failure_count, testing recovery)"
+                    [[ "$overall_health" == "HEALTHY" ]] && overall_health="RECOVERING"
+                    ;;
+                "CLOSED")
+                    echo "  ✅ $operation: $state (failures: $failure_count, successes: $success_count)"
+                    ;;
+                *)
+                    echo "  ❓ $operation: $state (unknown state)"
+                    [[ "$overall_health" == "HEALTHY" ]] && overall_health="UNKNOWN"
+                    ;;
+            esac
+        done < "$out_dir/circuit_breaker.db"
+        
+        # Update overall health based on circuit breaker states
+        if grep -q "|OPEN|" "$out_dir/circuit_breaker.db" 2>/dev/null; then
+            overall_health="DEGRADED"
+        elif grep -q "|HALF_OPEN|" "$out_dir/circuit_breaker.db" 2>/dev/null; then
+            [[ "$overall_health" == "HEALTHY" ]] && overall_health="RECOVERING"
+        fi
+    fi
+    
+    echo ""
+    
+    # Check file system status
+    echo "File System Status:"
+    echo "-------------------"
+    
+    if [[ -d "$out_dir" ]]; then
+        echo "  ✅ Output directory: $out_dir (exists)"
+        
+        # Check key files
+        local key_files=("state.db" "circuit_breaker.db" "events.jsonl" "audit.log" "lineage.jsonl")
+        for file in "${key_files[@]}"; do
+            if [[ -f "$out_dir/$file" ]]; then
+                local size=$(stat -f%z "$out_dir/$file" 2>/dev/null || stat -c%s "$out_dir/$file" 2>/dev/null || echo "unknown")
+                echo "  ✅ $file: exists ($size bytes)"
+            else
+                echo "  ⚠️  $file: missing"
+                [[ "$overall_health" == "HEALTHY" ]] && overall_health="DEGRADED"
+            fi
+        done
+    else
+        echo "  ❌ Output directory: $out_dir (does not exist)"
+        overall_health="DEGRADED"
+    fi
+    
+    echo ""
+    
+    # Show overall health
+    echo "Overall System Health: $overall_health"
+    case "$overall_health" in
+        "HEALTHY")
+            echo "  ✅ All systems operational"
+            ;;
+        "RECOVERING")
+            echo "  ⚠️  System recovering from failures"
+            ;;
+        "DEGRADED")
+            echo "  ❌ System experiencing issues"
+            ;;
+        "UNKNOWN")
+            echo "  ❓ System status unclear"
+            ;;
+    esac
+    
+    if [[ "$verbose" == true ]]; then
+        echo ""
+        echo "Detailed Circuit Breaker Information:"
+        echo "====================================="
+        echo "$cb_status_json" | python3 -m json.tool 2>/dev/null || echo "$cb_status_json"
+    fi
+    
+    # Exit with appropriate code
+    case "$overall_health" in
+        "HEALTHY"|"RECOVERING") exit 0 ;;
+        *) exit 1 ;;
+    esac
+}
+
+# Command: lineage
+cmd_lineage() {
+    local subcommand="${1:-}"
+    
+    case "$subcommand" in
+        query)
+            shift
+            lineage_query "$@"
+            ;;
+        stats)
+            shift
+            lineage_stats "$@"
+            ;;
+        trace)
+            shift
+            lineage_trace "$@"
+            ;;
+        --help|-h|"")
+            cat <<EOF
+Usage: ${PROG_NAME} lineage <subcommand> [options]
+
+Query and analyze data lineage for comprehensive data flow understanding.
+
+Subcommands:
+  query <entity>       Query lineage for a specific entity
+  stats               Show lineage statistics
+  trace <start> <end> Trace lineage path between entities
+
+Examples:
+  ${PROG_NAME} lineage query ./src/main.swift
+  ${PROG_NAME} lineage stats --verbose
+  ${PROG_NAME} lineage trace ./input.swift ./output.jsonl
+EOF
+            exit 0
+            ;;
+        *)
+            echo "Error: Unknown lineage subcommand: $subcommand" >&2
+            echo "Run '${PROG_NAME} lineage --help' for usage." >&2
+            exit 1
+            ;;
+    esac
+}
+
+# Query lineage for entity
+lineage_query() {
+    local entity="$1"
+    local out_dir=".sourceatlas"
+    local direction="both"
+    local verbose=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --direction)
+                direction="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} lineage query <entity> [options]
+
+Query lineage relationships for a specific entity.
+
+Arguments:
+  entity           Entity to query (file path, symbol name, etc.)
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --direction DIR  Query direction: upstream, downstream, both (default: both)
+  --verbose, -v    Show detailed lineage information
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} lineage query ./src/main.swift
+  ${PROG_NAME} lineage query MainViewModel --direction upstream
+  ${PROG_NAME} lineage query ./output.jsonl --verbose
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                if [[ -z "$entity" ]]; then
+                    entity="$1"
+                else
+                    echo "Error: Unexpected argument: $1" >&2
+                    exit 1
+                fi
+                shift
+                ;;
+        esac
+    done
+    
+    if [[ -z "$entity" ]]; then
+        echo "Error: Entity name required" >&2
+        echo "Run '${PROG_NAME} lineage query --help' for usage." >&2
+        exit 1
+    fi
+    
+    export LINEAGE_FILE="$out_dir/lineage.jsonl"
+    
+    echo "Lineage Query Results for: $entity"
+    echo "=================================="
+    echo "Direction: $direction"
+    echo ""
+    
+    local results=$(query_lineage_by_entity "$entity" "$direction")
+    
+    if [[ -z "$results" ]]; then
+        echo "No lineage relationships found for '$entity'"
+        return 0
+    fi
+    
+    local count=0
+    echo "$results" | while IFS= read -r line; do
+        if [[ -n "$line" ]]; then
+            count=$((count + 1))
+            
+            if [[ "$verbose" == "true" ]]; then
+                echo "Record $count:"
+                echo "$line" | python3 -m json.tool 2>/dev/null || echo "$line"
+                echo ""
+            else
+                # Extract key information for summary display
+                local event_type=$(echo "$line" | grep -o '"event_type": "[^"]*"' | cut -d'"' -f4)
+                local operation=$(echo "$line" | grep -o '"operation": "[^"]*"' | cut -d'"' -f4)
+                local source=$(echo "$line" | grep -o '"source"[^}]*"entity": "[^"]*"' | tail -1 | cut -d'"' -f4)
+                local target=$(echo "$line" | grep -o '"target"[^}]*"entity": "[^"]*"' | tail -1 | cut -d'"' -f4)
+                local timestamp=$(echo "$line" | grep -o '"timestamp": "[^"]*"' | cut -d'"' -f4)
+                
+                printf "%s [%s] %s → %s (%s)\\n" "$timestamp" "$event_type" "$source" "$target" "$operation"
+            fi
+        fi
+    done
+}
+
+# Show lineage statistics
+lineage_stats() {
+    local out_dir=".sourceatlas"
+    local verbose=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} lineage stats [options]
+
+Show comprehensive lineage statistics and analytics.
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --verbose, -v    Show detailed breakdown
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} lineage stats
+  ${PROG_NAME} lineage stats --verbose
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    echo "Data Lineage Statistics"
+    echo "======================="
+    echo ""
+    
+    local stats=$(get_lineage_stats "$out_dir")
+    local total_events=$(echo "$stats" | grep -o '"total_events": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+    local unique_entities=$(echo "$stats" | grep -o '"entities": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+    local unique_operations=$(echo "$stats" | grep -o '"operations": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+    
+    echo "Overall Statistics:"
+    echo "  Total Events: $total_events"
+    echo "  Unique Entities: $unique_entities"
+    echo "  Unique Operations: $unique_operations"
+    
+    if [[ -f "$out_dir/lineage.jsonl" ]]; then
+        local file_size=$(stat -f%z "$out_dir/lineage.jsonl" 2>/dev/null || stat -c%s "$out_dir/lineage.jsonl" 2>/dev/null || echo 0)
+        echo "  Lineage File Size: $file_size bytes"
+    fi
+    
+    if [[ "$verbose" == "true" ]]; then
+        echo ""
+        echo "Operation Breakdown:"
+        grep -o '"operation": "[^"]*"' "$out_dir/lineage.jsonl" 2>/dev/null | sort | uniq -c | sort -nr | while read count op; do
+            operation=$(echo "$op" | cut -d'"' -f4)
+            echo "  $operation: $count events"
+        done
+        
+        echo ""
+        echo "Event Type Breakdown:"
+        grep -o '"event_type": "[^"]*"' "$out_dir/lineage.jsonl" 2>/dev/null | sort | uniq -c | sort -nr | while read count type; do
+            event_type=$(echo "$type" | cut -d'"' -f4)
+            echo "  $event_type: $count events"
+        done
+        
+        echo ""
+        echo "Entity Type Breakdown:"
+        grep -o '"type": "[^"]*"' "$out_dir/lineage.jsonl" 2>/dev/null | sort | uniq -c | sort -nr | while read count type; do
+            entity_type=$(echo "$type" | cut -d'"' -f4)
+            echo "  $entity_type: $count references"
+        done
+    fi
+}
+
+# Trace lineage path
+lineage_trace() {
+    local start_entity="$1"
+    local end_entity="$2"
+    local out_dir=".sourceatlas"
+    local max_depth=10
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --max-depth)
+                max_depth="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} lineage trace <start> <end> [options]
+
+Trace lineage path between two entities.
+
+Arguments:
+  start            Starting entity
+  end              Target entity
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --max-depth NUM  Maximum search depth (default: 10)
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} lineage trace ./input.swift ./output.jsonl
+  ${PROG_NAME} lineage trace MainViewModel symbols_table --max-depth 5
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                if [[ -z "$start_entity" ]]; then
+                    start_entity="$1"
+                elif [[ -z "$end_entity" ]]; then
+                    end_entity="$1"
+                else
+                    echo "Error: Unexpected argument: $1" >&2
+                    exit 1
+                fi
+                shift
+                ;;
+        esac
+    done
+    
+    if [[ -z "$start_entity" || -z "$end_entity" ]]; then
+        echo "Error: Both start and end entities required" >&2
+        echo "Run '${PROG_NAME} lineage trace --help' for usage." >&2
+        exit 1
+    fi
+    
+    export LINEAGE_FILE="$out_dir/lineage.jsonl"
+    
+    echo "Tracing Lineage Path"
+    echo "==================="
+    echo "From: $start_entity"
+    echo "To:   $end_entity"
+    echo "Max Depth: $max_depth"
+    echo ""
+    
+    local result=$(trace_lineage_path "$start_entity" "$end_entity" "$max_depth")
+    local path_found=$(echo "$result" | grep -o '"path_found": [^,}]*' | cut -d':' -f2 | tr -d ' ')
+    local depth=$(echo "$result" | grep -o '"depth": [^,}]*' | cut -d':' -f2 | tr -d ' ')
+    
+    if [[ "$path_found" == "true" ]]; then
+        echo "✅ Path found!"
+        echo "   Depth: $depth steps"
+    else
+        echo "❌ No path found"
+        echo "   Searched depth: $depth steps"
+        echo "   Try increasing --max-depth or check if entities are connected"
+    fi
+}
+
+# Command: monitor
+cmd_monitor() {
+    local subcommand="${1:-}"
+    
+    case "$subcommand" in
+        metrics)
+            shift
+            monitor_metrics "$@"
+            ;;
+        anomalies)
+            shift
+            monitor_anomalies "$@"
+            ;;
+        baseline)
+            shift
+            monitor_baseline "$@"
+            ;;
+        --help|-h|"")
+            cat <<EOF
+Usage: ${PROG_NAME} monitor <subcommand> [options]
+
+Performance monitoring and anomaly detection for predictive analysis.
+
+Subcommands:
+  metrics              Show performance metrics and trends
+  anomalies           Show recent anomaly detections
+  baseline <metric>   Show performance baseline for metric
+
+Examples:
+  ${PROG_NAME} monitor metrics --verbose
+  ${PROG_NAME} monitor anomalies --hours 12
+  ${PROG_NAME} monitor baseline operation_duration_cmd_scan
+EOF
+            exit 0
+            ;;
+        *)
+            echo "Error: Unknown monitor subcommand: $subcommand" >&2
+            echo "Run '${PROG_NAME} monitor --help' for usage." >&2
+            exit 1
+            ;;
+    esac
+}
+
+# Show performance metrics
+monitor_metrics() {
+    local out_dir=".sourceatlas"
+    local verbose=false
+    local metric_filter=""
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
+            --metric)
+                metric_filter="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} monitor metrics [options]
+
+Show performance metrics, trends, and baselines.
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --metric NAME    Filter by specific metric name
+  --verbose, -v    Show detailed statistics
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} monitor metrics
+  ${PROG_NAME} monitor metrics --metric operation_duration_cmd_scan
+  ${PROG_NAME} monitor metrics --verbose
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    export METRICS_FILE="$out_dir/metrics.jsonl"
+    
+    echo "Performance Metrics Overview"
+    echo "============================"
+    echo ""
+    
+    if [[ ! -f "$METRICS_FILE" ]]; then
+        echo "No metrics data available"
+        echo "Run some commands to generate performance metrics"
+        return 0
+    fi
+    
+    local total_metrics=$(wc -l < "$METRICS_FILE" | tr -d ' ')
+    echo "Total Metrics Recorded: $total_metrics"
+    echo ""
+    
+    # Get unique metric names
+    local metric_names=$(grep -o '"metric_name": "[^"]*"' "$METRICS_FILE" | cut -d'"' -f4 | sort -u)
+    
+    if [[ -n "$metric_filter" ]]; then
+        metric_names=$(echo "$metric_names" | grep "$metric_filter")
+    fi
+    
+    echo "Metric Baselines:"
+    echo "-----------------"
+    
+    echo "$metric_names" | while IFS= read -r metric_name; do
+        if [[ -n "$metric_name" ]]; then
+            local baseline=$(get_performance_baseline "$metric_name")
+            local error=$(echo "$baseline" | grep -o '"error": "[^"]*"' | cut -d'"' -f4)
+            
+            if [[ -n "$error" ]]; then
+                echo "$metric_name: $error"
+            else
+                local mean=$(echo "$baseline" | grep -o '"mean": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+                local std_dev=$(echo "$baseline" | grep -o '"std_dev": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+                local count=$(echo "$baseline" | grep -o '"count": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+                
+                if [[ "$verbose" == "true" ]]; then
+                    local variance=$(echo "$baseline" | grep -o '"variance": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+                    echo "$metric_name:"
+                    echo "  Mean: $mean"
+                    echo "  Std Dev: $std_dev"
+                    echo "  Variance: $variance" 
+                    echo "  Samples: $count"
+                    echo "  3σ Range: $(echo "scale=2; $mean - 3 * $std_dev" | bc -l) - $(echo "scale=2; $mean + 3 * $std_dev" | bc -l)"
+                    echo ""
+                else
+                    printf "%-40s Mean: %8.2f ± %6.2f (%d samples)\\n" "$metric_name" "$mean" "$std_dev" "$count"
+                fi
+            fi
+        fi
+    done
+}
+
+# Show anomaly detections
+monitor_anomalies() {
+    local out_dir=".sourceatlas"
+    local hours=24
+    local verbose=false
+    local severity_filter=""
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --hours)
+                hours="$2"
+                shift 2
+                ;;
+            --severity)
+                severity_filter="$2"
+                shift 2
+                ;;
+            --verbose|-v)
+                verbose=true
+                shift
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} monitor anomalies [options]
+
+Show recent anomaly detections and their details.
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --hours NUM      Time window in hours (default: 24)
+  --severity LEV   Filter by severity: medium, high, critical
+  --verbose, -v    Show detailed anomaly information
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} monitor anomalies
+  ${PROG_NAME} monitor anomalies --hours 12
+  ${PROG_NAME} monitor anomalies --severity critical --verbose
+EOF
+                exit 0
+                ;;
+            *)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    export ANOMALIES_FILE="$out_dir/anomalies.jsonl"
+    
+    echo "Anomaly Detection Report"
+    echo "========================"
+    echo "Time Window: Last $hours hours"
+    echo ""
+    
+    local anomalies=$(get_recent_anomalies "$hours")
+    
+    if [[ -z "$anomalies" ]]; then
+        echo "✅ No anomalies detected in the last $hours hours"
+        return 0
+    fi
+    
+    # Filter by severity if specified
+    if [[ -n "$severity_filter" ]]; then
+        anomalies=$(echo "$anomalies" | grep "\"severity\": \"$severity_filter\"")
+    fi
+    
+    if [[ -z "$anomalies" ]]; then
+        echo "✅ No anomalies found matching criteria"
+        return 0
+    fi
+    
+    local anomaly_count=$(echo "$anomalies" | wc -l | tr -d ' ')
+    echo "⚠️  Anomalies Found: $anomaly_count"
+    echo ""
+    
+    echo "$anomalies" | while IFS= read -r line; do
+        if [[ -n "$line" ]]; then
+            local timestamp=$(echo "$line" | grep -o '"timestamp": "[^"]*"' | cut -d'"' -f4)
+            local metric_name=$(echo "$line" | grep -o '"metric_name": "[^"]*"' | cut -d'"' -f4)
+            local current_value=$(echo "$line" | grep -o '"current_value": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+            local baseline_mean=$(echo "$line" | grep -o '"baseline_mean": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+            local z_score=$(echo "$line" | grep -o '"z_score": [0-9.-]*' | cut -d':' -f2 | tr -d ' ')
+            local severity=$(echo "$line" | grep -o '"severity": "[^"]*"' | cut -d'"' -f4)
+            
+            local severity_icon="⚠️"
+            case "$severity" in
+                "critical") severity_icon="🚨" ;;
+                "high") severity_icon="⛔" ;;
+                "medium") severity_icon="⚠️" ;;
+            esac
+            
+            if [[ "$verbose" == "true" ]]; then
+                local anomaly_id=$(echo "$line" | grep -o '"anomaly_id": "[^"]*"' | cut -d'"' -f4)
+                local std_dev=$(echo "$line" | grep -o '"std_deviation": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+                local trace_id=$(echo "$line" | grep -o '"trace_id": "[^"]*"' | cut -d'"' -f4)
+                
+                echo "$severity_icon Anomaly Detected"
+                echo "  ID: $anomaly_id"
+                echo "  Time: $timestamp"
+                echo "  Metric: $metric_name"
+                echo "  Current Value: $current_value"
+                echo "  Baseline Mean: $baseline_mean ± $std_dev"
+                echo "  Z-Score: $z_score"
+                echo "  Severity: $severity"
+                echo "  Trace ID: $trace_id"
+                echo ""
+            else
+                printf "%s [%s] %s: %.2f (baseline: %.2f, z-score: %.2f) - %s\\n" \
+                    "$timestamp" "$severity_icon" "$metric_name" "$current_value" "$baseline_mean" "$z_score" "$severity"
+            fi
+        fi
+    done
+}
+
+# Show performance baseline for specific metric
+monitor_baseline() {
+    local metric_name=""
+    local out_dir=".sourceatlas"
+    local window_size=$ANOMALY_WINDOW
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --window)
+                window_size="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} monitor baseline <metric> [options]
+
+Show detailed performance baseline for a specific metric.
+
+Arguments:
+  metric           Metric name to analyze
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --window NUM     Sample window size (default: $ANOMALY_WINDOW)
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} monitor baseline operation_duration_cmd_scan
+  ${PROG_NAME} monitor baseline memory_usage_cmd_scan --window 50
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                if [[ -z "$metric_name" ]]; then
+                    metric_name="$1"
+                else
+                    echo "Error: Unexpected argument: $1" >&2
+                    exit 1
+                fi
+                shift
+                ;;
+        esac
+    done
+    
+    if [[ -z "$metric_name" ]]; then
+        echo "Error: Metric name required" >&2
+        echo "Run '${PROG_NAME} monitor baseline --help' for usage." >&2
+        exit 1
+    fi
+    
+    export METRICS_FILE="$out_dir/metrics.jsonl"
+    
+    echo "Performance Baseline Analysis"
+    echo "============================="
+    echo "Metric: $metric_name"
+    echo "Window Size: $window_size samples"
+    echo ""
+    
+    local baseline=$(get_performance_baseline "$metric_name" "$window_size")
+    local error=$(echo "$baseline" | grep -o '"error": "[^"]*"' | cut -d'"' -f4)
+    
+    if [[ -n "$error" ]]; then
+        echo "❌ Error: $error"
+        if [[ "$error" == "insufficient_samples" ]]; then
+            local count=$(echo "$baseline" | grep -o '"count": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+            local required=$(echo "$baseline" | grep -o '"required": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+            echo "   Current samples: $count"
+            echo "   Required samples: $required"
+            echo ""
+            echo "Run more operations to collect baseline data."
+        fi
+        return 1
+    fi
+    
+    local mean=$(echo "$baseline" | grep -o '"mean": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+    local std_dev=$(echo "$baseline" | grep -o '"std_dev": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+    local variance=$(echo "$baseline" | grep -o '"variance": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+    local count=$(echo "$baseline" | grep -o '"count": [0-9]*' | cut -d':' -f2 | tr -d ' ')
+    
+    echo "Statistical Summary:"
+    echo "  Sample Count: $count"
+    echo "  Mean: $mean"
+    echo "  Standard Deviation: $std_dev"
+    echo "  Variance: $variance"
+    echo ""
+    echo "Anomaly Detection Thresholds (${SIGMA_THRESHOLD}-sigma):"
+    echo "  Lower Bound: $(echo "scale=2; $mean - $SIGMA_THRESHOLD * $std_dev" | bc -l)"
+    echo "  Upper Bound: $(echo "scale=2; $mean + $SIGMA_THRESHOLD * $std_dev" | bc -l)"
+    echo ""
+    echo "Confidence Intervals:"
+    echo "  1σ (68.2%): $(echo "scale=2; $mean - $std_dev" | bc -l) - $(echo "scale=2; $mean + $std_dev" | bc -l)"
+    echo "  2σ (95.4%): $(echo "scale=2; $mean - 2 * $std_dev" | bc -l) - $(echo "scale=2; $mean + 2 * $std_dev" | bc -l)"
+    echo "  3σ (99.7%): $(echo "scale=2; $mean - 3 * $std_dev" | bc -l) - $(echo "scale=2; $mean + 3 * $std_dev" | bc -l)"
+}
+
+# Main entry point
+main() {
+    local command="${1:-}"
+    local session_start_time=$(get_timestamp_ms)
+    
+    # Initialize observability systems (skip in CI environment)
+    if [[ "${CI:-}" != "true" ]]; then
+        # Initialize event system early
+        init_event_system
+        
+        # Initialize state machine database
+        init_state_db
+        
+        # Initialize circuit breaker database
+        init_circuit_breaker_db
+        
+        # Initialize lineage tracking
+        init_lineage_tracking
+        
+        # Initialize monitoring system
+        init_monitoring_system
+    fi
+    
+    # Build args array safely
+    local args_json="[]"
+    if [[ $# -gt 0 ]]; then
+        args_json="[$(printf '"%s",' "$@" | sed 's/,$//' | sed 's/"/\\"/g')]"
+    fi
+    
+    # Emit session start event
+    emit_event "session_started" "{
+        \"command\": \"$command\",
+        \"args\": $args_json,
+        \"version\": \"$VERSION\",
+        \"schema_version\": \"$SCHEMA_VERSION\"
+    }"
+    
+    # Start main span
+    start_span "main_command_$command"
+    
+    local exit_code=0
+    case "$command" in
+        version|--version|-v)
+            track_performance "show_version" show_version || exit_code=$?
+            ;;
+        help|--help|-h|"")
+            track_performance "show_help" show_help || exit_code=$?
+            ;;
+        init)
+            shift
+            track_performance "cmd_init" cmd_init "$@" || exit_code=$?
+            ;;
+        scan)
+            shift
+            track_performance "cmd_scan" cmd_scan "$@" || exit_code=$?
+            ;;
+        symbols)
+            shift
+            track_performance "cmd_symbols" cmd_symbols "$@" || exit_code=$?
+            ;;
+        stats)
+            shift
+            track_performance "cmd_stats" cmd_stats "$@" || exit_code=$?
+            ;;
+        manifest)
+            shift
+            track_performance "cmd_manifest" cmd_manifest "$@" || exit_code=$?
+            ;;
+        shard)
+            shift
+            track_performance "cmd_shard" cmd_shard "$@" || exit_code=$?
+            ;;
+        delta)
+            shift
+            track_performance "cmd_delta" cmd_delta "$@" || exit_code=$?
+            ;;
+        query)
+            shift
+            track_performance "cmd_query" cmd_query "$@" || exit_code=$?
+            ;;
+        segment)
+            shift
+            track_performance "cmd_segment" cmd_segment "$@" || exit_code=$?
+            ;;
+        export-dsl)
+            shift
+            track_performance "cmd_export_dsl" cmd_export_dsl "$@" || exit_code=$?
+            ;;
+        clean)
+            shift
+            track_performance "cmd_clean" cmd_clean "$@" || exit_code=$?
+            ;;
+        run)
+            shift
+            track_performance "cmd_run" cmd_run "$@" || exit_code=$?
+            ;;
+        verify)
+            shift
+            track_performance "cmd_verify" cmd_verify "$@" || exit_code=$?
+            ;;
+        snapshot)
+            shift
+            track_performance "cmd_snapshot" cmd_snapshot "$@" || exit_code=$?
+            ;;
+        health)
+            shift
+            track_performance "cmd_health" cmd_health "$@" || exit_code=$?
+            ;;
+        lineage)
+            shift
+            track_performance "cmd_lineage" cmd_lineage "$@" || exit_code=$?
+            ;;
+        monitor)
+            shift
+            track_performance "cmd_monitor" cmd_monitor "$@" || exit_code=$?
+            ;;
+        profile)
+            shift
+            track_performance "cmd_profile" cmd_profile "$@" || exit_code=$?
+            ;;
+        events)
+            shift
+            track_performance "cmd_events" cmd_events "$@" || exit_code=$?
+            ;;
+        debug)
+            shift
+            track_performance "cmd_debug" cmd_debug "$@" || exit_code=$?
+            ;;
+        *)
+            emit_event "command_error" "{
+                \"error\": \"unknown_command\",
+                \"command\": \"$command\",
+                \"message\": \"Unknown command: $command\"
+            }"
+            echo "Error: Unknown command: $command" >&2
+            echo "Run '${PROG_NAME} help' for usage information." >&2
+            exit_code=1
+            ;;
+    esac
+    
+    # End main span and emit session end event
+    end_span "main_command_$command" "$exit_code"
+    
+    local session_end_time=$(get_timestamp_ms)
+    local duration_ms=$((session_end_time - session_start_time))
+    
+    emit_event "session_ended" "{
+        \"command\": \"$command\",
+        \"exit_code\": $exit_code,
+        \"duration_ms\": $duration_ms
+    }"
+    
+    exit $exit_code
+}
+
+# ======================================================================
+# Profile Command - Performance analysis and bottleneck detection
+# ======================================================================
+
+# Main profile command handler
+cmd_profile() {
+    local subcommand="${1:-analyze}"
+    shift || true
+    
+    case "$subcommand" in
+        analyze)
+            profile_analyze "$@"
+            ;;
+        bottlenecks)
+            profile_bottlenecks "$@"
+            ;;
+        timeline)
+            profile_timeline "$@"
+            ;;
+        --help|-h|"")
+            cat <<EOF
+Usage: ${PROG_NAME} profile <subcommand> [options]
+
+Analyze performance data to identify bottlenecks and optimization opportunities.
+
+Subcommands:
+  analyze             General performance analysis
+  bottlenecks         Identify performance bottlenecks
+  timeline            Show operation timeline analysis
+
+Options:
+  --help          Show help for a specific command
+  --version       Show version information
+
+Examples:
+  ${PROG_NAME} profile analyze --window 100
+  ${PROG_NAME} profile bottlenecks --threshold 1000
+  ${PROG_NAME} profile timeline --trace abc123-def456
+EOF
+            exit 0
+            ;;
+        *)
+            echo "Error: Unknown profile subcommand: $subcommand" >&2
+            echo "Run '${PROG_NAME} profile --help' for usage." >&2
+            exit 1
+            ;;
+    esac
+}
+
+# Analyze overall performance
+profile_analyze() {
+    local out_dir=".sourceatlas"
+    local window_size=100
+    local metric_filter=""
+    local operation_filter=""
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --window)
+                window_size="$2"
+                shift 2
+                ;;
+            --metric)
+                metric_filter="$2"
+                shift 2
+                ;;
+            --operation)
+                operation_filter="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} profile analyze [options]
+
+Analyze overall performance patterns and trends.
+
+Options:
+  --out DIR          Output directory (default: .sourceatlas)
+  --window NUM       Analysis window size (default: 100)
+  --metric PATTERN   Filter by metric name pattern
+  --operation TYPE   Filter by operation type
+  --help, -h         Show this help message
+
+Examples:
+  ${PROG_NAME} profile analyze --window 200
+  ${PROG_NAME} profile analyze --metric "operation_duration*"
+  ${PROG_NAME} profile analyze --operation cmd_scan
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                echo "Error: Unexpected argument: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    local metrics_file="$out_dir/metrics.jsonl"
+    
+    if [[ ! -f "$metrics_file" ]]; then
+        echo "Error: Metrics file not found: $metrics_file" >&2
+        exit 1
+    fi
+    
+    echo "Performance Analysis Report"
+    echo "=========================="
+    echo "Analysis Window: $window_size samples"
+    if [[ -n "$metric_filter" ]]; then
+        echo "Metric Filter: $metric_filter"
+    fi
+    if [[ -n "$operation_filter" ]]; then
+        echo "Operation Filter: $operation_filter"
+    fi
+    echo ""
+    
+    # Get unique metric names
+    local metrics=$(get_unique_metrics "$metrics_file" "$metric_filter" "$operation_filter")
+    
+    if [[ -z "$metrics" ]]; then
+        echo "No metrics found matching the criteria."
+        return 0
+    fi
+    
+    echo "Performance Overview:"
+    echo "--------------------"
+    
+    # Analyze each metric
+    echo "$metrics" | while IFS= read -r metric_name; do
+        if [[ -n "$metric_name" ]]; then
+            analyze_metric_performance "$metrics_file" "$metric_name" "$window_size"
+        fi
+    done
+}
+
+# Get unique metric names from metrics file
+get_unique_metrics() {
+    local metrics_file="$1"
+    local metric_filter="$2"
+    local operation_filter="$3"
+    
+    local filter_cmd="grep ."
+    
+    if [[ -n "$metric_filter" ]]; then
+        filter_cmd="grep \"$metric_filter\""
+    fi
+    
+    if [[ -n "$operation_filter" ]]; then
+        filter_cmd="$filter_cmd | grep \"\\\"operation\\\": \\\"$operation_filter\\\"\""
+    fi
+    
+    # Extract unique metric names
+    eval "$filter_cmd" "$metrics_file" 2>/dev/null | \
+        grep -o '"metric_name": "[^"]*"' | \
+        cut -d'"' -f4 | \
+        sort -u
+}
+
+# Analyze performance for a specific metric
+analyze_metric_performance() {
+    local metrics_file="$1"
+    local metric_name="$2"
+    local window_size="$3"
+    
+    # Get recent samples for this metric
+    local samples=$(grep "\"metric_name\": \"$metric_name\"" "$metrics_file" | tail -n "$window_size")
+    local sample_count=$(echo "$samples" | wc -l | tr -d ' ')
+    
+    if [[ $sample_count -eq 0 ]]; then
+        return 0
+    fi
+    
+    # Calculate statistics
+    local stats=$(echo "$samples" | calculate_statistics)
+    local mean=$(echo "$stats" | grep -o '"mean": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+    local std_dev=$(echo "$stats" | grep -o '"std_dev": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+    local min_val=$(echo "$stats" | grep -o '"min": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+    local max_val=$(echo "$stats" | grep -o '"max": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+    
+    # Get percentiles
+    local p50=$(calculate_percentile "$samples" 50)
+    local p95=$(calculate_percentile "$samples" 95)
+    local p99=$(calculate_percentile "$samples" 99)
+    
+    printf "%-30s | %8s | %8s | %8s | %8s | %8s | %8s | %8s\n" \
+        "$metric_name" "$sample_count" "$mean" "$std_dev" "$min_val" "$max_val" "$p50" "$p95"
+}
+
+# Calculate percentile from samples
+calculate_percentile() {
+    local samples="$1"
+    local percentile="$2"
+    
+    # Extract values and sort them
+    local values=$(echo "$samples" | grep -o '"value": [0-9.]*' | cut -d':' -f2 | tr -d ' ' | sort -n)
+    local count=$(echo "$values" | wc -l | tr -d ' ')
+    
+    if [[ $count -eq 0 ]]; then
+        echo "0"
+        return
+    fi
+    
+    # Calculate position for percentile
+    local position=$(echo "scale=0; ($percentile * $count) / 100" | bc 2>/dev/null || echo "1")
+    if [[ $position -lt 1 ]]; then
+        position=1
+    fi
+    
+    # Get the value at that position
+    local result=$(echo "$values" | sed -n "${position}p")
+    echo "${result:-0}"
+}
+
+# Identify performance bottlenecks
+profile_bottlenecks() {
+    local out_dir=".sourceatlas"
+    local threshold=""
+    local top_n=10
+    local metric_filter=""
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --threshold)
+                threshold="$2"
+                shift 2
+                ;;
+            --top)
+                top_n="$2"
+                shift 2
+                ;;
+            --metric)
+                metric_filter="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} profile bottlenecks [options]
+
+Identify performance bottlenecks and slow operations.
+
+Options:
+  --out DIR          Output directory (default: .sourceatlas)
+  --threshold MS     Only show operations slower than threshold (milliseconds)
+  --top NUM          Show top N slowest operations (default: 10)
+  --metric PATTERN   Filter by metric name pattern
+  --help, -h         Show this help message
+
+Examples:
+  ${PROG_NAME} profile bottlenecks --threshold 1000 --top 5
+  ${PROG_NAME} profile bottlenecks --metric "operation_duration*"
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                echo "Error: Unexpected argument: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    local metrics_file="$out_dir/metrics.jsonl"
+    
+    if [[ ! -f "$metrics_file" ]]; then
+        echo "Error: Metrics file not found: $metrics_file" >&2
+        exit 1
+    fi
+    
+    echo "Performance Bottlenecks Analysis"
+    echo "==============================="
+    if [[ -n "$threshold" ]]; then
+        echo "Threshold: > ${threshold}ms"
+    fi
+    echo "Showing top $top_n results"
+    if [[ -n "$metric_filter" ]]; then
+        echo "Metric Filter: $metric_filter"
+    fi
+    echo ""
+    
+    # Build filter command
+    local filter_cmd="cat"
+    if [[ -n "$metric_filter" ]]; then
+        filter_cmd="grep \"$metric_filter\""
+    fi
+    
+    if [[ -n "$threshold" ]]; then
+        filter_cmd="$filter_cmd | grep -v '\"value\": 0' | awk '\$0 ~ /\"value\": [0-9]+/ { match(\$0, /\"value\": ([0-9]+)/, arr); if(arr[1] >= $threshold) print }'"
+    fi
+    
+    # Get bottlenecks and sort by performance impact
+    local bottlenecks=$(eval "$filter_cmd" "$metrics_file" 2>/dev/null | head -n "$top_n")
+    
+    if [[ -z "$bottlenecks" ]]; then
+        echo "No bottlenecks found matching the criteria."
+        return 0
+    fi
+    
+    printf "%-20s %-20s %-10s %-15s %-30s\n" "TIMESTAMP" "METRIC" "VALUE" "OPERATION" "TRACE_ID"
+    printf "%-20s %-20s %-10s %-15s %-30s\n" "--------------------" "--------------------" "----------" "---------------" "------------------------------"
+    
+    echo "$bottlenecks" | while IFS= read -r line; do
+        if [[ -n "$line" ]]; then
+            local timestamp=$(echo "$line" | grep -o '"timestamp": "[^"]*"' | cut -d'"' -f4 | cut -c1-19)
+            local metric_name=$(echo "$line" | grep -o '"metric_name": "[^"]*"' | cut -d'"' -f4 | cut -c1-19)
+            local value=$(echo "$line" | grep -o '"value": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+            local operation=$(echo "$line" | grep -o '"operation": "[^"]*"' | cut -d'"' -f4 | cut -c1-14)
+            local trace_id=$(echo "$line" | grep -o '"trace_id": "[^"]*"' | cut -d'"' -f4 | cut -c1-29)
+            
+            printf "%-20s %-20s %-10s %-15s %-30s\n" \
+                "$timestamp" "$metric_name" "${value}ms" "$operation" "$trace_id"
+        fi
+    done
+}
+
+# Show operation timeline analysis
+profile_timeline() {
+    local out_dir=".sourceatlas"
+    local trace_id=""
+    local operation=""
+    local window="1 hour"
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --trace)
+                trace_id="$2"
+                shift 2
+                ;;
+            --operation)
+                operation="$2"
+                shift 2
+                ;;
+            --window)
+                window="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} profile timeline [options]
+
+Show operation timeline and execution flow analysis.
+
+Options:
+  --out DIR          Output directory (default: .sourceatlas)
+  --trace ID         Focus on specific trace ID
+  --operation TYPE   Focus on specific operation type
+  --window TIME      Time window to analyze (default: "1 hour")
+  --help, -h         Show this help message
+
+Examples:
+  ${PROG_NAME} profile timeline --trace abc123-def456-789
+  ${PROG_NAME} profile timeline --operation cmd_scan --window "30 minutes"
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                echo "Error: Unexpected argument: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    local audit_file="$out_dir/audit.log"
+    
+    if [[ ! -f "$audit_file" ]]; then
+        echo "Error: Audit log not found: $audit_file" >&2
+        exit 1
+    fi
+    
+    echo "Operation Timeline Analysis"
+    echo "=========================="
+    echo "Time Window: $window"
+    if [[ -n "$trace_id" ]]; then
+        echo "Trace ID: $trace_id"
+    fi
+    if [[ -n "$operation" ]]; then
+        echo "Operation: $operation"
+    fi
+    echo ""
+    
+    # Build filter for events
+    local filter_cmd="cat"
+    if [[ -n "$trace_id" ]]; then
+        filter_cmd="grep '$trace_id'"
+    fi
+    if [[ -n "$operation" ]]; then
+        filter_cmd="$filter_cmd | grep '$operation'"
+    fi
+    
+    # Get timeline events
+    local timeline_events=$(eval "$filter_cmd" "$audit_file" 2>/dev/null | tail -n 50)
+    
+    if [[ -z "$timeline_events" ]]; then
+        echo "No timeline events found matching the criteria."
+        return 0
+    fi
+    
+    printf "%-20s %-20s %-15s %-30s\n" "TIMESTAMP" "EVENT_TYPE" "DURATION" "TRACE_ID"
+    printf "%-20s %-20s %-15s %-30s\n" "--------------------" "--------------------" "---------------" "------------------------------"
+    
+    echo "$timeline_events" | while IFS= read -r line; do
+        if [[ -n "$line" ]]; then
+            local timestamp=$(echo "$line" | grep -o '\[.*\]' | head -1 | tr -d '[]' | cut -c1-19)
+            local event_type=$(echo "$line" | grep -o '[a-z_]*:' | head -1 | tr -d ':' | cut -c1-19)
+            local trace_id=$(echo "$line" | grep -o 'trace: [a-f0-9-]*' | cut -d' ' -f2 | cut -c1-29)
+            
+            printf "%-20s %-20s %-15s %-30s\n" \
+                "$timestamp" "$event_type" "-" "$trace_id"
+        fi
+    done
+}
+
+# ======================================================================
+# Debug Command - Interactive debugging and troubleshooting
+# ======================================================================
+
+# Main debug command handler
+cmd_debug() {
+    local subcommand="${1:-session}"
+    shift || true
+    
+    case "$subcommand" in
+        session)
+            debug_session "$@"
+            ;;
+        step)
+            debug_step "$@"
+            ;;
+        inspect)
+            debug_inspect "$@"
+            ;;
+        --help|-h|"")
+            cat <<EOF
+Usage: ${PROG_NAME} debug <subcommand> [options]
+
+Interactive debugging tools for troubleshooting and analysis.
+
+Subcommands:
+  session             Start interactive debugging session
+  step                Step-by-step operation debugging
+  inspect             Inspect system state and data
+
+Options:
+  --help          Show help for a specific command
+  --version       Show version information
+
+Examples:
+  ${PROG_NAME} debug session
+  ${PROG_NAME} debug step --operation cmd_scan
+  ${PROG_NAME} debug inspect --trace abc123-def456
+EOF
+            exit 0
+            ;;
+        *)
+            echo "Error: Unknown debug subcommand: $subcommand" >&2
+            echo "Run '${PROG_NAME} debug --help' for usage." >&2
+            exit 1
+            ;;
+    esac
+}
+
+# Start interactive debugging session
+debug_session() {
+    local out_dir=".sourceatlas"
+    local auto_mode=false
+    local trace_filter=""
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --auto)
+                auto_mode=true
+                shift
+                ;;
+            --trace)
+                trace_filter="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} debug session [options]
+
+Start an interactive debugging session to analyze system behavior.
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --auto           Run automatic diagnostic checks
+  --trace ID       Focus on specific trace ID
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} debug session --auto
+  ${PROG_NAME} debug session --trace abc123-def456-789
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                echo "Error: Unexpected argument: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    echo "SourceAtlas Debug Session"
+    echo "========================"
+    echo "Output Directory: $out_dir"
+    if [[ -n "$trace_filter" ]]; then
+        echo "Trace Filter: $trace_filter"
+    fi
+    echo ""
+    
+    if [[ "$auto_mode" == "true" ]]; then
+        run_automatic_diagnostics "$out_dir" "$trace_filter"
+        return
+    fi
+    
+    # Interactive debugging menu
+    while true; do
+        echo "Debug Commands:"
+        echo "  1) System Health Check"
+        echo "  2) Recent Events Analysis"
+        echo "  3) Performance Bottlenecks"
+        echo "  4) Anomaly Detection"
+        echo "  5) Data Lineage Inspection"
+        echo "  6) Circuit Breaker Status"
+        echo "  7) Custom Query"
+        echo "  q) Quit"
+        echo ""
+        
+        read -p "Select option [1-7,q]: " choice
+        
+        case "$choice" in
+            1)
+                debug_system_health "$out_dir"
+                ;;
+            2)
+                debug_recent_events "$out_dir" "$trace_filter"
+                ;;
+            3)
+                debug_performance_issues "$out_dir"
+                ;;
+            4)
+                debug_anomalies "$out_dir"
+                ;;
+            5)
+                debug_data_lineage "$out_dir"
+                ;;
+            6)
+                debug_circuit_breaker_status "$out_dir"
+                ;;
+            7)
+                debug_custom_query "$out_dir"
+                ;;
+            q|Q)
+                echo "Exiting debug session."
+                break
+                ;;
+            *)
+                echo "Invalid option. Please try again."
+                ;;
+        esac
+        echo ""
+    done
+}
+
+# Run automatic diagnostic checks
+run_automatic_diagnostics() {
+    local out_dir="$1"
+    local trace_filter="$2"
+    
+    echo "Running Automatic Diagnostics..."
+    echo "================================"
+    echo ""
+    
+    echo "1. System Health Check:"
+    debug_system_health "$out_dir"
+    echo ""
+    
+    echo "2. Recent Errors Analysis:"
+    debug_recent_events "$out_dir" "$trace_filter" | head -10
+    echo ""
+    
+    echo "3. Performance Bottlenecks:"
+    debug_performance_issues "$out_dir" | head -5
+    echo ""
+    
+    echo "4. Anomaly Detection:"
+    debug_anomalies "$out_dir"
+    echo ""
+    
+    echo "5. Circuit Breaker Status:"
+    debug_circuit_breaker_status "$out_dir"
+    echo ""
+    
+    echo "Automatic diagnostics complete."
+}
+
+# Debug system health
+debug_system_health() {
+    local out_dir="$1"
+    
+    echo "System Health Status:"
+    echo "--------------------"
+    
+    # Check if key files exist
+    local audit_file="$out_dir/audit.log"
+    local events_file="$out_dir/events.jsonl"
+    local metrics_file="$out_dir/metrics.jsonl"
+    local lineage_file="$out_dir/lineage.jsonl"
+    
+    printf "%-20s %s\n" "Audit Log:" "$(check_file_status "$audit_file")"
+    printf "%-20s %s\n" "Events File:" "$(check_file_status "$events_file")"
+    printf "%-20s %s\n" "Metrics File:" "$(check_file_status "$metrics_file")"
+    printf "%-20s %s\n" "Lineage File:" "$(check_file_status "$lineage_file")"
+    
+    # Check file sizes
+    if [[ -f "$audit_file" ]]; then
+        local audit_size=$(wc -l < "$audit_file" 2>/dev/null || echo "0")
+        printf "%-20s %s events\n" "Audit Entries:" "$audit_size"
+    fi
+    
+    if [[ -f "$metrics_file" ]]; then
+        local metrics_count=$(wc -l < "$metrics_file" 2>/dev/null || echo "0")
+        printf "%-20s %s metrics\n" "Metrics Count:" "$metrics_count"
+    fi
+    
+    # Check recent activity
+    if [[ -f "$audit_file" ]]; then
+        local last_event=$(tail -1 "$audit_file" 2>/dev/null)
+        if [[ -n "$last_event" ]]; then
+            local last_timestamp=$(echo "$last_event" | grep -o '\[.*\]' | head -1 | tr -d '[]')
+            printf "%-20s %s\n" "Last Activity:" "$last_timestamp"
+        fi
+    fi
+}
+
+# Check file status helper
+check_file_status() {
+    local file="$1"
+    
+    if [[ -f "$file" ]]; then
+        local size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo "0")
+        echo "✅ EXISTS (${size} bytes)"
+    else
+        echo "❌ MISSING"
+    fi
+}
+
+# Debug recent events
+debug_recent_events() {
+    local out_dir="$1"
+    local trace_filter="$2"
+    local limit=20
+    
+    echo "Recent Events Analysis:"
+    echo "----------------------"
+    
+    local audit_file="$out_dir/audit.log"
+    if [[ ! -f "$audit_file" ]]; then
+        echo "No audit file found."
+        return
+    fi
+    
+    local filter_cmd="tail -n $limit"
+    if [[ -n "$trace_filter" ]]; then
+        filter_cmd="grep '$trace_filter' | tail -n $limit"
+    fi
+    
+    eval "$filter_cmd" "$audit_file" 2>/dev/null | \
+        while IFS= read -r line; do
+            if [[ -n "$line" ]]; then
+                local timestamp=$(echo "$line" | grep -o '\[.*\]' | head -1 | tr -d '[]' | cut -c1-19)
+                local event_type=$(echo "$line" | grep -o '[a-z_]*:' | head -1 | tr -d ':')
+                local trace_id=$(echo "$line" | grep -o 'trace: [a-f0-9-]*' | cut -d' ' -f2 | cut -c1-12)
+                
+                printf "%-19s %-15s %-12s %s\n" "$timestamp" "$event_type" "$trace_id" "..."
+            fi
+        done
+}
+
+# Debug performance issues
+debug_performance_issues() {
+    local out_dir="$1"
+    
+    echo "Performance Issues Analysis:"
+    echo "---------------------------"
+    
+    local metrics_file="$out_dir/metrics.jsonl"
+    if [[ ! -f "$metrics_file" ]]; then
+        echo "No metrics file found."
+        return
+    fi
+    
+    # Find slow operations (>500ms)
+    grep '"value": [5-9][0-9][0-9]' "$metrics_file" 2>/dev/null | \
+        head -5 | \
+        while IFS= read -r line; do
+            if [[ -n "$line" ]]; then
+                local timestamp=$(echo "$line" | grep -o '"timestamp": "[^"]*"' | cut -d'"' -f4 | cut -c1-19)
+                local metric=$(echo "$line" | grep -o '"metric_name": "[^"]*"' | cut -d'"' -f4 | cut -c1-15)
+                local value=$(echo "$line" | grep -o '"value": [0-9.]*' | cut -d':' -f2 | tr -d ' ')
+                local operation=$(echo "$line" | grep -o '"operation": "[^"]*"' | cut -d'"' -f4)
+                
+                printf "%-19s %-15s %8sms %s\n" "$timestamp" "$metric" "$value" "$operation"
+            fi
+        done
+}
+
+# Debug anomalies
+debug_anomalies() {
+    local out_dir="$1"
+    
+    echo "Anomaly Detection Results:"
+    echo "-------------------------"
+    
+    # Use the existing monitor anomalies functionality
+    monitor_anomalies --out "$out_dir" 2>/dev/null || echo "No anomaly detection data available."
+}
+
+# Debug data lineage
+debug_data_lineage() {
+    local out_dir="$1"
+    
+    echo "Data Lineage Summary:"
+    echo "--------------------"
+    
+    local lineage_file="$out_dir/lineage.jsonl"
+    if [[ ! -f "$lineage_file" ]]; then
+        echo "No lineage file found."
+        return
+    fi
+    
+    local total_events=$(wc -l < "$lineage_file" 2>/dev/null || echo "0")
+    echo "Total lineage events: $total_events"
+    
+    # Show recent lineage events
+    echo "Recent lineage events:"
+    tail -5 "$lineage_file" 2>/dev/null | \
+        while IFS= read -r line; do
+            if [[ -n "$line" ]]; then
+                local event_type=$(echo "$line" | grep -o '"event_type": "[^"]*"' | cut -d'"' -f4)
+                local source=$(echo "$line" | grep -o '"source": {"entity": "[^"]*"' | cut -d'"' -f4)
+                local target=$(echo "$line" | grep -o '"target": {"entity": "[^"]*"' | cut -d'"' -f4)
+                
+                printf "  %-15s: %s -> %s\n" "$event_type" "${source:0:20}" "${target:0:20}"
+            fi
+        done
+}
+
+# Debug circuit breaker status
+debug_circuit_breaker_status() {
+    local out_dir="$1"
+    
+    echo "Circuit Breaker Status:"
+    echo "----------------------"
+    
+    # Use existing health command functionality
+    cmd_health --out "$out_dir" 2>/dev/null || echo "No circuit breaker data available."
+}
+
+# Debug custom query
+debug_custom_query() {
+    local out_dir="$1"
+    
+    echo "Custom Query Interface:"
+    echo "----------------------"
+    echo "Available files:"
+    echo "  - audit.log     : Event audit trail"
+    echo "  - events.jsonl  : Structured events"
+    echo "  - metrics.jsonl : Performance metrics"
+    echo "  - lineage.jsonl : Data lineage tracking"
+    echo ""
+    
+    read -p "Enter grep pattern to search (or 'exit' to return): " pattern
+    
+    if [[ "$pattern" == "exit" ]]; then
+        return
+    fi
+    
+    if [[ -z "$pattern" ]]; then
+        echo "No pattern provided."
+        return
+    fi
+    
+    echo "Searching for: $pattern"
+    echo "Results:"
+    
+    for file in audit.log events.jsonl metrics.jsonl lineage.jsonl; do
+        local filepath="$out_dir/$file"
+        if [[ -f "$filepath" ]]; then
+            local results=$(grep "$pattern" "$filepath" 2>/dev/null | head -3)
+            if [[ -n "$results" ]]; then
+                echo "From $file:"
+                echo "$results" | sed 's/^/  /'
+                echo ""
+            fi
+        fi
+    done
+}
+
+# Step-by-step operation debugging
+debug_step() {
+    local out_dir=".sourceatlas"
+    local operation=""
+    local trace_id=""
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --operation)
+                operation="$2"
+                shift 2
+                ;;
+            --trace)
+                trace_id="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} debug step [options]
+
+Step through operations for detailed analysis.
+
+Options:
+  --out DIR          Output directory (default: .sourceatlas)
+  --operation TYPE   Debug specific operation type
+  --trace ID         Debug specific trace ID
+  --help, -h         Show this help message
+
+Examples:
+  ${PROG_NAME} debug step --operation cmd_scan
+  ${PROG_NAME} debug step --trace abc123-def456-789
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                echo "Error: Unexpected argument: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    echo "Step-by-Step Operation Debugging"
+    echo "==============================="
+    if [[ -n "$operation" ]]; then
+        echo "Operation: $operation"
+    fi
+    if [[ -n "$trace_id" ]]; then
+        echo "Trace ID: $trace_id"
+    fi
+    echo ""
+    
+    # Build filter for audit log
+    local filter_cmd="cat"
+    if [[ -n "$operation" ]]; then
+        filter_cmd="grep '$operation'"
+    fi
+    if [[ -n "$trace_id" ]]; then
+        filter_cmd="$filter_cmd | grep '$trace_id'"
+    fi
+    
+    local audit_file="$out_dir/audit.log"
+    if [[ ! -f "$audit_file" ]]; then
+        echo "Error: Audit file not found: $audit_file"
+        return 1
+    fi
+    
+    # Get relevant events
+    local events=$(eval "$filter_cmd" "$audit_file" 2>/dev/null | tail -20)
+    
+    if [[ -z "$events" ]]; then
+        echo "No events found matching the criteria."
+        return 0
+    fi
+    
+    echo "Operation Timeline:"
+    echo "------------------"
+    
+    echo "$events" | while IFS= read -r line; do
+        if [[ -n "$line" ]]; then
+            local timestamp=$(echo "$line" | grep -o '\[.*\]' | head -1 | tr -d '[]')
+            local event_type=$(echo "$line" | grep -o '[a-z_]*:' | head -1 | tr -d ':')
+            local trace=$(echo "$line" | grep -o 'trace: [a-f0-9-]*' | cut -d' ' -f2)
+            
+            echo "[$timestamp] $event_type (trace: $trace)"
+        fi
+    done
+}
+
+# Inspect system state and data
+debug_inspect() {
+    local out_dir=".sourceatlas"
+    local target=""
+    local format="summary"
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --target)
+                target="$2"
+                shift 2
+                ;;
+            --format)
+                format="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} debug inspect [options]
+
+Inspect system state, data structures, and current status.
+
+Options:
+  --out DIR          Output directory (default: .sourceatlas)
+  --target TYPE      Inspect specific target (files, metrics, events, lineage)
+  --format FORMAT    Output format: summary, detailed, json (default: summary)
+  --help, -h         Show this help message
+
+Examples:
+  ${PROG_NAME} debug inspect --target metrics --format detailed
+  ${PROG_NAME} debug inspect --target events --format json
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                echo "Error: Unexpected argument: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    echo "System State Inspection"
+    echo "======================"
+    echo "Output Directory: $out_dir"
+    echo "Format: $format"
+    if [[ -n "$target" ]]; then
+        echo "Target: $target"
+    fi
+    echo ""
+    
+    case "$target" in
+        files)
+            inspect_files "$out_dir" "$format"
+            ;;
+        metrics)
+            inspect_metrics "$out_dir" "$format"
+            ;;
+        events)
+            inspect_events "$out_dir" "$format"
+            ;;
+        lineage)
+            inspect_lineage "$out_dir" "$format"
+            ;;
+        ""|all)
+            inspect_all "$out_dir" "$format"
+            ;;
+        *)
+            echo "Error: Unknown target: $target" >&2
+            exit 1
+            ;;
+    esac
+}
+
+# Inspect files
+inspect_files() {
+    local out_dir="$1"
+    local format="$2"
+    
+    echo "File System Inspection:"
+    echo "----------------------"
+    
+    for file in audit.log events.jsonl metrics.jsonl lineage.jsonl; do
+        local filepath="$out_dir/$file"
+        if [[ -f "$filepath" ]]; then
+            local size=$(stat -f%z "$filepath" 2>/dev/null || stat -c%s "$filepath" 2>/dev/null || echo "0")
+            local lines=$(wc -l < "$filepath" 2>/dev/null || echo "0")
+            printf "%-15s: %8s bytes, %6s lines\n" "$file" "$size" "$lines"
+        else
+            printf "%-15s: MISSING\n" "$file"
+        fi
+    done
+}
+
+# Inspect metrics
+inspect_metrics() {
+    local out_dir="$1"
+    local format="$2"
+    
+    echo "Metrics Inspection:"
+    echo "------------------"
+    
+    local metrics_file="$out_dir/metrics.jsonl"
+    if [[ ! -f "$metrics_file" ]]; then
+        echo "No metrics file found."
+        return
+    fi
+    
+    # Show unique metric names and counts
+    grep -o '"metric_name": "[^"]*"' "$metrics_file" 2>/dev/null | \
+        cut -d'"' -f4 | \
+        sort | uniq -c | \
+        while read count metric; do
+            printf "%-30s: %s samples\n" "$metric" "$count"
+        done
+}
+
+# Inspect events
+inspect_events() {
+    local out_dir="$1"
+    local format="$2"
+    
+    echo "Events Inspection:"
+    echo "-----------------"
+    
+    local audit_file="$out_dir/audit.log"
+    if [[ ! -f "$audit_file" ]]; then
+        echo "No audit file found."
+        return
+    fi
+    
+    # Show event type distribution
+    grep -o '[a-z_]*:' "$audit_file" 2>/dev/null | \
+        tr -d ':' | \
+        sort | uniq -c | \
+        while read count event_type; do
+            printf "%-20s: %s occurrences\n" "$event_type" "$count"
+        done
+}
+
+# Inspect lineage
+inspect_lineage() {
+    local out_dir="$1"
+    local format="$2"
+    
+    echo "Lineage Inspection:"
+    echo "------------------"
+    
+    local lineage_file="$out_dir/lineage.jsonl"
+    if [[ ! -f "$lineage_file" ]]; then
+        echo "No lineage file found."
+        return
+    fi
+    
+    local total_events=$(wc -l < "$lineage_file" 2>/dev/null || echo "0")
+    echo "Total lineage events: $total_events"
+    
+    # Show lineage event types
+    grep -o '"event_type": "[^"]*"' "$lineage_file" 2>/dev/null | \
+        cut -d'"' -f4 | \
+        sort | uniq -c | \
+        while read count event_type; do
+            printf "%-20s: %s events\n" "$event_type" "$count"
+        done
+}
+
+# Inspect all targets
+inspect_all() {
+    local out_dir="$1"
+    local format="$2"
+    
+    inspect_files "$out_dir" "$format"
+    echo ""
+    inspect_metrics "$out_dir" "$format"
+    echo ""
+    inspect_events "$out_dir" "$format"
+    echo ""
+    inspect_lineage "$out_dir" "$format"
+}
+
+# ======================================================================
+# Events Command - Query event stream
+# ======================================================================
+
+# Main events command handler
+cmd_events() {
+    local subcommand="${1:-query}"
+    shift || true
+    
+    case "$subcommand" in
+        query)
+            events_query "$@"
+            ;;
+        tail)
+            events_tail "$@"
+            ;;
+        trace)
+            events_trace "$@"
+            ;;
+        --help|-h|"")
+            cat <<EOF
+Usage: ${PROG_NAME} events <subcommand> [options]
+
+Query and analyze event streams for debugging and monitoring.
+
+Subcommands:
+  query               Query events by criteria
+  tail                Follow event stream in real-time
+  trace               Query events by trace ID
+
+Options:
+  --help          Show help for a specific command
+  --version       Show version information
+
+Examples:
+  ${PROG_NAME} events query --since "1 hour ago"
+  ${PROG_NAME} events tail --follow
+  ${PROG_NAME} events trace abc123-def456
+EOF
+            exit 0
+            ;;
+        *)
+            echo "Error: Unknown events subcommand: $subcommand" >&2
+            echo "Run '${PROG_NAME} events --help' for usage." >&2
+            exit 1
+            ;;
+    esac
+}
+
+# Query events by criteria
+events_query() {
+    local out_dir=".sourceatlas"
+    local since=""
+    local until=""
+    local event_type=""
+    local trace_id=""
+    local limit=50
+    local format="table"
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --since)
+                since="$2"
+                shift 2
+                ;;
+            --until)
+                until="$2"
+                shift 2
+                ;;
+            --type)
+                event_type="$2"
+                shift 2
+                ;;
+            --trace)
+                trace_id="$2"
+                shift 2
+                ;;
+            --limit)
+                limit="$2"
+                shift 2
+                ;;
+            --format)
+                format="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} events query [options]
+
+Query events from the event stream based on specified criteria.
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --since TIME     Show events since time (e.g., "1 hour ago", "2025-01-01")
+  --until TIME     Show events until time
+  --type TYPE      Filter by event type
+  --trace ID       Filter by trace ID
+  --limit NUM      Maximum number of events to show (default: 50)
+  --format FORMAT  Output format: table, json, csv (default: table)
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} events query --since "1 hour ago" --limit 100
+  ${PROG_NAME} events query --type "session_started" --format json
+  ${PROG_NAME} events query --trace abc123-def456-789
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                echo "Error: Unexpected argument: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    local audit_file="$out_dir/audit.log"
+    local events_file="$out_dir/events.jsonl"
+    
+    if [[ ! -f "$audit_file" && ! -f "$events_file" ]]; then
+        echo "Error: No event files found in $out_dir" >&2
+        exit 1
+    fi
+    
+    echo "Event Stream Query Results"
+    echo "=========================="
+    if [[ -n "$since" ]]; then
+        echo "Since: $since"
+    fi
+    if [[ -n "$until" ]]; then
+        echo "Until: $until"
+    fi
+    if [[ -n "$event_type" ]]; then
+        echo "Event Type: $event_type"
+    fi
+    if [[ -n "$trace_id" ]]; then
+        echo "Trace ID: $trace_id"
+    fi
+    echo "Limit: $limit events"
+    echo "Format: $format"
+    echo ""
+    
+    local query_results=""
+    
+    # Query audit log first
+    if [[ -f "$audit_file" ]]; then
+        query_results=$(query_audit_log "$audit_file" "$since" "$until" "$event_type" "$trace_id" "$limit")
+    fi
+    
+    # Query events file if available
+    if [[ -f "$events_file" && -z "$query_results" ]]; then
+        query_results=$(query_events_jsonl "$events_file" "$since" "$until" "$event_type" "$trace_id" "$limit")
+    fi
+    
+    if [[ -z "$query_results" ]]; then
+        echo "No events found matching the criteria."
+        return 0
+    fi
+    
+    # Format and display results
+    case "$format" in
+        table)
+            format_events_table "$query_results"
+            ;;
+        json)
+            echo "$query_results"
+            ;;
+        csv)
+            format_events_csv "$query_results"
+            ;;
+        *)
+            echo "Error: Unknown format: $format" >&2
+            exit 1
+            ;;
+    esac
+}
+
+# Query audit log file
+query_audit_log() {
+    local audit_file="$1"
+    local since="$2"
+    local until="$3"
+    local event_type="$4"
+    local trace_id="$5"
+    local limit="$6"
+    
+    local grep_cmd="grep"
+    local filter_args=""
+    
+    # Build filter arguments
+    if [[ -n "$event_type" ]]; then
+        filter_args="$event_type"
+    else
+        filter_args="."
+    fi
+    
+    if [[ -n "$trace_id" ]]; then
+        filter_args="$filter_args.*$trace_id"
+    fi
+    
+    # Apply filters and limit
+    local results=$(grep "$filter_args" "$audit_file" 2>/dev/null | tail -n "$limit" || true)
+    echo "$results"
+}
+
+# Query events JSONL file
+query_events_jsonl() {
+    local events_file="$1"
+    local since="$2"
+    local until="$3"
+    local event_type="$4"
+    local trace_id="$5"
+    local limit="$6"
+    
+    # For now, just use grep-based filtering similar to audit log
+    local filter_args=""
+    
+    if [[ -n "$event_type" ]]; then
+        filter_args="\"event_type\": \"$event_type\""
+    else
+        filter_args="."
+    fi
+    
+    if [[ -n "$trace_id" ]]; then
+        filter_args="$filter_args.*\"trace_id\": \"$trace_id\""
+    fi
+    
+    local results=$(grep "$filter_args" "$events_file" 2>/dev/null | tail -n "$limit" || true)
+    echo "$results"
+}
+
+# Format events as table
+format_events_table() {
+    local events="$1"
+    
+    printf "%-20s %-15s %-30s %-10s\n" "TIMESTAMP" "EVENT_TYPE" "TRACE_ID" "DETAILS"
+    printf "%-20s %-15s %-30s %-10s\n" "--------------------" "---------------" "------------------------------" "----------"
+    
+    echo "$events" | while IFS= read -r line; do
+        if [[ -n "$line" ]]; then
+            # Extract timestamp
+            local timestamp=$(echo "$line" | grep -o '\[.*\]' | head -1 | tr -d '[]')
+            if [[ -z "$timestamp" ]]; then
+                # Try JSON format
+                timestamp=$(echo "$line" | grep -o '"timestamp": "[^"]*"' | cut -d'"' -f4)
+            fi
+            
+            # Extract event type
+            local event_type=$(echo "$line" | grep -o '[a-z_]*:' | head -1 | tr -d ':')
+            if [[ -z "$event_type" ]]; then
+                # Try JSON format
+                event_type=$(echo "$line" | grep -o '"event_type": "[^"]*"' | cut -d'"' -f4)
+            fi
+            
+            # Extract trace ID
+            local trace_id=$(echo "$line" | grep -o 'trace: [a-f0-9-]*' | cut -d' ' -f2)
+            if [[ -z "$trace_id" ]]; then
+                # Try JSON format
+                trace_id=$(echo "$line" | grep -o '"trace_id": "[^"]*"' | cut -d'"' -f4)
+            fi
+            
+            # Format for display
+            printf "%-20s %-15s %-30s %-10s\n" \
+                "${timestamp:0:19}" \
+                "${event_type:0:14}" \
+                "${trace_id:0:29}" \
+                "..."
+        fi
+    done
+}
+
+# Format events as CSV
+format_events_csv() {
+    local events="$1"
+    
+    echo "timestamp,event_type,trace_id,details"
+    
+    echo "$events" | while IFS= read -r line; do
+        if [[ -n "$line" ]]; then
+            # Extract fields (similar to table format)
+            local timestamp=$(echo "$line" | grep -o '\[.*\]' | head -1 | tr -d '[]')
+            if [[ -z "$timestamp" ]]; then
+                timestamp=$(echo "$line" | grep -o '"timestamp": "[^"]*"' | cut -d'"' -f4)
+            fi
+            
+            local event_type=$(echo "$line" | grep -o '[a-z_]*:' | head -1 | tr -d ':')
+            if [[ -z "$event_type" ]]; then
+                event_type=$(echo "$line" | grep -o '"event_type": "[^"]*"' | cut -d'"' -f4)
+            fi
+            
+            local trace_id=$(echo "$line" | grep -o 'trace: [a-f0-9-]*' | cut -d' ' -f2)
+            if [[ -z "$trace_id" ]]; then
+                trace_id=$(echo "$line" | grep -o '"trace_id": "[^"]*"' | cut -d'"' -f4)
+            fi
+            
+            echo "$timestamp,$event_type,$trace_id,\"$line\""
+        fi
+    done
+}
+
+# Follow event stream in real-time
+events_tail() {
+    local out_dir=".sourceatlas"
+    local follow=false
+    local lines=20
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --follow|-f)
+                follow=true
+                shift
+                ;;
+            --lines|-n)
+                lines="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} events tail [options]
+
+Follow event stream in real-time.
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --follow, -f     Follow the event stream as new events arrive
+  --lines NUM, -n  Number of lines to show initially (default: 20)
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} events tail -f
+  ${PROG_NAME} events tail --lines 50 --follow
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                echo "Error: Unexpected argument: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    local audit_file="$out_dir/audit.log"
+    
+    if [[ ! -f "$audit_file" ]]; then
+        echo "Error: Audit log not found: $audit_file" >&2
+        exit 1
+    fi
+    
+    echo "Following event stream: $audit_file"
+    echo "Press Ctrl+C to stop"
+    echo ""
+    
+    if [[ "$follow" == "true" ]]; then
+        tail -n "$lines" -f "$audit_file"
+    else
+        tail -n "$lines" "$audit_file"
+    fi
+}
+
+# Query events by trace ID
+events_trace() {
+    local trace_id="$1"
+    local out_dir=".sourceatlas"
+    local format="table"
+    
+    if [[ -z "$trace_id" ]]; then
+        echo "Error: Trace ID required" >&2
+        echo "Run '${PROG_NAME} events trace --help' for usage." >&2
+        exit 1
+    fi
+    
+    # Parse remaining arguments
+    shift
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --out)
+                out_dir="$2"
+                shift 2
+                ;;
+            --format)
+                format="$2"
+                shift 2
+                ;;
+            --help|-h)
+                cat <<EOF
+Usage: ${PROG_NAME} events trace <trace_id> [options]
+
+Query all events for a specific trace ID.
+
+Arguments:
+  trace_id         The trace ID to search for
+
+Options:
+  --out DIR        Output directory (default: .sourceatlas)
+  --format FORMAT  Output format: table, json, csv (default: table)
+  --help, -h       Show this help message
+
+Examples:
+  ${PROG_NAME} events trace abc123-def456-789
+  ${PROG_NAME} events trace abc123-def456-789 --format json
+EOF
+                exit 0
+                ;;
+            --*)
+                echo "Error: Unknown option: $1" >&2
+                exit 1
+                ;;
+            *)
+                echo "Error: Unexpected argument: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Use the events query function with trace filter
+    events_query --out "$out_dir" --trace "$trace_id" --format "$format" --limit 1000
 }
 
 # Run main function

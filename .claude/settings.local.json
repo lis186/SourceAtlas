@@ -10,7 +10,10 @@
       "Bash(chmod:*)",
       "Bash(ln:*)",
       "Bash(PATH:*)",
-      "Read(/private/tmp/test_stats/**)"
+      "Read(/private/tmp/test_stats/**)",
+      "Bash(./bin/sourceatlas:*)",
+      "Bash(cat:*)",
+      "Bash(./test_state_machine.sh:*)"
     ],
     "deny": [],
     "ask": []
