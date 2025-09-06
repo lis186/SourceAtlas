@@ -28,10 +28,17 @@ init_benchmark_system() {
     
     emit_benchmark_event "benchmark_init_start" "Initializing benchmark system" "$trace_id"
     
-    # Create benchmark directories
-    mkdir -p "$BENCHMARK_DIR" || {
-        emit_benchmark_event "benchmark_init_error" "Failed to create benchmark directory" "$trace_id"
+    # Create benchmark directories with secure permissions
+    if ! mkdir -p "$BENCHMARK_DIR" 2>/dev/null; then
+        echo "ERROR: Failed to create benchmark directory: $BENCHMARK_DIR" >&2
+        echo "       Check permissions and disk space" >&2
+        emit_benchmark_event "benchmark_init_error" "Failed to create benchmark directory: $BENCHMARK_DIR" "$trace_id"
         return 1
+    fi
+    
+    # Set secure permissions on benchmark directory
+    chmod 755 "$BENCHMARK_DIR" 2>/dev/null || {
+        echo "WARNING: Could not set secure permissions on $BENCHMARK_DIR" >&2
     }
     
     # Initialize result files

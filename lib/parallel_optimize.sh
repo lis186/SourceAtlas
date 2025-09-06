@@ -109,18 +109,29 @@ parallel_process_files() {
     num_workers=$(get_cpu_cores)
     emit_event "parallel_config" "Using $num_workers parallel workers" "$trace_id"
     
-    # Create temporary directory in memory if available
+    # Create secure temporary directory in memory if available
     local temp_dir
     if [[ -d "/dev/shm" ]] && [[ -w "/dev/shm" ]]; then
-        temp_dir="/dev/shm/sourceatlas_parallel_$$"
+        temp_dir=$(mktemp -d "/dev/shm/sourceatlas_parallel_XXXXXX") || {
+            emit_event "parallel_error" "Failed to create secure temp directory in /dev/shm" "$trace_id"
+            return 1
+        }
     else
-        temp_dir="/tmp/sourceatlas_parallel_$$"
+        temp_dir=$(mktemp -d "/tmp/sourceatlas_parallel_XXXXXX") || {
+            emit_event "parallel_error" "Failed to create secure temp directory in /tmp" "$trace_id"
+            return 1
+        }
     fi
     
-    mkdir -p "$temp_dir" || {
-        emit_event "parallel_error" "Failed to create temp directory: $temp_dir" "$trace_id"
+    # Set secure permissions (owner read/write/execute only)
+    chmod 700 "$temp_dir" || {
+        emit_event "parallel_error" "Failed to set secure permissions on temp directory: $temp_dir" "$trace_id"
+        cleanup_temp_dir "$temp_dir"
         return 1
     }
+    
+    # Store temp_dir globally for signal handler access
+    PARALLEL_TEMP_DIR="$temp_dir"
     
     # Split file list into batches for workers
     local total_files
@@ -185,12 +196,62 @@ parallel_process_files() {
     echo "$total_processed"
 }
 
-# Cleanup temporary directory
+# Cleanup temporary directory with enhanced error handling
 cleanup_temp_dir() {
     local temp_dir="$1"
     if [[ -d "$temp_dir" ]]; then
-        rm -rf "$temp_dir"
+        # Kill any remaining background processes that might be using the directory
+        if [[ -n "${pids[*]:-}" ]]; then
+            for pid in "${pids[@]}"; do
+                if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+                    kill -TERM "$pid" 2>/dev/null || true
+                    sleep 0.1
+                    # Force kill if still running
+                    kill -0 "$pid" 2>/dev/null && kill -KILL "$pid" 2>/dev/null || true
+                fi
+            done
+            # Wait briefly for processes to exit
+            sleep 0.5
+        fi
+        
+        # Remove temporary directory
+        if ! rm -rf "$temp_dir" 2>/dev/null; then
+            echo "WARNING: Failed to clean up temporary directory: $temp_dir" >&2
+            # Try to remove contents individually
+            find "$temp_dir" -type f -delete 2>/dev/null || true
+            find "$temp_dir" -type d -empty -delete 2>/dev/null || true
+        fi
     fi
+}
+
+# Signal handler for graceful cleanup
+cleanup_on_signal() {
+    local signal="$1"
+    echo "Received signal $signal, cleaning up..." >&2
+    
+    # Kill worker processes
+    if [[ -n "${pids[*]:-}" ]]; then
+        for pid in "${pids[@]}"; do
+            if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+                kill -TERM "$pid" 2>/dev/null || true
+            fi
+        done
+        sleep 1
+        # Force kill any remaining processes
+        for pid in "${pids[@]}"; do
+            if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+                kill -KILL "$pid" 2>/dev/null || true
+            fi
+        done
+    fi
+    
+    # Clean up temporary directory
+    if [[ -n "${PARALLEL_TEMP_DIR:-}" ]]; then
+        cleanup_temp_dir "$PARALLEL_TEMP_DIR"
+    fi
+    
+    emit_event "parallel_interrupted" "Parallel processing interrupted by signal $signal" "${PARALLEL_TRACE_ID:-interrupted}"
+    exit 1
 }
 
 # Export functions for use in other scripts
@@ -203,6 +264,14 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
         echo "  trace_id: Optional trace ID for observability" >&2
         exit 1
     fi
+    
+    # Set up signal handlers for graceful cleanup
+    trap 'cleanup_on_signal SIGTERM' TERM
+    trap 'cleanup_on_signal SIGINT' INT
+    trap 'cleanup_on_signal SIGQUIT' QUIT
+    
+    # Store parameters in global variables for signal handler access
+    PARALLEL_TRACE_ID="$3"
     
     parallel_process_files "$1" "$2" "$3"
 else

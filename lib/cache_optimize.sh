@@ -215,10 +215,35 @@ update_hash_cache() {
     local file_path="$1"
     local hash="$2"
     
-    # Remove old entry and add new one
-    grep -v "^$file_path	" "$CONTENT_HASH_CACHE" > "$CONTENT_HASH_CACHE.tmp" 2>/dev/null || true
-    echo -e "$file_path\t$hash" >> "$CONTENT_HASH_CACHE.tmp"
-    mv "$CONTENT_HASH_CACHE.tmp" "$CONTENT_HASH_CACHE"
+    # Create secure temporary file for atomic operation
+    local temp_file
+    temp_file=$(mktemp "${CONTENT_HASH_CACHE}.XXXXXX") || {
+        echo "ERROR: Failed to create secure temporary file for hash cache update" >&2
+        return 1
+    }
+    
+    # Set secure permissions
+    chmod 600 "$temp_file" || {
+        echo "ERROR: Failed to set secure permissions on temporary file" >&2
+        rm -f "$temp_file"
+        return 1
+    }
+    
+    # Update or append the hash entry using atomic operation
+    if ! grep -v "^$file_path	" "$CONTENT_HASH_CACHE" > "$temp_file" 2>/dev/null; then
+        # Create new cache if grep fails
+        > "$temp_file"
+    fi
+    echo -e "$file_path\t$hash" >> "$temp_file" || {
+        echo "ERROR: Failed to write to temporary hash cache file" >&2
+        rm -f "$temp_file"
+        return 1
+    }
+    mv "$temp_file" "$CONTENT_HASH_CACHE" || {
+        echo "ERROR: Failed to update hash cache atomically" >&2
+        rm -f "$temp_file"
+        return 1
+    }
 }
 
 # Update metadata cache
@@ -227,10 +252,35 @@ update_metadata_cache() {
     local mtime="$2"
     local size="$3"
     
-    # Remove old entry and add new one
-    grep -v "^$file_path	" "$METADATA_CACHE" > "$METADATA_CACHE.tmp" 2>/dev/null || true
-    echo -e "$file_path\t$mtime\t$size" >> "$METADATA_CACHE.tmp"
-    mv "$METADATA_CACHE.tmp" "$METADATA_CACHE"
+    # Create secure temporary file for atomic operation
+    local temp_file
+    temp_file=$(mktemp "${METADATA_CACHE}.XXXXXX") || {
+        echo "ERROR: Failed to create secure temporary file for metadata cache update" >&2
+        return 1
+    }
+    
+    # Set secure permissions
+    chmod 600 "$temp_file" || {
+        echo "ERROR: Failed to set secure permissions on temporary file" >&2
+        rm -f "$temp_file"
+        return 1
+    }
+    
+    # Update or append the metadata entry using atomic operation
+    if ! grep -v "^$file_path	" "$METADATA_CACHE" > "$temp_file" 2>/dev/null; then
+        # Create new cache if grep fails
+        > "$temp_file"
+    fi
+    echo -e "$file_path\t$mtime\t$size" >> "$temp_file" || {
+        echo "ERROR: Failed to write to temporary metadata cache file" >&2
+        rm -f "$temp_file"
+        return 1
+    }
+    mv "$temp_file" "$METADATA_CACHE" || {
+        echo "ERROR: Failed to update metadata cache atomically" >&2
+        rm -f "$temp_file"
+        return 1
+    }
 }
 
 # Retrieve cached results for unchanged files
@@ -295,14 +345,29 @@ cleanup_cache() {
     
     emit_cache_event "cache_cleanup_start" "Cleaning up stale cache entries" "$trace_id"
     
-    # Remove cache entries for files that no longer exist
-    local temp_hash_cache="$CONTENT_HASH_CACHE.cleanup"
-    local temp_metadata_cache="$METADATA_CACHE.cleanup"
-    local temp_result_cache="$RESULT_CACHE.cleanup"
+    # Create secure temporary files for cache cleanup
+    local temp_hash_cache temp_metadata_cache temp_result_cache
+    temp_hash_cache=$(mktemp "${CONTENT_HASH_CACHE}.cleanup.XXXXXX") || {
+        emit_cache_event "cache_cleanup_error" "Failed to create secure temp file for hash cache cleanup" "$trace_id"
+        return 1
+    }
+    temp_metadata_cache=$(mktemp "${METADATA_CACHE}.cleanup.XXXXXX") || {
+        emit_cache_event "cache_cleanup_error" "Failed to create secure temp file for metadata cache cleanup" "$trace_id"
+        rm -f "$temp_hash_cache"
+        return 1
+    }
+    temp_result_cache=$(mktemp "${RESULT_CACHE}.cleanup.XXXXXX") || {
+        emit_cache_event "cache_cleanup_error" "Failed to create secure temp file for result cache cleanup" "$trace_id"
+        rm -f "$temp_hash_cache" "$temp_metadata_cache"
+        return 1
+    }
     
-    > "$temp_hash_cache"
-    > "$temp_metadata_cache"
-    > "$temp_result_cache"
+    # Set secure permissions
+    chmod 600 "$temp_hash_cache" "$temp_metadata_cache" "$temp_result_cache" || {
+        emit_cache_event "cache_cleanup_error" "Failed to set secure permissions on cleanup temp files" "$trace_id"
+        rm -f "$temp_hash_cache" "$temp_metadata_cache" "$temp_result_cache"
+        return 1
+    }
     
     # Create lookup table of current files
     awk '{current_files[$1] = 1} END {
@@ -338,12 +403,17 @@ cleanup_cache() {
        result_cache="$RESULT_CACHE" temp_result="$temp_result_cache" \
        "$file_list"
     
-    # Replace cache files with cleaned versions
-    mv "$temp_hash_cache" "$CONTENT_HASH_CACHE"
-    mv "$temp_metadata_cache" "$METADATA_CACHE"
-    mv "$temp_result_cache" "$RESULT_CACHE"
-    
-    emit_cache_event "cache_cleanup_complete" "Cache cleanup completed" "$trace_id"
+    # Replace cache files with cleaned versions (with error handling)
+    if mv "$temp_hash_cache" "$CONTENT_HASH_CACHE" && \
+       mv "$temp_metadata_cache" "$METADATA_CACHE" && \
+       mv "$temp_result_cache" "$RESULT_CACHE"; then
+        emit_cache_event "cache_cleanup_complete" "Cache cleanup completed" "$trace_id"
+    else
+        emit_cache_event "cache_cleanup_error" "Failed to replace cache files after cleanup" "$trace_id"
+        # Clean up temporary files if move failed
+        rm -f "$temp_hash_cache" "$temp_metadata_cache" "$temp_result_cache"
+        return 1
+    fi
 }
 
 # Emit cache-specific observability event

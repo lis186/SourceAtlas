@@ -4,6 +4,15 @@
 # Optimized batch processing to reduce subprocess overhead by 5-20x
 
 BEGIN {
+    # Configuration parameters (with environment variable support)
+    MIN_IMPORTANCE = (ENVIRON["SOURCEATLAS_MIN_IMPORTANCE"] ? ENVIRON["SOURCEATLAS_MIN_IMPORTANCE"] : 0.1)
+    MAX_IMPORTANCE = (ENVIRON["SOURCEATLAS_MAX_IMPORTANCE"] ? ENVIRON["SOURCEATLAS_MAX_IMPORTANCE"] : 2.0)
+    REQUIRED_FIELDS = 5  # Expected number of tab-separated fields
+    
+    # Validation counters
+    valid_records = 0
+    invalid_records = 0
+    
     # Initialize language mapping
     lang_map[".swift"] = "swift"
     lang_map[".kt"] = "kotlin"  
@@ -33,16 +42,17 @@ BEGIN {
     lang_map[".gradle"] = "gradle"
     lang_map[".toml"] = "toml"
     
-    # Initialize role patterns
-    role_patterns["ViewController|Activity|Fragment"] = "ui"
-    role_patterns["ViewModel|Presenter"] = "viewmodel"
-    role_patterns["Repository|Store|Cache"] = "repository"
-    role_patterns["Service|Manager"] = "service"
-    role_patterns["UseCase|Interactor"] = "usecase"
-    role_patterns["Model|Entity|Data"] = "model"
-    role_patterns["Test|Spec"] = "test"
-    role_patterns["Config|Settings"] = "config"
-    role_patterns["build.*|Makefile|.*\\.gradle"] = "build"
+    # Pre-compile role patterns for performance (fix regex compilation overhead)
+    num_patterns = 0
+    role_regexes[++num_patterns] = "ViewController|Activity|Fragment"; role_values[num_patterns] = "ui"
+    role_regexes[++num_patterns] = "ViewModel|Presenter"; role_values[num_patterns] = "viewmodel" 
+    role_regexes[++num_patterns] = "Repository|Store|Cache"; role_values[num_patterns] = "repository"
+    role_regexes[++num_patterns] = "Service|Manager"; role_values[num_patterns] = "service"
+    role_regexes[++num_patterns] = "UseCase|Interactor"; role_values[num_patterns] = "usecase"
+    role_regexes[++num_patterns] = "Model|Entity|Data"; role_values[num_patterns] = "model"
+    role_regexes[++num_patterns] = "Test|Spec"; role_values[num_patterns] = "test"
+    role_regexes[++num_patterns] = "Config|Settings"; role_values[num_patterns] = "config"
+    role_regexes[++num_patterns] = "build.*|Makefile|.*\\.gradle"; role_values[num_patterns] = "build"
     
     # Set field separator
     FS = "\t"
@@ -59,12 +69,35 @@ BEGIN {
 {
     files_processed++
     
-    # Parse input fields
+    # Input validation: Check field count and format
+    if (NF != REQUIRED_FIELDS) {
+        printf "WARN: Line %d has %d fields, expected %d: %s\n", NR, NF, REQUIRED_FIELDS, $0 > "/dev/stderr"
+        invalid_records++
+        next
+    }
+    
+    # Parse and validate input fields
     file_path = $1
     size_bytes = $2
     loc = $3  
     content_hash = $4
     mtime = $5
+    
+    # Validate numeric fields
+    if (size_bytes !~ /^[0-9]+$/ || loc !~ /^[0-9]+$/ || mtime !~ /^[0-9]+(\.[0-9]+)?$/) {
+        printf "WARN: Line %d has invalid numeric fields: size=%s, loc=%s, mtime=%s\n", NR, size_bytes, loc, mtime > "/dev/stderr"
+        invalid_records++
+        next
+    }
+    
+    # Validate file path (basic security check)
+    if (file_path ~ /\.\.\/|^\//) {
+        printf "WARN: Line %d has potentially unsafe path: %s\n", NR, file_path > "/dev/stderr"
+        invalid_records++
+        next
+    }
+    
+    valid_records++
     
     # Extract file components
     filename = file_path
@@ -95,9 +128,14 @@ BEGIN {
     printf "{\"repo\":\"%s\",\"path\":\"%s\",\"file_name\":\"%s\",\"ext\":\"%s\",\"lang\":\"%s\",\"size_bytes\":%s,\"loc\":%s,\"roles\":[\"%s\"],\"summary\":\"File with role: %s, language: %s\",\"imports\":[],\"symbols\":[],\"importance_score\":%.2f,\"content_hash\":\"%s\"}\n",
         repo, file_path, filename, ext, lang, size_bytes, loc, role, role, lang, importance_score, content_hash
         
-    # Emit processing event every 1000 files
+    # Emit processing event every 1000 files (with memory monitoring)
     if (files_processed % 1000 == 0) {
-        print_event("batch_progress", sprintf("Processed %d files", files_processed))
+        print_event("batch_progress", sprintf("Processed %d files, valid: %d, invalid: %d", files_processed, valid_records, invalid_records))
+        
+        # Simple memory usage warning for large record counts
+        if (valid_records > 100000) {
+            printf "WARN: Processing large dataset (%d records) - monitor memory usage\n", valid_records > "/dev/stderr"
+        }
     }
 }
 
@@ -109,13 +147,19 @@ END {
     total_time = end_time - start_time
     files_per_second = (total_time > 0) ? files_processed / total_time : files_processed
     
-    print_event("batch_optimize_complete", sprintf("Processed %d files in %.3f seconds (%.2f files/sec)", files_processed, total_time, files_per_second))
+    print_event("batch_optimize_complete", sprintf("Processed %d files in %.3f seconds (%.2f files/sec) - Valid: %d, Invalid: %d", files_processed, total_time, files_per_second, valid_records, invalid_records))
+    
+    # Report validation statistics
+    if (invalid_records > 0) {
+        printf "WARNING: %d invalid records encountered (%.2f%% error rate)\n", invalid_records, (invalid_records * 100.0 / (valid_records + invalid_records)) > "/dev/stderr"
+    }
 }
 
 function detect_file_role(filename) {
-    for (pattern in role_patterns) {
-        if (match(filename, pattern)) {
-            return role_patterns[pattern]
+    # Use pre-compiled patterns for better performance
+    for (i = 1; i <= num_patterns; i++) {
+        if (match(filename, role_regexes[i])) {
+            return role_values[i]
         }
     }
     return "general"
@@ -142,9 +186,9 @@ function calculate_importance(role, lang, loc, size_bytes) {
     else if (loc > 100) base_score += 0.1
     else if (loc < 10) base_score -= 0.1
     
-    # Ensure score is in reasonable range
-    if (base_score > 2.0) base_score = 2.0
-    if (base_score < 0.1) base_score = 0.1
+    # Ensure score is in configurable range
+    if (base_score > MAX_IMPORTANCE) base_score = MAX_IMPORTANCE
+    if (base_score < MIN_IMPORTANCE) base_score = MIN_IMPORTANCE
     
     return base_score
 }

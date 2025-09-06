@@ -123,9 +123,20 @@ batch_calculate_hashes() {
     
     # Process files in batches to optimize hash calculation
     local temp_batch
-    temp_batch=$(mktemp)
+    temp_batch=$(mktemp) || {
+        echo "ERROR: Failed to create secure temporary batch file" >&2
+        return 1
+    }
     local batch_count=0
     local total_files=0
+    
+    # Set up cleanup for interruption
+    local cleanup_hash_batch() {
+        echo "Cleaning up hash batch processing..." >&2
+        rm -f "$temp_batch"
+        exit 1
+    }
+    trap cleanup_hash_batch INT TERM QUIT
     
     echo "Starting batch hash calculation..." >&2
     
@@ -139,7 +150,11 @@ batch_calculate_hashes() {
         
         # Process batch when it reaches configured size
         if [[ $batch_count -ge $BATCH_HASH_SIZE ]]; then
-            process_hash_batch "$temp_batch" "$output_file"
+            if ! process_hash_batch "$temp_batch" "$output_file"; then
+                echo "ERROR: Failed to process hash batch at $total_files files" >&2
+                rm -f "$temp_batch"
+                return 1
+            fi
             > "$temp_batch"  # Clear batch file
             batch_count=0
             echo "Processed batch ($total_files files so far)..." >&2
@@ -148,7 +163,11 @@ batch_calculate_hashes() {
     
     # Process remaining files in final batch
     if [[ $batch_count -gt 0 ]]; then
-        process_hash_batch "$temp_batch" "$output_file"
+        if ! process_hash_batch "$temp_batch" "$output_file"; then
+            echo "ERROR: Failed to process final hash batch" >&2
+            rm -f "$temp_batch"
+            return 1
+        fi
     fi
     
     rm -f "$temp_batch"
