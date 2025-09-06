@@ -128,13 +128,34 @@ BEGIN {
     printf "{\"repo\":\"%s\",\"path\":\"%s\",\"file_name\":\"%s\",\"ext\":\"%s\",\"lang\":\"%s\",\"size_bytes\":%s,\"loc\":%s,\"roles\":[\"%s\"],\"summary\":\"File with role: %s, language: %s\",\"imports\":[],\"symbols\":[],\"importance_score\":%.2f,\"content_hash\":\"%s\"}\n",
         repo, file_path, filename, ext, lang, size_bytes, loc, role, role, lang, importance_score, content_hash
         
-    # Emit processing event every 1000 files (with memory monitoring)
+    # Emit processing event every 1000 files (with enhanced monitoring)
     if (files_processed % 1000 == 0) {
         print_event("batch_progress", sprintf("Processed %d files, valid: %d, invalid: %d", files_processed, valid_records, invalid_records))
         
-        # Simple memory usage warning for large record counts
-        if (valid_records > 100000) {
-            printf "WARN: Processing large dataset (%d records) - monitor memory usage\n", valid_records > "/dev/stderr"
+        # Progressive memory usage warnings with specific recommendations
+        if (valid_records > 500000) {
+            printf "CRITICAL: Processing very large dataset (%d records) - consider splitting input or using streaming mode\n", valid_records > "/dev/stderr"
+            print_event("memory_critical", sprintf("Processing %d records may cause memory exhaustion", valid_records))
+        } else if (valid_records > 200000) {
+            printf "WARN: Processing large dataset (%d records) - monitor system memory usage\n", valid_records > "/dev/stderr"
+            print_event("memory_warning", sprintf("Large dataset processing: %d records", valid_records))
+        } else if (valid_records > 100000) {
+            printf "INFO: Processing medium dataset (%d records) - performance monitoring active\n", valid_records > "/dev/stderr"
+        }
+        
+        # Check processing rate for performance issues
+        if (files_processed > 1000) {
+            "date +%s.%3N 2>/dev/null || date +%s" | getline current_time
+            close("date +%s.%3N 2>/dev/null || date +%s")
+            
+            elapsed_time = current_time - start_time
+            if (elapsed_time > 0) {
+                processing_rate = files_processed / elapsed_time
+                if (processing_rate < 100) {
+                    printf "WARN: Low processing rate (%.1f files/sec) - system may be under stress\n", processing_rate > "/dev/stderr"
+                    print_event("performance_warning", sprintf("Low processing rate: %.1f files/sec", processing_rate))
+                }
+            }
         }
     }
 }

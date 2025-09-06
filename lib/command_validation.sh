@@ -26,7 +26,7 @@ validate_command() {
     fi
 }
 
-# Get file size with fallbacks
+# Get file size with enhanced cross-platform fallbacks
 get_file_size() {
     local file="$1"
     local size=0
@@ -36,26 +36,44 @@ get_file_size() {
         return
     fi
     
-    # Primary: stat command (most reliable)
+    # Primary: stat command with comprehensive platform support
     if validate_command "stat"; then
         if [[ "$OSTYPE" =~ darwin ]]; then
+            # macOS/BSD stat
             size=$(stat -f "%z" "$file" 2>/dev/null || echo "0")
+        elif [[ "$OSTYPE" =~ (freebsd|openbsd|netbsd) ]]; then
+            # BSD variants
+            size=$(stat -f "%z" "$file" 2>/dev/null || echo "0")
+        elif [[ "$OSTYPE" =~ solaris ]]; then
+            # Solaris stat (try both GNU and traditional)
+            size=$(stat -c "%s" "$file" 2>/dev/null || stat -x "$file" 2>/dev/null | awk '/Size:/ {print $2}' || echo "0")
         else
+            # Linux and other GNU stat
             size=$(stat -c "%s" "$file" 2>/dev/null || echo "0")
         fi
-    # Fallback 1: wc -c (byte count)
+    # Fallback 1: find command (very portable)
+    elif validate_command "find"; then
+        size=$(find "$file" -printf "%s" 2>/dev/null || echo "0")
+    # Fallback 2: wc -c (byte count - highly portable)
     elif validate_command "wc"; then
-        size=$(wc -c < "$file" 2>/dev/null | tr -d ' ' || echo "0")
-    # Fallback 2: ls -l parsing (less reliable but universal)
+        size=$(wc -c < "$file" 2>/dev/null | tr -d ' \t' || echo "0")
+    # Fallback 3: ls -l parsing (universal but slower)
     elif validate_command "ls"; then
         size=$(ls -l "$file" 2>/dev/null | awk '{print $5}' || echo "0")
+    # Last resort: du command
+    elif validate_command "du"; then
+        size=$(du -b "$file" 2>/dev/null | cut -f1 || echo "0")
     fi
     
-    # Ensure numeric result
-    [[ "$size" =~ ^[0-9]+$ ]] && echo "$size" || echo "0"
+    # Ensure numeric result and handle edge cases
+    if [[ "$size" =~ ^[0-9]+$ ]] && [[ $size -ge 0 ]]; then
+        echo "$size"
+    else
+        echo "0"
+    fi
 }
 
-# Get file modification time with fallbacks
+# Get file modification time with enhanced cross-platform fallbacks
 get_file_mtime() {
     local file="$1"
     local mtime=0
@@ -65,25 +83,57 @@ get_file_mtime() {
         return
     fi
     
-    # Primary: stat command
+    # Primary: stat command with comprehensive platform support
     if validate_command "stat"; then
         if [[ "$OSTYPE" =~ darwin ]]; then
+            # macOS/BSD stat
             mtime=$(stat -f "%m" "$file" 2>/dev/null || echo "0")
+        elif [[ "$OSTYPE" =~ (freebsd|openbsd|netbsd) ]]; then
+            # BSD variants
+            mtime=$(stat -f "%m" "$file" 2>/dev/null || echo "0")
+        elif [[ "$OSTYPE" =~ solaris ]]; then
+            # Solaris - try GNU stat first, then traditional
+            mtime=$(stat -c "%Y" "$file" 2>/dev/null || stat -x "$file" 2>/dev/null | awk '/Modify:/ {print $2}' | sed 's/\..*//' || echo "0")
         else
+            # Linux and other GNU stat
             mtime=$(stat -c "%Y" "$file" 2>/dev/null || echo "0")
         fi
-    # Fallback 1: date command with file reference
+    # Fallback 1: find command (very portable)
+    elif validate_command "find"; then
+        mtime=$(find "$file" -printf "%T@" 2>/dev/null | cut -d. -f1 || echo "0")
+    # Fallback 2: date command with file reference (GNU coreutils)
     elif validate_command "date"; then
-        # This is less portable but may work
-        mtime=$(date -r "$file" +%s 2>/dev/null || echo "0")
-    # Fallback 2: ls -l with date parsing (complex, avoid if possible)
+        # Try different date command variants
+        if [[ "$OSTYPE" =~ (darwin|freebsd|openbsd|netbsd) ]]; then
+            # BSD date
+            mtime=$(stat -f "%m" "$file" 2>/dev/null || echo "0")
+        else
+            # GNU date
+            mtime=$(date -r "$file" +%s 2>/dev/null || echo "0")
+        fi
+    # Fallback 3: ls with date parsing (less reliable)
+    elif validate_command "ls" && validate_command "awk"; then
+        # Parse ls output to get approximate timestamp (less accurate)
+        local ls_time
+        ls_time=$(ls -l --time-style=+%s "$file" 2>/dev/null | awk '{print $6}')
+        if [[ "$ls_time" =~ ^[0-9]+$ ]]; then
+            mtime="$ls_time"
+        else
+            # Fallback: current time
+            mtime=$(date +%s 2>/dev/null || echo "$(( $(date +%Y) - 1970) * 31536000))")
+        fi
+    # Last resort: current time
     else
-        # Return current time as fallback
         mtime=$(date +%s 2>/dev/null || echo "0")
     fi
     
-    # Ensure numeric result
-    [[ "$mtime" =~ ^[0-9]+$ ]] && echo "$mtime" || echo "0"
+    # Ensure numeric result and reasonable bounds
+    if [[ "$mtime" =~ ^[0-9]+$ ]] && [[ $mtime -gt 0 ]] && [[ $mtime -lt 2147483647 ]]; then
+        echo "$mtime"
+    else
+        # Return a reasonable default (year 2000 epoch)
+        echo "946684800"
+    fi
 }
 
 # Count lines with fallbacks

@@ -44,11 +44,20 @@ init_cache() {
     
     emit_cache_event "cache_init_start" "Initializing cache system" "$trace_id"
     
-    # Create cache directories
-    mkdir -p "$CACHE_DIR" || {
-        emit_cache_event "cache_init_error" "Failed to create cache directory" "$trace_id"
+    # Create cache directories with detailed error reporting
+    if ! mkdir -p "$CACHE_DIR" 2>/dev/null; then
+        local error_details=""
+        if [[ ! -w "$(dirname "$CACHE_DIR")" ]]; then
+            error_details="Permission denied: cannot write to parent directory $(dirname "$CACHE_DIR")"
+        elif [[ $(df "$CACHE_DIR" 2>/dev/null | awk 'NR==2 {print $4}') -lt 1024 ]]; then
+            error_details="Insufficient disk space: less than 1MB available"
+        else
+            error_details="Unknown filesystem error creating directory $CACHE_DIR"
+        fi
+        emit_cache_event "cache_init_error" "Failed to create cache directory: $error_details" "$trace_id"
+        echo "ERROR: Cache initialization failed - $error_details" >&2
         return 1
-    }
+    fi
     
     # Initialize cache databases if they don't exist
     if [[ ! -f "$CONTENT_HASH_CACHE" ]]; then
@@ -118,9 +127,11 @@ fast_change_detection() {
             ((changed_count++))
         fi
         
-        # Emit progress every 1000 files
+        # Emit progress every 1000 files with memory monitoring
         if [[ $((total_files % 1000)) -eq 0 ]]; then
             emit_cache_event "change_detect_progress" "Processed $total_files files ($changed_count changed, $cached_count cached)" "$trace_id"
+            # Memory monitoring for large datasets
+            monitor_memory_usage "$total_files" "$trace_id"
         fi
     done < "$file_list"
     
@@ -417,14 +428,105 @@ cleanup_cache() {
 }
 
 # Emit cache-specific observability event
+# Get current memory usage information
+get_memory_info() {
+    local memory_info=""
+    
+    # Try different methods based on OS
+    if [[ "$OSTYPE" =~ darwin ]]; then
+        # macOS - use vm_stat for memory info
+        if command -v vm_stat >/dev/null 2>&1; then
+            local vm_output
+            vm_output=$(vm_stat 2>/dev/null)
+            if [[ -n "$vm_output" ]]; then
+                local free_pages used_pages
+                free_pages=$(echo "$vm_output" | awk '/Pages free:/ {print $3}' | tr -d '.')
+                used_pages=$(echo "$vm_output" | awk '/Pages active:/ {print $3}' | tr -d '.')
+                if [[ -n "$free_pages" ]] && [[ -n "$used_pages" ]] && [[ $((free_pages + used_pages)) -gt 0 ]]; then
+                    local used_percent=$((used_pages * 100 / (free_pages + used_pages)))
+                    memory_info="used_percent:${used_percent}%"
+                fi
+            fi
+        fi
+    elif [[ -r "/proc/meminfo" ]]; then
+        # Linux
+        local mem_total mem_available mem_used
+        mem_total=$(awk '/MemTotal:/ {print $2}' /proc/meminfo 2>/dev/null)
+        mem_available=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo 2>/dev/null)
+        if [[ -n "$mem_total" ]] && [[ -n "$mem_available" ]]; then
+            mem_used=$((mem_total - mem_available))
+            local mem_used_percent=$((mem_used * 100 / mem_total))
+            memory_info="used_percent:${mem_used_percent}%,available_mb:$((mem_available / 1024))"
+        fi
+    fi
+    
+    # Fallback: try free command
+    if [[ -z "$memory_info" ]] && command -v free >/dev/null 2>&1; then
+        local free_output
+        free_output=$(free -m 2>/dev/null | awk '/^Mem:/ {if($2>0) print "used_percent:"int($3*100/$2)"%,total_mb:"$2}')
+        memory_info="$free_output"
+    fi
+    
+    echo "$memory_info"
+}
+
+# Monitor memory usage and emit warnings
+monitor_memory_usage() {
+    local record_count="$1"
+    local trace_id="$2"
+    local warning_threshold=80  # Warning at 80% memory usage
+    
+    local memory_info
+    memory_info=$(get_memory_info)
+    
+    if [[ -n "$memory_info" ]]; then
+        # Extract memory usage percentage
+        local mem_percent
+        if [[ "$memory_info" =~ used_percent:([0-9]+)% ]]; then
+            mem_percent="${BASH_REMATCH[1]}"
+        fi
+        
+        # Emit memory event for significant checkpoints
+        if [[ $((record_count % 50000)) -eq 0 ]]; then
+            emit_cache_event "memory_monitor" "Memory usage: $memory_info, processing $record_count records" "$trace_id"
+        fi
+        
+        # Check for memory pressure
+        if [[ -n "$mem_percent" ]] && [[ $mem_percent -ge $warning_threshold ]]; then
+            emit_cache_event "memory_warning" "High memory usage detected: ${mem_percent}% with $record_count records being processed" "$trace_id"
+            echo "WARNING: High memory usage (${mem_percent}%) detected while processing $record_count records" >&2
+            echo "Consider reducing batch sizes or enabling streaming mode for large datasets" >&2
+            return 1  # Signal that memory pressure exists
+        fi
+        
+        # Special monitoring for very large datasets
+        if [[ $record_count -gt 500000 ]]; then
+            emit_cache_event "memory_large_dataset" "Processing very large dataset: $record_count records, memory: $memory_info" "$trace_id"
+            echo "INFO: Processing very large dataset ($record_count records) - monitoring memory usage" >&2
+        fi
+    fi
+    
+    return 0  # No memory pressure detected
+}
+
 emit_cache_event() {
     local event_type="$1"
     local message="$2"
     local trace_id="$3"
     
+    # Add memory info to critical events
+    local enhanced_message="$message"
+    if [[ "$event_type" =~ (complete|warning|error) ]]; then
+        local memory_info
+        memory_info=$(get_memory_info)
+        if [[ -n "$memory_info" ]]; then
+            enhanced_message="$message [memory: $memory_info]"
+        fi
+    fi
+    
     if [[ -w ".sourceatlas/events.jsonl" ]] || [[ -w ".sourceatlas/" ]]; then
         printf '{"timestamp":"%s","event":"%s","message":"%s","trace_id":"%s","component":"cache_optimizer"}\n' \
-            "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$event_type" "$message" "$trace_id" \
+            "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$event_type" "$enhanced_message" "$trace_id" \
             >> ".sourceatlas/events.jsonl" 2>/dev/null
     fi
 }

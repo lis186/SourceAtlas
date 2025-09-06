@@ -12,27 +12,83 @@ source "$SCRIPT_DIR/hash_cache.sh" 2>/dev/null || {
     echo "WARNING: Hash caching not available, using direct calculation" >&2
 }
 
-# Get number of CPU cores, default to 4 if detection fails
+# Get optimal number of workers with resource awareness and graceful degradation
 get_cpu_cores() {
+    local base_cores=4
+    local max_workers=16
+    local min_workers=2
+    
     # Use validated utility if available, otherwise fallback to original logic
     if command -v get_optimal_worker_count >/dev/null 2>&1; then
-        get_optimal_worker_count
+        base_cores=$(get_optimal_worker_count)
     else
-        # Original fallback logic with validation
-        local cores
+        # Enhanced CPU detection with better portability
         if validate_command "nproc" && command -v nproc >/dev/null 2>&1; then
-            cores=$(nproc 2>/dev/null || echo "4")
-        elif [[ "$OSTYPE" == "darwin"* ]] && validate_command "sysctl"; then
-            cores=$(sysctl -n hw.ncpu 2>/dev/null || echo "4")
-        elif [[ -r "/proc/cpuinfo" ]]; then
-            cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || echo "4")
+            base_cores=$(nproc 2>/dev/null || echo "4")
+        elif [[ "$OSTYPE" =~ darwin ]] && validate_command "sysctl"; then
+            base_cores=$(sysctl -n hw.ncpu 2>/dev/null || echo "4")
+        elif [[ "$OSTYPE" =~ linux ]] && [[ -r "/proc/cpuinfo" ]]; then
+            base_cores=$(grep -c "^processor" /proc/cpuinfo 2>/dev/null || echo "4")
+        elif [[ "$OSTYPE" =~ freebsd ]] && validate_command "sysctl"; then
+            base_cores=$(sysctl -n hw.ncpu 2>/dev/null || echo "4")
         else
-            cores=4
+            echo "INFO: Could not detect CPU cores, using default: 4" >&2
+            base_cores=4
         fi
-        
-        # Use nproc * 2 worker threads as specified in task.md
-        echo $((cores * 2))
     fi
+    
+    # Calculate initial worker count (cores * 2 as per task.md)
+    local workers=$((base_cores * 2))
+    
+    # Apply resource-aware degradation
+    local memory_mb=0
+    
+    # Check available memory for graceful degradation
+    if [[ "$OSTYPE" =~ darwin ]] && validate_command "sysctl"; then
+        memory_mb=$(sysctl -n hw.memsize 2>/dev/null | awk '{print int($1/1024/1024)}' || echo "0")
+    elif [[ -r "/proc/meminfo" ]]; then
+        memory_mb=$(awk '/MemAvailable:/ {print int($2/1024)}' /proc/meminfo 2>/dev/null || echo "0")
+    elif validate_command "free"; then
+        memory_mb=$(free -m 2>/dev/null | awk '/^Mem:/ {print $7}' || echo "0")
+    fi
+    
+    # Graceful degradation based on available memory
+    if [[ $memory_mb -gt 0 ]]; then
+        # Reduce workers if memory is constrained (< 2GB available)
+        if [[ $memory_mb -lt 2048 ]]; then
+            workers=$((workers / 2))
+            echo "INFO: Reducing worker count due to limited memory (${memory_mb}MB available)" >&2
+        # Further reduce for very low memory (< 1GB)
+        elif [[ $memory_mb -lt 1024 ]]; then
+            workers=$((base_cores / 2))
+            echo "WARN: Severely reducing worker count due to low memory (${memory_mb}MB available)" >&2
+        fi
+    fi
+    
+    # Check system load for additional degradation
+    if validate_command "uptime"; then
+        local load_avg
+        load_avg=$(uptime 2>/dev/null | sed 's/.*load average: \([0-9.]*\).*/\1/' || echo "0")
+        if command -v bc >/dev/null 2>&1; then
+            local high_load
+            high_load=$(echo "$load_avg > $base_cores * 2" | bc 2>/dev/null || echo "0")
+            if [[ "$high_load" == "1" ]]; then
+                workers=$((workers / 2))
+                echo "INFO: Reducing worker count due to high system load ($load_avg)" >&2
+            fi
+        fi
+    fi
+    
+    # Enforce bounds with logging
+    if [[ $workers -gt $max_workers ]]; then
+        workers=$max_workers
+        echo "INFO: Capping workers at maximum: $max_workers" >&2
+    elif [[ $workers -lt $min_workers ]]; then
+        workers=$min_workers
+        echo "INFO: Using minimum worker count: $min_workers" >&2
+    fi
+    
+    echo "$workers"
 }
 
 # Emit observability event
