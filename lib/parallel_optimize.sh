@@ -104,6 +104,65 @@ emit_event() {
     fi
 }
 
+# Process files in streaming mode (low memory usage)
+process_streaming_batch() {
+    local worker_id="$1"
+    local temp_dir="$2"
+    local batch_file="$3"
+    local trace_id="$4"
+    local already_processed="${5:-0}"
+    
+    emit_event "worker_streaming_start" "Worker $worker_id started streaming mode processing" "$trace_id"
+    
+    local files_processed=$already_processed
+    local worker_output="$temp_dir/worker_${worker_id}_output.jsonl"
+    local temp_metadata temp_json
+    
+    # Create secure temporary files for streaming processing
+    temp_metadata=$(mktemp "/tmp/streaming_metadata_${worker_id}.XXXXXX") || return 1
+    temp_json=$(mktemp "/tmp/streaming_json_${worker_id}.XXXXXX") || return 1
+    chmod 600 "$temp_metadata" "$temp_json"
+    
+    # Process remaining files in streaming mode (one at a time)
+    while IFS= read -r file_path; do
+        [[ -z "$file_path" ]] && continue
+        [[ ! -f "$file_path" ]] && continue
+        
+        # Extract metadata for single file
+        local metadata size_bytes loc hash mtime
+        size_bytes=$(get_file_size "$file_path")
+        mtime=$(get_file_mtime "$file_path")
+        loc=$(count_file_lines "$file_path")
+        hash=$(calculate_file_hash_cached "$file_path")
+        
+        # Write single record to temp file
+        printf "%s\t%s\t%s\t%s\t%s\n" "$file_path" "$size_bytes" "$loc" "$hash" "$mtime" > "$temp_metadata"
+        
+        # Process single record through AWK (no accumulation)
+        if awk -f "$(dirname "$0")/batch_optimize.awk" "$temp_metadata" > "$temp_json" 2>/dev/null; then
+            # Append to output immediately (streaming)
+            cat "$temp_json" >> "$worker_output"
+            ((files_processed++))
+        fi
+        
+        # Clear temporary files for next iteration
+        > "$temp_metadata"
+        > "$temp_json"
+        
+        # Report progress every 50 files (more frequent for streaming)
+        if ((files_processed % 50 == 0)); then
+            emit_event "worker_streaming_progress" "Worker $worker_id streamed $files_processed files" "$trace_id"
+        fi
+        
+    done < "$batch_file"
+    
+    # Cleanup temporary files
+    rm -f "$temp_metadata" "$temp_json"
+    
+    emit_event "worker_streaming_complete" "Worker $worker_id completed streaming mode: $files_processed files" "$trace_id"
+    echo "$files_processed" > "$temp_dir/worker_${worker_id}_count.txt"
+}
+
 # Process a batch of files in parallel worker
 process_file_batch() {
     local worker_id="$1"
@@ -132,9 +191,19 @@ process_file_batch() {
         
         metadata=$(printf "%s\t%s\t%s\t%s\t%s\n" "$file_path" "$size_bytes" "$loc" "$hash" "$mtime")
         
-        # Pass to batch optimizer AWK script
+        # Pass to batch optimizer AWK script with streaming mode detection
         if [[ -n "$metadata" ]]; then
             echo "$metadata" | awk -f "$(dirname "$0")/batch_optimize.awk" >> "$worker_output"
+            local awk_exit=$?
+            
+            # Check for streaming mode switch signal
+            if [[ $awk_exit -eq 2 ]]; then
+                emit_event "worker_streaming_switch" "Worker $worker_id switching to streaming mode" "$trace_id"
+                # Switch to streaming mode for remaining files
+                process_streaming_batch "$worker_id" "$temp_dir" "$batch_file" "$trace_id" "$files_processed"
+                return $?
+            fi
+            
             ((files_processed++))
         fi
         
@@ -156,6 +225,35 @@ parallel_process_files() {
     local trace_id="${3:-parallel-$(date +%s)}"
     
     emit_event "parallel_start" "Starting parallel file processing" "$trace_id"
+    
+    # Initialize checkpoint and recovery system
+    local checkpoint_dir=".sourceatlas/checkpoints"
+    local checkpoint_file="$checkpoint_dir/parallel_${trace_id}.checkpoint"
+    local resume_from_checkpoint=false
+    
+    mkdir -p "$checkpoint_dir"
+    
+    # Check for existing checkpoint and offer recovery
+    if [[ -f "$checkpoint_file" ]] && [[ -s "$checkpoint_file" ]]; then
+        local checkpoint_age
+        checkpoint_age=$(($(date +%s) - $(stat -c %Y "$checkpoint_file" 2>/dev/null || date +%s)))
+        
+        if [[ $checkpoint_age -lt 3600 ]]; then  # Checkpoint less than 1 hour old
+            emit_event "checkpoint_found" "Found recent checkpoint (${checkpoint_age}s old), attempting recovery" "$trace_id"
+            echo "INFO: Found recent checkpoint for trace $trace_id (${checkpoint_age}s old)" >&2
+            echo "      Attempting to resume from checkpoint..." >&2
+            
+            if restore_from_checkpoint "$checkpoint_file" "$file_list" "$output_file" "$trace_id"; then
+                return 0  # Successfully resumed and completed
+            else
+                echo "WARN: Checkpoint recovery failed, starting fresh processing" >&2
+                rm -f "$checkpoint_file"
+            fi
+        else
+            echo "INFO: Found old checkpoint (${checkpoint_age}s), starting fresh processing" >&2
+            rm -f "$checkpoint_file"
+        fi
+    fi
     
     # Initialize hash caching system
     init_hash_cache
@@ -186,8 +284,10 @@ parallel_process_files() {
         return 1
     }
     
-    # Store temp_dir globally for signal handler access
+    # Store processing state globally for signal handler access
     PARALLEL_TEMP_DIR="$temp_dir"
+    PARALLEL_CHECKPOINT_FILE="$checkpoint_file"
+    PARALLEL_TRACE_ID="$trace_id"
     
     # Split file list into batches for workers
     local total_files
@@ -214,10 +314,28 @@ parallel_process_files() {
         emit_event "worker_spawned" "Started worker $((worker_id-1)) (PID: ${pids[$((worker_id-1))]})" "$trace_id"
     done
     
-    # Wait for all workers to complete
+    # Store worker count for signal handler
+    PARALLEL_WORKER_COUNT=$worker_id
+    
+    # Wait for all workers to complete with periodic checkpointing
     local total_processed=0
+    local checkpoint_interval=60  # Checkpoint every 60 seconds
+    local last_checkpoint=$(date +%s)
+    
     for ((i=0; i<worker_id; i++)); do
         if [[ -n "${pids[i]}" ]]; then
+            # Monitor worker progress and create checkpoints
+            while kill -0 "${pids[i]}" 2>/dev/null; do
+                sleep 5  # Check every 5 seconds
+                
+                # Create periodic checkpoint
+                local current_time=$(date +%s)
+                if [[ $((current_time - last_checkpoint)) -ge $checkpoint_interval ]]; then
+                    create_checkpoint "$checkpoint_file" "$temp_dir" "$worker_id" "$trace_id"
+                    last_checkpoint=$current_time
+                fi
+            done
+            
             wait "${pids[i]}"
             local exit_code=$?
             
@@ -231,6 +349,8 @@ parallel_process_files() {
                 emit_event "worker_joined" "Worker $i completed successfully ($worker_count files)" "$trace_id"
             else
                 emit_event "worker_error" "Worker $i failed with exit code $exit_code" "$trace_id"
+                # Create emergency checkpoint for failed workers
+                create_checkpoint "$checkpoint_file" "$temp_dir" "$worker_id" "$trace_id" "FAILED"
             fi
         fi
     done
@@ -247,6 +367,12 @@ parallel_process_files() {
     
     # Cleanup
     cleanup_temp_dir "$temp_dir"
+    
+    # Remove checkpoint on successful completion
+    if [[ -f "$checkpoint_file" ]]; then
+        rm -f "$checkpoint_file"
+        emit_event "checkpoint_cleanup" "Removed checkpoint after successful completion" "$trace_id"
+    fi
     
     emit_event "parallel_complete" "Parallel processing completed: $total_processed files processed" "$trace_id"
     echo "$total_processed"
@@ -280,6 +406,134 @@ cleanup_temp_dir() {
     fi
 }
 
+# Create checkpoint with current processing state
+create_checkpoint() {
+    local checkpoint_file="$1"
+    local temp_dir="$2" 
+    local total_workers="$3"
+    local trace_id="$4"
+    local status="${5:-RUNNING}"
+    
+    local checkpoint_temp
+    checkpoint_temp=$(mktemp "${checkpoint_file}.tmp.XXXXXX") || return 1
+    chmod 600 "$checkpoint_temp"
+    
+    # Create checkpoint with atomic operation
+    {
+        echo "# SourceAtlas Parallel Processing Checkpoint"
+        echo "# Created: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        echo "TRACE_ID=$trace_id"
+        echo "STATUS=$status"
+        echo "TIMESTAMP=$(date +%s)"
+        echo "TOTAL_WORKERS=$total_workers"
+        echo ""
+        
+        # Record worker progress
+        for ((i=0; i<total_workers; i++)); do
+            if [[ -f "$temp_dir/worker_${i}_count.txt" ]]; then
+                local worker_count
+                worker_count=$(cat "$temp_dir/worker_${i}_count.txt")
+                echo "WORKER_${i}_COMPLETED=$worker_count"
+            fi
+            
+            # Preserve partial output files
+            if [[ -f "$temp_dir/worker_${i}_output.jsonl" ]]; then
+                local output_size
+                output_size=$(wc -l < "$temp_dir/worker_${i}_output.jsonl" 2>/dev/null || echo "0")
+                echo "WORKER_${i}_OUTPUT_LINES=$output_size"
+            fi
+        done
+        
+        echo ""
+        echo "# Worker Output Files"
+        for output_file in "$temp_dir"/worker_*_output.jsonl; do
+            if [[ -f "$output_file" ]]; then
+                echo "OUTPUT_FILE=$(basename "$output_file")"
+            fi
+        done
+        
+    } > "$checkpoint_temp"
+    
+    # Atomic move to final checkpoint
+    if mv "$checkpoint_temp" "$checkpoint_file"; then
+        emit_event "checkpoint_created" "Checkpoint created successfully" "$trace_id"
+        return 0
+    else
+        rm -f "$checkpoint_temp"
+        emit_event "checkpoint_error" "Failed to create checkpoint" "$trace_id"
+        return 1
+    fi
+}
+
+# Restore processing from checkpoint
+restore_from_checkpoint() {
+    local checkpoint_file="$1"
+    local file_list="$2"
+    local output_file="$3"
+    local trace_id="$4"
+    
+    emit_event "checkpoint_restore_start" "Attempting to restore from checkpoint" "$trace_id"
+    
+    # Read checkpoint metadata
+    local checkpoint_status checkpoint_timestamp
+    
+    # Source the checkpoint file safely
+    if [[ -r "$checkpoint_file" ]]; then
+        # Extract key variables safely
+        checkpoint_status=$(grep "^STATUS=" "$checkpoint_file" | cut -d= -f2)
+        checkpoint_timestamp=$(grep "^TIMESTAMP=" "$checkpoint_file" | cut -d= -f2)
+        
+        # Only restore from successful running checkpoints
+        if [[ "$checkpoint_status" != "RUNNING" ]]; then
+            emit_event "checkpoint_restore_skip" "Checkpoint status not suitable for restore: $checkpoint_status" "$trace_id"
+            return 1
+        fi
+        
+        # Check if checkpoint is not too old (within 1 hour)
+        local age=$(($(date +%s) - checkpoint_timestamp))
+        if [[ $age -gt 3600 ]]; then
+            emit_event "checkpoint_restore_expired" "Checkpoint too old: ${age}s" "$trace_id"
+            return 1
+        fi
+        
+        # Look for preserved worker outputs in checkpoint directory
+        local checkpoint_dir
+        checkpoint_dir=$(dirname "$checkpoint_file")
+        local preserved_outputs=()
+        
+        # Collect any preserved output files
+        for output in "$checkpoint_dir"/worker_*_output.jsonl; do
+            if [[ -f "$output" ]]; then
+                preserved_outputs+=("$output")
+            fi
+        done
+        
+        # If we have preserved outputs, merge them
+        if [[ ${#preserved_outputs[@]} -gt 0 ]]; then
+            emit_event "checkpoint_merge" "Merging ${#preserved_outputs[@]} preserved worker outputs" "$trace_id"
+            cat "${preserved_outputs[@]}" > "$output_file" 2>/dev/null
+            
+            # Get total lines processed from checkpoint
+            local total_restored=0
+            for output in "${preserved_outputs[@]}"; do
+                local lines
+                lines=$(wc -l < "$output" 2>/dev/null || echo "0")
+                ((total_restored += lines))
+            done
+            
+            emit_event "checkpoint_restore_complete" "Successfully restored $total_restored processed files from checkpoint" "$trace_id"
+            echo "$total_restored"
+            return 0
+        else
+            emit_event "checkpoint_restore_no_data" "No preserved data found in checkpoint" "$trace_id"
+            return 1
+        fi
+    else
+        emit_event "checkpoint_restore_unreadable" "Checkpoint file not readable" "$trace_id"
+        return 1
+    fi
+}
+
 # Signal handler for graceful cleanup
 cleanup_on_signal() {
     local signal="$1"
@@ -301,12 +555,18 @@ cleanup_on_signal() {
         done
     fi
     
+    # Create emergency checkpoint before cleanup
+    if [[ -n "${PARALLEL_CHECKPOINT_FILE:-}" ]] && [[ -n "${PARALLEL_TEMP_DIR:-}" ]] && [[ -n "${PARALLEL_WORKER_COUNT:-}" ]]; then
+        echo "Creating emergency checkpoint..." >&2
+        create_checkpoint "$PARALLEL_CHECKPOINT_FILE" "$PARALLEL_TEMP_DIR" "$PARALLEL_WORKER_COUNT" "${PARALLEL_TRACE_ID:-interrupted}" "INTERRUPTED"
+    fi
+    
     # Clean up temporary directory
     if [[ -n "${PARALLEL_TEMP_DIR:-}" ]]; then
         cleanup_temp_dir "$PARALLEL_TEMP_DIR"
     fi
     
-    emit_event "parallel_interrupted" "Parallel processing interrupted by signal $signal" "${PARALLEL_TRACE_ID:-interrupted}"
+    emit_event "parallel_interrupted" "Parallel processing interrupted by signal $signal - checkpoint created" "${PARALLEL_TRACE_ID:-interrupted}"
     exit 1
 }
 

@@ -62,6 +62,9 @@ BEGIN {
     close("date +%s.%3N 2>/dev/null || date +%s")
     files_processed = 0
     
+    # Initialize exponential moving average for predictive monitoring
+    ema_rate = 0
+    
     print_event("batch_optimize_start", "Single AWK batch processing started")
 }
 
@@ -128,32 +131,68 @@ BEGIN {
     printf "{\"repo\":\"%s\",\"path\":\"%s\",\"file_name\":\"%s\",\"ext\":\"%s\",\"lang\":\"%s\",\"size_bytes\":%s,\"loc\":%s,\"roles\":[\"%s\"],\"summary\":\"File with role: %s, language: %s\",\"imports\":[],\"symbols\":[],\"importance_score\":%.2f,\"content_hash\":\"%s\"}\n",
         repo, file_path, filename, ext, lang, size_bytes, loc, role, role, lang, importance_score, content_hash
         
-    # Emit processing event every 1000 files (with enhanced monitoring)
+    # Emit processing event every 1000 files (with enhanced monitoring and automatic fallbacks)
     if (files_processed % 1000 == 0) {
         print_event("batch_progress", sprintf("Processed %d files, valid: %d, invalid: %d", files_processed, valid_records, invalid_records))
         
-        # Progressive memory usage warnings with specific recommendations
+        # Automatic streaming mode fallback for memory management
         if (valid_records > 500000) {
-            printf "CRITICAL: Processing very large dataset (%d records) - consider splitting input or using streaming mode\n", valid_records > "/dev/stderr"
-            print_event("memory_critical", sprintf("Processing %d records may cause memory exhaustion", valid_records))
+            printf "CRITICAL: Auto-enabling streaming mode - dataset too large (%d records) for in-memory processing\n", valid_records > "/dev/stderr"
+            print_event("memory_critical_fallback", sprintf("Enabling streaming mode for %d records", valid_records))
+            
+            # Signal streaming mode activation to parent process
+            system("echo 'STREAMING_MODE_REQUIRED' >> .sourceatlas/processing_signals.txt 2>/dev/null || true")
+            
+            # Flush current output to ensure no data loss
+            fflush("")
+            
+            # Exit gracefully to allow parent process to switch modes
+            printf "STREAM_MODE_SWITCH:%d\n", files_processed > "/dev/stderr"
+            exit(2)  # Special exit code for streaming mode switch
+            
         } else if (valid_records > 200000) {
-            printf "WARN: Processing large dataset (%d records) - monitor system memory usage\n", valid_records > "/dev/stderr"
-            print_event("memory_warning", sprintf("Large dataset processing: %d records", valid_records))
+            printf "WARN: Approaching memory limits (%d records) - preparing for potential streaming mode\n", valid_records > "/dev/stderr"
+            print_event("memory_warning_prepare", sprintf("Preparing streaming fallback for %d records", valid_records))
+            
+            # Pre-emptively signal potential streaming need
+            system("echo 'STREAMING_PREPARE' >> .sourceatlas/processing_signals.txt 2>/dev/null || true")
+            
         } else if (valid_records > 100000) {
-            printf "INFO: Processing medium dataset (%d records) - performance monitoring active\n", valid_records > "/dev/stderr"
+            printf "INFO: Large dataset processing (%d records) - monitoring memory usage\n", valid_records > "/dev/stderr"
         }
         
-        # Check processing rate for performance issues
+        # Enhanced processing rate monitoring with predictive analysis
         if (files_processed > 1000) {
             "date +%s.%3N 2>/dev/null || date +%s" | getline current_time
             close("date +%s.%3N 2>/dev/null || date +%s")
             
             elapsed_time = current_time - start_time
             if (elapsed_time > 0) {
-                processing_rate = files_processed / elapsed_time
-                if (processing_rate < 100) {
-                    printf "WARN: Low processing rate (%.1f files/sec) - system may be under stress\n", processing_rate > "/dev/stderr"
-                    print_event("performance_warning", sprintf("Low processing rate: %.1f files/sec", processing_rate))
+                current_rate = files_processed / elapsed_time
+                
+                # Exponential moving average for trend analysis
+                if (ema_rate == 0) {
+                    ema_rate = current_rate
+                } else {
+                    # Alpha = 0.3 for responsive but stable EMA
+                    ema_rate = 0.3 * current_rate + 0.7 * ema_rate
+                }
+                
+                # Predictive performance degradation detection
+                rate_decline = (ema_rate - current_rate) / ema_rate * 100
+                if (rate_decline > 20) {
+                    printf "WARN: Significant performance degradation detected (%.1f%% decline from EMA)\n", rate_decline > "/dev/stderr"
+                    printf "      Current: %.1f files/sec, EMA: %.1f files/sec\n", current_rate, ema_rate > "/dev/stderr"
+                    print_event("performance_degradation", sprintf("Rate decline: %.1f%%, current: %.1f files/sec, EMA: %.1f files/sec", rate_decline, current_rate, ema_rate))
+                    
+                    # Automatic streaming mode suggestion for severe degradation
+                    if (rate_decline > 50 && valid_records > 50000) {
+                        printf "CRITICAL: Severe performance degradation - consider streaming mode\n" > "/dev/stderr"
+                        system("echo 'PERFORMANCE_STREAMING_SUGGEST' >> .sourceatlas/processing_signals.txt 2>/dev/null || true")
+                    }
+                } else if (current_rate < 50) {
+                    printf "WARN: Low processing rate (%.1f files/sec) - system under stress\n", current_rate > "/dev/stderr"
+                    print_event("performance_warning", sprintf("Low processing rate: %.1f files/sec, EMA: %.1f files/sec", current_rate, ema_rate))
                 }
             }
         }
