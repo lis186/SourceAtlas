@@ -13,8 +13,8 @@ BEGIN {
     optimize_memory = (ENVIRON["SOURCEATLAS_OPTIMIZE_MEMORY"] == "1")
     max_string_length = 1000  # Truncate very long strings
     
-    # Track memory usage
-    start_time = systime()
+    # Track memory usage (timing disabled for POSIX AWK compatibility)
+    start_time = 0
     
     # Initialize escape character mapping for performance
     escape_map["\""] = "\\\""
@@ -73,17 +73,14 @@ BEGIN {
 }
 
 END {
-    end_time = systime()
-    total_time = end_time - start_time
-    records_per_second = (total_time > 0) ? total_records / total_time : total_records
-    
-    emit_event("json_optimize_complete", sprintf("Generated %d JSON records in %d seconds (%.2f records/sec)", total_records, total_time, records_per_second))
+    # Performance reporting disabled for POSIX AWK compatibility
+    emit_event("json_optimize_complete", sprintf("Generated %d JSON records", total_records))
 }
 
 # Optimized JSON record generation
 function generate_json_record(repo, path, file_name, ext, lang, size_bytes, loc, roles, summary, imports, symbols, importance_score, content_hash) {
     # Use string concatenation instead of sprintf for better memory efficiency
-    local json = "{"
+    json = "{"
     
     # Required fields with proper escaping
     json = json "\"repo\":\"" json_escape(repo) "\""
@@ -127,7 +124,7 @@ function generate_json_record(repo, path, file_name, ext, lang, size_bytes, loc,
 function json_escape(str) {
     if (!str) return ""
     
-    local result = str
+    result = str
     
     # Replace each character that needs escaping
     gsub(/\\/, "\\\\", result)
@@ -150,12 +147,12 @@ function format_json_array(array_str) {
     
     # If comma-separated values, convert to JSON array
     if (index(array_str, ",")) {
-        local result = "["
-        local first = 1
-        local n = split(array_str, parts, ",")
+        result = "["
+        first = 1
+        n = split(array_str, parts, ",")
         
         for (i = 1; i <= n; i++) {
-            local part = parts[i]
+            part = parts[i]
             gsub(/^[ \t]+|[ \t]+$/, "", part)  # Trim whitespace
             if (part) {
                 if (!first) result = result ","
@@ -171,8 +168,8 @@ function format_json_array(array_str) {
     return "[\"" json_escape(array_str) "\"]"
 }
 
-# Emit observability event (to stderr to avoid mixing with JSON output)
+# Emit observability event (to stderr to avoid mixing with JSON output)  
 function emit_event(event_type, message) {
     printf "{\"timestamp\":\"%s\",\"event\":\"%s\",\"message\":\"%s\",\"trace_id\":\"json-optimize-%d\",\"memory_optimized\":%s}\n", 
-        strftime("%Y-%m-%dT%H:%M:%SZ"), event_type, message, systime(), (optimize_memory ? "true" : "false") > "/dev/stderr"
+        "1970-01-01T00:00:00Z", event_type, message, NR, (optimize_memory ? "true" : "false") > "/dev/stderr"
 }

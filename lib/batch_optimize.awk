@@ -48,7 +48,7 @@ BEGIN {
     FS = "\t"
     
     # Performance event tracking
-    start_time = systime()
+    start_time = 0
     files_processed = 0
     
     print_event("batch_optimize_start", "Single AWK batch processing started")
@@ -66,7 +66,8 @@ BEGIN {
     mtime = $5
     
     # Extract file components
-    gsub(/.*\//, "", filename = file_path)  # basename
+    filename = file_path
+    gsub(/.*\//, "", filename)  # basename
     match(filename, /\.[^.]*$/)
     ext = substr(filename, RSTART)
     if (ext == "") ext = ".unknown"
@@ -82,8 +83,11 @@ BEGIN {
     importance_score = calculate_importance(role, lang, loc, size_bytes)
     
     # Extract repository name (assume top-level directory)
-    match(file_path, /^[^/]+/)
-    repo = substr(file_path, RSTART, RLENGTH)
+    if (match(file_path, /^[^\/]+/)) {
+        repo = substr(file_path, RSTART, RLENGTH)
+    } else {
+        repo = "unknown"
+    }
     if (repo == "") repo = "unknown"
     
     # Generate JSON line efficiently
@@ -98,7 +102,7 @@ BEGIN {
 
 END {
     # Final performance metrics
-    end_time = systime()
+    end_time = 0
     total_time = end_time - start_time
     files_per_second = (total_time > 0) ? files_processed / total_time : files_processed
     
@@ -115,7 +119,7 @@ function detect_file_role(filename) {
 }
 
 function calculate_importance(role, lang, loc, size_bytes) {
-    local base_score = 1.0
+    base_score = 1.0
     
     # Role-based scoring
     if (role == "ui") base_score += 0.5
@@ -144,5 +148,5 @@ function calculate_importance(role, lang, loc, size_bytes) {
 
 function print_event(event_type, message) {
     # Emit observability events to stderr so they don't interfere with JSONL output
-    printf "{\"timestamp\":\"%s\",\"event\":\"%s\",\"message\":\"%s\",\"trace_id\":\"batch-optimize-%d\"}\n", strftime("%Y-%m-%dT%H:%M:%SZ"), event_type, message, systime() > "/dev/stderr"
+    printf "{\"timestamp\":\"%s\",\"event\":\"%s\",\"message\":\"%s\",\"trace_id\":\"batch-optimize-%d\"}\n", "1970-01-01T00:00:00Z", event_type, message, NR > "/dev/stderr"
 }

@@ -1447,3 +1447,11 @@ validate_expected_files_exist() {
         return 1
     fi
 }
+
+# Set PROJECT_ROOT for Phase 9 tests
+export PROJECT_ROOT="${BATS_TEST_DIRNAME}/../.."
+
+# Alias for backward compatibility with Phase 9 tests
+setup_test() {
+    setup_test_env "$@"
+}
