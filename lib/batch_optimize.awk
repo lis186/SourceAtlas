@@ -4,9 +4,24 @@
 # Optimized batch processing to reduce subprocess overhead by 5-20x
 
 BEGIN {
-    # Configuration parameters (with environment variable support)
+    # Configuration parameters (centralized via phase9_config.sh)
     MIN_IMPORTANCE = (ENVIRON["SOURCEATLAS_MIN_IMPORTANCE"] ? ENVIRON["SOURCEATLAS_MIN_IMPORTANCE"] : 0.1)
     MAX_IMPORTANCE = (ENVIRON["SOURCEATLAS_MAX_IMPORTANCE"] ? ENVIRON["SOURCEATLAS_MAX_IMPORTANCE"] : 2.0)
+    
+    # Memory management thresholds (configurable)
+    MEMORY_WARNING_THRESHOLD = (ENVIRON["SOURCEATLAS_MEMORY_WARNING_THRESHOLD"] ? ENVIRON["SOURCEATLAS_MEMORY_WARNING_THRESHOLD"] : 100000)
+    MEMORY_PREPARE_THRESHOLD = (ENVIRON["SOURCEATLAS_MEMORY_PREPARE_THRESHOLD"] ? ENVIRON["SOURCEATLAS_MEMORY_PREPARE_THRESHOLD"] : 200000)
+    MEMORY_CRITICAL_THRESHOLD = (ENVIRON["SOURCEATLAS_MEMORY_CRITICAL_THRESHOLD"] ? ENVIRON["SOURCEATLAS_MEMORY_CRITICAL_THRESHOLD"] : 500000)
+    
+    # EMA monitoring configuration
+    EMA_ALPHA = (ENVIRON["SOURCEATLAS_EMA_ALPHA"] ? ENVIRON["SOURCEATLAS_EMA_ALPHA"] : 0.3)
+    PERFORMANCE_WARNING_THRESHOLD = (ENVIRON["SOURCEATLAS_PERFORMANCE_WARNING_THRESHOLD"] ? ENVIRON["SOURCEATLAS_PERFORMANCE_WARNING_THRESHOLD"] : 20)
+    PERFORMANCE_CRITICAL_THRESHOLD = (ENVIRON["SOURCEATLAS_PERFORMANCE_CRITICAL_THRESHOLD"] ? ENVIRON["SOURCEATLAS_PERFORMANCE_CRITICAL_THRESHOLD"] : 50)
+    MIN_PROCESSING_RATE = (ENVIRON["SOURCEATLAS_MIN_PROCESSING_RATE"] ? ENVIRON["SOURCEATLAS_MIN_PROCESSING_RATE"] : 50)
+    
+    # Progress reporting interval
+    PROGRESS_INTERVAL = (ENVIRON["SOURCEATLAS_PROGRESS_INTERVAL"] ? ENVIRON["SOURCEATLAS_PROGRESS_INTERVAL"] : 1000)
+    
     REQUIRED_FIELDS = 5  # Expected number of tab-separated fields
     
     # Validation counters
@@ -131,12 +146,12 @@ BEGIN {
     printf "{\"repo\":\"%s\",\"path\":\"%s\",\"file_name\":\"%s\",\"ext\":\"%s\",\"lang\":\"%s\",\"size_bytes\":%s,\"loc\":%s,\"roles\":[\"%s\"],\"summary\":\"File with role: %s, language: %s\",\"imports\":[],\"symbols\":[],\"importance_score\":%.2f,\"content_hash\":\"%s\"}\n",
         repo, file_path, filename, ext, lang, size_bytes, loc, role, role, lang, importance_score, content_hash
         
-    # Emit processing event every 1000 files (with enhanced monitoring and automatic fallbacks)
-    if (files_processed % 1000 == 0) {
+    # Emit processing event at configurable intervals (with enhanced monitoring and automatic fallbacks)
+    if (files_processed % PROGRESS_INTERVAL == 0) {
         print_event("batch_progress", sprintf("Processed %d files, valid: %d, invalid: %d", files_processed, valid_records, invalid_records))
         
-        # Automatic streaming mode fallback for memory management
-        if (valid_records > 500000) {
+        # Automatic streaming mode fallback for memory management (configurable threshold)
+        if (valid_records > MEMORY_CRITICAL_THRESHOLD) {
             printf "CRITICAL: Auto-enabling streaming mode - dataset too large (%d records) for in-memory processing\n", valid_records > "/dev/stderr"
             print_event("memory_critical_fallback", sprintf("Enabling streaming mode for %d records", valid_records))
             
@@ -150,14 +165,14 @@ BEGIN {
             printf "STREAM_MODE_SWITCH:%d\n", files_processed > "/dev/stderr"
             exit(2)  # Special exit code for streaming mode switch
             
-        } else if (valid_records > 200000) {
+        } else if (valid_records > MEMORY_PREPARE_THRESHOLD) {
             printf "WARN: Approaching memory limits (%d records) - preparing for potential streaming mode\n", valid_records > "/dev/stderr"
             print_event("memory_warning_prepare", sprintf("Preparing streaming fallback for %d records", valid_records))
             
             # Pre-emptively signal potential streaming need
             system("echo 'STREAMING_PREPARE' >> .sourceatlas/processing_signals.txt 2>/dev/null || true")
             
-        } else if (valid_records > 100000) {
+        } else if (valid_records > MEMORY_WARNING_THRESHOLD) {
             printf "INFO: Large dataset processing (%d records) - monitoring memory usage\n", valid_records > "/dev/stderr"
         }
         
@@ -170,27 +185,27 @@ BEGIN {
             if (elapsed_time > 0) {
                 current_rate = files_processed / elapsed_time
                 
-                # Exponential moving average for trend analysis
+                # Exponential moving average for trend analysis (configurable alpha)
                 if (ema_rate == 0) {
                     ema_rate = current_rate
                 } else {
-                    # Alpha = 0.3 for responsive but stable EMA
-                    ema_rate = 0.3 * current_rate + 0.7 * ema_rate
+                    # Configurable EMA alpha for responsive but stable tracking
+                    ema_rate = EMA_ALPHA * current_rate + (1 - EMA_ALPHA) * ema_rate
                 }
                 
-                # Predictive performance degradation detection
+                # Predictive performance degradation detection (configurable thresholds)
                 rate_decline = (ema_rate - current_rate) / ema_rate * 100
-                if (rate_decline > 20) {
+                if (rate_decline > PERFORMANCE_WARNING_THRESHOLD) {
                     printf "WARN: Significant performance degradation detected (%.1f%% decline from EMA)\n", rate_decline > "/dev/stderr"
                     printf "      Current: %.1f files/sec, EMA: %.1f files/sec\n", current_rate, ema_rate > "/dev/stderr"
                     print_event("performance_degradation", sprintf("Rate decline: %.1f%%, current: %.1f files/sec, EMA: %.1f files/sec", rate_decline, current_rate, ema_rate))
                     
-                    # Automatic streaming mode suggestion for severe degradation
-                    if (rate_decline > 50 && valid_records > 50000) {
+                    # Automatic streaming mode suggestion for severe degradation (configurable threshold)
+                    if (rate_decline > PERFORMANCE_CRITICAL_THRESHOLD && valid_records > 50000) {
                         printf "CRITICAL: Severe performance degradation - consider streaming mode\n" > "/dev/stderr"
                         system("echo 'PERFORMANCE_STREAMING_SUGGEST' >> .sourceatlas/processing_signals.txt 2>/dev/null || true")
                     }
-                } else if (current_rate < 50) {
+                } else if (current_rate < MIN_PROCESSING_RATE) {
                     printf "WARN: Low processing rate (%.1f files/sec) - system under stress\n", current_rate > "/dev/stderr"
                     print_event("performance_warning", sprintf("Low processing rate: %.1f files/sec, EMA: %.1f files/sec", current_rate, ema_rate))
                 }

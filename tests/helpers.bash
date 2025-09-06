@@ -1,6 +1,36 @@
 #!/usr/bin/env bash
 # Test helpers for SourceAtlas E2E tests
 
+# Test environment setup
+setup_test_environment() {
+    # Create unique test directory
+    export TEST_DIR="${BATS_TMPDIR}/sourceatlas_test_$$_$(date +%s)"
+    mkdir -p "$TEST_DIR"
+    cd "$TEST_DIR"
+    
+    # Initialize test environment
+    export SOURCEATLAS_TEST_MODE=1
+    
+    # Copy necessary files to test directory if needed
+    if [[ -f "$BATS_TEST_DIRNAME/../../lib/batch_optimize.awk" ]]; then
+        mkdir -p lib
+        cp "$BATS_TEST_DIRNAME/../../lib"/*.awk lib/ 2>/dev/null || true
+        cp "$BATS_TEST_DIRNAME/../../lib"/*.sh lib/ 2>/dev/null || true
+    fi
+}
+
+# Test environment cleanup
+cleanup_test_environment() {
+    # Clean up test directory
+    if [[ -n "${TEST_DIR:-}" ]] && [[ -d "$TEST_DIR" ]]; then
+        cd /
+        rm -rf "$TEST_DIR"
+    fi
+    
+    # Clean up any background processes
+    jobs -p | xargs -r kill 2>/dev/null || true
+}
+
 # Check for required tools and provide warnings
 check_required_tools() {
     local missing_tools=()
