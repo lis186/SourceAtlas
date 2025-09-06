@@ -4,23 +4,115 @@
 # Optimized batch processing to reduce subprocess overhead by 5-20x
 
 BEGIN {
+    # ==========================================
+    # Environment Variable Validation
+    # ==========================================
+    
+    # Validate critical ENVIRON variables before proceeding
+    validation_errors = 0
+    
     # Configuration parameters (centralized via phase9_config.sh)
-    MIN_IMPORTANCE = (ENVIRON["SOURCEATLAS_MIN_IMPORTANCE"] ? ENVIRON["SOURCEATLAS_MIN_IMPORTANCE"] : 0.1)
-    MAX_IMPORTANCE = (ENVIRON["SOURCEATLAS_MAX_IMPORTANCE"] ? ENVIRON["SOURCEATLAS_MAX_IMPORTANCE"] : 2.0)
+    if (ENVIRON["SOURCEATLAS_MIN_IMPORTANCE"] && ENVIRON["SOURCEATLAS_MIN_IMPORTANCE"] !~ /^[0-9]+(\.[0-9]+)?$/) {
+        printf "ERROR: SOURCEATLAS_MIN_IMPORTANCE must be numeric (got: %s)\n", ENVIRON["SOURCEATLAS_MIN_IMPORTANCE"] > "/dev/stderr"
+        validation_errors++
+    }
+    MIN_IMPORTANCE = (ENVIRON["SOURCEATLAS_MIN_IMPORTANCE"] ? ENVIRON["SOURCEATLAS_MIN_IMPORTANCE"] + 0 : 0.1)
     
-    # Memory management thresholds (configurable)
-    MEMORY_WARNING_THRESHOLD = (ENVIRON["SOURCEATLAS_MEMORY_WARNING_THRESHOLD"] ? ENVIRON["SOURCEATLAS_MEMORY_WARNING_THRESHOLD"] : 100000)
-    MEMORY_PREPARE_THRESHOLD = (ENVIRON["SOURCEATLAS_MEMORY_PREPARE_THRESHOLD"] ? ENVIRON["SOURCEATLAS_MEMORY_PREPARE_THRESHOLD"] : 200000)
-    MEMORY_CRITICAL_THRESHOLD = (ENVIRON["SOURCEATLAS_MEMORY_CRITICAL_THRESHOLD"] ? ENVIRON["SOURCEATLAS_MEMORY_CRITICAL_THRESHOLD"] : 500000)
+    if (ENVIRON["SOURCEATLAS_MAX_IMPORTANCE"] && ENVIRON["SOURCEATLAS_MAX_IMPORTANCE"] !~ /^[0-9]+(\.[0-9]+)?$/) {
+        printf "ERROR: SOURCEATLAS_MAX_IMPORTANCE must be numeric (got: %s)\n", ENVIRON["SOURCEATLAS_MAX_IMPORTANCE"] > "/dev/stderr"
+        validation_errors++
+    }
+    MAX_IMPORTANCE = (ENVIRON["SOURCEATLAS_MAX_IMPORTANCE"] ? ENVIRON["SOURCEATLAS_MAX_IMPORTANCE"] + 0 : 2.0)
     
-    # EMA monitoring configuration
-    EMA_ALPHA = (ENVIRON["SOURCEATLAS_EMA_ALPHA"] ? ENVIRON["SOURCEATLAS_EMA_ALPHA"] : 0.3)
-    PERFORMANCE_WARNING_THRESHOLD = (ENVIRON["SOURCEATLAS_PERFORMANCE_WARNING_THRESHOLD"] ? ENVIRON["SOURCEATLAS_PERFORMANCE_WARNING_THRESHOLD"] : 20)
-    PERFORMANCE_CRITICAL_THRESHOLD = (ENVIRON["SOURCEATLAS_PERFORMANCE_CRITICAL_THRESHOLD"] ? ENVIRON["SOURCEATLAS_PERFORMANCE_CRITICAL_THRESHOLD"] : 50)
-    MIN_PROCESSING_RATE = (ENVIRON["SOURCEATLAS_MIN_PROCESSING_RATE"] ? ENVIRON["SOURCEATLAS_MIN_PROCESSING_RATE"] : 50)
+    # Memory management thresholds (configurable with validation)
+    if (ENVIRON["SOURCEATLAS_MEMORY_WARNING_THRESHOLD"] && ENVIRON["SOURCEATLAS_MEMORY_WARNING_THRESHOLD"] !~ /^[0-9]+$/) {
+        printf "ERROR: SOURCEATLAS_MEMORY_WARNING_THRESHOLD must be integer (got: %s)\n", ENVIRON["SOURCEATLAS_MEMORY_WARNING_THRESHOLD"] > "/dev/stderr"
+        validation_errors++
+    }
+    MEMORY_WARNING_THRESHOLD = (ENVIRON["SOURCEATLAS_MEMORY_WARNING_THRESHOLD"] ? ENVIRON["SOURCEATLAS_MEMORY_WARNING_THRESHOLD"] + 0 : 100000)
     
-    # Progress reporting interval
-    PROGRESS_INTERVAL = (ENVIRON["SOURCEATLAS_PROGRESS_INTERVAL"] ? ENVIRON["SOURCEATLAS_PROGRESS_INTERVAL"] : 1000)
+    if (ENVIRON["SOURCEATLAS_MEMORY_PREPARE_THRESHOLD"] && ENVIRON["SOURCEATLAS_MEMORY_PREPARE_THRESHOLD"] !~ /^[0-9]+$/) {
+        printf "ERROR: SOURCEATLAS_MEMORY_PREPARE_THRESHOLD must be integer (got: %s)\n", ENVIRON["SOURCEATLAS_MEMORY_PREPARE_THRESHOLD"] > "/dev/stderr"
+        validation_errors++
+    }
+    MEMORY_PREPARE_THRESHOLD = (ENVIRON["SOURCEATLAS_MEMORY_PREPARE_THRESHOLD"] ? ENVIRON["SOURCEATLAS_MEMORY_PREPARE_THRESHOLD"] + 0 : 200000)
+    
+    if (ENVIRON["SOURCEATLAS_MEMORY_CRITICAL_THRESHOLD"] && ENVIRON["SOURCEATLAS_MEMORY_CRITICAL_THRESHOLD"] !~ /^[0-9]+$/) {
+        printf "ERROR: SOURCEATLAS_MEMORY_CRITICAL_THRESHOLD must be integer (got: %s)\n", ENVIRON["SOURCEATLAS_MEMORY_CRITICAL_THRESHOLD"] > "/dev/stderr"
+        validation_errors++
+    }
+    MEMORY_CRITICAL_THRESHOLD = (ENVIRON["SOURCEATLAS_MEMORY_CRITICAL_THRESHOLD"] ? ENVIRON["SOURCEATLAS_MEMORY_CRITICAL_THRESHOLD"] + 0 : 500000)
+    
+    # EMA monitoring configuration (with validation)
+    if (ENVIRON["SOURCEATLAS_EMA_ALPHA"] && ENVIRON["SOURCEATLAS_EMA_ALPHA"] !~ /^0\.[0-9]+$/) {
+        printf "ERROR: SOURCEATLAS_EMA_ALPHA must be decimal between 0.1-0.5 (got: %s)\n", ENVIRON["SOURCEATLAS_EMA_ALPHA"] > "/dev/stderr"
+        validation_errors++
+    }
+    EMA_ALPHA = (ENVIRON["SOURCEATLAS_EMA_ALPHA"] ? ENVIRON["SOURCEATLAS_EMA_ALPHA"] + 0 : 0.3)
+    
+    if (ENVIRON["SOURCEATLAS_PERFORMANCE_WARNING_THRESHOLD"] && ENVIRON["SOURCEATLAS_PERFORMANCE_WARNING_THRESHOLD"] !~ /^[0-9]+$/) {
+        printf "ERROR: SOURCEATLAS_PERFORMANCE_WARNING_THRESHOLD must be integer (got: %s)\n", ENVIRON["SOURCEATLAS_PERFORMANCE_WARNING_THRESHOLD"] > "/dev/stderr"
+        validation_errors++
+    }
+    PERFORMANCE_WARNING_THRESHOLD = (ENVIRON["SOURCEATLAS_PERFORMANCE_WARNING_THRESHOLD"] ? ENVIRON["SOURCEATLAS_PERFORMANCE_WARNING_THRESHOLD"] + 0 : 20)
+    
+    if (ENVIRON["SOURCEATLAS_PERFORMANCE_CRITICAL_THRESHOLD"] && ENVIRON["SOURCEATLAS_PERFORMANCE_CRITICAL_THRESHOLD"] !~ /^[0-9]+$/) {
+        printf "ERROR: SOURCEATLAS_PERFORMANCE_CRITICAL_THRESHOLD must be integer (got: %s)\n", ENVIRON["SOURCEATLAS_PERFORMANCE_CRITICAL_THRESHOLD"] > "/dev/stderr"
+        validation_errors++
+    }
+    PERFORMANCE_CRITICAL_THRESHOLD = (ENVIRON["SOURCEATLAS_PERFORMANCE_CRITICAL_THRESHOLD"] ? ENVIRON["SOURCEATLAS_PERFORMANCE_CRITICAL_THRESHOLD"] + 0 : 50)
+    
+    if (ENVIRON["SOURCEATLAS_MIN_PROCESSING_RATE"] && ENVIRON["SOURCEATLAS_MIN_PROCESSING_RATE"] !~ /^[0-9]+$/) {
+        printf "ERROR: SOURCEATLAS_MIN_PROCESSING_RATE must be integer (got: %s)\n", ENVIRON["SOURCEATLAS_MIN_PROCESSING_RATE"] > "/dev/stderr"
+        validation_errors++
+    }
+    MIN_PROCESSING_RATE = (ENVIRON["SOURCEATLAS_MIN_PROCESSING_RATE"] ? ENVIRON["SOURCEATLAS_MIN_PROCESSING_RATE"] + 0 : 50)
+    
+    # Progress reporting interval (with validation)
+    if (ENVIRON["SOURCEATLAS_PROGRESS_INTERVAL"] && ENVIRON["SOURCEATLAS_PROGRESS_INTERVAL"] !~ /^[0-9]+$/) {
+        printf "ERROR: SOURCEATLAS_PROGRESS_INTERVAL must be integer (got: %s)\n", ENVIRON["SOURCEATLAS_PROGRESS_INTERVAL"] > "/dev/stderr"
+        validation_errors++
+    }
+    PROGRESS_INTERVAL = (ENVIRON["SOURCEATLAS_PROGRESS_INTERVAL"] ? ENVIRON["SOURCEATLAS_PROGRESS_INTERVAL"] + 0 : 1000)
+    
+    # ==========================================
+    # Configuration Consistency Validation
+    # ==========================================
+    
+    # Validate threshold ordering
+    if (MEMORY_WARNING_THRESHOLD >= MEMORY_PREPARE_THRESHOLD) {
+        printf "ERROR: MEMORY_WARNING_THRESHOLD (%d) must be < MEMORY_PREPARE_THRESHOLD (%d)\n", MEMORY_WARNING_THRESHOLD, MEMORY_PREPARE_THRESHOLD > "/dev/stderr"
+        validation_errors++
+    }
+    
+    if (MEMORY_PREPARE_THRESHOLD >= MEMORY_CRITICAL_THRESHOLD) {
+        printf "ERROR: MEMORY_PREPARE_THRESHOLD (%d) must be < MEMORY_CRITICAL_THRESHOLD (%d)\n", MEMORY_PREPARE_THRESHOLD, MEMORY_CRITICAL_THRESHOLD > "/dev/stderr"
+        validation_errors++
+    }
+    
+    if (PERFORMANCE_WARNING_THRESHOLD >= PERFORMANCE_CRITICAL_THRESHOLD) {
+        printf "ERROR: PERFORMANCE_WARNING_THRESHOLD (%d) must be < PERFORMANCE_CRITICAL_THRESHOLD (%d)\n", PERFORMANCE_WARNING_THRESHOLD, PERFORMANCE_CRITICAL_THRESHOLD > "/dev/stderr"
+        validation_errors++
+    }
+    
+    # Validate EMA alpha range
+    if (EMA_ALPHA < 0.1 || EMA_ALPHA > 0.5) {
+        printf "ERROR: EMA_ALPHA (%.3f) must be between 0.1-0.5 for optimal performance\n", EMA_ALPHA > "/dev/stderr"
+        validation_errors++
+    }
+    
+    # Validate importance score range
+    if (MIN_IMPORTANCE >= MAX_IMPORTANCE) {
+        printf "ERROR: MIN_IMPORTANCE (%.3f) must be < MAX_IMPORTANCE (%.3f)\n", MIN_IMPORTANCE, MAX_IMPORTANCE > "/dev/stderr"
+        validation_errors++
+    }
+    
+    # Exit early if validation failed
+    if (validation_errors > 0) {
+        printf "FATAL: %d configuration validation error(s) detected in AWK script\n", validation_errors > "/dev/stderr"
+        printf "Please check environment variables and run phase9_config.sh validation\n" > "/dev/stderr"
+        exit(1)
+    }
     
     REQUIRED_FIELDS = 5  # Expected number of tab-separated fields
     
@@ -117,12 +209,56 @@ BEGIN {
     
     valid_records++
     
-    # Extract file components
+    # Extract file components with enhanced portability and edge case handling
     filename = file_path
-    gsub(/.*\//, "", filename)  # basename
-    match(filename, /\.[^.]*$/)
-    ext = substr(filename, RSTART)
-    if (ext == "") ext = ".unknown"
+    
+    # Robust basename extraction (handles multiple edge cases)
+    if (match(file_path, /\/[^\/]*$/)) {
+        # Path contains directory separator - extract filename after last /
+        filename = substr(file_path, RSTART + 1)
+    } else if (file_path ~ /\//) {
+        # Contains / but didn't match above pattern - likely edge case
+        gsub(/.*\//, "", filename)  # fallback to original method
+    }
+    # If no /, filename = file_path (already correct)
+    
+    # Enhanced file extension extraction with better edge case handling
+    ext = ""
+    if (filename != "") {
+        # Handle files with multiple dots (e.g., file.min.js, archive.tar.gz)
+        if (match(filename, /\.[^.\/]+$/)) {
+            # Standard case: extension after last dot
+            ext = substr(filename, RSTART)
+        } else if (filename ~ /^\./) {
+            # Hidden files starting with dot (e.g., .bashrc, .gitignore)
+            if (match(filename, /\.[^.\/]+$/) && RSTART > 1) {
+                # Hidden file with extension (e.g., .test.js)
+                ext = substr(filename, RSTART)
+            } else {
+                # Pure dotfile (e.g., .bashrc) - treat whole name as extension
+                ext = filename
+            }
+        }
+    }
+    
+    # Normalize extension handling
+    if (ext == "" || ext == ".") {
+        ext = ".unknown"
+    }
+    
+    # Handle special cases and validate extension
+    if (length(ext) > 10) {
+        # Suspiciously long extension - likely not a real extension
+        printf "WARN: Line %d has unusually long extension: %s (file: %s)\n", NR, ext, filename > "/dev/stderr"
+        ext = ".unknown"
+    } else if (ext ~ /[^a-zA-Z0-9._-]/) {
+        # Extension contains invalid characters
+        printf "WARN: Line %d has invalid characters in extension: %s (file: %s)\n", NR, ext, filename > "/dev/stderr"
+        ext = ".unknown"
+    }
+    
+    # Convert extension to lowercase for consistent mapping
+    ext = tolower(ext)
     
     # Get language
     lang = lang_map[ext]

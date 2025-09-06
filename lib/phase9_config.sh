@@ -96,41 +96,179 @@ load_user_config() {
 # Validate configuration values
 validate_config() {
     local errors=()
+    local warnings=()
     
-    # Validate worker bounds
+    # ==========================================
+    # Critical Threshold Validation
+    # ==========================================
+    
+    # Validate memory threshold progression
+    if [[ $SOURCEATLAS_MEMORY_WARNING_THRESHOLD -ge $SOURCEATLAS_MEMORY_PREPARE_THRESHOLD ]]; then
+        errors+=("MEMORY_WARNING_THRESHOLD ($SOURCEATLAS_MEMORY_WARNING_THRESHOLD) must be < MEMORY_PREPARE_THRESHOLD ($SOURCEATLAS_MEMORY_PREPARE_THRESHOLD)")
+    fi
+    
+    if [[ $SOURCEATLAS_MEMORY_PREPARE_THRESHOLD -ge $SOURCEATLAS_MEMORY_CRITICAL_THRESHOLD ]]; then
+        errors+=("MEMORY_PREPARE_THRESHOLD ($SOURCEATLAS_MEMORY_PREPARE_THRESHOLD) must be < MEMORY_CRITICAL_THRESHOLD ($SOURCEATLAS_MEMORY_CRITICAL_THRESHOLD)")
+    fi
+    
+    # Validate threshold values are reasonable
+    if [[ $SOURCEATLAS_MEMORY_WARNING_THRESHOLD -lt 1000 ]]; then
+        warnings+=("MEMORY_WARNING_THRESHOLD ($SOURCEATLAS_MEMORY_WARNING_THRESHOLD) is very low, may trigger frequently")
+    fi
+    
+    if [[ $SOURCEATLAS_MEMORY_CRITICAL_THRESHOLD -gt 2000000 ]]; then
+        warnings+=("MEMORY_CRITICAL_THRESHOLD ($SOURCEATLAS_MEMORY_CRITICAL_THRESHOLD) is very high, may cause memory issues")
+    fi
+    
+    # Validate threshold gaps are reasonable
+    local warning_prepare_gap=$((SOURCEATLAS_MEMORY_PREPARE_THRESHOLD - SOURCEATLAS_MEMORY_WARNING_THRESHOLD))
+    local prepare_critical_gap=$((SOURCEATLAS_MEMORY_CRITICAL_THRESHOLD - SOURCEATLAS_MEMORY_PREPARE_THRESHOLD))
+    
+    if [[ $warning_prepare_gap -lt 50000 ]]; then
+        warnings+=("Gap between WARNING and PREPARE thresholds ($warning_prepare_gap) is small, may not provide enough reaction time")
+    fi
+    
+    if [[ $prepare_critical_gap -lt 100000 ]]; then
+        warnings+=("Gap between PREPARE and CRITICAL thresholds ($prepare_critical_gap) is small, may not provide enough reaction time")
+    fi
+    
+    # ==========================================
+    # EMA Alpha Validation (Enhanced)
+    # ==========================================
+    
+    # Validate EMA alpha is numeric and in valid range
+    if ! echo "$SOURCEATLAS_EMA_ALPHA" | grep -qE '^0\.[0-9]+$'; then
+        errors+=("SOURCEATLAS_EMA_ALPHA must be numeric decimal between 0.1-0.5 (got: '$SOURCEATLAS_EMA_ALPHA')")
+    else
+        # Check if EMA alpha is in recommended range (0.1-0.5)
+        local ema_check
+        ema_check=$(echo "$SOURCEATLAS_EMA_ALPHA >= 0.1 && $SOURCEATLAS_EMA_ALPHA <= 0.5" | bc -l 2>/dev/null || echo "0")
+        
+        if [[ "$ema_check" != "1" ]]; then
+            errors+=("SOURCEATLAS_EMA_ALPHA must be between 0.1-0.5 for optimal performance (got: $SOURCEATLAS_EMA_ALPHA)")
+        fi
+        
+        # Provide specific guidance based on EMA value
+        local ema_value_check
+        ema_value_check=$(echo "$SOURCEATLAS_EMA_ALPHA < 0.2" | bc -l 2>/dev/null || echo "0")
+        if [[ "$ema_value_check" == "1" ]]; then
+            warnings+=("EMA_ALPHA ($SOURCEATLAS_EMA_ALPHA) is low - EMA will be very stable but slow to detect changes")
+        fi
+        
+        ema_value_check=$(echo "$SOURCEATLAS_EMA_ALPHA > 0.4" | bc -l 2>/dev/null || echo "0")
+        if [[ "$ema_value_check" == "1" ]]; then
+            warnings+=("EMA_ALPHA ($SOURCEATLAS_EMA_ALPHA) is high - EMA will be responsive but may be noisy")
+        fi
+    fi
+    
+    # ==========================================
+    # Worker Count System Limits Validation
+    # ==========================================
+    
+    # Get system CPU count for validation
+    local system_cpu_count=4  # Default fallback
+    if command -v nproc >/dev/null 2>&1; then
+        system_cpu_count=$(nproc 2>/dev/null || echo "4")
+    elif [[ -r /proc/cpuinfo ]]; then
+        system_cpu_count=$(grep -c "^processor" /proc/cpuinfo 2>/dev/null || echo "4")
+    elif command -v sysctl >/dev/null 2>&1 && sysctl -n hw.ncpu >/dev/null 2>&1; then
+        system_cpu_count=$(sysctl -n hw.ncpu 2>/dev/null || echo "4")
+    fi
+    
+    # Validate worker bounds against system capabilities
     if [[ $SOURCEATLAS_MIN_WORKERS -lt 1 ]] || [[ $SOURCEATLAS_MIN_WORKERS -gt 32 ]]; then
         errors+=("SOURCEATLAS_MIN_WORKERS must be between 1-32 (got: $SOURCEATLAS_MIN_WORKERS)")
     fi
     
-    if [[ $SOURCEATLAS_MAX_WORKERS -lt $SOURCEATLAS_MIN_WORKERS ]] || [[ $SOURCEATLAS_MAX_WORKERS -gt 64 ]]; then
-        errors+=("SOURCEATLAS_MAX_WORKERS must be >= MIN_WORKERS and <= 64 (got: $SOURCEATLAS_MAX_WORKERS)")
+    if [[ $SOURCEATLAS_MAX_WORKERS -lt $SOURCEATLAS_MIN_WORKERS ]]; then
+        errors+=("SOURCEATLAS_MAX_WORKERS ($SOURCEATLAS_MAX_WORKERS) must be >= MIN_WORKERS ($SOURCEATLAS_MIN_WORKERS)")
     fi
     
-    # Validate EMA alpha
-    if ! echo "$SOURCEATLAS_EMA_ALPHA" | grep -qE '^0\.[0-9]+$'; then
-        errors+=("SOURCEATLAS_EMA_ALPHA must be between 0.0-1.0 (got: $SOURCEATLAS_EMA_ALPHA)")
+    if [[ $SOURCEATLAS_MAX_WORKERS -gt 64 ]]; then
+        errors+=("SOURCEATLAS_MAX_WORKERS must be <= 64 (got: $SOURCEATLAS_MAX_WORKERS)")
     fi
     
-    # Validate thresholds
-    if [[ $SOURCEATLAS_MEMORY_WARNING_THRESHOLD -ge $SOURCEATLAS_MEMORY_PREPARE_THRESHOLD ]]; then
-        errors+=("Memory warning threshold must be < prepare threshold")
+    # Check worker count against system CPU limits
+    local recommended_max=$((system_cpu_count * 3))  # Conservative recommendation
+    local absolute_max=$((system_cpu_count * 6))     # Absolute maximum
+    
+    if [[ $SOURCEATLAS_MAX_WORKERS -gt $absolute_max ]]; then
+        errors+=("MAX_WORKERS ($SOURCEATLAS_MAX_WORKERS) exceeds system limit of ${absolute_max} (${system_cpu_count} CPUs × 6)")
+    elif [[ $SOURCEATLAS_MAX_WORKERS -gt $recommended_max ]]; then
+        warnings+=("MAX_WORKERS ($SOURCEATLAS_MAX_WORKERS) exceeds recommended limit of ${recommended_max} (${system_cpu_count} CPUs × 3)")
     fi
     
-    if [[ $SOURCEATLAS_MEMORY_PREPARE_THRESHOLD -ge $SOURCEATLAS_MEMORY_CRITICAL_THRESHOLD ]]; then
-        errors+=("Memory prepare threshold must be < critical threshold")
+    # Check if worker count is too low for the system
+    if [[ $SOURCEATLAS_MAX_WORKERS -lt $system_cpu_count ]] && [[ $system_cpu_count -gt 2 ]]; then
+        warnings+=("MAX_WORKERS ($SOURCEATLAS_MAX_WORKERS) is less than CPU count ($system_cpu_count), may underutilize system")
     fi
     
-    # Report validation errors
+    # ==========================================
+    # Performance Threshold Validation
+    # ==========================================
+    
+    # Validate performance thresholds are logical
+    if [[ $SOURCEATLAS_PERFORMANCE_WARNING_THRESHOLD -ge $SOURCEATLAS_PERFORMANCE_CRITICAL_THRESHOLD ]]; then
+        errors+=("PERFORMANCE_WARNING_THRESHOLD ($SOURCEATLAS_PERFORMANCE_WARNING_THRESHOLD) must be < CRITICAL_THRESHOLD ($SOURCEATLAS_PERFORMANCE_CRITICAL_THRESHOLD)")
+    fi
+    
+    # Validate performance threshold ranges
+    if [[ $SOURCEATLAS_PERFORMANCE_WARNING_THRESHOLD -lt 5 ]] || [[ $SOURCEATLAS_PERFORMANCE_WARNING_THRESHOLD -gt 50 ]]; then
+        warnings+=("PERFORMANCE_WARNING_THRESHOLD ($SOURCEATLAS_PERFORMANCE_WARNING_THRESHOLD) outside recommended range 5-50%")
+    fi
+    
+    if [[ $SOURCEATLAS_PERFORMANCE_CRITICAL_THRESHOLD -lt 20 ]] || [[ $SOURCEATLAS_PERFORMANCE_CRITICAL_THRESHOLD -gt 80 ]]; then
+        warnings+=("PERFORMANCE_CRITICAL_THRESHOLD ($SOURCEATLAS_PERFORMANCE_CRITICAL_THRESHOLD) outside recommended range 20-80%")
+    fi
+    
+    # ==========================================
+    # Additional System Validation
+    # ==========================================
+    
+    # Validate checkpoint interval is reasonable
+    if [[ $SOURCEATLAS_CHECKPOINT_INTERVAL -lt 10 ]]; then
+        warnings+=("CHECKPOINT_INTERVAL ($SOURCEATLAS_CHECKPOINT_INTERVAL) is very frequent, may impact performance")
+    elif [[ $SOURCEATLAS_CHECKPOINT_INTERVAL -gt 600 ]]; then
+        warnings+=("CHECKPOINT_INTERVAL ($SOURCEATLAS_CHECKPOINT_INTERVAL) is very infrequent, may lose more work on failure")
+    fi
+    
+    # Validate progress interval
+    if [[ $SOURCEATLAS_PROGRESS_INTERVAL -lt 100 ]]; then
+        warnings+=("PROGRESS_INTERVAL ($SOURCEATLAS_PROGRESS_INTERVAL) is very frequent, may generate excessive output")
+    elif [[ $SOURCEATLAS_PROGRESS_INTERVAL -gt 10000 ]]; then
+        warnings+=("PROGRESS_INTERVAL ($SOURCEATLAS_PROGRESS_INTERVAL) is infrequent, may provide poor progress visibility")
+    fi
+    
+    # ==========================================
+    # Report Results
+    # ==========================================
+    
+    # Report validation errors (blocking)
     if [[ ${#errors[@]} -gt 0 ]]; then
         echo "❌ Configuration validation errors:" >&2
         for error in "${errors[@]}"; do
             echo "   • $error" >&2
         done
-        return 1
+        echo "" >&2
     fi
     
-    echo "✅ Configuration validation passed" >&2
-    return 0
+    # Report validation warnings (non-blocking)
+    if [[ ${#warnings[@]} -gt 0 ]]; then
+        echo "⚠️  Configuration warnings:" >&2
+        for warning in "${warnings[@]}"; do
+            echo "   • $warning" >&2
+        done
+        echo "" >&2
+    fi
+    
+    # Summary
+    if [[ ${#errors[@]} -gt 0 ]]; then
+        echo "❌ Configuration validation failed with ${#errors[@]} error(s) and ${#warnings[@]} warning(s)" >&2
+        return 1
+    else
+        echo "✅ Configuration validation passed (${#warnings[@]} warning(s), ${#errors[@]} error(s))" >&2
+        return 0
+    fi
 }
 
 # Generate sample configuration file
