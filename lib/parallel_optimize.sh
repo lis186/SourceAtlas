@@ -48,42 +48,27 @@ process_file_batch() {
         [[ -z "$file_path" ]] && continue
         [[ ! -f "$file_path" ]] && continue
         
-        # Fast metadata extraction using AWK
-        local metadata
-        metadata=$(awk -v file="$file_path" '
-        BEGIN {
-            # Get file stats
-            cmd = "stat " file
-            if ((cmd | getline stat_line) > 0) {
-                close(cmd)
-                # Extract size and mtime (implementation varies by OS)
-                if (ENVIRON["OSTYPE"] ~ /darwin/) {
-                    cmd = "stat -f \"%z %m\" " file
-                } else {
-                    cmd = "stat -c \"%s %Y\" " file
-                }
-                if ((cmd | getline size_mtime) > 0) {
-                    close(cmd)
-                    split(size_mtime, parts, " ")
-                    size_bytes = parts[1]
-                    mtime = parts[2]
-                }
-            }
-            
-            # Count lines
-            cmd = "wc -l < " file " | tr -d \" \""
-            if ((cmd | getline loc) > 0) {
-                close(cmd)
-            }
-            
-            # Calculate hash (simplified for performance)
-            cmd = "openssl dgst -md5 " file " | cut -d\" \" -f2"
-            if ((cmd | getline hash) > 0) {
-                close(cmd)
-            }
-            
-            printf "%s\t%s\t%s\t%s\t%s\n", file, size_bytes, loc, hash, mtime
-        }')
+        # Fast metadata extraction using shell commands (securely)
+        local metadata size_bytes loc hash mtime
+        
+        # Securely extract file metadata using shell quoting
+        local quoted_file
+        quoted_file=$(printf '%q' "$file_path")
+        
+        # Get file stats securely
+        if [[ "$OSTYPE" =~ darwin ]]; then
+            read -r size_bytes mtime < <(stat -f "%z %m" "$file_path" 2>/dev/null || echo "0 0")
+        else
+            read -r size_bytes mtime < <(stat -c "%s %Y" "$file_path" 2>/dev/null || echo "0 0")
+        fi
+        
+        # Count lines securely
+        loc=$(wc -l < "$file_path" 2>/dev/null | tr -d ' ' || echo "0")
+        
+        # Calculate hash securely
+        hash=$(openssl dgst -md5 "$file_path" 2>/dev/null | cut -d' ' -f2 || echo "unknown")
+        
+        metadata=$(printf "%s\t%s\t%s\t%s\t%s\n" "$file_path" "$size_bytes" "$loc" "$hash" "$mtime")
         
         # Pass to batch optimizer AWK script
         if [[ -n "$metadata" ]]; then

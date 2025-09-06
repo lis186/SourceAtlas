@@ -132,16 +132,12 @@ process_file_batch() {
         if ((getline file_check < file_path) >= 0) {
             close(file_path)
             
-            # Get file metadata efficiently
-            cmd = "stat " file_path " 2>/dev/null"
-            if ((cmd | getline stat_result) > 0) {
-                close(cmd)
-                
-                # Extract size and mtime (simplified, OS-dependent)
-                size_bytes = extract_file_size(file_path)
-                mtime = extract_mtime(file_path)
-                loc = count_lines_fast(file_path)
-                hash = calculate_hash_fast(file_path)
+            # SECURITY: Skip unsafe stat call, use simplified extraction
+            # Note: Proper implementation should use shell-side secure stat calls
+            size_bytes = extract_file_size(file_path)
+            mtime = extract_mtime(file_path)
+            loc = count_lines_fast(file_path)
+            hash = calculate_hash_fast(file_path)
                 
                 # Output tab-separated metadata for further processing
                 printf "%s\t%s\t%s\t%s\t%s\n", file_path, size_bytes, loc, hash, mtime
@@ -156,8 +152,10 @@ process_file_batch() {
         printf "Batch %s processed %d files (%d bytes)\n", batch_id, files_processed, total_size > "/dev/stderr"
     }
     
-    function extract_file_size(file) {
-        cmd = "wc -c < " file " 2>/dev/null"
+    function extract_file_size(file,    escaped_file, cmd, size) {
+        # SECURITY: Properly escape file path to prevent command injection
+        gsub(/'/, "'\"'\"'", file)  # Escape single quotes
+        cmd = "wc -c < '" file "' 2>/dev/null"
         if ((cmd | getline size) > 0) {
             close(cmd)
             return size
@@ -166,12 +164,14 @@ process_file_batch() {
     }
     
     function extract_mtime(file) {
-        # Simplified mtime extraction
-        return systime()
+        # SECURITY: Simplified mtime - should use secure shell-side implementation
+        return 0  # Placeholder - avoid systime() for POSIX compatibility
     }
     
-    function count_lines_fast(file) {
-        cmd = "wc -l < " file " 2>/dev/null | tr -d \" \""
+    function count_lines_fast(file,    escaped_file, cmd, lines) {
+        # SECURITY: Properly escape file path to prevent command injection
+        gsub(/'/, "'\"'\"'", file)  # Escape single quotes
+        cmd = "wc -l < '" file "' 2>/dev/null | tr -d ' '"
         if ((cmd | getline lines) > 0) {
             close(cmd)
             return lines
@@ -179,8 +179,10 @@ process_file_batch() {
         return 0
     }
     
-    function calculate_hash_fast(file) {
-        cmd = "openssl dgst -md5 " file " 2>/dev/null | cut -d\" \" -f2"
+    function calculate_hash_fast(file,    escaped_file, cmd, hash) {
+        # SECURITY: Properly escape file path to prevent command injection
+        gsub(/'/, "'\"'\"'", file)  # Escape single quotes
+        cmd = "openssl dgst -md5 '" file "' 2>/dev/null | cut -d' ' -f2"
         if ((cmd | getline hash) > 0) {
             close(cmd)
             return hash
