@@ -3,6 +3,12 @@
 # SourceAtlas Phase 9 - Cache and incremental optimization
 # Smart file change detection and result caching for 100x+ speed improvement
 
+# Load command validation utilities
+SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+source "$SCRIPT_DIR/command_validation.sh" 2>/dev/null || {
+    echo "WARNING: Command validation not available, using basic fallbacks" >&2
+}
+
 # Cache directory structure
 CACHE_DIR=".sourceatlas/cache"
 CONTENT_HASH_CACHE="$CACHE_DIR/content_hashes.db"

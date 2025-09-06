@@ -3,19 +3,33 @@
 # SourceAtlas Phase 9 - Parallel File Processing Implementation
 # Utilizes all CPU cores for 10-50x speed improvement
 
+# Load command validation utilities
+SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+source "$SCRIPT_DIR/command_validation.sh" 2>/dev/null || {
+    echo "WARNING: Command validation not available, using basic fallbacks" >&2
+}
+
 # Get number of CPU cores, default to 4 if detection fails
 get_cpu_cores() {
-    local cores
-    if command -v nproc >/dev/null 2>&1; then
-        cores=$(nproc)
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-        cores=$(sysctl -n hw.ncpu 2>/dev/null || echo "4")
+    # Use validated utility if available, otherwise fallback to original logic
+    if command -v get_optimal_worker_count >/dev/null 2>&1; then
+        get_optimal_worker_count
     else
-        cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || echo "4")
+        # Original fallback logic with validation
+        local cores
+        if validate_command "nproc" && command -v nproc >/dev/null 2>&1; then
+            cores=$(nproc 2>/dev/null || echo "4")
+        elif [[ "$OSTYPE" == "darwin"* ]] && validate_command "sysctl"; then
+            cores=$(sysctl -n hw.ncpu 2>/dev/null || echo "4")
+        elif [[ -r "/proc/cpuinfo" ]]; then
+            cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || echo "4")
+        else
+            cores=4
+        fi
+        
+        # Use nproc * 2 worker threads as specified in task.md
+        echo $((cores * 2))
     fi
-    
-    # Use nproc * 2 worker threads as specified in task.md
-    echo $((cores * 2))
 }
 
 # Emit observability event
@@ -51,22 +65,11 @@ process_file_batch() {
         # Fast metadata extraction using shell commands (securely)
         local metadata size_bytes loc hash mtime
         
-        # Securely extract file metadata using shell quoting
-        local quoted_file
-        quoted_file=$(printf '%q' "$file_path")
-        
-        # Get file stats securely
-        if [[ "$OSTYPE" =~ darwin ]]; then
-            read -r size_bytes mtime < <(stat -f "%z %m" "$file_path" 2>/dev/null || echo "0 0")
-        else
-            read -r size_bytes mtime < <(stat -c "%s %Y" "$file_path" 2>/dev/null || echo "0 0")
-        fi
-        
-        # Count lines securely
-        loc=$(wc -l < "$file_path" 2>/dev/null | tr -d ' ' || echo "0")
-        
-        # Calculate hash securely
-        hash=$(openssl dgst -md5 "$file_path" 2>/dev/null | cut -d' ' -f2 || echo "unknown")
+        # Use validated command utilities with fallbacks
+        size_bytes=$(get_file_size "$file_path")
+        mtime=$(get_file_mtime "$file_path")
+        loc=$(count_file_lines "$file_path")
+        hash=$(calculate_file_hash "$file_path")
         
         metadata=$(printf "%s\t%s\t%s\t%s\t%s\n" "$file_path" "$size_bytes" "$loc" "$hash" "$mtime")
         

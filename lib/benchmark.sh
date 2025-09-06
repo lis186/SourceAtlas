@@ -3,6 +3,12 @@
 # SourceAtlas Phase 9 - Performance Benchmark Testing
 # Comprehensive benchmark suite to measure optimization effects and detect regressions
 
+# Load command validation utilities
+SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+source "$SCRIPT_DIR/command_validation.sh" 2>/dev/null || {
+    echo "WARNING: Command validation not available, using basic fallbacks" >&2
+}
+
 # Benchmark configuration
 BENCHMARK_DIR=".sourceatlas/benchmarks"
 BENCHMARK_RESULTS="$BENCHMARK_DIR/results.jsonl"

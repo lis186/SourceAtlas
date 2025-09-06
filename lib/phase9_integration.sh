@@ -6,6 +6,14 @@
 # Source all optimization modules
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 
+# Load command validation utilities first
+source "$SCRIPT_DIR/command_validation.sh" 2>/dev/null || {
+    echo "WARNING: Command validation not available, using basic fallbacks" >&2
+}
+
+# Validate Phase 9 dependencies on startup
+validate_phase9_dependencies
+
 # Source existing observability components (Phase 8)
 [[ -f "$SCRIPT_DIR/observability.sh" ]] && source "$SCRIPT_DIR/observability.sh"
 
