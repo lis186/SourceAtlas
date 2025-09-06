@@ -114,7 +114,7 @@ count_file_lines() {
     [[ "$lines" =~ ^[0-9]+$ ]] && echo "$lines" || echo "0"
 }
 
-# Calculate file hash with fallbacks
+# Calculate file hash with fallbacks (non-cached version)
 calculate_file_hash() {
     local file="$1"
     local hash="unknown"
@@ -145,6 +145,19 @@ calculate_file_hash() {
     fi
     
     echo "$hash"
+}
+
+# Calculate file hash with caching (preferred method)
+calculate_file_hash_cached() {
+    local file="$1"
+    
+    # Use cached version if hash caching is available
+    if command -v calculate_cached_file_hash >/dev/null 2>&1; then
+        calculate_cached_file_hash "$file"
+    else
+        # Fallback to non-cached version
+        calculate_file_hash "$file"
+    fi
 }
 
 # Validate all required commands for Phase 9 optimizations

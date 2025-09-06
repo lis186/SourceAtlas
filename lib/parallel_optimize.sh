@@ -3,10 +3,13 @@
 # SourceAtlas Phase 9 - Parallel File Processing Implementation
 # Utilizes all CPU cores for 10-50x speed improvement
 
-# Load command validation utilities
+# Load command validation and hash caching utilities
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 source "$SCRIPT_DIR/command_validation.sh" 2>/dev/null || {
     echo "WARNING: Command validation not available, using basic fallbacks" >&2
+}
+source "$SCRIPT_DIR/hash_cache.sh" 2>/dev/null || {
+    echo "WARNING: Hash caching not available, using direct calculation" >&2
 }
 
 # Get number of CPU cores, default to 4 if detection fails
@@ -65,11 +68,11 @@ process_file_batch() {
         # Fast metadata extraction using shell commands (securely)
         local metadata size_bytes loc hash mtime
         
-        # Use validated command utilities with fallbacks
+        # Use validated command utilities with hash caching
         size_bytes=$(get_file_size "$file_path")
         mtime=$(get_file_mtime "$file_path")
         loc=$(count_file_lines "$file_path")
-        hash=$(calculate_file_hash "$file_path")
+        hash=$(calculate_file_hash_cached "$file_path")
         
         metadata=$(printf "%s\t%s\t%s\t%s\t%s\n" "$file_path" "$size_bytes" "$loc" "$hash" "$mtime")
         
@@ -97,6 +100,9 @@ parallel_process_files() {
     local trace_id="${3:-parallel-$(date +%s)}"
     
     emit_event "parallel_start" "Starting parallel file processing" "$trace_id"
+    
+    # Initialize hash caching system
+    init_hash_cache
     
     # Get optimal number of workers
     local num_workers

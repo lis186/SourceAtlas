@@ -47,8 +47,9 @@ BEGIN {
     # Set field separator
     FS = "\t"
     
-    # Performance event tracking
-    start_time = 0
+    # Performance event tracking - use shell timestamp for POSIX compatibility
+    "date +%s.%3N 2>/dev/null || date +%s" | getline start_time
+    close("date +%s.%3N 2>/dev/null || date +%s")
     files_processed = 0
     
     print_event("batch_optimize_start", "Single AWK batch processing started")
@@ -101,12 +102,14 @@ BEGIN {
 }
 
 END {
-    # Final performance metrics
-    end_time = 0
+    # Final performance metrics - get actual end time
+    "date +%s.%3N 2>/dev/null || date +%s" | getline end_time
+    close("date +%s.%3N 2>/dev/null || date +%s")
+    
     total_time = end_time - start_time
     files_per_second = (total_time > 0) ? files_processed / total_time : files_processed
     
-    print_event("batch_optimize_complete", sprintf("Processed %d files in %d seconds (%.2f files/sec)", files_processed, total_time, files_per_second))
+    print_event("batch_optimize_complete", sprintf("Processed %d files in %.3f seconds (%.2f files/sec)", files_processed, total_time, files_per_second))
 }
 
 function detect_file_role(filename) {

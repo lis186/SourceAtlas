@@ -15,6 +15,29 @@ CONTENT_HASH_CACHE="$CACHE_DIR/content_hashes.db"
 METADATA_CACHE="$CACHE_DIR/file_metadata.db"
 RESULT_CACHE="$CACHE_DIR/index_results.jsonl"
 
+# Streaming cache lookup to avoid loading entire cache into memory
+stream_cache_lookup() {
+    local file_path="$1"
+    local cache_file="$2"
+    
+    if [[ ! -f "$cache_file" ]]; then
+        return 1
+    fi
+    
+    # Use grep for efficient single-file lookup
+    # Format: file_path\tmtime\tsize
+    local result
+    result=$(grep -F "$file_path"$'\t' "$cache_file" 2>/dev/null | head -1)
+    
+    if [[ -n "$result" ]]; then
+        # Extract mtime and size (skip file_path)
+        echo "$result" | cut -f2,3
+        return 0
+    fi
+    
+    return 1
+}
+
 # Initialize cache system
 init_cache() {
     local trace_id="${1:-cache-init-$(date +%s)}"
@@ -60,73 +83,46 @@ fast_change_detection() {
     
     > "$changed_files"  # Clear output file
     
-    # Use AWK for high-performance file processing
-    awk -v cache_file="$METADATA_CACHE" -v changed_file="$changed_files" -v trace_id="$trace_id" '
-    BEGIN {
-        # Load existing metadata cache into memory
-        while ((getline cache_line < cache_file) > 0) {
-            split(cache_line, cache_parts, "\t")
-            cache_path = cache_parts[1]
-            cache_mtime = cache_parts[2]
-            cache_size = cache_parts[3]
-            cached_files[cache_path] = cache_mtime "\t" cache_size
-        }
-        close(cache_file)
-    }
-    
-    {
-        file_path = $1
-        total_files++
+    # Use streaming approach to avoid loading entire cache into memory
+    # First pass: process files and check against cache via external lookups
+    while IFS= read -r file_path; do
+        [[ -z "$file_path" ]] && continue
+        [[ ! -f "$file_path" ]] && continue
         
-        # Get current file stats
-        if ((getstat(file_path, file_stat)) == 0) {
-            current_mtime = file_stat["mtime"]
-            current_size = file_stat["size"]
+        ((total_files++))
+        
+        # Get current file metadata
+        local current_mtime current_size
+        current_mtime=$(get_file_mtime "$file_path")
+        current_size=$(get_file_size "$file_path")
+        
+        # Check cache using streaming lookup (avoids loading full cache)
+        local cached_entry
+        cached_entry=$(stream_cache_lookup "$file_path" "$METADATA_CACHE")
+        
+        if [[ -n "$cached_entry" ]]; then
+            # Parse cached entry
+            local cached_mtime cached_size
+            IFS=$'\t' read -r cached_mtime cached_size <<< "$cached_entry"
             
-            cache_key = cached_files[file_path]
-            if (cache_key) {
-                split(cache_key, cache_parts, "\t")
-                cached_mtime = cache_parts[1]
-                cached_size = cache_parts[2]
-                
-                # Check if file has changed (mtime or size different)
-                if (current_mtime != cached_mtime || current_size != cached_size) {
-                    print file_path > changed_file
-                    changed_count++
-                } else {
-                    cached_count++
-                }
-            } else {
-                # New file, needs processing
-                print file_path > changed_file
-                changed_count++
-            }
-        }
-    }
-    
-    END {
-        printf "Fast change detection: %d total, %d changed, %d cached\n" > "/dev/stderr"
-    }
-    
-    function getstat(file, s,    stat_cmd, stat_result) {
-        # SECURITY: Use system() with proper quoting instead of command injection
-        # This is a simplified approach - in production use proper shell-side stat calls
-        gsub(/'/, "'\"'\"'", file)  # Escape single quotes
-        stat_cmd = "stat '" file "' 2>/dev/null"
+            # Compare metadata
+            if [[ "$current_mtime" != "$cached_mtime" ]] || [[ "$current_size" != "$cached_size" ]]; then
+                echo "$file_path" >> "$changed_files"
+                ((changed_count++))
+            else
+                ((cached_count++))
+            fi
+        else
+            # File not in cache, mark as changed
+            echo "$file_path" >> "$changed_files"
+            ((changed_count++))
+        fi
         
-        if ((stat_cmd | getline stat_result) > 0) {
-            close(stat_cmd)
-            # For security and compatibility, return basic success
-            s["mtime"] = 0  # Placeholder - should be extracted from stat_result
-            s["size"] = 0   # Placeholder - should be extracted from stat_result  
-            return 0
-        }
-        return -1
-    }
-    ' "$file_list"
-    
-    changed_count=$(wc -l < "$changed_files" 2>/dev/null || echo "0")
-    cached_count=$((total_files - changed_count))
+        # Emit progress every 1000 files
+        if [[ $((total_files % 1000)) -eq 0 ]]; then
+            emit_cache_event "change_detect_progress" "Processed $total_files files ($changed_count changed, $cached_count cached)" "$trace_id"
+        fi
+    done < "$file_list"
     
     emit_cache_event "change_detect_complete" "Detected $changed_count changed files, $cached_count cached" "$trace_id"
     
