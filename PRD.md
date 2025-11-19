@@ -36,6 +36,7 @@ SourceAtlas 是一個為 AI 輔助開發設計的智慧型程式碼上下文引�
 10. [實作規範](#10-實作規範)
 11. [效能指標](#11-效能指標)
 12. [驗收標準](#12-驗收標準)
+
 - [附錄 A：範例輸出](#附錄-a範例輸出)
 - [附錄 B：實作時程](#附錄-b實作時程)
 - [附錄 C：相關資源](#附錄-c相關資源)
@@ -75,6 +76,7 @@ SourceAtlas 是一個為 AI 輔助開發設計的智慧型程式碼上下文引�
 ### 2.1 From "What" to "Why"
 
 #### 傳統索引
+
 ```yaml
 file: user.rb
 symbols:
@@ -84,6 +86,7 @@ symbols:
 ```
 
 #### SourceAtlas 索引
+
 ```yaml
 file: user.rb
 purpose: Handle user authentication and profile
@@ -386,12 +389,14 @@ compression_levels:
 ### 6.1 核心命令
 
 #### 初始化
+
 ```bash
 satlas init                   # 互動式專案設定
 satlas init --auto           # 自動偵測專案類型
 ```
 
 #### 索引建立
+
 ```bash
 satlas index                  # 完整索引
 satlas index --quick         # 快速索引（僅關鍵檔案）
@@ -399,12 +404,14 @@ satlas index --layer models  # 特定層級
 ```
 
 #### 更新
+
 ```bash
 satlas update                # 增量更新（基於 git）
 satlas update --since 1.week # 更新一週內變更
 ```
 
 #### 查詢
+
 ```bash
 satlas find "authentication" # 搜尋功能
 satlas explain user.rb      # 解釋特定檔案
@@ -412,6 +419,7 @@ satlas flow "add feature"   # 顯示工作流程
 ```
 
 #### 匯出
+
 ```bash
 satlas export                # 匯出給 AI（TOON）
 satlas export --json        # JSON 格式
@@ -419,6 +427,7 @@ satlas export --tokens 4000 # 限制 token 數
 ```
 
 #### 分析
+
 ```bash
 satlas analyze              # 專案健康度分析
 satlas patterns            # 偵測設計模式
@@ -1072,24 +1081,28 @@ m:
 ## 附錄 B：實作時程
 
 ### Phase 1: MVP (Week 1-2)
+
 - 基本 CLI 架構
 - 檔案掃描器
 - Ruby/JS 解析器
 - TOON 輸出
 
 ### Phase 2: 核心功能 (Week 3-4)
+
 - 智慧索引
 - 模式偵測
 - 範例擷取
 - 增量更新
 
 ### Phase 3: 進階功能 (Week 5-6)
+
 - AI 對話介面
 - Git 整合
 - 多語言支援
 - 效能優化
 
 ### Phase 4: 品質與部署 (Week 7-8)
+
 - 完整測試覆蓋
 - 文件撰寫
 - 套件發布
@@ -1100,16 +1113,19 @@ m:
 ## 附錄 C：相關資源
 
 ### 參考資料
+
 - TOON Format Specification
 - Snapshot 2.0 Article
 - Claude Context Best Practices
 
 ### 工具連結
+
 - TOON Python Parser
 - Universal Ctags
 - Bats Testing Framework
 
 ### 社群
+
 - GitHub: sourceatlas/sourceatlas
 - Discord: SourceAtlas Community
 - Twitter: @sourceatlas
@@ -1119,12 +1135,14 @@ m:
 ## 更新日誌
 
 ### v2.0.0 (2025-01-15)
+
 - 整合 TOON 格式
 - 加入 Snapshot 2.0 理念
 - 重新設計資料模型
 - 優化 token 使用
 
 ### v1.0.0 (2025-01-01)
+
 - 初始 PRD
 - 基本索引功能
 - JSON 輸出
