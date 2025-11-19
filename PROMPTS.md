@@ -20,6 +20,7 @@ SourceAtlas v2.0 提供三階段的代碼庫分析 Prompts，基於資訊理論�
 | **Stage 2** | Git 熱點分析 | 識別開發模式和演進 | ~20k | 95%+ |
 
 **核心優勢**:
+
 - ✅ 掃描 <5% 檔案達到 70-80% 理解
 - ✅ 節省 95%+ 時間和 Token
 - ✅ 系統化的分析流程
@@ -32,6 +33,7 @@ SourceAtlas v2.0 提供三階段的代碼庫分析 Prompts，基於資訊理論�
 ### 目標
 
 在最短時間內建立專案的完整輪廓，包括：
+
 - 技術棧識別
 - 架構模式推論
 - 業務領域分析
@@ -41,11 +43,13 @@ SourceAtlas v2.0 提供三階段的代碼庫分析 Prompts，基於資訊理論�
 ### 核心理念
 
 **資訊理論基礎**:
+
 - 優先掃描高熵（high-entropy）檔案
 - 少量關鍵檔案包含大量資訊
 - 結構性檔案比代碼更有價值
 
 **高熵檔案優先級**:
+
 1. **配置檔案** (package.json, composer.json, Cargo.toml, go.mod)
 2. **文檔檔案** (README.md, CLAUDE.md, 架構文檔)
 3. **目錄結構** (ls -R, tree)
@@ -95,17 +99,20 @@ find [PROJECT_PATH] -type f | grep -E "\.(ts|tsx|js|jsx|php|go|rs|py|java)$" | w
 ```
 
 **Step 4: 識別業務領域 (掃描 Models/Entities)**
+
 - Laravel: `app/Models/*.php`
 - Rails: `app/models/*.rb`
 - Go: `**/models/*.go` 或 `**/entities/*.go`
 - TypeScript: `**/types/*.ts` 或 `**/models/*.ts`
 
 讀取 3-5 個核心 Model 檔案，理解：
+
 - 業務實體（User, Product, Order 等）
 - 關聯關係（hasMany, belongsTo）
 - 業務邏輯（方法、計算欄位）
 
 **Step 5: 掃描關鍵架構檔案**
+
 - Controllers/Handlers: 讀取 1-2 個範例
 - Services: 檢查是否有 Service Layer
 - Routes/API 定義: 理解 API 架構
@@ -115,6 +122,7 @@ find [PROJECT_PATH] -type f | grep -E "\.(ts|tsx|js|jsx|php|go|rs|py|java)$" | w
 基於 Phase 1 的資訊，進行以下推論：
 
 **技術棧推論**:
+
 - 前端框架（React, Vue, Svelte）
 - 後端框架（Laravel, Rails, Go Gin）
 - 資料庫類型（MySQL, PostgreSQL, MongoDB）
@@ -122,24 +130,28 @@ find [PROJECT_PATH] -type f | grep -E "\.(ts|tsx|js|jsx|php|go|rs|py|java)$" | w
 - 部署方式（Docker, Cloud, 傳統）
 
 **架構模式推論**:
+
 - MVC, MVVM, Clean Architecture
 - Repository Pattern
 - Service Layer
 - Policy-based Authorization
 
 **代碼品質推論**:
+
 - 測試覆蓋率（估計）
 - 註解密度
 - 型別安全程度
 - 錯誤處理完整性
 
 **開發者能力初步評估**:
+
 - 經驗年資（基於代碼複雜度）
 - Git 習慣（commit 頻率和品質）
 - 文檔能力
 - 架構思維
 
 **生成 10-15 個假設**（供 Stage 1 驗證）:
+
 - 每個假設包含：
   - 假設陳述
   - 信心等級 (0.0-1.0)
@@ -361,6 +373,7 @@ next_stage_preparation: [READY | NEED_MORE_INFO]
 ## 📊 驗證標準
 
 一個好的 Stage 0 分析應該：
+
 - ✅ 掃描檔案 <5% 總數
 - ✅ 達到 70-80% 理解深度
 - ✅ 生成 10-15 個可驗證假設
@@ -372,9 +385,11 @@ next_stage_preparation: [READY | NEED_MORE_INFO]
 ## 🎓 範例參考
 
 查看以下實際分析範例：
+
 - `test_results/trySwift-stage0-fingerprint.toon`
 - `test_results/taiwan-calendar-stage0-fingerprint.toon`
 - `test_results/h1431532403240-Mir01-stage0-fingerprint.toon`
+
 ```
 
 ---
@@ -424,6 +439,7 @@ cat [STAGE0_REPORT_PATH]
 針對每個假設，執行以下驗證步驟：
 
 **驗證模板**:
+
 ```
 假設: [假設陳述]
 初始信心: [0.0-1.0]
@@ -445,6 +461,7 @@ cat [STAGE0_REPORT_PATH]
 ### Phase 3: 驗證方法指南
 
 **架構驗證**:
+
 ```bash
 # 檢查目錄是否存在
 test -d [PATH] && echo "EXISTS" || echo "NOT_FOUND"
@@ -457,6 +474,7 @@ find [PATH] -name "*.php" | wc -l
 ```
 
 **代碼模式驗證**:
+
 ```bash
 # 搜尋特定模式
 grep -r "[PATTERN]" [PATH] --include="*.ts"
@@ -469,6 +487,7 @@ grep -rl "[PATTERN]" [PATH]
 ```
 
 **型別安全驗證**:
+
 ```bash
 # 搜尋 'any' 型別
 grep -r ": any\|as any" src/ --include="*.ts" | wc -l
@@ -478,6 +497,7 @@ grep -r "@ts-ignore" src/ --include="*.ts"
 ```
 
 **測試驗證**:
+
 ```bash
 # 統計測試檔案
 find . -name "*.test.*" -o -name "*.spec.*" | wc -l
@@ -487,6 +507,7 @@ ls jest.config.* vitest.config.* phpunit.xml
 ```
 
 **Git 驗證**:
+
 ```bash
 # 檢查 commit 格式
 git log --oneline -30
@@ -535,9 +556,11 @@ git log --format="%ad" --date=short | sort | uniq -c
   ```bash
   [使用的命令]
   ```
+
 - **發現**: [詳細說明]
 
 #### ✅ H2: [下一個假設]
+
 ...
 
 ---
@@ -545,6 +568,7 @@ git log --format="%ad" --date=short | sort | uniq -c
 ## ⚠️ 部分確認的假設 ([數量]/[總數])
 
 #### ⚠️ H3: [假設陳述]
+
 - **初始信心**: [0.0-1.0]
 - **驗證結果**: ⚠️ **部分確認**
 - **證據**:
@@ -558,6 +582,7 @@ git log --format="%ad" --date=short | sort | uniq -c
 ## ❌ 被推翻的假設 ([數量]/[總數])
 
 #### ❌ H4: [假設陳述]
+
 - **初始信心**: [0.0-1.0]
 - **驗證結果**: ❌ **推翻**
 - **反證**:
@@ -571,10 +596,12 @@ git log --format="%ad" --date=short | sort | uniq -c
 ## 🔍 關鍵發現
 
 ### 1. [重要發現1]
+
 - **影響**: [HIGH | MEDIUM | LOW]
 - **說明**: [詳細描述]
 
 ### 2. [重要發現2]
+
 ...
 
 ---
@@ -583,7 +610,8 @@ git log --format="%ad" --date=short | sort | uniq -c
 
 ### 整體準確率: [%] ([確認數]/[總數])
 
-### 分類準確率:
+### 分類準確率
+
 1. **[類別1]**: [%] ([確認數]/[類別數])
 2. **[類別2]**: [%]
 ...
@@ -591,16 +619,16 @@ git log --format="%ad" --date=short | sort | uniq -c
 ### 為什麼某些假設被推翻？
 
 **原因分析**:
-- [原因1]: [說明]
-- [原因2]: [說明]
 
 ### 驗證方法的改進
 
 **成功的方法**:
+
 - ✅ [方法1]
 - ✅ [方法2]
 
 **失敗的方法**:
+
 - ❌ [方法1]: [為什麼失敗]
 - ❌ [方法2]: [為什麼失敗]
 
@@ -621,15 +649,19 @@ git log --format="%ad" --date=short | sort | uniq -c
 基於驗證結果，更新對專案的理解：
 
 ### 技術棧 (更新)
+
 - [更正或補充]
 
 ### 架構模式 (更新)
+
 - [更正或補充]
 
 ### 代碼品質 (更新)
+
 - [更正或補充]
 
 ### 開發者能力 (更新)
+
 - [更正或補充]
 
 ---
@@ -651,6 +683,7 @@ git log --format="%ad" --date=short | sort | uniq -c
 **報告完成時間**: [ISO 8601]
 **理解深度**: [85-95]%
 **信心等級**: [0.0-1.0]
+
 ```
 
 ## ⚠️ 重要原則
@@ -686,6 +719,7 @@ git log --format="%ad" --date=short | sort | uniq -c
 ### 目標
 
 通過分析 Git 歷史，識別：
+
 - 開發模式和節奏
 - 代碼熱點（最常修改的檔案）
 - 開發者能力和習慣
@@ -696,6 +730,7 @@ git log --format="%ad" --date=short | sort | uniq -c
 ### 核心理念
 
 **Git 是開發歷史的時間膠囊**:
+
 - Commit 模式反映開發習慣
 - 檔案修改頻率反映架構熱點
 - Commit message 反映思維方式
@@ -736,6 +771,7 @@ git log --all --format="%ad" --date=format:"%Y-%m" | sort | uniq -c
 ```
 
 **Commit 時間分析**:
+
 ```bash
 # 最近 30 天的 commits
 git log --all --since="30 days ago" --oneline | wc -l
@@ -750,6 +786,7 @@ git log --all --format="%ad" --date=format:"%H" | sort | uniq -c
 ### Phase 2: 檔案熱點分析
 
 **最常修改的檔案**:
+
 ```bash
 # Top 20 最常修改的檔案
 git log --all --name-only --format="" | sort | uniq -c | sort -rn | head -20
@@ -759,6 +796,7 @@ git log --all --name-only --format="" -- [PATH]/ | sort | uniq -c | sort -rn
 ```
 
 **代碼變更量分析**:
+
 ```bash
 # 總代碼變更統計
 git log --all --numstat --format="" | awk 'NF==3 {plus+=$1; minus+=$2} END {
@@ -775,6 +813,7 @@ git log --all --numstat --format="%H %s" |
 ### Phase 3: Commit Message 分析
 
 **Commit 格式分析**:
+
 ```bash
 # Conventional Commits 統計
 git log --all --format="%s" | grep -E "^(feat|fix|docs|style|refactor|test|chore|perf):" | wc -l
@@ -787,6 +826,7 @@ git log --all --format="%s" | grep -oE "^[a-z]+:" | sort | uniq -c | sort -rn
 ```
 
 **開發模式識別**:
+
 ```bash
 # 尋找重構 commits
 git log --all --grep="refactor" --oneline | wc -l
@@ -804,6 +844,7 @@ git log --all --grep="debt\|todo\|cleanup" --oneline
 ### Phase 4: 開發者行為分析
 
 **多作者專案**:
+
 ```bash
 # 每位作者的代碼貢獻
 git log --all --numstat --format="%an" |
@@ -819,6 +860,7 @@ done
 ```
 
 **單作者多環境檢測**:
+
 ```bash
 # 檢查是否同一人使用多個郵箱/環境
 git log --all --format="%an|%ae|%cn|%ce" | sort -u
@@ -827,6 +869,7 @@ git log --all --format="%an|%ae|%cn|%ce" | sort -u
 ### Phase 5: AI 協作證據分析
 
 **AI 代碼特徵**:
+
 ```bash
 # 搜尋 AI 配置檔案修改
 git log --all --name-only --format="" | grep -E "(\.claude|\.cursor|CLAUDE\.md|\.ai)"
@@ -859,26 +902,32 @@ git log --all --format="%s" | grep -E "[\u4e00-\u9fff]" | wc -l
 
 ### 開發時間線
 ```
+
 開始日期: [YYYY-MM-DD]
 結束日期: [YYYY-MM-DD]
 總開發時間: [X 個月/週]
 總 Commits: [數量]
 平均每日 Commits: [數量]
+
 ```
 
 ### 代碼變更量
 ```
+
 總新增行: [數量]
 總刪除行: [數量]
 淨增長: [數量]
 效率比: [新增/刪除比例]
+
 ```
 
 ### 開發者統計
 ```
+
 [作者1]: [X] commits ([Y]%)
 [作者2]: [X] commits ([Y]%)
 ...
+
 ```
 
 ---
@@ -925,8 +974,10 @@ git log --all --format="%s" | grep -E "[\u4e00-\u9fff]" | wc -l
 
 **代表性 Commits**:
 ```
+
 [hash] [message]
 [hash] [message]
+
 ```
 
 ### Phase 2: [下一階段]
@@ -945,10 +996,12 @@ git log --all --format="%s" | grep -E "[\u4e00-\u9fff]" | wc -l
 
 **常見前綴**:
 ```
+
 feat:     [X] commits ([Y]%)
 fix:      [X] commits ([Y]%)
 refactor: [X] commits ([Y]%)
 ...
+
 ```
 
 ### 開發節奏
@@ -960,7 +1013,9 @@ refactor: [X] commits ([Y]%)
 
 **工作時間分析**:
 ```
+
 [分析開發者的工作時間偏好]
+
 ```
 
 ### 重構頻率
@@ -986,7 +1041,9 @@ refactor: [X] commits ([Y]%)
 
 **AI 協作時間線**:
 ```
+
 [描述 AI 協作的引入和演進]
+
 ```
 
 ### AI 代碼特徵
@@ -1068,6 +1125,7 @@ refactor: [X] commits ([Y]%)
 ## 📊 分析標準
 
 一個好的 Stage 2 分析應該：
+
 - ✅ 完整的時間線重建
 - ✅ 識別所有關鍵階段
 - ✅ 找出檔案熱點
@@ -1078,9 +1136,11 @@ refactor: [X] commits ([Y]%)
 ## 🎓 範例參考
 
 查看以下實際分析範例：
+
 - `test_results/trySwift-stage2-git-hotspots.md`
 - `test_results/taiwan-calendar-stage2-git-hotspots.md`
 - `test_results/h1431532403240-Mir01-stage2-git-hotspots.md`
+
 ```
 
 ---
@@ -1090,6 +1150,7 @@ refactor: [X] commits ([Y]%)
 ### 標準分析流程
 
 ```
+
 1. Stage 0: Project Fingerprint
    ↓ (生成 10-15 個假設)
 
@@ -1101,6 +1162,7 @@ refactor: [X] commits ([Y]%)
 
 4. 綜合報告
    (整合三階段結果)
+
 ```
 
 ### 何時跳過某個 Stage？
