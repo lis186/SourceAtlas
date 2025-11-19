@@ -1,326 +1,550 @@
-# SourceAtlas PRD v2.0
+# SourceAtlas PRD v2.5
 
-**AI-Optimized Codebase Context Engine**
+**AI-Powered Codebase Understanding Assistant**
 
-- **版本**: 2.0.0
-- **更新日期**: 2025-11-19
-- **狀態**: Draft
+- **版本**: 2.5.0
+- **更新日期**: 2025-11-20
+- **狀態**: Active Development
 
 ---
 
 ## Executive Summary
 
-SourceAtlas 是一個為 AI 輔助開發設計的智慧型程式碼上下文引擎。不同於傳統的程式碼索引工具，SourceAtlas 專注於提供「AI 需要知道的關鍵資訊」，採用 TOON 格式優化 token 使用，並整合 Snapshot 2.0 的開發理念。
+SourceAtlas 是一個整合在 Claude Code 中的智慧型程式碼理解助手。通過 Claude Skill + 輕量 Scripts 的架構，在開發者的工作流程中提供即時的專案理解、模式學習和影響分析能力。
+
+**核心定位的轉變**：
+- ❌ **不是**：獨立的 CLI 索引工具
+- ✅ **而是**：Claude Code 原生的分析助手
 
 ### 核心特色
 
-- 🎯 **目的導向索引**：不追求完整性,而是「理解專案脈絡」
+- 🎯 **即時探索**：不需要預先索引，按需分析
 - 🔄 **Token 優化**：採用 TOON 格式，節省 30-50% tokens
-- 🧠 **智慧上下文**：提供範例、模式、工作流程等高階理解
-- ⚡ **漸進式載入**：根據 context window 動態調整輸出
-- 🛠️ **零依賴設計**：純 POSIX 工具實作，易於部署
+- 🧠 **智慧理解**：AI 動態推理，而非靜態索引
+- ⚡ **工作流整合**：融入 Claude Code，無縫使用
+- 🛠️ **輕量設計**：Scripts 收集資料，AI 負責理解
 
 ---
 
 ## 目錄
 
-1. [背景與目標](#1-背景與目標)
-2. [核心理念](#2-核心理念)
-3. [系統架構](#3-系統架構)
-4. [資料模型](#4-資料模型)
+1. [產品定位](#1-產品定位)
+2. [使用場景](#2-使用場景)
+3. [產品架構](#3-產品架構)
+4. [核心能力](#4-核心能力)
 5. [TOON 格式規範](#5-toon-格式規範)
-6. [CLI 介面設計](#6-cli-介面設計)
-7. [索引策略](#7-索引策略)
-8. [智慧上下文](#8-智慧上下文)
-9. [漸進式檢索](#9-漸進式檢索)
-10. [實作規範](#10-實作規範)
-11. [效能指標](#11-效能指標)
-12. [驗收標準](#12-驗收標準)
-
-- [附錄 A：範例輸出](#附錄-a範例輸出)
-- [附錄 B：實作時程](#附錄-b實作時程)
-- [附錄 C：相關資源](#附錄-c相關資源)
+6. [Skill 介面設計](#6-skill-介面設計)
+7. [Scripts 設計](#7-scripts-設計)
+8. [分析方法論](#8-分析方法論)
+9. [實作規範](#9-實作規範)
+10. [成功指標](#10-成功指標)
+11. [實作路線圖](#11-實作路線圖)
 
 ---
 
-## 1. 背景與目標
+## 1. 產品定位
 
-### 1.1 問題陳述
+### 1.1 產品演進
 
-現有的程式碼索引工具（如 LSIF、ctags）為 IDE 設計，產生大量細節資訊，但對 AI 助理來說：
+```
+v2.0 (已完成) - 手動 Prompts 方法論
+  ↓
+v2.5 (當前) - SourceAtlas Skill
+  ├─ Claude Code Skill 整合
+  ├─ 輕量 Scripts 輔助
+  └─ 即時探索能力
+  ↓
+v3.0 (未來) - SourceAtlas Monitor
+  ├─ 持續追蹤系統
+  ├─ 歷史趨勢分析
+  └─ 健康度儀表板
+```
 
-- 資訊過多導致 token 浪費
-- 缺乏專案層級的理解
-- 沒有工作流程和慣例的描述
-- 無法提供「怎麼做」的範例
+### 1.2 為什麼選擇 Skill 架構
 
-### 1.2 目標用戶
+#### 問題：獨立 CLI 的限制
 
-- **主要**：使用 AI 助理（Claude、GPT-4）進行開發的工程師
-- **次要**：需要快速理解陌生專案的開發者
-- **延伸**：自動化文件生成、程式碼審查工具
+原始 PRD 設計的獨立 CLI 工具存在以下問題：
 
-### 1.3 成功指標
+| 問題 | 影響 |
+|------|------|
+| 需要匯出索引 | 開發者需要離開 Claude Code |
+| 預先建立索引 | 無法應對動態變化 |
+| 重複造輪子 | Claude Code 已有檔案操作工具 |
+| 開發週期長 | 8 週才能完成 MVP |
+| 學習成本高 | 需要記憶新的 CLI 命令 |
 
-| 指標 | 目標值 | 測量方式 |
-|------|--------|----------|
-| Token 使用量 | 降低 40% | 相同資訊量下的 token 數 |
-| 問答準確率 | > 85% | AI 能正確定位功能位置 |
-| 索引時間 | < 60 秒 | 中型專案首次索引 |
-| 更新時間 | < 5 秒 | 增量更新 |
+#### 解決方案：Skill + Scripts
+
+| 優勢 | 說明 |
+|------|------|
+| **原生整合** | 在 Claude Code 中直接使用 `/atlas` |
+| **即時分析** | 按需探索，不需預先索引 |
+| **零學習成本** | 自然語言互動 |
+| **快速開發** | 1-2 週完成核心功能 |
+| **AI 驅動** | 利用 Claude 的理解能力 |
+
+### 1.3 目標用戶
+
+- **主要**：使用 Claude Code 進行開發的工程師
+- **場景**：接手新專案、學習現有模式、Debug、Code Review
+- **頻率**：每天多次使用
 
 ---
 
-## 2. 核心理念
+## 2. 使用場景
 
-### 2.1 From "What" to "Why"
+### 場景 1：接手遺留系統（Bug 修復）
 
-#### 傳統索引
-
-```yaml
-file: user.rb
-symbols:
-  - User: class
-  - authenticate: method
-  - email: attribute
+**情境**：
+```
+新人 Alice 需要修 Bug：
+"用戶登入後，特定角色無法看到訂單列表"
 ```
 
-#### SourceAtlas 索引
+**傳統方式**：
+- 搜尋 "orders" → 50 個檔案
+- 猜測是 OrdersController？
+- 發現有 authorization 邏輯，但 Policy 在哪？
+- 問資深同事（可能在忙）
+- **花費 2 小時**
 
-```yaml
-file: user.rb
-purpose: Handle user authentication and profile
-why_exists: Central auth logic for JWT-based API
-key_responsibilities:
-  - Validate credentials
-  - Generate/refresh tokens
-  - Manage user sessions
-patterns: [ActiveRecord, JWT, BCrypt]
-examples:
-  login: "See authenticate method line 45"
-  signup: "See create + send_welcome_email"
+**使用 SourceAtlas**：
+```
+Alice: /atlas find "order list authorization"
+
+AI 回應：
+訂單列表的授權鏈路：
+  1. OrdersController#index (app/controllers/orders_controller.rb:23)
+     → 呼叫 authorize(@orders)
+
+  2. OrderPolicy#index? (app/policies/order_policy.rb:15)
+     → 檢查 user.role 和 store 權限
+
+  3. 相關測試：spec/requests/orders_spec.rb:45
+
+可能問題點：
+  - OrderPolicy 2天前被修改
+  - Commit: "fix: update role check logic"
+
+建議：先檢查 order_policy.rb:18 的角色判斷邏輯
 ```
 
-### 2.2 範例優於規範
-
-不告訴 AI「所有 API 都繼承 BaseController」，而是：
-
-```yaml
-example_patterns:
-  create_api_endpoint:
-    reference: app/controllers/api/v1/posts_controller.rb
-    pattern: "Inherit from Api::V1::BaseController, use serializers"
-    typical_structure:
-      - before_action for auth
-      - strong parameters
-      - render with serializer
-```
-
-### 2.3 工作流程感知
-
-```yaml
-development_workflow:
-  add_feature:
-    steps:
-      1: "Create migration if needed"
-      2: "Update model with validations"
-      3: "Add service object for business logic"
-      4: "Create/update controller action"
-      5: "Write request specs"
-    examples:
-      - feature: "Add user avatar"
-        files_changed:
-          - db/migrate/add_avatar_to_users.rb
-          - app/models/user.rb
-          - app/services/avatar_service.rb
-          - spec/requests/avatar_spec.rb
-```
+**時間節省**：從 2 小時 → 15 分鐘
 
 ---
 
-## 3. 系統架構
+### 場景 2：新功能開發（學習現有模式）
 
-### 3.1 組件架構
-
+**情境**：
 ```
-┌─────────────────────────────────────────┐
-│            SourceAtlas CLI              │
-├─────────────────────────────────────────┤
-│  Parser Layer                           │
-│  ├─ Language Parsers (regex-based)     │
-│  ├─ Pattern Detectors                  │
-│  └─ Example Extractors                 │
-├─────────────────────────────────────────┤
-│  Index Layer                            │
-│  ├─ File Scanner                       │
-│  ├─ Symbol Extractor                   │
-│  └─ Context Builder                    │
-├─────────────────────────────────────────┤
-│  Storage Layer                          │
-│  ├─ TOON Formatter                     │
-│  ├─ JSON Fallback                      │
-│  └─ Compression (zstd/gzip)            │
-├─────────────────────────────────────────┤
-│  Query Layer                            │
-│  ├─ Progressive Loader                 │
-│  ├─ Token Calculator                   │
-│  └─ Context Optimizer                  │
-└─────────────────────────────────────────┘
+PM: "我們要加新功能：用戶可以匯出發票 PDF"
+開發者 Bob: "好，但這專案怎麼處理 PDF 生成的？"
 ```
 
-### 3.2 資料流程
-
-```mermaid
-graph LR
-    A[Source Code] --> B[Scanner]
-    B --> C[Parser]
-    C --> D[Context Builder]
-    D --> E[TOON Formatter]
-    E --> F[Index Files]
-    F --> G[Query Engine]
-    G --> H[AI Assistant]
+**使用 SourceAtlas**：
 ```
+Bob: /atlas pattern "file generation"
+
+AI 回應：
+此專案的檔案生成模式（範例：訂單 PDF）：
+
+標準流程：
+  1. Controller 接收請求
+  2. 入隊背景任務 GeneratePdfJob
+  3. Service 使用 Prawn gem 生成
+  4. 上傳到 S3 (config/storage.yml:15)
+  5. 發送郵件通知用戶
+
+參考實作：
+  - Service: app/services/order_pdf_service.rb
+  - Job: app/jobs/generate_pdf_job.rb
+  - Test: spec/services/order_pdf_service_spec.rb
+
+跟隨此模式新增發票 PDF：
+  1. 創建 InvoicePdfService
+  2. 創建 GenerateInvoicePdfJob
+  3. 配置 S3 bucket
+  4. 更新 InvoiceMailer
+```
+
+**價值**：避免重新設計，遵循現有架構
+
+---
+
+### 場景 3：影響範圍分析
+
+影響分析是開發中的關鍵需求，包含兩種常見情況：
+
+#### 3A. Model 變更的連鎖影響
+
+**情境**：
+```
+測試環境發現：改了 User model 的驗證規則後，
+3 個看似不相關的功能都壞了
+```
+
+**使用 SourceAtlas**：
+```
+Developer: /atlas impact "User model validation"
+
+AI 回應：
+User model 驗證變更的影響範圍：
+
+直接影響（4 處）：
+  - RegistrationController#create
+  - Admin::UsersController#update
+  - Api::V1::ProfileController#update
+  - UserImportService（批量匯入）
+
+連鎖影響（3 處）：
+  - Order model (belongs_to :user, validates: true)
+  - Notification service（假設 user.email 總是有效）
+  - Analytics job（依賴 user 資料結構）
+
+測試覆蓋缺口：
+  ⚠️ UserImportService 沒有驗證失敗的測試
+  ⚠️ Order#user 關聯沒測試 invalid user
+
+建議：
+  1. 先補上缺失的測試
+  2. 檢查 Notification service 的 email 處理
+```
+
+**價值**：預防連鎖失敗，提前補測試
+
+---
+
+#### 3B. API 改動的影響範圍（⭐ 高頻場景）
+
+**情境**：
+```
+後端 API 端點變更，需要盤點哪些前端頁面會受影響
+
+例如：GET /api/users/{id} 的 response 格式改變
+- 'role' 欄位從字串改為陣列 'roles'
+- 新增 'profile' 巢狀物件
+```
+
+**使用 SourceAtlas**：
+```
+Developer: /atlas impact api "/api/users/{id}"
+
+AI 回應：
+=== API Impact Analysis ===
+
+📍 調用鏈路：
+  1. API 層
+     - src/types/api.ts (類型定義)
+     - src/lib/apiClient.ts (調用封裝)
+
+  2. Hook 層
+     - src/hooks/useUser.ts (主要 Hook)
+       → 被 5 個元件使用
+
+  3. 元件層
+     - src/app/profile/page.tsx
+     - src/app/users/[id]/page.tsx
+     - src/components/UserCard.tsx
+     - src/components/UserBadge.tsx
+     - src/app/dashboard/page.tsx
+
+📊 欄位使用分析：
+
+'role' 欄位（⚠️ 將被改為 'roles' 陣列）：
+  - 使用次數：8 處
+  - 關鍵位置：
+    1. UserBadge.tsx:34 - 渲染角色徽章
+       if (user.role === 'admin') { ... }
+
+    2. permissions.ts:12 - 權限檢查
+       return user.role === 'admin' || user.role === 'editor'
+
+    3. UserForm.tsx:67 - 表單顯示
+    4. useUser.ts:23 - 數據轉換
+
+  - 假設類型為字串：✅ 是（全部）
+  - 影響評估：🔴 破壞性變更（需要修改）
+
+🧪 測試影響：
+  需要更新 5 個測試檔案：
+  - useUser.test.ts - Mock 數據
+  - UserBadge.test.tsx
+  - permissions.test.ts
+  - UserForm.test.tsx
+  - e2e/user-profile.spec.ts
+
+📋 遷移檢查清單：
+  [ ] 更新 API 類型定義（api.ts）
+  [ ] 更新 8 處 role → roles 使用
+  [ ] 改用 user.roles.includes('admin')
+  [ ] 新增向後相容處理（如需要）
+  [ ] 更新 5 個測試檔案
+  [ ] 測試所有影響的頁面
+
+預估工作量：2-3 小時
+風險等級：🔴 高（破壞性變更）
+```
+
+**價值**：
+- 提前發現所有影響點，避免遺漏
+- 給出明確修改清單和遷移步驟
+- 評估工作量和風險等級
+- 減少前後端協作摩擦
+
+**適用場景**：
+- API Response 格式變更
+- 新增必填參數
+- 欄位移除或改名
+- 狀態碼邏輯變更
+
+---
+
+### 場景 4：Code Review（理解變更意圖）
+
+**情境**：
+```
+收到 PR：新增 PaymentRefundService
+Reviewer 不熟悉支付模組，需要快速理解上下文
+```
+
+**使用 SourceAtlas**：
+```
+Reviewer: /atlas review PR#123
+
+AI 回應：
+此 PR 在支付模組新增退款服務
+
+模組上下文：
+  - 現有：PaymentService (charge, capture)
+  - 現有：PaymentWebhookHandler
+  - 新增：PaymentRefundService ← 此 PR
+
+架構符合度：✅ 良好
+  - 遵循現有 Service Object 模式
+  - 錯誤處理方式一致（Result pattern）
+  - 命名符合慣例
+
+潛在問題：
+  ⚠️ 缺少冪等性處理（PaymentService 有實作）
+  ⚠️ Webhook 處理器需要更新支援 refund events
+  ⚠️ 測試覆蓋 85%（建議 >90% for payment logic）
+
+建議：
+  1. 參考 PaymentService#charge 的冪等性實作
+  2. 更新 webhook_handler.rb
+```
+
+**價值**：提高 Review 品質，減少來回修改
+
+---
+
+### 場景 5：技術債務管理（專案健康度）
+
+**情境**：
+```
+Tech Lead 需要向 CTO 報告：
+"我們的技術債務有多嚴重？重構優先級？"
+```
+
+**使用 SourceAtlas**：
+```
+Tech Lead: /atlas health
+
+AI 回應：
+專案健康度報告
+
+🔴 高風險區域（需立即處理）：
+  1. PaymentService
+     - 複雜度：450 lines, 8 dependencies
+     - 被 12 個檔案依賴（核心模組）
+     - 6 個月內修改 23 次（高變動）
+     - 測試覆蓋 78%（支付邏輯應 >95%）
+     → 建議：拆分為多個小 Service + 補測試
+
+  2. User model
+     - God Object 模式（15 concerns）
+     - 影響 45 個檔案
+     → 建議：提取 Authentication, Authorization 為獨立模組
+
+🟡 中風險（規劃重構）：
+  ...
+
+✅ 健康區域：
+  - API Controllers（一致性 98%）
+  - Background Jobs（測試覆蓋 95%）
+```
+
+**價值**：量化技術債務，優先級排序
+
+---
+
+### 場景分類
+
+| 場景類型 | 需求特點 | 適用產品 |
+|---------|---------|---------|
+| **即時探索** | 不需歷史資料、即時推理 | ✅ SourceAtlas Skill (v2.5) |
+| 場景 1: Bug 修復 | 快速定位問題 | ✅ Skill |
+| 場景 2: 學習模式 | 識別設計模式 | ✅ Skill |
+| 場景 3B: API 影響分析 ⭐ | 追蹤 API 調用鏈 | ✅ Skill (基礎版) |
+| 場景 4: Code Review | 理解變更意圖 | ✅ Skill |
+| **持續追蹤** | 需要歷史資料、趨勢分析 | 🔮 SourceAtlas Monitor (v3.0) |
+| 場景 3A: Model 變更影響 | Git 歷史、關聯分析 | 🔮 Monitor |
+| 場景 5: 技術債務 | 持續追蹤、量化指標 | 🔮 Monitor |
+
+---
+
+## 3. 產品架構
+
+### 3.1 整體架構
+
+```
+┌─────────────────────────────────────────────┐
+│           Claude Code Environment           │
+├─────────────────────────────────────────────┤
+│  SourceAtlas Skill                          │
+│  ├─ Stage 0: Project Fingerprint           │
+│  ├─ Stage 1: Hypothesis Validation         │
+│  ├─ Stage 2: Git Hotspots                  │
+│  ├─ Find: Smart Search                     │
+│  ├─ Pattern: Pattern Detection             │
+│  └─ Explain: Deep Dive                     │
+├─────────────────────────────────────────────┤
+│  Helper Scripts (Bash)                      │
+│  ├─ detect-project-type.sh                 │
+│  ├─ scan-high-entropy.sh                   │
+│  ├─ collect-git-stats.sh                   │
+│  └─ analyze-patterns.sh                    │
+├─────────────────────────────────────────────┤
+│  Claude Code Built-in Tools                 │
+│  ├─ Glob (file pattern matching)           │
+│  ├─ Grep (content search)                  │
+│  ├─ Read (file reading)                    │
+│  └─ Bash (command execution)               │
+└─────────────────────────────────────────────┘
+```
+
+### 3.2 與原始 PRD 的對比
+
+| 組件 | 原始 PRD (CLI) | 新設計 (Skill) | 理由 |
+|------|---------------|---------------|------|
+| **Parser Layer** | ✅ 需實作 | ❌ 移除 | AI 自己理解代碼 |
+| **Index Layer** | ✅ 需實作 | ❌ 移除 | 即時探索，不需索引 |
+| **Storage Layer** | ✅ 需實作 | ❌ 移除 | 不儲存索引 |
+| **Query Layer** | ✅ 需實作 | ❌ 移除 | AI 動態查詢 |
+| **Skill Prompt** | ❌ 無 | ✅ 新增 | 指導 AI 分析 |
+| **Helper Scripts** | ❌ 無 | ✅ 新增 | 資料收集 |
 
 ### 3.3 檔案結構
 
 ```
-project_root/
-├── .sourceatlas/
-│   ├── project.toon          # 專案級理解
-│   ├── index.toon            # 主索引
-│   ├── symbols.toon          # 符號表
-│   ├── patterns.toon         # 模式與範例
-│   ├── workflows.toon        # 工作流程
-│   └── shards/               # 分片目錄
-│       ├── models.toon
-│       ├── controllers.toon
-│       └── services.toon
-└── (原始程式碼)
+sourceatlas2/
+├── .claude/
+│   └── skills/
+│       └── atlas.md              # ✨ Skill 定義（核心）
+│
+├── scripts/
+│   ├── atlas-stage0.sh          # Stage 0 資料收集
+│   ├── atlas-stage1.sh          # Stage 1 驗證助手
+│   ├── atlas-stage2.sh          # Stage 2 Git 分析
+│   ├── atlas-find.sh            # 智慧搜尋
+│   └── utils/
+│       ├── detect-project-type.sh
+│       ├── scan-high-entropy.sh
+│       ├── collect-git-stats.sh
+│       └── analyze-patterns.sh
+│
+├── templates/
+│   ├── stage0-prompt.txt        # Stage 0 Prompt 模板
+│   ├── stage1-prompt.txt        # Stage 1 Prompt 模板
+│   ├── stage2-prompt.txt        # Stage 2 Prompt 模板
+│   └── patterns.yaml            # 模式定義庫
+│
+├── docs/
+│   ├── PROMPTS.md               # 完整 Prompt 文檔（已有）
+│   ├── USAGE_GUIDE.md           # 使用指南（已有）
+│   └── README.md                # 總覽（已有）
+│
+└── test_results/                # 驗證案例（已有）
 ```
 
 ---
 
-## 4. 資料模型
+## 4. 核心能力
 
-### 4.1 專案理解模型
+### 4.1 三階段分析（保留 v2.0 核心）
 
-```yaml
-# project.toon
-project:
-  name: MyApp
-  type: Rails API + React SPA
-  version: 1.0.0
-  description: E-commerce platform with microservices
+#### Stage 0: Project Fingerprint
+- **目標**：掃描 <5% 檔案達到 70-80% 理解
+- **方法**：高熵檔案優先（README, package.json, Models）
+- **輸出**：TOON 格式專案指紋
+- **時間**：10-15 分鐘
 
-architecture:
-  pattern: Microservices with Event Sourcing
-  layers:
-    - presentation: React + GraphQL
-    - api: Rails API
-    - business: Service Objects
-    - data: PostgreSQL + Redis
+#### Stage 1: Hypothesis Validation
+- **目標**：驗證 Stage 0 假設，達到 85-95% 理解
+- **方法**：系統化驗證，提供證據
+- **輸出**：驗證報告
+- **時間**：20-30 分鐘
 
-core_concepts:
-  multi_tenancy:
-    how: Schema-based isolation
-    gem: apartment
-    key_files:
-      - config/initializers/apartment.rb
-      - app/models/concerns/tenantable.rb
+#### Stage 2: Git Hotspots Analysis
+- **目標**：識別開發模式，理解深度 95%+
+- **方法**：分析 commit 歷史、識別熱點
+- **輸出**：Git 分析報告
+- **時間**：15-20 分鐘
 
-  authentication:
-    how: JWT with refresh tokens
-    storage: Redis
-    key_files:
-      - app/services/auth_service.rb
-      - app/controllers/concerns/authenticable.rb
+### 4.2 即時探索能力（新增）
 
-conventions:
-  naming:
-    services: app/services/*_service.rb
-    serializers: app/serializers/*_serializer.rb
-    jobs: app/jobs/*_job.rb
+#### Find（智慧搜尋）
+```
+/atlas find "authentication flow"
 
-  testing:
-    framework: RSpec
-    structure: spec/parallel/to/app
-    factories: spec/factories/*.rb
+AI 自動：
+1. 理解搜尋意圖
+2. 規劃搜尋策略
+3. 執行多輪搜尋
+4. 整合結果
+5. 提供上下文
 ```
 
-### 4.2 檔案索引模型
+#### Pattern（模式識別）
+```
+/atlas pattern "api endpoint"
 
-```yaml
-# index.toon - 標準版本
-files:
-  - path: app/models/user.rb
-    purpose: User authentication and profile management
-    layer: model
-    complexity: medium  # low|medium|high
-
-    responsibilities:
-      - Authenticate users with BCrypt
-      - Generate JWT tokens
-      - Manage user preferences
-
-    key_methods:
-      authenticate:
-        purpose: Validate credentials
-        returns: JWT token or nil
-        used_by: [AuthController, API::V1::SessionsController]
-
-      generate_token:
-        purpose: Create new JWT token
-        ttl: 24 hours
-        refresh: true
-
-    dependencies:
-      internal:
-        - app/models/concerns/tokenable.rb
-        - app/models/user_preference.rb
-      gems:
-        - bcrypt
-        - jwt
-
-    patterns:
-      - ActiveRecord callbacks for token cleanup
-      - Soft delete with paranoia gem
-
-    test_coverage:
-      file: spec/models/user_spec.rb
-      percentage: 95
-      critical_paths: [authenticate, generate_token]
-
-    recent_changes:
-      - date: 2025-01-10
-        type: feature
-        description: Added OAuth support
-      - date: 2025-01-05
-        type: bugfix
-        description: Fixed token expiration
+AI 識別：
+1. 找到最佳範例檔案
+2. 提取設計模式
+3. 說明慣例
+4. 提供步驟指引
 ```
 
-### 4.3 壓縮模型（Token 優化）
-
-```yaml
-# index.min.toon - 極簡版本
-f:  # files
-  - p: app/models/user.rb
-    u: User auth  # purpose
-    l: m  # layer: model
-    d:  # dependencies
-      - bcrypt
-      - jwt
-    m:  # methods
-      - authenticate: validate credentials
-      - generate_token: create JWT
-    t: spec/models/user_spec.rb  # test
+#### Explain（深入解釋）
 ```
+/atlas explain app/services/payment_service.rb
+
+AI 分析：
+1. 檔案目的和職責
+2. 關鍵方法說明
+3. 依賴關係
+4. 使用範例
+5. 測試覆蓋
+```
+
+### 4.3 AI 協作識別（保留 v2.0 發現）
+
+識別專案的 AI 協作成熟度（Level 0-4）：
+
+| Level | 特徵 | 識別方法 |
+|-------|------|---------|
+| **Level 0** | 無 AI | 傳統代碼風格 |
+| **Level 1-2** | 基礎使用 | 偶爾的 AI 痕跡 |
+| **Level 3** | 系統化 | CLAUDE.md、高一致性、詳細註解 |
+| **Level 4** | 生態化 | 團隊級 AI 協作（未來） |
 
 ---
 
 ## 5. TOON 格式規範
 
-### 5.1 為什麼選擇 TOON
+### 5.1 為什麼選擇 TOON（保留原 PRD）
 
 | 特性 | JSON | YAML | TOON | 優勢 |
 |------|------|------|------|------|
@@ -330,822 +554,618 @@ f:  # files
 | 多行字串 | 複雜 | ✓ | ✓ | ✓ |
 | 解析速度 | 快 | 慢 | 快 | ✓ |
 
-### 5.2 TOON 使用規範
+### 5.2 TOON 基本語法
 
 ```yaml
-# 基本規則
-key: value                    # 簡單鍵值對
-list:
-  - item1                    # 列表項目
-  - item2
-nested:
-  child: value              # 巢狀結構
-
-# 多行字串
-description: >
-  This is a long description
-  that spans multiple lines
-  but will be joined.
-
-code: |
-  def example
-    puts "preserves newlines"
-  end
-
-# 類型提示（可選）
-count: 42 #int
-ratio: 0.95 #float
-enabled: true #bool
-```
-
-### 5.3 壓縮策略
-
-```yaml
-# 三層壓縮策略
-compression_levels:
-  full:
-    when: unlimited tokens
-    keys: full words
-    values: complete descriptions
-    includes: all metadata
-
-  standard:
-    when: normal context (32k)
-    keys: abbreviated
-    values: concise
-    includes: essential fields
-
-  minimal:
-    when: limited context (<8k)
-    keys: single letter
-    values: keywords only
-    includes: critical only
-```
-
----
-
-## 6. CLI 介面設計
-
-### 6.1 核心命令
-
-#### 初始化
-
-```bash
-satlas init                   # 互動式專案設定
-satlas init --auto           # 自動偵測專案類型
-```
-
-#### 索引建立
-
-```bash
-satlas index                  # 完整索引
-satlas index --quick         # 快速索引（僅關鍵檔案）
-satlas index --layer models  # 特定層級
-```
-
-#### 更新
-
-```bash
-satlas update                # 增量更新（基於 git）
-satlas update --since 1.week # 更新一週內變更
-```
-
-#### 查詢
-
-```bash
-satlas find "authentication" # 搜尋功能
-satlas explain user.rb      # 解釋特定檔案
-satlas flow "add feature"   # 顯示工作流程
-```
-
-#### 匯出
-
-```bash
-satlas export                # 匯出給 AI（TOON）
-satlas export --json        # JSON 格式
-satlas export --tokens 4000 # 限制 token 數
-```
-
-#### 分析
-
-```bash
-satlas analyze              # 專案健康度分析
-satlas patterns            # 偵測設計模式
-satlas suggest             # 改進建議
-```
-
-### 6.2 進階功能
-
-```bash
-# 智慧查詢
-satlas ask "How do I add a new API endpoint?"
-# 輸出：範例檔案、模式、步驟
-
-# Context 產生器
-satlas context "fix user login bug"
-# 輸出：相關檔案、測試、最近變更
-
-# 整合 Git
-satlas blame "Why does this exist?"
-satlas history app/models/user.rb
-
-# AI 對話模式
-satlas chat
-> What's the authentication flow?
-> Show me the user model
-> How to add OAuth provider?
-```
-
-### 6.3 設定檔
-
-```yaml
-# .sourceatlas/config.toon
-config:
-  # 基本設定
-  project_type: auto  # auto|rails|node|python
-  index_mode: smart   # full|smart|minimal
-
-  # 包含/排除
-  include:
-    - app/**
-    - lib/**
-    - config/**
-  exclude:
-    - vendor/**
-    - node_modules/**
-    - tmp/**
-    - .git/**
-
-  # 語言設定
-  languages:
-    ruby:
-      extensions: [.rb, .rake]
-      parser: regex  # regex|ast
-    javascript:
-      extensions: [.js, .jsx, .ts, .tsx]
-      parser: regex
-
-  # 輸出設定
-  output:
-    format: toon  # toon|json|yaml
-    compression: auto  # none|gzip|zstd|auto
-    max_file_size: 2MB
-
-  # AI 優化
-  ai:
-    default_model: claude-3
-    max_tokens: 8000
-    include_examples: true
-    include_patterns: true
-```
-
----
-
-## 7. 索引策略
-
-### 7.1 智慧掃描
-
-```yaml
-scanning_strategy:
-  # 優先級順序
-  priority:
-    1: entry_points     # main.rb, application.rb
-    2: routes          # routes.rb, router.js
-    3: models          # 資料模型
-    4: controllers     # API/Web 控制器
-    5: services        # 商業邏輯
-    6: tests          # 測試檔案
-    7: configs        # 設定檔
-    8: others         # 其他
-
-  # 智慧判斷
-  smart_detection:
-    entry_points:
-      - file_names: [main, app, application, index]
-      - contains: ["if __name__ == '__main__'", "Rails.application"]
-    models:
-      - paths: ["*/models/*", "*/entities/*"]
-      - contains: ["class.*< ApplicationRecord", "@Entity"]
-    services:
-      - paths: ["*/services/*", "*/use_cases/*"]
-      - suffix: [Service, UseCase, Handler]
-```
-
-### 7.2 符號擷取
-
-```yaml
-symbol_extraction:
-  ruby:
-    patterns:
-      class: 'class\s+(\w+)'
-      module: 'module\s+(\w+)'
-      method: 'def\s+(\w+)'
-      scope: 'scope\s+:(\w+)'
-
-    importance:
-      public_method: high
-      private_method: low
-      class_method: high
-      included_module: medium
-
-  javascript:
-    patterns:
-      class: 'class\s+(\w+)'
-      function: 'function\s+(\w+)'
-      arrow: 'const\s+(\w+)\s*=\s*\([^)]*\)\s*=>'
-      react_component: '(function|const)\s+(\w+).*return.*<'
-```
-
-### 7.3 模式識別
-
-```yaml
-pattern_detection:
-  design_patterns:
-    singleton:
-      indicators:
-        - "class << self"
-        - "private_class_method :new"
-        - "@instance ||="
-
-    factory:
-      indicators:
-        - suffix: Factory
-        - methods: [create, build]
-
-    observer:
-      indicators:
-        - methods: [subscribe, notify, observe]
-        - gems: [wisper, activesupport]
-
-  code_smells:
-    large_class:
-      threshold: 300 lines
-
-    long_method:
-      threshold: 30 lines
-
-    too_many_parameters:
-      threshold: 5 parameters
-```
-
----
-
-## 8. 智慧上下文
-
-### 8.1 範例提取
-
-```yaml
-example_extraction:
-  # 自動識別好範例
-  criteria:
-    - well_tested: coverage > 90%
-    - well_documented: has comments
-    - follows_patterns: matches conventions
-    - frequently_referenced: imported by > 3 files
-
-  # 範例分類
-  categories:
-    crud_operations:
-      example: PostsController
-      operations: [index, show, create, update, destroy]
-
-    authentication:
-      example: AuthService
-      operations: [login, logout, refresh_token]
-
-    background_jobs:
-      example: EmailNotificationJob
-      operations: [perform, retry, handle_error]
-```
-
-### 8.2 工作流程對應
-
-```yaml
-workflow_mapping:
-  # 常見任務對應
-  tasks:
-    add_api_endpoint:
-      steps:
-        1: "Add route to config/routes.rb"
-        2: "Create controller with action"
-        3: "Add service for business logic"
-        4: "Create serializer for response"
-        5: "Write request specs"
-      examples:
-        - "See app/controllers/api/v1/posts_controller.rb"
-
-    fix_bug:
-      steps:
-        1: "Write failing test to reproduce"
-        2: "Find root cause in code"
-        3: "Apply fix"
-        4: "Verify test passes"
-        5: "Check related functionality"
-      tools:
-        - "rspec spec/path/to/test.rb"
-        - "git blame file.rb"
-        - "git log -p file.rb"
-```
-
-### 8.3 關聯性分析
-
-```yaml
-relationship_analysis:
-  # 檔案關聯性
-  file_relationships:
-    strong:
-      definition: "Always change together"
-      threshold: 80% co-occurrence
-      example: [model, serializer, test]
-
-    medium:
-      definition: "Often change together"
-      threshold: 50% co-occurrence
-      example: [controller, service]
-
-    weak:
-      definition: "Sometimes related"
-      threshold: 20% co-occurrence
-
-  # 功能群組
-  feature_groups:
-    authentication:
-      core_files:
-        - app/models/user.rb
-        - app/services/auth_service.rb
-        - app/controllers/sessions_controller.rb
-      related_files:
-        - config/initializers/devise.rb
-        - app/mailers/user_mailer.rb
-      tests:
-        - spec/models/user_spec.rb
-        - spec/requests/auth_spec.rb
-```
-
----
-
-## 9. 漸進式檢索
-
-### 9.1 Context Window 策略
-
-```yaml
-context_strategies:
-  unlimited:  # > 100k tokens
-    include:
-      - full project context
-      - all file indexes
-      - complete examples
-      - detailed patterns
-    format: json
-
-  large:  # 32k-100k tokens
-    include:
-      - project summary
-      - relevant file indexes
-      - key examples
-      - important patterns
-    format: toon
-
-  medium:  # 8k-32k tokens
-    include:
-      - project overview
-      - critical files only
-      - minimal examples
-    format: compressed_toon
-
-  small:  # < 8k tokens
-    include:
-      - project type and stack
-      - file paths only
-      - entry points
-    format: minimal_toon
-```
-
-### 9.2 載入優先順序
-
-```yaml
-loading_priority:
-  # 根據查詢類型動態調整
-  query_types:
-    navigation:  # "Where is X?"
-      1: file paths and purposes
-      2: symbols index
-      3: dependencies
-
-    implementation:  # "How does X work?"
-      1: target file full index
-      2: dependencies
-      3: tests
-      4: examples
-
-    modification:  # "Change X to Y"
-      1: target file
-      2: related files
-      3: tests
-      4: patterns to follow
-
-    debugging:  # "Why is X failing?"
-      1: error location
-      2: recent changes
-      3: dependencies
-      4: tests
-      5: similar issues
-```
-
-### 9.3 Token 計算
-
-```yaml
-token_calculation:
-  # Token 估算規則
-  rules:
-    text: 4 chars = 1 token
-    code: 3 chars = 1 token
-    toon: 2.5 chars = 1 token
-    json: 4 chars = 1 token
-
-  # 預算分配
-  budget_allocation:
-    total: 8000
-    distribution:
-      project_context: 500
-      file_indexes: 4000
-      examples: 2000
-      patterns: 1000
-      buffer: 500
-```
-
----
-
-## 10. 實作規範
-
-### 10.1 技術棧
-
-```yaml
-tech_stack:
-  core:
-    language: Shell (POSIX)
-    reason: Zero dependencies, universal
-
-  parsers:
-    toon: Python toon-lang library
-    fallback: Pure sed/awk
-
-  storage:
-    format: TOON + JSON fallback
-    compression: gzip (universal)
-
-  tools:
-    scanner: find + grep
-    parser: sed + awk
-    hasher: sha256sum
-    compressor: gzip
-```
-
-### 10.2 檔案系統
-
-```bash
-# SourceAtlas 工具結構
-sourceatlas/
-├── bin/
-│   ├── satlas              # 主執行檔
-│   └── sourceatlas         # 完整名稱連結
-├── lib/
-│   ├── core.sh            # 核心函數
-│   ├── scanner.sh         # 檔案掃描
-│   ├── parser.sh          # 內容解析
-│   ├── indexer.sh         # 索引建立
-│   ├── query.sh           # 查詢引擎
-│   └── export.sh          # 匯出功能
-├── parsers/
-│   ├── ruby.sh
-│   ├── javascript.sh
-│   ├── python.sh
-│   └── generic.sh
-├── templates/
-│   ├── project.toon
-│   ├── config.toon
-│   └── patterns.toon
-└── tests/
-    ├── fixtures/
-    ├── e2e/
-    └── helpers.bash
-```
-
-### 10.3 核心演算法
-
-```bash
-# 掃描演算法（偽代碼）
-scan_project() {
-  # 1. 偵測專案類型
-  detect_project_type()
-
-  # 2. 載入對應規則
-  load_rules($project_type)
-
-  # 3. 掃描檔案
-  find_files() | while read file; do
-    # 4. 擷取資訊
-    extract_purpose($file)
-    extract_symbols($file)
-    extract_dependencies($file)
-    detect_patterns($file)
-
-    # 5. 建立索引
-    create_index_entry($file)
-  done
-
-  # 6. 分析關聯
-  analyze_relationships()
-
-  # 7. 產生範例
-  extract_examples()
-
-  # 8. 輸出結果
-  format_output($format)
-}
-```
-
----
-
-## 11. 效能指標
-
-### 11.1 效能目標
-
-| 作業 | 小型專案 | 中型專案 | 大型專案 |
-|------|----------|----------|----------|
-| 檔案數 | < 100 | 100-1000 | > 1000 |
-| 首次索引 | < 5s | < 30s | < 2min |
-| 增量更新 | < 1s | < 5s | < 20s |
-| 查詢回應 | < 100ms | < 200ms | < 500ms |
-| 記憶體使用 | < 50MB | < 200MB | < 1GB |
-
-### 11.2 最佳化策略
-
-```yaml
-optimizations:
-  scanning:
-    - parallel processing with xargs -P
-    - skip binary files early
-    - cache file metadata
-
-  parsing:
-    - regex over AST for speed
-    - lazy evaluation
-    - incremental parsing
-
-  storage:
-    - compress large indexes
-    - shard by directory
-    - use memory mapping
-
-  query:
-    - index symbols in TSV
-    - binary search on sorted data
-    - cache frequent queries
-```
-
----
-
-## 12. 驗收標準
-
-### 12.1 功能驗收
-
-```yaml
-acceptance_criteria:
-  functional:
-    - Init: Creates config in < 5 seconds
-    - Index: Covers 95% of source files
-    - Update: Only processes changed files
-    - Query: Returns results in < 500ms
-    - Export: Fits in specified token limit
-
-  quality:
-    - Accuracy: 85% correct file locations
-    - Completeness: All key symbols indexed
-    - Relevance: Examples match patterns
-    - Efficiency: Token usage reduced by 40%
-```
-
-### 12.2 測試案例
-
-```yaml
-test_scenarios:
-  basic:
-    - "Where is user authentication?"
-    - "Show me the User model"
-    - "How to add an API endpoint?"
-
-  advanced:
-    - "What changed in authentication recently?"
-    - "Which files depend on UserService?"
-    - "Find examples of background jobs"
-
-  edge_cases:
-    - Empty project
-    - Single file project
-    - Circular dependencies
-    - Mixed languages
-```
-
-### 12.3 品質門檻
-
-| 指標 | 門檻 | 測量方式 |
-|------|------|----------|
-| 程式碼覆蓋率 | > 80% | Unit tests |
-| E2E 測試通過率 | 100% | Bats tests |
-| 記憶體洩漏 | 0 | Valgrind |
-| 效能衰退 | < 10% | Benchmark suite |
-
----
-
-## 附錄 A：範例輸出
-
-### A.1 專案理解檔案
-
-```yaml
-# .sourceatlas/project.toon
-project:
-  name: EcommerceAPI
-  type: Rails API
-  version: 2.3.1
-  team_size: 5
-  age_months: 18
-
-stack:
+# 專案指紋範例
+metadata:
+  project_name: EcommerceAPI
+  scan_time: 2025-11-20T10:00:00Z
+  scanned_files: 12
+  total_files_estimate: 450
+
+## 專案指紋
+project_type: WEB_APP
+framework: Rails 7.0
+architecture: Service-oriented
+scale: LARGE
+
+## 技術棧
+backend:
   language: Ruby 3.1
   framework: Rails 7.0
   database: PostgreSQL 14
-  cache: Redis 6
-  queue: Sidekiq
 
-architecture:
-  pattern: Service-oriented
-  api_style: RESTful + GraphQL
-  auth: JWT
-
-key_features:
-  - Multi-tenant SaaS
-  - Real-time notifications
-  - Payment processing
-  - Inventory management
-
-health:
-  test_coverage: 87%
-  code_climate: B
-  last_deploy: 2 days ago
-  open_issues: 23
+## 假設清單
+hypotheses:
+  architecture:
+    - hypothesis: "使用 Service Object 模式處理商業邏輯"
+      confidence: 0.9
+      evidence: "app/services/ 有 15 個 Service 類別"
+      validation_method: "檢查 Service 類別結構和呼叫方式"
 ```
 
-### A.2 檔案索引範例
+### 5.3 Token 優化比較
 
-```yaml
-# .sourceatlas/index.toon (片段)
-files:
-  - path: app/services/payment_service.rb
-    purpose: Handle payment processing with Stripe
-    complexity: high
-
-    responsibilities:
-      - Process credit card payments
-      - Handle refunds and disputes
-      - Manage subscriptions
-      - Send payment receipts
-
-    key_methods:
-      charge:
-        purpose: Process one-time payment
-        params: [amount, currency, source]
-        returns: Payment object or error
-        error_handling: Rescue Stripe errors
-
-      refund:
-        purpose: Refund a payment
-        params: [payment_id, amount]
-        async: true via PaymentRefundJob
-
-    dependencies:
-      gems: [stripe, money]
-      internal:
-        - app/models/payment.rb
-        - app/models/user.rb
-        - app/jobs/payment_receipt_job.rb
-
-    patterns:
-      - Result object pattern
-      - Idempotency keys
-      - Webhook handling
-
-    test:
-      file: spec/services/payment_service_spec.rb
-      coverage: 95%
-      key_scenarios:
-        - successful payment
-        - declined card
-        - network timeout
-        - webhook processing
+```
+原始 JSON: 156 tokens
+TOON 標準: 92 tokens (節省 41%)
+TOON 壓縮: 41 tokens (節省 74%)
 ```
 
-### A.3 Token 優化比較
+---
 
-```javascript
-// 原始 JSON: 156 tokens
-{
-  "file": "app/services/payment_service.rb",
-  "purpose": "Handle payment processing",
-  "methods": [
-    {
-      "name": "charge",
-      "params": ["amount", "currency", "source"],
-      "returns": "Payment object"
-    }
-  ]
+## 6. Skill 介面設計
+
+### 6.1 核心命令
+
+```bash
+# 三階段分析
+/atlas                    # Stage 0: 專案指紋
+/atlas stage1            # Stage 1: 假設驗證
+/atlas stage2            # Stage 2: Git 分析
+
+# 即時探索
+/atlas find "功能描述"     # 智慧搜尋
+/atlas pattern "類型"      # 模式學習
+/atlas explain 檔案路徑    # 深入解釋
+
+# 進階分析
+/atlas impact "變更"       # 影響範圍（v3.0）
+/atlas health            # 專案健康度（v3.0）
+/atlas review PR#123     # PR 分析（v3.0）
+```
+
+### 6.2 Skill 定義結構
+
+```markdown
+# .claude/skills/atlas.md
+
+---
+description: SourceAtlas - 快速理解專案架構的三階段分析法
+---
+
+當用戶輸入 `/atlas` 時，執行以下流程：
+
+## Stage 0: Project Fingerprint
+
+1. 執行 scripts/atlas-stage0.sh 取得專案資訊
+2. 基於 PROMPTS.md 的 Stage 0 邏輯分析
+3. 輸出 TOON 格式指紋
+
+### 核心規則
+- 優先掃描高熵檔案（README, package.json, Models）
+- 掃描 <5% 檔案達到 70-80% 理解
+- 生成 10-15 個可驗證假設
+
+### 高熵檔案優先序
+1. README.md, CLAUDE.md（專案描述）
+2. package.json, composer.json（技術棧）
+3. Models（資料結構）
+4. Controllers/Routes（API 端點）
+5. 主要配置檔
+
+### 輸出格式
+使用 TOON 格式，包含：
+- metadata（掃描資訊）
+- 專案指紋
+- 技術棧
+- 架構模式
+- 假設清單
+
+...（完整 Skill 定義）
+```
+
+---
+
+## 7. Scripts 設計
+
+### 7.1 設計原則
+
+**Scripts 只做資料收集，不做理解推理**
+
+```bash
+# ✅ 好的 Script 設計
+detect_project_type() {
+    # 輸出原始資料
+    echo "package.json: $(test -f package.json && echo 'exists')"
+    echo "composer.json: $(test -f composer.json && echo 'exists')"
+    # AI 自己判斷是 Node 還是 PHP 專案
 }
 
-// TOON 標準: 92 tokens
-file: app/services/payment_service.rb
-purpose: Handle payment processing
-methods:
-  - name: charge
-    params: [amount, currency, source]
-    returns: Payment object
+# ❌ 壞的 Script 設計
+detect_project_type() {
+    # 不要在 Script 裡做判斷邏輯
+    if [ -f "package.json" ]; then
+        echo "This is a Node.js project"
+    fi
+}
+```
 
-// TOON 壓縮: 41 tokens
-f: app/services/payment_service.rb
-u: Payment processing
-m:
-  - charge: [amount,currency,source]->Payment
+### 7.2 核心 Scripts
+
+#### scripts/atlas-stage0.sh
+
+```bash
+#!/bin/bash
+# Stage 0: 收集專案基本資訊
+
+main() {
+    echo "=== Project Detection ==="
+    detect_project_files
+
+    echo ""
+    echo "=== Project Stats ==="
+    project_statistics
+
+    echo ""
+    echo "=== High-Entropy Files ==="
+    list_high_entropy_files
+
+    echo ""
+    echo "=== Directory Structure ==="
+    show_structure
+}
+
+detect_project_files() {
+    # 檢查關鍵檔案是否存在
+    for file in package.json composer.json requirements.txt Gemfile pom.xml; do
+        [ -f "$file" ] && echo "Found: $file"
+    done
+}
+
+project_statistics() {
+    # 基本統計
+    echo "Total files: $(find . -type f | wc -l)"
+    echo "Total lines: $(find . -name '*.rb' -o -name '*.js' | xargs wc -l | tail -1)"
+    echo "Languages: $(find . -name '*.rb' -o -name '*.js' -o -name '*.py' | \
+                         sed 's/.*\.//' | sort | uniq -c)"
+}
+
+list_high_entropy_files() {
+    # 列出高熵檔案（README, 配置, Models）
+    find . -maxdepth 2 -iname 'readme*' -o -iname 'claude*'
+    find . -name 'package.json' -o -name 'composer.json'
+    find . -path '*/models/*' -o -path '*/app/models/*' | head -5
+}
+
+show_structure() {
+    # 顯示目錄結構（2 層）
+    tree -L 2 -d --charset ascii 2>/dev/null || find . -maxdepth 2 -type d
+}
+
+main
+```
+
+#### scripts/atlas-find.sh
+
+```bash
+#!/bin/bash
+# 智慧搜尋輔助工具
+
+search_term="$1"
+
+main() {
+    echo "=== File Name Search ==="
+    find . -iname "*${search_term}*" -type f | head -10
+
+    echo ""
+    echo "=== Content Search ==="
+    grep -r -i "$search_term" --include="*.rb" --include="*.js" . | head -20
+
+    echo ""
+    echo "=== Related Files ==="
+    # 找到包含搜尋詞的檔案後，列出其依賴
+    grep -l -r -i "$search_term" . | head -5
+}
+
+main
+```
+
+### 7.3 Scripts vs AI 分工
+
+| 任務 | 負責方 | 範例 |
+|------|-------|------|
+| 檔案列表 | Script | `find . -name "*.rb"` |
+| 內容搜尋 | Script | `grep -r "User"` |
+| 統計資訊 | Script | `wc -l`, `git log --stat` |
+| **理解意圖** | AI | "這是用戶認證模組" |
+| **識別模式** | AI | "使用 Service Object 模式" |
+| **推理關聯** | AI | "改 User model 會影響 Order" |
+| **生成建議** | AI | "建議拆分為多個 Service" |
+
+---
+
+## 8. 分析方法論
+
+### 8.1 高熵檔案優先策略（保留 v2.0）
+
+**資訊理論基礎**：
+```
+資訊熵 = 檔案包含的「意外」資訊量
+
+高熵檔案：README.md, Models, 配置檔
+  → 包含專案級理解、資料結構、架構決策
+
+低熵檔案：重複的 CRUD Controllers, 樣板代碼
+  → 模式可預測，單獨看價值低
+```
+
+**掃描優先序**：
+```
+1. README.md, CLAUDE.md        (專案描述、規範)
+2. package.json, composer.json (技術棧、依賴)
+3. Models (3-5 個核心)         (資料結構)
+4. Routes, Controllers (1-2 個) (API 設計)
+5. 主要配置檔                  (環境、整合)
+```
+
+### 8.2 貝葉斯推理模式（保留 v2.0）
+
+```
+先驗概率 (Stage 0) + 證據 (Stage 1) = 後驗概率
+
+範例：
+Stage 0 假設：「使用 JWT 認證」(信心度 0.7)
+  依據：package.json 有 jsonwebtoken
+
+Stage 1 驗證：grep "jwt" → 找到 5 個使用處
+  證據：Auth middleware、Token 生成、驗證邏輯
+
+後驗概率：信心度提升至 0.95 ✅ 確認
+```
+
+### 8.3 模式識別規則
+
+#### 架構模式
+
+```yaml
+MVC:
+  indicators:
+    - directories: [models, views, controllers]
+    - framework: Rails, Django
+
+Service-oriented:
+  indicators:
+    - directory: services/
+    - naming: *_service.rb
+    - pattern: Single responsibility
+
+Microservices:
+  indicators:
+    - multiple: package.json
+    - docker: docker-compose.yml
+    - gateway: API gateway config
+```
+
+#### 設計模式
+
+```yaml
+Repository:
+  indicators:
+    - suffix: Repository
+    - methods: [find, save, delete]
+
+Factory:
+  indicators:
+    - suffix: Factory
+    - methods: [create, build]
+
+Observer:
+  indicators:
+    - methods: [subscribe, notify]
+    - gems: [wisper, eventmachine]
 ```
 
 ---
 
-## 附錄 B：實作時程
+## 9. 實作規範
 
-### Phase 1: MVP (Week 1-2)
+### 9.1 技術棧
 
-- 基本 CLI 架構
-- 檔案掃描器
-- Ruby/JS 解析器
-- TOON 輸出
+```yaml
+skill:
+  format: Markdown
+  location: .claude/skills/atlas.md
+  size: ~500 lines
 
-### Phase 2: 核心功能 (Week 3-4)
+scripts:
+  language: Bash (POSIX)
+  location: scripts/
+  total_size: ~1000 lines
 
-- 智慧索引
-- 模式偵測
-- 範例擷取
-- 增量更新
+  dependencies:
+    required: [bash, find, grep, git]
+    optional: [tree, jq]
 
-### Phase 3: 進階功能 (Week 5-6)
+templates:
+  format: Plain text + YAML
+  location: templates/
+```
 
-- AI 對話介面
-- Git 整合
-- 多語言支援
-- 效能優化
+### 9.2 開發優先級
 
-### Phase 4: 品質與部署 (Week 7-8)
+#### Phase 1: 核心 Skill (Week 1)
+- ✅ Skill 基礎架構
+- ✅ Stage 0 整合
+- ✅ Stage 1 整合
+- ✅ Stage 2 整合
+- ✅ TOON 格式輸出
 
-- 完整測試覆蓋
-- 文件撰寫
-- 套件發布
-- CI/CD 設置
+#### Phase 2: 輔助 Scripts (Week 1-2)
+- ✅ detect-project-type.sh
+- ✅ scan-high-entropy.sh
+- ✅ collect-git-stats.sh
+- ⏳ atlas-find.sh
+- ⏳ analyze-patterns.sh
+
+#### Phase 3: 增強功能 (Week 2-3)
+- ⏳ /atlas find 智慧搜尋
+- ⏳ /atlas pattern 模式識別
+- ⏳ /atlas explain 深入解釋
+- ⏳ 模式定義庫
+
+#### Phase 4: 測試與文檔 (Week 3-4)
+- ⏳ 在真實專案測試
+- ⏳ 收集使用回饋
+- ⏳ 優化 Prompt
+- ⏳ 撰寫使用文檔
 
 ---
 
-## 附錄 C：相關資源
+## 10. 成功指標
 
-### 參考資料
+### 10.1 量化指標
 
-- TOON Format Specification
-- Snapshot 2.0 Article
-- Claude Context Best Practices
+| 指標 | 目標值 | 測量方式 | v2.0 驗證結果 |
+|------|--------|----------|--------------|
+| **理解準確度** | >85% | AI 能正確定位功能 | ✅ 87-100% |
+| **Token 節省** | >40% | vs 完整檔案讀取 | ✅ 95%+ |
+| **時間節省** | >90% | vs 手動理解 | ✅ 95%+ |
+| **Stage 0 準確度** | >70% | 假設驗證率 | ✅ 75-95% |
+| **使用頻率** | 每天 3+ 次 | 開發者實際使用 | 🔜 待測 |
 
-### 工具連結
+### 10.2 質化指標
 
-- TOON Python Parser
-- Universal Ctags
-- Bats Testing Framework
+```yaml
+使用者體驗:
+  - 學習成本：< 5 分鐘上手
+  - 回應速度：< 30 秒得到結果
+  - 準確性：85% 以上有用
+  - 整合度：無縫融入工作流程
 
-### 社群
+技術品質:
+  - Script 執行：< 5 秒完成資料收集
+  - 錯誤處理：優雅降級
+  - 相容性：支援主流語言（Ruby, JS, Python, Go）
+```
 
-- GitHub: sourceatlas/sourceatlas
-- Discord: SourceAtlas Community
-- Twitter: @sourceatlas
+### 10.3 驗收標準
+
+#### 基本功能
+- [x] Stage 0 能在 15 分鐘內完成分析
+- [x] Stage 1 驗證率 >80%
+- [x] Stage 2 識別 AI 協作模式
+- [ ] /atlas find 能找到正確檔案
+- [ ] /atlas pattern 能識別設計模式
+
+#### 質量標準
+- [ ] 在 4+ 真實專案測試通過
+- [ ] 使用者回饋 >4/5 分
+- [ ] Scripts 在 Linux/macOS 都能運行
+- [ ] 錯誤時提供清晰訊息
+
+---
+
+## 11. 實作路線圖
+
+### v2.5.0 - SourceAtlas Skill (當前)
+
+**目標**：提供即時專案理解能力
+
+**時程**：3-4 週
+
+#### Week 1: 核心 Skill
+- [x] 設計 Skill 架構
+- [ ] 實作 Stage 0 Skill
+- [ ] 實作 Stage 1 Skill
+- [ ] 實作 Stage 2 Skill
+- [ ] 基礎 Scripts（detect, scan）
+
+#### Week 2-3: 增強功能
+- [ ] /atlas find 實作
+- [ ] /atlas pattern 實作
+- [ ] /atlas explain 實作
+- [ ] 完整 Scripts 集合
+- [ ] 模式定義庫
+
+#### Week 3-4: 測試與優化
+- [ ] 在 5+ 真實專案測試
+- [ ] 收集使用回饋
+- [ ] 優化 Prompt 和 Scripts
+- [ ] 撰寫使用文檔
+- [ ] 發布 v2.5.0
+
+---
+
+### v3.0.0 - SourceAtlas Monitor (未來)
+
+**目標**：持續追蹤和趨勢分析
+
+**時程**：3-6 個月
+
+**功能規劃**：
+```yaml
+持續追蹤:
+  - 自動偵測變更
+  - 建立歷史索引
+  - 趨勢分析
+
+影響分析:
+  - 靜態依賴分析
+  - Git 歷史關聯
+  - 測試覆蓋追蹤
+
+健康度儀表板:
+  - 技術債務量化
+  - 複雜度追蹤
+  - 風險區域識別
+```
+
+**是否開發取決於**：
+1. v2.5 使用者回饋
+2. 是否確實需要持續追蹤
+3. 開發資源和時間
+
+---
+
+## 附錄 A：設計決策記錄
+
+### 決策 1：為什麼選擇 Skill 而非 CLI？
+
+**日期**：2025-11-20
+
+**問題**：原始 PRD 設計獨立 CLI 工具 (`satlas`)，是否仍然適合？
+
+**考量因素**：
+| 因素 | CLI 工具 | Skill 架構 |
+|------|---------|-----------|
+| 開發時間 | 8 週 | 1-2 週 |
+| 學習成本 | 需學習命令 | 自然語言 |
+| 工作流整合 | 需切換工具 | 原生整合 |
+| 維護成本 | 高（索引、解析） | 低（Scripts + AI） |
+| 靈活性 | 固定索引 | 動態探索 |
+
+**決策**：採用 Claude Code Skill + Scripts 架構
+
+**理由**：
+1. 開發者已經在 Claude Code 中工作
+2. AI 的理解能力可以替代大量解析邏輯
+3. 即時探索比預先索引更靈活
+4. 更快交付價值（1-2 週 vs 8 週）
+
+---
+
+### 決策 2：Scripts 的職責範圍
+
+**日期**：2025-11-20
+
+**問題**：Scripts 應該做多少事？
+
+**決策**：Scripts 只做資料收集，不做理解推理
+
+**理由**：
+- AI 擅長理解和推理
+- Scripts 擅長快速資料收集
+- 保持 Scripts 簡單，易於維護
+- 避免在 Bash 中實作複雜邏輯
+
+**範例**：
+```bash
+# ✅ Script 負責
+detect_files() { find . -name "*.rb"; }
+
+# ✅ AI 負責
+"這些檔案使用 Service Object 模式"
+```
+
+---
+
+### 決策 3：是否需要持續索引？
+
+**日期**：2025-11-20
+
+**問題**：v2.5 是否需要建立和維護索引？
+
+**決策**：v2.5 不建立持續索引，留待 v3.0
+
+**理由**：
+1. 即時探索場景（找 Bug、學模式）不需要索引
+2. 持續追蹤場景（技術債務）才需要索引
+3. 先驗證即時探索的價值
+4. 避免過度設計
+
+**影響**：
+- v2.5 專注於即時分析
+- v3.0 再評估是否需要 Monitor
+
+---
+
+## 附錄 B：與 v2.0 的關係
+
+### v2.0 成果（已完成）
+
+```
+✅ PROMPTS.md - 完整的三階段 Prompt
+✅ USAGE_GUIDE.md - 使用指南
+✅ README.md - 專案總覽
+✅ 4 個專案驗證
+✅ AI 協作識別方法
+✅ TOON 格式規範
+```
+
+### v2.5 如何使用 v2.0
+
+```yaml
+保留:
+  - 三階段分析方法論
+  - TOON 格式規範
+  - 高熵檔案優先策略
+  - AI 協作識別邏輯
+  - 驗證結果和洞察
+
+轉換:
+  - 手動 Prompt → Skill 自動化
+  - 複製貼上 → 命令觸發
+  - 獨立報告 → 對話式互動
+
+新增:
+  - /atlas find 智慧搜尋
+  - /atlas pattern 模式識別
+  - /atlas explain 深入解釋
+  - 輔助 Scripts
+```
 
 ---
 
 ## 更新日誌
 
-### v2.0.0 (2025-01-15)
+### v2.5.0 (2025-11-20) - 當前版本
 
-- 整合 TOON 格式
-- 加入 Snapshot 2.0 理念
-- 重新設計資料模型
-- 優化 token 使用
+**重大變更**：
+- 從獨立 CLI 工具轉為 Claude Code Skill
+- 移除複雜的索引系統
+- 新增輔助 Scripts 架構
+- 保留 v2.0 的核心方法論
 
-### v1.0.0 (2025-01-01)
+**新增**：
+- Skill 定義架構
+- 即時探索命令（find, pattern, explain）
+- 5 個真實使用場景分析
+- 輕量 Scripts 設計
 
-- 初始 PRD
-- 基本索引功能
-- JSON 輸出
+**保留自 v2.0**：
+- 三階段分析方法
+- TOON 格式規範
+- 高熵檔案優先策略
+- AI 協作識別
+
+---
+
+### v2.0.0 (2025-11-19) - 研究驗證版
+
+- 完成手動 Prompts 方法論
+- 驗證 4 個真實專案
+- 建立 TOON 格式規範
+- 發現 AI 協作識別方法
+
+---
+
+### v1.0.0 (2025-01-15) - 原始 PRD
+
+- 獨立 CLI 工具設計
+- 完整索引系統架構
+- TOON 格式提出
 
 ---
 
