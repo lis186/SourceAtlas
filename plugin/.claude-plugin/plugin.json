@@ -1,0 +1,20 @@
+{
+  "name": "sourceatlas",
+  "description": "AI-powered codebase understanding assistant. Learn design patterns, analyze impact, and understand any codebase through three-stage analysis.",
+  "version": "2.5.1",
+  "author": {
+    "name": "Justin Lee"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/justinlee/sourceatlas-plugin"
+  },
+  "keywords": [
+    "codebase-analysis",
+    "pattern-learning",
+    "impact-analysis",
+    "code-understanding",
+    "architecture"
+  ],
+  "license": "MIT"
+}
