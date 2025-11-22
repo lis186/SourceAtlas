@@ -1,20 +1,20 @@
-# SourceAtlas PRD v2.5
+# SourceAtlas PRD v2.5.2
 
 **AI-Powered Codebase Understanding Assistant**
 
-- **版本**: 2.5.0
-- **更新日期**: 2025-11-20
-- **狀態**: Active Development
+- **版本**: 2.5.2
+- **更新日期**: 2025-11-22
+- **狀態**: Active Development (Architecture Finalized)
 
 ---
 
 ## Executive Summary
 
-SourceAtlas 是一個整合在 Claude Code 中的智慧型程式碼理解助手。通過 Claude Skill + 輕量 Scripts 的架構，在開發者的工作流程中提供即時的專案理解、模式學習和影響分析能力。
+SourceAtlas 是一個整合在 Claude Code 中的智慧型程式碼理解助手。通過 **Claude Commands (斜線命令) + 輕量 Scripts** 的架構，在開發者的工作流程中提供即時的專案理解、模式學習和影響分析能力。
 
 **核心定位的轉變**：
 - ❌ **不是**：獨立的 CLI 索引工具
-- ✅ **而是**：Claude Code 原生的分析助手
+- ✅ **而是**：Claude Code 原生的分析助手（Commands）
 
 ### 核心特色
 
@@ -402,19 +402,19 @@ AI 回應：
 ┌─────────────────────────────────────────────┐
 │           Claude Code Environment           │
 ├─────────────────────────────────────────────┤
-│  SourceAtlas Skill                          │
-│  ├─ Stage 0: Project Fingerprint           │
-│  ├─ Stage 1: Hypothesis Validation         │
-│  ├─ Stage 2: Git Hotspots                  │
-│  ├─ Find: Smart Search                     │
-│  ├─ Pattern: Pattern Detection             │
-│  └─ Explain: Deep Dive                     │
+│  SourceAtlas Commands (Slash Commands)     │
+│  ├─ /atlas               - Full Analysis   │
+│  ├─ /atlas-pattern       - Learn Patterns  │
+│  ├─ /atlas-impact        - Impact Analysis │
+│  ├─ /atlas-find          - Quick Search    │
+│  └─ /atlas-explain       - Deep Dive       │
 ├─────────────────────────────────────────────┤
 │  Helper Scripts (Bash)                      │
-│  ├─ detect-project-type.sh                 │
-│  ├─ scan-high-entropy.sh                   │
-│  ├─ collect-git-stats.sh                   │
-│  └─ analyze-patterns.sh                    │
+│  ├─ detect-project.sh                      │
+│  ├─ scan-entropy.sh                        │
+│  ├─ find-patterns.sh                       │
+│  ├─ collect-git.sh                         │
+│  └─ analyze-dependencies.sh                │
 ├─────────────────────────────────────────────┤
 │  Claude Code Built-in Tools                 │
 │  ├─ Glob (file pattern matching)           │
@@ -426,13 +426,13 @@ AI 回應：
 
 ### 3.2 與原始 PRD 的對比
 
-| 組件 | 原始 PRD (CLI) | 新設計 (Skill) | 理由 |
-|------|---------------|---------------|------|
+| 組件 | 原始 PRD (CLI) | 新設計 (Commands) | 理由 |
+|------|---------------|------------------|------|
 | **Parser Layer** | ✅ 需實作 | ❌ 移除 | AI 自己理解代碼 |
 | **Index Layer** | ✅ 需實作 | ❌ 移除 | 即時探索，不需索引 |
 | **Storage Layer** | ✅ 需實作 | ❌ 移除 | 不儲存索引 |
 | **Query Layer** | ✅ 需實作 | ❌ 移除 | AI 動態查詢 |
-| **Skill Prompt** | ❌ 無 | ✅ 新增 | 指導 AI 分析 |
+| **Command Prompts** | ❌ 無 | ✅ 新增 | 用戶明確觸發的分析流程 |
 | **Helper Scripts** | ❌ 無 | ✅ 新增 | 資料收集 |
 
 ### 3.3 檔案結構
@@ -440,30 +440,31 @@ AI 回應：
 ```
 sourceatlas2/
 ├── .claude/
-│   └── skills/
-│       └── atlas.md              # ✨ Skill 定義（核心）
+│   └── commands/
+│       ├── atlas.md             # ✨ /atlas - 完整分析（核心）
+│       ├── atlas-overview.md    # ✨ /atlas-overview - 專案概覽 ⭐⭐⭐⭐⭐
+│       ├── atlas-pattern.md     # ✨ /atlas-pattern - 學習模式 ⭐⭐⭐⭐⭐
+│       ├── atlas-impact.md      # ✨ /atlas-impact - 影響分析
+│       ├── atlas-find.md        # /atlas-find - 快速搜尋
+│       └── atlas-explain.md     # /atlas-explain - 深入解釋
 │
-├── scripts/
-│   ├── atlas-stage0.sh          # Stage 0 資料收集
-│   ├── atlas-stage1.sh          # Stage 1 驗證助手
-│   ├── atlas-stage2.sh          # Stage 2 Git 分析
-│   ├── atlas-find.sh            # 智慧搜尋
-│   └── utils/
-│       ├── detect-project-type.sh
-│       ├── scan-high-entropy.sh
-│       ├── collect-git-stats.sh
-│       └── analyze-patterns.sh
+├── scripts/atlas/
+│   ├── detect-project.sh        # 專案類型偵測
+│   ├── scan-entropy.sh          # 高熵檔案掃描
+│   ├── find-patterns.sh         # 模式識別輔助 ⭐
+│   ├── collect-git.sh           # Git 統計收集
+│   └── analyze-dependencies.sh  # 依賴分析
 │
 ├── templates/
-│   ├── stage0-prompt.txt        # Stage 0 Prompt 模板
-│   ├── stage1-prompt.txt        # Stage 1 Prompt 模板
-│   ├── stage2-prompt.txt        # Stage 2 Prompt 模板
-│   └── patterns.yaml            # 模式定義庫
+│   ├── stage0-output.toon       # Stage 0 輸出範例
+│   ├── stage1-output.md         # Stage 1 輸出範例
+│   └── patterns.yaml            # 模式定義庫（可選）
 │
 ├── docs/
 │   ├── PROMPTS.md               # 完整 Prompt 文檔（已有）
 │   ├── USAGE_GUIDE.md           # 使用指南（已有）
-│   └── README.md                # 總覽（已有）
+│   ├── README.md                # 總覽（已有）
+│   └── CLAUDE.md                # AI 工作指南（已有）
 │
 └── test_results/                # 驗證案例（已有）
 ```
@@ -595,65 +596,157 @@ TOON 壓縮: 41 tokens (節省 74%)
 
 ---
 
-## 6. Skill 介面設計
+## 6. Command 介面設計
 
-### 6.1 核心命令
+### 6.1 核心命令（按優先級）
 
 ```bash
-# 三階段分析
-/atlas                    # Stage 0: 專案指紋
-/atlas stage1            # Stage 1: 假設驗證
-/atlas stage2            # Stage 2: Git 分析
+# 優先級 ⭐⭐⭐⭐⭐ - 最常用功能
+/atlas-overview                    # 專案概覽（Stage 0 指紋）
+/atlas-overview src/api            # 分析特定目錄
+/atlas-pattern "api endpoint"      # 學習專案如何實作 API 端點
+/atlas-pattern "background job"    # 學習背景任務模式
+/atlas-pattern "file upload"       # 學習檔案上傳流程
 
-# 即時探索
-/atlas find "功能描述"     # 智慧搜尋
-/atlas pattern "類型"      # 模式學習
-/atlas explain 檔案路徑    # 深入解釋
+# 優先級 ⭐⭐⭐⭐ - 影響範圍分析
+/atlas-impact "User authentication"   # 功能改動影響
+/atlas-impact api "/api/users/{id}"   # API 改動影響
 
-# 進階分析
-/atlas impact "變更"       # 影響範圍（v3.0）
-/atlas health            # 專案健康度（v3.0）
-/atlas review PR#123     # PR 分析（v3.0）
+# 優先級 ⭐⭐⭐ - 完整分析
+/atlas                    # Stage 0-2 完整三階段分析
+
+# 優先級 ⭐⭐ - 快速定位
+/atlas-find "user login"  # 快速找到功能實作
+
+# 優先級 ⭐ - 深入解釋
+/atlas-explain path/to/file.rb   # 深入解釋特定檔案
+
+# 未來功能（v3.0）
+/atlas-health             # 專案健康度分析
+/atlas-review PR#123      # PR 變更分析
 ```
 
-### 6.2 Skill 定義結構
+### 6.2 Command 定義結構
+
+#### 範例 1: `/atlas-overview` (專案概覽)
 
 ```markdown
-# .claude/skills/atlas.md
+# .claude/commands/atlas-overview.md
 
 ---
-description: SourceAtlas - 快速理解專案架構的三階段分析法
+description: Get project overview - scan <5% of files to achieve 70-80% understanding
+allowed-tools: Bash, Glob, Grep, Read
+argument-hint: [optional: specific directory to analyze]
 ---
 
-當用戶輸入 `/atlas` 時，執行以下流程：
+# SourceAtlas: Project Overview (Stage 0 Fingerprint)
+
+## Context
+
+Analysis Target: $ARGUMENTS
+
+Goal: Generate project fingerprint by scanning <5% of files in 10-15 minutes.
+
+## Your Task
+
+Execute Stage 0 Analysis using information theory principles:
+
+1. Run: `bash scripts/atlas/detect-project.sh`
+2. Run: `bash scripts/atlas/scan-entropy.sh`
+3. Apply high-entropy file prioritization
+4. Generate 10-15 hypotheses with confidence levels
+5. Output TOON format report
+
+### High-Entropy Priority:
+1. Documentation (README, CLAUDE.md)
+2. Config files (package.json, etc.)
+3. Core models (3-5 samples)
+4. Entry points (1-2 samples)
+5. Tests (1-2 samples)
+
+Output Format: TOON (Token Optimized Output Notation)
+Time Limit: 10-15 minutes
+Understanding Target: 70-80%
+
+STOP after Stage 0 - do not proceed to validation or git analysis.
+```
+
+#### 範例 2: `/atlas-pattern` (學習設計模式)
+
+```markdown
+# .claude/commands/atlas-pattern.md
+
+---
+description: Learn design patterns from the current codebase
+allowed-tools: Bash, Glob, Grep, Read
+argument-hint: [pattern type, e.g., "api endpoint", "background job"]
+---
+
+# SourceAtlas: Pattern Learning Mode
+
+## Context
+
+Project structure: !`tree -L 2 -d --charset ascii`
+
+Pattern type requested: **$ARGUMENTS**
+
+## Your Task
+
+Goal: Help the user learn how THIS codebase implements the requested pattern.
+
+Workflow:
+1. Run: `bash scripts/atlas/find-patterns.sh "$ARGUMENTS"`
+2. Identify 2-3 exemplary implementations
+3. Extract the design pattern
+4. Provide actionable guidance
+
+Output Format:
+- Pattern name and standard approach
+- Best example files with line numbers
+- Key conventions to follow
+- Common pitfalls to avoid
+- Testing patterns
+
+Remember: Scan <5% of files, focus on patterns not exhaustive details.
+```
+
+#### 範例 3: `/atlas` (完整分析)
+
+```markdown
+# .claude/commands/atlas.md
+
+---
+description: Full three-stage codebase analysis (fingerprint, validation, hotspots)
+allowed-tools: Bash, Glob, Grep, Read
+---
+
+# SourceAtlas: Complete Analysis
+
+## Context
+
+Project info: !`bash scripts/atlas/detect-project.sh`
 
 ## Stage 0: Project Fingerprint
 
-1. 執行 scripts/atlas-stage0.sh 取得專案資訊
-2. 基於 PROMPTS.md 的 Stage 0 邏輯分析
-3. 輸出 TOON 格式指紋
+1. Run: `bash scripts/atlas/scan-entropy.sh`
+2. Apply high-entropy file prioritization
+3. Scan <5% of files to achieve 70-80% understanding
+4. Output TOON format report
 
-### 核心規則
-- 優先掃描高熵檔案（README, package.json, Models）
-- 掃描 <5% 檔案達到 70-80% 理解
-- 生成 10-15 個可驗證假設
+### High-Entropy Priority:
+1. README.md, CLAUDE.md
+2. package.json, composer.json, etc.
+3. Models (3-5 core models)
+4. Controllers/Routes (1-2 examples)
+5. Main config files
 
-### 高熵檔案優先序
-1. README.md, CLAUDE.md（專案描述）
-2. package.json, composer.json（技術棧）
-3. Models（資料結構）
-4. Controllers/Routes（API 端點）
-5. 主要配置檔
+## Stage 1: Hypothesis Validation
 
-### 輸出格式
-使用 TOON 格式，包含：
-- metadata（掃描資訊）
-- 專案指紋
-- 技術棧
-- 架構模式
-- 假設清單
+Systematically validate Stage 0 hypotheses...
 
-...（完整 Skill 定義）
+## Stage 2: Git Hotspots Analysis
+
+Analyze commit history and development patterns...
 ```
 
 ---
@@ -885,31 +978,30 @@ templates:
 
 ### 9.2 開發優先級
 
-#### Phase 1: 核心 Skill (Week 1)
-- ✅ Skill 基礎架構
-- ✅ Stage 0 整合
-- ✅ Stage 1 整合
-- ✅ Stage 2 整合
-- ✅ TOON 格式輸出
+#### Phase 1: 核心 Commands 框架 (Week 1)
+- [ ] 創建 `.claude/commands/` 目錄結構
+- [ ] 實作 `/atlas` - 完整三階段分析
+- [ ] 實作 `/atlas-pattern` - 學習模式 ⭐⭐⭐⭐⭐
+- [ ] 基礎 Scripts（detect-project.sh, scan-entropy.sh）
+- [ ] TOON 格式輸出
 
-#### Phase 2: 輔助 Scripts (Week 1-2)
-- ✅ detect-project-type.sh
-- ✅ scan-high-entropy.sh
-- ✅ collect-git-stats.sh
-- ⏳ atlas-find.sh
-- ⏳ analyze-patterns.sh
+#### Phase 2: 優先功能 (Week 1-2)
+- [ ] 完善 `/atlas-pattern` 命令和 Script
+- [ ] 實作 `find-patterns.sh` ⭐
+- [ ] 在真實專案測試 `/atlas-pattern`
+- [ ] 收集回饋並迭代優化
 
-#### Phase 3: 增強功能 (Week 2-3)
-- ⏳ /atlas find 智慧搜尋
-- ⏳ /atlas pattern 模式識別
-- ⏳ /atlas explain 深入解釋
-- ⏳ 模式定義庫
+#### Phase 3: 影響分析功能 (Week 2)
+- [ ] 實作 `/atlas-impact` - 功能影響分析
+- [ ] 實作 `/atlas-impact api` - API 影響分析
+- [ ] 相關 Scripts（analyze-dependencies.sh）
+- [ ] 測試驗證
 
-#### Phase 4: 測試與文檔 (Week 3-4)
-- ⏳ 在真實專案測試
-- ⏳ 收集使用回饋
-- ⏳ 優化 Prompt
-- ⏳ 撰寫使用文檔
+#### Phase 4: 輔助功能與優化 (Week 2-3)
+- [ ] 實作 `/atlas-find` - 快速搜尋
+- [ ] 實作 `/atlas-explain` - 深入解釋
+- [ ] 完善 Git 分析 Scripts
+- [ ] 整體測試與文檔
 
 ---
 
@@ -1091,6 +1183,102 @@ detect_files() { find . -name "*.rb"; }
 
 ---
 
+### 決策 4：Commands vs Skills？⭐
+
+**日期**：2025-11-20
+
+**問題**：SourceAtlas 應該使用 Claude Code Commands 還是 Skills？
+
+**技術差異**：
+
+| 特性 | Commands | Skills |
+|------|----------|--------|
+| **觸發方式** | 用戶手動輸入 `/cmd` | AI 自動決定 |
+| **控制權** | 用戶明確控制 | AI 上下文判斷 |
+| **適用場景** | 主動工具、明確流程 | 被動輔助、專家系統 |
+| **參數傳遞** | ✅ 支援 `$ARGUMENTS` | ❌ 不支援 |
+| **Script 執行** | ✅ 支援 | ✅ 支援 |
+| **檔案結構** | 單一 .md 檔案 | 目錄結構 (SKILL.md + scripts/) |
+| **開發速度** | 快（簡單） | 慢（複雜） |
+
+**考量因素**：
+
+| 因素 | Commands | Skills | 勝出 |
+|------|----------|--------|------|
+| **使用者期望** | 明確觸發分析 | 自動觸發 | ✅ Commands |
+| **場景多樣性** | 不同命令對應不同場景 | 單一入口 | ✅ Commands |
+| **可預測性** | 高 | 低 | ✅ Commands |
+| **開發複雜度** | 低 | 高 | ✅ Commands |
+| **Token 效率** | 普通 | 優秀 | Skills |
+
+**決策**：採用 Claude Code Commands 架構
+
+**理由**：
+
+1. **SourceAtlas 是「工具」不是「助手」**
+   - 用戶想要明確控制何時執行分析
+   - 不希望 AI 自動執行 30 分鐘的完整分析
+   - 不同場景需要不同入口點
+
+2. **使用場景需要明確觸發**
+   - `/atlas-pattern` (快速學習，5 分鐘) vs `/atlas` (完整分析，30 分鐘)
+   - 用戶根據需求選擇合適的命令
+   - Commands 提供清晰的功能邊界
+
+3. **開發效率更高**
+   - 一個 Command = 一個 .md 檔案
+   - 更簡單、更直接
+   - 用戶可輕鬆查看和修改
+
+4. **符合優先級排序**
+   - `/atlas-pattern` ⭐⭐⭐⭐⭐ (最常用)
+   - `/atlas-impact` ⭐⭐⭐⭐
+   - `/atlas` ⭐⭐⭐ (完整分析)
+   - 不同優先級需要不同命令入口
+
+**實作方案**：
+
+```
+.claude/commands/
+├── atlas.md              # /atlas - 完整三階段分析
+├── atlas-pattern.md      # /atlas-pattern - 學習模式 (最優先)
+├── atlas-impact.md       # /atlas-impact - 影響分析
+├── atlas-find.md         # /atlas-find - 快速搜尋
+└── atlas-explain.md      # /atlas-explain - 深入解釋
+
+scripts/atlas/
+├── detect-project.sh
+├── scan-entropy.sh
+├── find-patterns.sh      # 支援 /atlas-pattern
+└── collect-git.sh
+```
+
+**未來可能用 Skill 的場景**（可選增強）：
+
+創建一個輔助性的 Skill，在用戶表現出困惑時「建議」使用 SourceAtlas：
+
+```markdown
+---
+name: sourceatlas-advisor
+description: |
+  Suggest SourceAtlas commands when user shows confusion about codebase.
+  Do NOT auto-trigger analysis.
+---
+
+When detecting user confusion, suggest:
+"Would you like me to run `/atlas-pattern` to learn how this codebase handles [X]?"
+```
+
+但這是**可選的增強**，不影響核心功能。
+
+**影響**：
+- PRD 第 3、6、9 章需要更新
+- 將 "Skill" 術語改為 "Commands"
+- 檔案結構從 `.claude/skills/` 改為 `.claude/commands/`
+- 保持斜線命令介面不變（`/atlas`, `/atlas-pattern` 等）
+
+---
+
 ## 附錄 B：與 v2.0 的關係
 
 ### v2.0 成果（已完成）
@@ -1115,8 +1303,8 @@ detect_files() { find . -name "*.rb"; }
   - 驗證結果和洞察
 
 轉換:
-  - 手動 Prompt → Skill 自動化
-  - 複製貼上 → 命令觸發
+  - 手動 Prompt → Command 自動化
+  - 複製貼上 → 斜線命令觸發
   - 獨立報告 → 對話式互動
 
 新增:
@@ -1130,19 +1318,74 @@ detect_files() { find . -name "*.rb"; }
 
 ## 更新日誌
 
-### v2.5.0 (2025-11-20) - 當前版本
+### v2.5.2 (2025-11-22) - 當前版本 ⭐
+
+**重要新增**：
+- **新增 `/atlas-overview` 命令** - 專案概覽（Stage 0 指紋分析）
+- 填補 PRD 遺漏：提供獨立的快速理解能力
+- 不需執行完整三階段，10-15 分鐘即可獲得 70-80% 理解
+
+**實作內容**：
+- `.claude/commands/atlas-overview.md` - 專案概覽命令
+- `scripts/atlas/detect-project.sh` - 專案類型檢測腳本
+- `scripts/atlas/scan-entropy.sh` - 高熵文件掃描腳本
+
+**優先級調整**：
+- `/atlas-overview` 列為最高優先級 (⭐⭐⭐⭐⭐)
+- 與 `/atlas-pattern` 並列為最常用命令
+- 使用場景：接手新專案、Code Review 準備、快速技術棧評估
+
+**文檔更新**：
+- 第 3.3 節：檔案結構新增 atlas-overview.md
+- 第 6.1 節：核心命令新增 /atlas-overview
+- 第 6.2 節：新增 /atlas-overview 範例
+- 場景分類表：新增「快速理解新專案」場景
+
+**設計理念**：
+- `/atlas-overview` = 獨立 Stage 0（快速）
+- `/atlas` = 完整三階段（深入）
+- 給予用戶選擇權，不強制執行完整分析
+
+---
+
+### v2.5.1 (2025-11-20)
+
+**重大決策**：
+- **確定採用 Commands 而非 Skills** (決策 4)
+- 架構最終定案：Commands + Helper Scripts
+- 明確優先級：`/atlas-pattern` (⭐⭐⭐⭐⭐) 為最優先功能
+
+**架構變更**：
+- `.claude/skills/` → `.claude/commands/`
+- 單一 Skill → 多個專門的 Commands
+- 用戶明確觸發 → 更可控、更可預測
+
+**文檔更新**：
+- 第 3 章：產品架構（Commands 架構圖）
+- 第 6 章：Skill 介面設計 → Command 介面設計
+- 附錄 A：新增決策 4（Commands vs Skills）
+- 全文統一術語：Skill → Commands
+
+**影響**：
+- 開發路徑更清晰
+- 實作更簡單（單檔案 Commands）
+- 符合用戶期望（明確控制）
+
+---
+
+### v2.5.0 (2025-11-20)
 
 **重大變更**：
-- 從獨立 CLI 工具轉為 Claude Code Skill
+- 從獨立 CLI 工具轉為 Claude Code 整合
 - 移除複雜的索引系統
 - 新增輔助 Scripts 架構
 - 保留 v2.0 的核心方法論
 
 **新增**：
-- Skill 定義架構
 - 即時探索命令（find, pattern, explain）
 - 5 個真實使用場景分析
 - 輕量 Scripts 設計
+- 優先級排序（基於真實需求）
 
 **保留自 v2.0**：
 - 三階段分析方法
