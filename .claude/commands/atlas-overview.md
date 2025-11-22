@@ -123,98 +123,88 @@ Each hypothesis must include:
 
 ## Output Format
 
-Generate output in **TOON format** (Token Optimized Output Notation):
+Generate output in **YAML format** (standard, ecosystem-supported):
 
-```toon
+```yaml
 metadata:
-  project_name: [detected name]
-  scan_time: [ISO 8601 timestamp]
-  target_path: ${ARGUMENTS:-.}
+  project_name: "[detected name]"
+  scan_time: "[ISO 8601 timestamp]"
+  target_path: "${ARGUMENTS:-.}"
   total_files_estimate: [estimate]
   scanned_files: [actual count]
-  scan_ratio: [percentage]
-  analysis_time: [minutes]
+  scan_ratio: "[percentage]"
+  analysis_time: "[minutes]"
 
-## Project Fingerprint
-
-project_type: [WEB_APP|CLI|LIBRARY|MOBILE_APP|MICROSERVICE|MONOREPO]
-scale: [TINY|SMALL|MEDIUM|LARGE|VERY_LARGE]
-  # TINY: <500 LOC
-  # SMALL: 500-2k LOC
-  # MEDIUM: 2k-10k LOC
-  # LARGE: 10k-50k LOC
-  # VERY_LARGE: >50k LOC
-
-primary_language: [language + version]
-framework: [framework + version]
-architecture: [pattern name]
-
-## Technology Stack
-
-backend:
-  language: [name + version]
-  framework: [name + version]
-  database: [name + version]
-
-frontend:
-  # (if applicable)
-  language: [name]
-  framework: [name]
-
-infrastructure:
-  # (if applicable)
-  containerization: [Docker/none]
-  orchestration: [K8s/none]
-
-## Hypotheses
-
-architecture:
-  - hypothesis: "[architectural pattern description]"
-    confidence: [0.0-1.0]
-    evidence: "[file:line references]"
-    validation_method: "[how to verify]"
+project_fingerprint:
+  project_type: "[WEB_APP|CLI|LIBRARY|MOBILE_APP|MICROSERVICE|MONOREPO]"
+  scale: "[TINY|SMALL|MEDIUM|LARGE|VERY_LARGE]"
+  # TINY: <500 LOC, SMALL: 500-2k, MEDIUM: 2k-10k, LARGE: 10k-50k, VERY_LARGE: >50k
+  primary_language: "[language + version]"
+  framework: "[framework + version]"
+  architecture: "[pattern name]"
 
 tech_stack:
-  - hypothesis: "[technology decision]"
-    confidence: [0.0-1.0]
-    evidence: "[file:line references]"
-    validation_method: "[how to verify]"
+  backend:
+    language: "[name + version]"
+    framework: "[name + version]"
+    database: "[name + version]"
 
-development:
-  - hypothesis: "[development practice]"
-    confidence: [0.0-1.0]
-    evidence: "[file:line references]"
-    validation_method: "[how to verify]"
+  frontend:  # if applicable
+    language: "[name]"
+    framework: "[name]"
 
-ai_collaboration:
-  level: [0-4]
-  confidence: [0.0-1.0]
-  evidence: "[specific indicators]"
-  indicators:
-    - "[indicator 1]"
-    - "[indicator 2]"
+  infrastructure:  # if applicable
+    containerization: "[Docker/none]"
+    orchestration: "[K8s/none]"
 
-business:
-  - hypothesis: "[business domain insight]"
-    confidence: [0.0-1.0]
-    evidence: "[file:line references]"
-    validation_method: "[how to verify]"
+hypotheses:
+  architecture:
+    - hypothesis: "[architectural pattern description]"
+      confidence: 0.0-1.0
+      evidence: "[file:line references]"
+      validation_method: "[how to verify]"
 
-## Scanned Files
+  tech_stack:
+    - hypothesis: "[technology decision]"
+      confidence: 0.0-1.0
+      evidence: "[file:line references]"
+      validation_method: "[how to verify]"
 
-[List all files actually read, with key insights from each]
+  development:
+    - hypothesis: "[development practice]"
+      confidence: 0.0-1.0
+      evidence: "[file:line references]"
+      validation_method: "[how to verify]"
 
-## Summary
+  ai_collaboration:
+    level: 0-4
+    confidence: 0.0-1.0
+    evidence: "[specific indicators]"
+    indicators:
+      - "[indicator 1]"
+      - "[indicator 2]"
 
-understanding_depth: [70-80%]
-key_findings:
-  - "[finding 1]"
-  - "[finding 2]"
-  - "[finding 3]"
+  business:
+    - hypothesis: "[business domain insight]"
+      confidence: 0.0-1.0
+      evidence: "[file:line references]"
+      validation_method: "[how to verify]"
 
-recommended_next_steps:
-  - "[action 1]"
-  - "[action 2]"
+scanned_files:
+  - file: "[path/to/file]"
+    reason: "[why scanned]"
+    key_insight: "[main learning]"
+
+summary:
+  understanding_depth: "[70-80%]"
+  key_findings:
+    - "[finding 1]"
+    - "[finding 2]"
+    - "[finding 3]"
+
+  recommended_next_steps:
+    - "[action 1]"
+    - "[action 2]"
 ```
 
 ---

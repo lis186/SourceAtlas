@@ -1,6 +1,10 @@
-# SourceAtlas v2.0 - Prompts 完整版
+# SourceAtlas - Prompts 完整版
 
-**版本**: v2.0
+**當前狀態**：
+- **v1.0** ✅ - 方法論已驗證（5 專案測試）
+- **v2.5** 🔵 - Commands 架構開發中
+
+**版本**: v1.0 完成，v2.5 開發中
 **更新時間**: 2025-11-19
 **作者**: SourceAtlas Team
 **驗證專案**: trySwiftTokyoApp, taiwan-calendar, Mir01, chiahsing1115 (5 projects)
@@ -9,7 +13,11 @@
 
 ## 📖 總覽
 
-SourceAtlas v2.0 提供三階段的代碼庫分析 Prompts，基於資訊理論設計，能夠以最少的檔案掃描達到最大的理解深度。
+SourceAtlas 提供三階段的代碼庫分析 Prompts，基於資訊理論設計，能夠以最少的檔案掃描達到最大的理解深度。
+
+**當前狀態**：
+- **v1.0** ✅ - 方法論已驗證（5 專案測試）
+- **v2.5** 🔵 - Commands 架構開發中
 
 ### 三階段設計理念
 
@@ -158,12 +166,12 @@ find [PROJECT_PATH] -type f | grep -E "\.(ts|tsx|js|jsx|php|go|rs|py|java)$" | w
   - 驗證方法
   - 推理依據
 
-### Phase 3: 生成 TOON 格式報告
+### Phase 3: 生成 YAML 格式報告
 
-輸出格式：`[project-name]-stage0-fingerprint.toon`
+輸出格式：`[project-name]-stage0-fingerprint.yaml`
 
-```toon
-# stage0-fingerprint.toon - [Project Name]
+```yaml
+# stage0-fingerprint.yaml - [Project Name]
 
 metadata:
   project_name: [Name]
@@ -386,9 +394,9 @@ next_stage_preparation: [READY | NEED_MORE_INFO]
 
 查看以下實際分析範例：
 
-- `test_results/trySwift-stage0-fingerprint.toon`
-- `test_results/taiwan-calendar-stage0-fingerprint.toon`
-- `test_results/h1431532403240-Mir01-stage0-fingerprint.toon`
+- `test_results/trySwift-stage0-fingerprint.yaml`
+- `test_results/taiwan-calendar-stage0-fingerprint.yaml`
+- `test_results/h1431532403240-Mir01-stage0-fingerprint.yaml`
 
 ```
 
@@ -1229,6 +1237,6 @@ refactor: [X] commits ([Y]%)
 
 ---
 
-**文檔版本**: v2.0
-**最後更新**: 2025-11-19
+**文檔版本**: v1.0 完成，v2.5 開發中
+**最後更新**: 2025-11-22
 **維護者**: SourceAtlas Team
