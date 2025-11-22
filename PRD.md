@@ -484,50 +484,64 @@ AI 回應：
 └─────────────────────────────────────────────┘
 ```
 
-### 3.2 與原始 PRD 的對比
+> **歷史演進**：SourceAtlas 從獨立 CLI 設計演進為 Claude Code Commands 整合。完整演進過程見 `.dev-notes/HISTORY.md`
 
-| 組件 | 原始 PRD (CLI) | 新設計 (Commands) | 理由 |
-|------|---------------|------------------|------|
-| **Parser Layer** | ✅ 需實作 | ❌ 移除 | AI 自己理解代碼 |
-| **Index Layer** | ✅ 需實作 | ❌ 移除 | 即時探索，不需索引 |
-| **Storage Layer** | ✅ 需實作 | ❌ 移除 | 不儲存索引 |
-| **Query Layer** | ✅ 需實作 | ❌ 移除 | AI 動態查詢 |
-| **Command Prompts** | ❌ 無 | ✅ 新增 | 用戶明確觸發的分析流程 |
-| **Helper Scripts** | ❌ 無 | ✅ 新增 | 資料收集 |
+### 3.2 檔案結構
 
-### 3.3 檔案結構
+**當前狀態** (v1.0 完成，v2.5 開發中)：
 
 ```
 sourceatlas2/
-├── .claude/
-│   └── commands/
-│       ├── atlas.md             # ✨ /atlas - 完整分析（核心）
-│       ├── atlas-overview.md    # ✨ /atlas-overview - 專案概覽 ⭐⭐⭐⭐⭐
-│       ├── atlas-pattern.md     # ✨ /atlas-pattern - 學習模式 ⭐⭐⭐⭐⭐
-│       ├── atlas-impact.md      # ✨ /atlas-impact - 影響分析
-│       ├── atlas-find.md        # /atlas-find - 快速搜尋
-│       └── atlas-explain.md     # /atlas-explain - 深入解釋
+├── .claude/commands/                    # Claude Code Commands
+│   └── atlas-overview.md                # ✅ /atlas-overview（已完成）
+│   # 計畫中：
+│   # ├── atlas-pattern.md               # 🔵 /atlas-pattern（Phase 1）
+│   # ├── atlas.md                       # 🔵 /atlas（Phase 1）
+│   # ├── atlas-impact.md                # ⏳ /atlas-impact（Phase 2）
+│   # ├── atlas-find.md                  # ⏳ /atlas-find（Phase 3）
+│   # └── atlas-explain.md               # ⏳ /atlas-explain（Phase 3）
 │
-├── scripts/atlas/
-│   ├── detect-project.sh        # 專案類型偵測
-│   ├── scan-entropy.sh          # 高熵檔案掃描
-│   ├── find-patterns.sh         # 模式識別輔助 ⭐
-│   ├── collect-git.sh           # Git 統計收集
-│   └── analyze-dependencies.sh  # 依賴分析
+├── .dev-notes/                          # ⭐ v1.0 開發記錄（重要！）
+│   ├── HISTORY.md                       # ✅ 完整歷史與決策記錄
+│   ├── KEY_LEARNINGS.md                 # ✅ v1.0 關鍵學習總結
+│   ├── toon-vs-yaml-analysis.md         # ✅ 格式決策分析
+│   ├── v1-implementation-log.md         # ✅ 完整實作日誌
+│   ├── implementation-roadmap.md        # ✅ v2.5 路線圖
+│   └── NEXT_STEPS.md                    # ✅ 下一步行動指南
 │
-├── templates/
-│   ├── stage0-output.yaml       # Stage 0 輸出範例
-│   ├── stage1-output.md         # Stage 1 輸出範例
-│   └── patterns.yaml            # 模式定義庫（可選）
+├── prompts/                             # v2.0 手動 Prompts（保留參考）
+│   ├── stage0-fingerprint.md
+│   ├── stage1-validation.md
+│   └── stage2-hotspots.md
 │
-├── docs/
-│   ├── PROMPTS.md               # 完整 Prompt 文檔（已有）
-│   ├── USAGE_GUIDE.md           # 使用指南（已有）
-│   ├── README.md                # 總覽（已有）
-│   └── CLAUDE.md                # AI 工作指南（已有）
+├── scripts/atlas/                       # 輔助腳本
+│   ├── detect-project-enhanced.sh       # ✅ 規模感知偵測
+│   ├── scan-entropy.sh                  # ✅ 高熵檔案掃描
+│   ├── benchmark.sh                     # ✅ 效能測試
+│   └── compare-formats.sh               # ✅ 格式比較
+│   # 計畫中：
+│   # ├── find-patterns.sh               # ⏳ 模式識別（Phase 1）
+│   # ├── collect-git.sh                 # ⏳ Git 統計（Phase 2）
+│   # └── analyze-dependencies.sh        # ⏳ 依賴分析（Phase 3）
 │
-└── test_results/                # 驗證案例（已有）
+├── plugin/                              # 🔮 Marketplace 發布準備
+│   └── (獨立的 plugin 結構)
+│
+├── test_results/                        # 驗證案例（git ignored）
+├── test_targets/                        # 測試專案（git ignored）
+│
+├── CLAUDE.md                            # AI 工作指南
+├── PRD.md                               # 產品需求文檔
+├── PROMPTS.md                           # 完整 Prompt 模板
+├── README.md                            # 專案總覽
+└── USAGE_GUIDE.md                       # 使用指南
 ```
+
+> **說明**：
+> - ✅ = 已完成
+> - 🔵 = 開發中（Phase 1）
+> - ⏳ = 計畫中（Phase 2-3）
+> - 🔮 = 未來功能
 
 ---
 
@@ -665,31 +679,7 @@ hypotheses:
       validation_method: "檢查 Service 類別結構和呼叫方式"
 ```
 
-### 5.3 TOON 格式（歷史參考）
-
-**註**: TOON 格式已評估但未採用。保留此節作為設計決策記錄。
-
-TOON 格式的設計理念是通過緊湊語法減少 tokens：
-
-```toon
-metadata:
-  project_name: EcommerceAPI
-  scan_time: 2025-11-22T10:00:00Z
-
-## 專案指紋
-project_type: WEB_APP
-framework: Rails 7.0
-
-## 假設
-architecture:
-  - "使用 Service Object 模式" (0.9)
-    evidence: "app/services/ 有 15 個 Service"
-    validate: "檢查 Service 結構"
-```
-
-**實測節省**：14% tokens (非理論值 30-50%)
-
-**為何未採用**：生態系統價值 > 14% token 節省
+> **格式決策歷史**：v1.0 評估了自訂 TOON 格式（14% token 節省），但最終選擇 YAML 以獲得生態系統支援。詳見 `.dev-notes/HISTORY.md` 和 `.dev-notes/toon-vs-yaml-analysis.md`
 
 ---
 
@@ -1377,138 +1367,20 @@ When detecting user confusion, suggest:
 
 ---
 
-## 附錄 B：與 v2.0 的關係
+## 版本資訊
 
-### v2.0 成果（已完成）
+**當前版本**: v2.5.2 (2025-11-22)
 
-```
-✅ PROMPTS.md - 完整的三階段 Prompt
-✅ USAGE_GUIDE.md - 使用指南
-✅ README.md - 專案總覽
-✅ 4 個專案驗證
-✅ AI 協作識別方法
-✅ 格式決策（YAML 選定）
-```
+**開發狀態**：
+- v1.0 ✅ - 方法論驗證完成（5 專案測試）
+- v2.5 🔵 - Commands 架構開發中（預計 3-4 週）
+  - `/atlas-overview` ✅ - 專案概覽（已完成）
+  - `/atlas-pattern` 🔵 - 模式學習（Phase 1，最高優先級）
+  - `/atlas` 🔵 - 完整三階段分析（Phase 1）
+  - `/atlas-impact` ⏳ - 影響分析（Phase 2）
+  - 其他命令（Phase 2-3）
 
-### v2.5 如何使用 v2.0
-
-```yaml
-保留:
-  - 三階段分析方法論
-  - YAML 格式規範（v1.0 決策）
-  - 高熵檔案優先策略
-  - AI 協作識別邏輯
-  - 驗證結果和洞察
-
-轉換:
-  - 手動 Prompt → Command 自動化
-  - 複製貼上 → 斜線命令觸發
-  - 獨立報告 → 對話式互動
-  - TOON 評估 → YAML 採用
-
-新增:
-  - /atlas find 智慧搜尋
-  - /atlas pattern 模式識別
-  - /atlas explain 深入解釋
-  - 輔助 Scripts
-```
-
----
-
-## 更新日誌
-
-### v2.5.2 (2025-11-22) - 當前版本 ⭐
-
-**重要新增**：
-- **新增 `/atlas-overview` 命令** - 專案概覽（Stage 0 指紋分析）
-- 填補 PRD 遺漏：提供獨立的快速理解能力
-- 不需執行完整三階段，10-15 分鐘即可獲得 70-80% 理解
-
-**實作內容**：
-- `.claude/commands/atlas-overview.md` - 專案概覽命令
-- `scripts/atlas/detect-project.sh` - 專案類型檢測腳本
-- `scripts/atlas/scan-entropy.sh` - 高熵文件掃描腳本
-
-**優先級調整**：
-- `/atlas-overview` 列為最高優先級 (⭐⭐⭐⭐⭐)
-- 與 `/atlas-pattern` 並列為最常用命令
-- 使用場景：接手新專案、Code Review 準備、快速技術棧評估
-
-**文檔更新**：
-- 第 3.3 節：檔案結構新增 atlas-overview.md
-- 第 6.1 節：核心命令新增 /atlas-overview
-- 第 6.2 節：新增 /atlas-overview 範例
-- 場景分類表：新增「快速理解新專案」場景
-
-**設計理念**：
-- `/atlas-overview` = 獨立 Stage 0（快速）
-- `/atlas` = 完整三階段（深入）
-- 給予用戶選擇權，不強制執行完整分析
-
----
-
-### v2.5.1 (2025-11-20)
-
-**重大決策**：
-- **確定採用 Commands 而非 Skills** (決策 4)
-- 架構最終定案：Commands + Helper Scripts
-- 明確優先級：`/atlas-pattern` (⭐⭐⭐⭐⭐) 為最優先功能
-
-**架構變更**：
-- `.claude/skills/` → `.claude/commands/`
-- 單一 Skill → 多個專門的 Commands
-- 用戶明確觸發 → 更可控、更可預測
-
-**文檔更新**：
-- 第 3 章：產品架構（Commands 架構圖）
-- 第 6 章：Skill 介面設計 → Command 介面設計
-- 附錄 A：新增決策 4（Commands vs Skills）
-- 全文統一術語：Skill → Commands
-
-**影響**：
-- 開發路徑更清晰
-- 實作更簡單（單檔案 Commands）
-- 符合用戶期望（明確控制）
-
----
-
-### v2.5.0 (2025-11-20)
-
-**重大變更**：
-- 從獨立 CLI 工具轉為 Claude Code 整合
-- 移除複雜的索引系統
-- 新增輔助 Scripts 架構
-- 保留 v2.0 的核心方法論
-
-**新增**：
-- 即時探索命令（find, pattern, explain）
-- 5 個真實使用場景分析
-- 輕量 Scripts 設計
-- 優先級排序（基於真實需求）
-
-**保留自 v2.0**：
-- 三階段分析方法
-- TOON 格式規範
-- 高熵檔案優先策略
-- AI 協作識別
-
----
-
-### v2.0.0 (2025-11-19) - 研究驗證版
-
-- 完成手動 Prompts 方法論
-- 驗證 5 個真實專案
-- YAML vs TOON 格式決策
-- 規模感知算法
-- 發現 AI 協作識別方法
-
----
-
-### v1.0.0 (2025-01-15) - 原始 PRD
-
-- 獨立 CLI 工具設計（已轉向 Commands）
-- 完整索引系統架構（已改為即時分析）
-- TOON 格式提出（已評估並選擇 YAML）
+> **完整版本歷史與決策記錄**：見 `.dev-notes/HISTORY.md`
 
 ---
 
