@@ -1,7 +1,7 @@
-# SourceAtlas v2.0 - 使用指南
+# SourceAtlas - 使用指南
 
-**版本**: v2.0
-**更新時間**: 2025-11-19
+**版本**: v1.0 完成，v2.5 開發中
+**更新時間**: 2025-11-22
 
 ---
 
@@ -20,7 +20,7 @@ cd /path/to/target/project
 
 **步驟 3: 查看結果**
 
-你會得到一個 `.toon` 格式的報告，包含：
+你會得到一個 `.yaml` 格式的報告，包含：
 - 技術棧識別
 - 架構模式推論
 - 10-15 個假設（供 Stage 1 驗證）
@@ -138,8 +138,8 @@ cd /path/to/target/project
    - 生成假設
 
 3. **你會得到**:
-   - 一個 `.toon` 格式的報告
-   - 10-15 個待驗證的假設
+   - 一個 `.yaml` 格式的報告
+   - 10-15 個待驗證的假設（規模感知調整）
    - 技術棧和架構的推論
    - 開發者能力初步評估
 
@@ -152,7 +152,7 @@ cd /path/to/target/project
 **常見問題**:
 
 Q: Stage 0 輸出太長怎麼辦？
-A: 這是正常的，.toon 格式設計為完整記錄。可以重點看 `專案指紋` 和 `假設清單` 部分。
+A: 這是正常的，YAML 格式設計為完整記錄。可以重點看 `project_fingerprint` 和 `hypotheses` 部分。
 
 Q: 假設太多/太少？
 A: 理想是 10-15 個。太多說明不夠聚焦，太少可能遺漏重點。
@@ -263,27 +263,29 @@ A: 看 commit message 一致性、註解密度、CLAUDE.md 等檔案。
 
 ## 📋 輸出格式說明
 
-### TOON 格式 (.toon)
+### YAML 格式 (.yaml)
 
 **用於**: Stage 0 報告
 
 **特點**:
-- 結構化的文本格式
-- 易於解析
-- 包含完整的metadata
+- 標準格式，廣泛生態系統支援
+- 極佳的人類可讀性
+- 完整的 IDE 和工具支援
+- 包含完整的 metadata
+
+**v1.0 決策**: 選擇 YAML 而非自訂 TOON 格式（詳見 `.dev-notes/toon-vs-yaml-analysis.md`）
 
 **範例**:
-```toon
+```yaml
 metadata:
   project_name: example
   developer: john_doe
-  scan_time: 2025-11-19T10:00:00Z
+  scan_time: "2025-11-22T10:00:00Z"
 
-## 專案指紋
-
-project_type: WEB_APP
-architecture: MVC
-scale: MEDIUM
+project_fingerprint:
+  project_type: WEB_APP
+  architecture: MVC
+  scale: MEDIUM
 ```
 
 ### Markdown 格式 (.md)
@@ -529,6 +531,6 @@ done
 
 ---
 
-**文檔版本**: v2.0
-**最後更新**: 2025-11-19
+**文檔版本**: v1.0 完成，v2.5 開發中
+**最後更新**: 2025-11-22
 **維護者**: SourceAtlas Team
