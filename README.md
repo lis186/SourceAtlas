@@ -1,11 +1,15 @@
-# SourceAtlas v2.0
+# SourceAtlas
 
 **快速理解任何代碼庫的 AI 分析工具**
 
 基於資訊理論設計，通過掃描 <5% 的檔案達到 70-80% 的理解深度，節省 95%+ 的時間和 Token。
 
-[![驗證狀態](https://img.shields.io/badge/驗證-4個專案-brightgreen)](./test_results/)
-[![準確率](https://img.shields.io/badge/準確率-87%25-blue)]()
+**當前狀態**：
+- **v1.0** ✅ - 方法論驗證完成（2025-11-22）
+- **v2.5** 🔵 - Commands 架構開發中
+
+[![驗證狀態](https://img.shields.io/badge/驗證-5個專案-brightgreen)](./test_results/)
+[![準確率](https://img.shields.io/badge/準確率-87~100%25-blue)]()
 [![Token節省](https://img.shields.io/badge/Token節省-95%25-yellow)]()
 
 ---
@@ -74,7 +78,7 @@ cd /path/to/your/project
 - 推論架構模式和技術棧
 - 生成 10-15 個假設
 
-**輸出**: `.toon` 格式報告
+**輸出**: `.yaml` 格式報告
 
 **時間**: 10-15 分鐘 | **Token**: ~20k
 
@@ -171,7 +175,7 @@ cd /path/to/your/project
 
 ## 🤖 AI 協作識別
 
-SourceAtlas v2.0 能準確識別 AI 輔助開發模式：
+SourceAtlas 能準確識別 AI 輔助開發模式（v1.0 已驗證）：
 
 ### AI 協作成熟度模型
 
@@ -219,16 +223,24 @@ sourceatlas2/
 ├── README.md                    # 👈 你在這裡（總覽）
 ├── PROMPTS.md                   # 完整 Prompt 模板（核心）
 ├── USAGE_GUIDE.md               # 詳細使用指南
+├── PRD.md                       # 產品需求（v2.5 Commands）
 │
-├── test_results/                # 實際分析案例
-│   ├── *-stage0-fingerprint.toon
-│   ├── *-stage1-validation.md
-│   ├── *-stage2-hotspots.md
-│   ├── ANALYSIS_SUMMARY.md
-│   ├── VALIDATION_COMPARISON.md
-│   └── ...
+├── .claude/commands/            # Claude Code 斜線命令
+│   └── atlas-overview.md        # /atlas-overview ✅
 │
-└── test_targets/                # 測試專案（已忽略）
+├── scripts/atlas/               # 輔助腳本
+│   ├── detect-project-enhanced.sh  # 規模感知偵測 ✅
+│   ├── scan-entropy.sh             # 高熵檔案掃描 ✅
+│   └── benchmark.sh                # 效能測試 ✅
+│
+├── .dev-notes/                  # 開發紀錄（關鍵學習）
+│   ├── v1-implementation-log.md    # v1.0 完整紀錄
+│   ├── toon-vs-yaml-analysis.md    # 格式決策分析
+│   ├── KEY_LEARNINGS.md            # 關鍵學習索引
+│   ├── implementation-roadmap.md   # v2.5 實作路線圖
+│   └── NEXT_STEPS.md               # 下一步行動指南
+│
+└── test_results/                # 驗證案例（測試時生成）
 ```
 
 ---
@@ -335,7 +347,7 @@ README.md > package.json > Models > Controllers
 
 ## 🔬 研究價值
 
-SourceAtlas v2.0 不僅是分析工具，也是研究 AI 時代軟體工程的平台。
+SourceAtlas 不僅是分析工具，也是研究 AI 時代軟體工程的平台。
 
 ### 已完成的研究
 
@@ -359,28 +371,29 @@ SourceAtlas v2.0 不僅是分析工具，也是研究 AI 時代軟體工程的�
 
 ## 🛠️ 技術細節
 
-### 為什麼使用 TOON 格式？
+### 為什麼使用 YAML 格式？
 
-**TOON** = **T**oken **O**ptimized **O**utput **N**otation
+**YAML** = 標準的數據序列化格式
 
 **優勢**:
 
-1. 結構化，易於解析
-2. Token 優化（相比 JSON/YAML）
-3. 人類可讀
+1. 標準格式，廣泛的生態系統支援
+2. 人類可讀性極佳
+3. 完整的 IDE 和工具支援
 4. 包含 metadata
+
+**v1.0 決策**: 曾評估自訂 TOON 格式（14% token 節省），但最終選擇 YAML 以獲得生態系統支援。詳見 `.dev-notes/toon-vs-yaml-analysis.md`
 
 **範例**:
 
-```toon
+```yaml
 metadata:
   project_name: example
-  scan_time: 2025-11-19T10:00:00Z
+  scan_time: "2025-11-22T10:00:00Z"
 
-## 專案指紋
-
-project_type: WEB_APP
-scale: LARGE
+project_fingerprint:
+  project_type: WEB_APP
+  scale: LARGE
 ```
 
 ### 為什麼三階段設計？
@@ -481,29 +494,48 @@ scale: LARGE
 
 ## 🗺️ 路線圖
 
-### v2.0 (當前) ✅
+### v1.0 (2025-11-22) ✅
 
-- [x] 三階段 Prompts 完整版
-- [x] 4 個專案驗證
+- [x] 三階段方法論驗證
+- [x] 5 個專案測試（TINY → LARGE）
+- [x] 規模感知算法
+- [x] YAML vs TOON 格式決策
 - [x] AI 協作識別
-- [x] 三方對比研究
+- [x] 完整基準測試
 
-### v2.1 (計劃中)
+**關鍵成果**：
+- ✅ 掃描 <5% 檔案達到 70-80% 理解（已驗證）
+- ✅ 速度/大小/tokens：100% 通過率
+- ✅ YAML 格式確定為標準
 
-- [ ] 評估標準體系
-- [ ] 更多語言支援 (Go, Rust, Java)
-- [ ] CLI 工具原型
+### v2.5 (開發中) 🔵
 
-### v3.0 (未來)
+**Commands 架構** - 預計 3-4 週完成
 
-- [ ] 自動化工具
-- [ ] 網頁介面
+- [x] `/atlas-overview` - 專案概覽（Stage 0）✅
+- [ ] `/atlas-pattern` ⭐⭐⭐⭐⭐ - 學習設計模式（最高優先級）
+- [ ] `/atlas` - 完整三階段分析
+- [ ] `/atlas-impact` ⭐⭐⭐⭐ - 影響範圍分析
+- [ ] `/atlas-find` - 智慧搜尋
+- [ ] `/atlas-explain` - 深入解釋
+
+**進度追蹤**：見 `.dev-notes/implementation-roadmap.md`
+
+### v3.0 (未來) 🔮
+
+**SourceAtlas Monitor** - 持續追蹤系統
+
+- [ ] 自動化專案監控
+- [ ] 技術債務量化
+- [ ] 趨勢分析儀表板
 - [ ] 團隊協作功能
 - [ ] API 服務
 
 ---
 
-**SourceAtlas v2.0** - 用 AI 的速度，達到人工的深度
+**SourceAtlas** - 用 AI 的速度，達到人工的深度
+
+**v1.0 已完成驗證 | v2.5 Commands 開發中**
 
 Made with ❤️ and 🤖 by SourceAtlas Team
 
