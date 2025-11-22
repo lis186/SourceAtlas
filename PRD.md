@@ -381,16 +381,17 @@ AI 回應：
 
 ### 場景分類
 
-| 場景類型 | 需求特點 | 適用產品 |
-|---------|---------|---------|
-| **即時探索** | 不需歷史資料、即時推理 | ✅ SourceAtlas Skill (v2.5) |
-| 場景 1: Bug 修復 | 快速定位問題 | ✅ Skill |
-| 場景 2: 學習模式 | 識別設計模式 | ✅ Skill |
-| 場景 3B: API 影響分析 ⭐ | 追蹤 API 調用鏈 | ✅ Skill (基礎版) |
-| 場景 4: Code Review | 理解變更意圖 | ✅ Skill |
-| **持續追蹤** | 需要歷史資料、趨勢分析 | 🔮 SourceAtlas Monitor (v3.0) |
-| 場景 3A: Model 變更影響 | Git 歷史、關聯分析 | 🔮 Monitor |
-| 場景 5: 技術債務 | 持續追蹤、量化指標 | 🔮 Monitor |
+| 場景類型 | 需求特點 | 適用產品 | 使用命令 |
+|---------|---------|---------|----------|
+| **即時探索** | 不需歷史資料、即時推理 | ✅ SourceAtlas Commands (v2.5) | |
+| 快速理解新專案 | 10-15 分鐘全局視角 | ✅ Commands | `/atlas-overview` ⭐⭐⭐⭐⭐ |
+| 場景 1: Bug 修復 | 快速定位問題 | ✅ Commands | `/atlas-find` |
+| 場景 2: 學習模式 | 識別設計模式 | ✅ Commands | `/atlas-pattern` ⭐⭐⭐⭐⭐ |
+| 場景 3B: API 影響分析 ⭐ | 追蹤 API 調用鏈 | ✅ Commands | `/atlas-impact` |
+| 場景 4: Code Review | 理解變更意圖 | ✅ Commands | `/atlas-overview` + `/atlas` |
+| **持續追蹤** | 需要歷史資料、趨勢分析 | 🔮 SourceAtlas Monitor (v3.0) | |
+| 場景 3A: Model 變更影響 | Git 歷史、關聯分析 | 🔮 Monitor | (未來功能) |
+| 場景 5: 技術債務 | 持續追蹤、量化指標 | 🔮 Monitor | `/atlas-health` (未來) |
 
 ---
 
