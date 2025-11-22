@@ -19,7 +19,7 @@ SourceAtlas 是一個整合在 Claude Code 中的智慧型程式碼理解助手�
 ### 核心特色
 
 - 🎯 **即時探索**：不需要預先索引，按需分析
-- 🔄 **Token 優化**：採用 TOON 格式，節省 30-50% tokens
+- 📋 **標準格式**：採用 YAML 格式，完整生態系統支援
 - 🧠 **智慧理解**：AI 動態推理，而非靜態索引
 - ⚡ **工作流整合**：融入 Claude Code，無縫使用
 - 🛠️ **輕量設計**：Scripts 收集資料，AI 負責理解
@@ -32,8 +32,8 @@ SourceAtlas 是一個整合在 Claude Code 中的智慧型程式碼理解助手�
 2. [使用場景](#2-使用場景)
 3. [產品架構](#3-產品架構)
 4. [核心能力](#4-核心能力)
-5. [TOON 格式規範](#5-toon-格式規範)
-6. [Skill 介面設計](#6-skill-介面設計)
+5. [輸出格式決策](#5-輸出格式決策)
+6. [Command 介面設計](#6-command-介面設計)
 7. [Scripts 設計](#7-scripts-設計)
 8. [分析方法論](#8-分析方法論)
 9. [實作規範](#9-實作規範)
@@ -457,7 +457,7 @@ sourceatlas2/
 │   └── analyze-dependencies.sh  # 依賴分析
 │
 ├── templates/
-│   ├── stage0-output.toon       # Stage 0 輸出範例
+│   ├── stage0-output.yaml       # Stage 0 輸出範例
 │   ├── stage1-output.md         # Stage 1 輸出範例
 │   └── patterns.yaml            # 模式定義庫（可選）
 │
@@ -479,7 +479,7 @@ sourceatlas2/
 #### Stage 0: Project Fingerprint
 - **目標**：掃描 <5% 檔案達到 70-80% 理解
 - **方法**：高熵檔案優先（README, package.json, Models）
-- **輸出**：TOON 格式專案指紋
+- **輸出**：YAML 格式專案指紋
 - **時間**：10-15 分鐘
 
 #### Stage 1: Hypothesis Validation
@@ -544,41 +544,60 @@ AI 分析：
 
 ---
 
-## 5. TOON 格式規範
+## 5. 輸出格式決策
 
-### 5.1 為什麼選擇 TOON（保留原 PRD）
+### 5.1 格式選擇：YAML (v1.0 決策)
 
-| 特性 | JSON | YAML | TOON | 優勢 |
-|------|------|------|------|------|
-| Token 使用 | 100% | 85% | 55% | 最佳 |
-| 可讀性 | 中 | 高 | 高 | ✓ |
-| 註解支援 | ✗ | ✓ | ✓ | ✓ |
-| 多行字串 | 複雜 | ✓ | ✓ | ✓ |
-| 解析速度 | 快 | 慢 | 快 | ✓ |
+**決策結果**：使用 **YAML** 作為 Stage 0 輸出格式
 
-### 5.2 TOON 基本語法
+**評估過程**：v1.0 實作期間，曾評估自訂 TOON (Token Optimized Output Notation) 格式
+
+| 特性 | JSON | YAML | TOON (評估) |
+|------|------|------|-------------|
+| Token 效率 | 基準 | 基準 +15% | 基準 -14% ✅ |
+| 生態系統 | 廣泛 | **廣泛** ✅ | 無 |
+| 可讀性 | 中 | **高** ✅ | 高 |
+| IDE 支援 | ✓ | **✓** ✅ | ✗ |
+| 工具支援 | 多 | **多** ✅ | 無 |
+| 學習曲線 | 低 | **低** ✅ | 需學習 |
+
+**TOON vs YAML 測試結果** (cursor-talk-to-figma-mcp 專案):
+- TOON: 807 tokens
+- YAML: 938 tokens
+- **差異**: 131 tokens (14% 節省)
+
+**決策理由**：
+1. **14% 節省屬於邊際效益** - 非預期的 30-50%
+2. **內容佔 85%，結構僅 15%** - 優化結構的效益有限
+3. **生態系統價值高** - YAML 有完整工具鏈、IDE 支援、廣泛使用
+4. **符合"極簡"哲學** - 使用標準工具，不重新發明輪子
+5. **開發效率** - 無需維護自訂解析器和文檔
+
+**完整分析**：見 `.dev-notes/toon-vs-yaml-analysis.md`
+
+### 5.2 YAML 格式規範
+
+用於 Stage 0 輸出：
 
 ```yaml
-# 專案指紋範例
 metadata:
   project_name: EcommerceAPI
-  scan_time: 2025-11-20T10:00:00Z
+  scan_time: "2025-11-22T10:00:00Z"
   scanned_files: 12
   total_files_estimate: 450
 
-## 專案指紋
-project_type: WEB_APP
-framework: Rails 7.0
-architecture: Service-oriented
-scale: LARGE
-
-## 技術棧
-backend:
-  language: Ruby 3.1
+project_fingerprint:
+  project_type: WEB_APP
   framework: Rails 7.0
-  database: PostgreSQL 14
+  architecture: Service-oriented
+  scale: LARGE
 
-## 假設清單
+tech_stack:
+  backend:
+    language: Ruby 3.1
+    framework: Rails 7.0
+    database: PostgreSQL 14
+
 hypotheses:
   architecture:
     - hypothesis: "使用 Service Object 模式處理商業邏輯"
@@ -587,13 +606,31 @@ hypotheses:
       validation_method: "檢查 Service 類別結構和呼叫方式"
 ```
 
-### 5.3 Token 優化比較
+### 5.3 TOON 格式（歷史參考）
 
+**註**: TOON 格式已評估但未採用。保留此節作為設計決策記錄。
+
+TOON 格式的設計理念是通過緊湊語法減少 tokens：
+
+```toon
+metadata:
+  project_name: EcommerceAPI
+  scan_time: 2025-11-22T10:00:00Z
+
+## 專案指紋
+project_type: WEB_APP
+framework: Rails 7.0
+
+## 假設
+architecture:
+  - "使用 Service Object 模式" (0.9)
+    evidence: "app/services/ 有 15 個 Service"
+    validate: "檢查 Service 結構"
 ```
-原始 JSON: 156 tokens
-TOON 標準: 92 tokens (節省 41%)
-TOON 壓縮: 41 tokens (節省 74%)
-```
+
+**實測節省**：14% tokens (非理論值 30-50%)
+
+**為何未採用**：生態系統價值 > 14% token 節省
 
 ---
 
@@ -656,7 +693,7 @@ Execute Stage 0 Analysis using information theory principles:
 2. Run: `bash scripts/atlas/scan-entropy.sh`
 3. Apply high-entropy file prioritization
 4. Generate 10-15 hypotheses with confidence levels
-5. Output TOON format report
+5. Output YAML format report
 
 ### High-Entropy Priority:
 1. Documentation (README, CLAUDE.md)
@@ -665,7 +702,7 @@ Execute Stage 0 Analysis using information theory principles:
 4. Entry points (1-2 samples)
 5. Tests (1-2 samples)
 
-Output Format: TOON (Token Optimized Output Notation)
+Output Format: YAML (Standard format with ecosystem support)
 Time Limit: 10-15 minutes
 Understanding Target: 70-80%
 
@@ -732,7 +769,7 @@ Project info: !`bash scripts/atlas/detect-project.sh`
 1. Run: `bash scripts/atlas/scan-entropy.sh`
 2. Apply high-entropy file prioritization
 3. Scan <5% of files to achieve 70-80% understanding
-4. Output TOON format report
+4. Output YAML format report
 
 ### High-Entropy Priority:
 1. README.md, CLAUDE.md
@@ -984,7 +1021,7 @@ templates:
 - [ ] 實作 `/atlas` - 完整三階段分析
 - [ ] 實作 `/atlas-pattern` - 學習模式 ⭐⭐⭐⭐⭐
 - [ ] 基礎 Scripts（detect-project.sh, scan-entropy.sh）
-- [ ] TOON 格式輸出
+- [x] YAML 格式輸出 ✅ (v1.0 決策)
 
 #### Phase 2: 優先功能 (Week 1-2)
 - [ ] 完善 `/atlas-pattern` 命令和 Script
@@ -1003,6 +1040,7 @@ templates:
 - [ ] 實作 `/atlas-explain` - 深入解釋
 - [ ] 完善 Git 分析 Scripts
 - [ ] 整體測試與文檔
+- [ ] 確保所有輸出使用 YAML 格式
 
 ---
 
@@ -1013,7 +1051,7 @@ templates:
 | 指標 | 目標值 | 測量方式 | v2.0 驗證結果 |
 |------|--------|----------|--------------|
 | **理解準確度** | >85% | AI 能正確定位功能 | ✅ 87-100% |
-| **Token 節省** | >40% | vs 完整檔案讀取 | ✅ 95%+ |
+| **Token 節省** | >80% | vs 完整檔案讀取 | ✅ 95%+ |
 | **時間節省** | >90% | vs 手動理解 | ✅ 95%+ |
 | **Stage 0 準確度** | >70% | 假設驗證率 | ✅ 75-95% |
 | **使用頻率** | 每天 3+ 次 | 開發者實際使用 | 🔜 待測 |
@@ -1290,7 +1328,7 @@ When detecting user confusion, suggest:
 ✅ README.md - 專案總覽
 ✅ 4 個專案驗證
 ✅ AI 協作識別方法
-✅ TOON 格式規範
+✅ 格式決策（YAML 選定）
 ```
 
 ### v2.5 如何使用 v2.0
@@ -1298,7 +1336,7 @@ When detecting user confusion, suggest:
 ```yaml
 保留:
   - 三階段分析方法論
-  - TOON 格式規範
+  - YAML 格式規範（v1.0 決策）
   - 高熵檔案優先策略
   - AI 協作識別邏輯
   - 驗證結果和洞察
@@ -1307,6 +1345,7 @@ When detecting user confusion, suggest:
   - 手動 Prompt → Command 自動化
   - 複製貼上 → 斜線命令觸發
   - 獨立報告 → 對話式互動
+  - TOON 評估 → YAML 採用
 
 新增:
   - /atlas find 智慧搜尋
@@ -1399,17 +1438,18 @@ When detecting user confusion, suggest:
 ### v2.0.0 (2025-11-19) - 研究驗證版
 
 - 完成手動 Prompts 方法論
-- 驗證 4 個真實專案
-- 建立 TOON 格式規範
+- 驗證 5 個真實專案
+- YAML vs TOON 格式決策
+- 規模感知算法
 - 發現 AI 協作識別方法
 
 ---
 
 ### v1.0.0 (2025-01-15) - 原始 PRD
 
-- 獨立 CLI 工具設計
-- 完整索引系統架構
-- TOON 格式提出
+- 獨立 CLI 工具設計（已轉向 Commands）
+- 完整索引系統架構（已改為即時分析）
+- TOON 格式提出（已評估並選擇 YAML）
 
 ---
 
