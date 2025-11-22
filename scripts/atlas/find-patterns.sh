@@ -109,6 +109,30 @@ get_file_patterns() {
             "workmanager"|"worker"|"background")
                 echo "*Worker.kt *Worker.java *WorkManager.kt *WorkRequest.kt"
                 ;;
+            "activity")
+                echo "*Activity.kt *Activity.java MainActivity.kt"
+                ;;
+            "service")
+                echo "*Service.kt *Service.java *ForegroundService.kt"
+                ;;
+            "receiver"|"broadcastreceiver"|"broadcast")
+                echo "*Receiver.kt *Receiver.java *BroadcastReceiver.kt *BroadcastReceiver.java"
+                ;;
+            "mapper"|"converter")
+                echo "*Mapper.kt *Mapper.java *Converter.kt *Converter.java *Transformer.kt"
+                ;;
+            "sealed"|"result"|"resource")
+                echo "*Result.kt *Result.java *Response.kt *Resource.kt UiState.kt"
+                ;;
+            "extension"|"ext"|"extensions")
+                echo "*Extensions.kt *Ext.kt *Extension.kt"
+                ;;
+            "viewbinding"|"databinding"|"binding")
+                echo "*Binding.kt *Binding.java"
+                ;;
+            "singleton"|"object"|"manager")
+                echo "*Manager.kt *Manager.java *Provider.kt *Singleton.kt AppConfig.kt"
+                ;;
             *)
                 echo ""
                 ;;
@@ -267,6 +291,30 @@ get_dir_patterns() {
             "workmanager"|"worker"|"background")
                 echo "worker workers work background"
                 ;;
+            "activity")
+                echo "activity activities ui/activity"
+                ;;
+            "service")
+                echo "service services background"
+                ;;
+            "receiver"|"broadcastreceiver"|"broadcast")
+                echo "receiver receivers broadcast"
+                ;;
+            "mapper"|"converter")
+                echo "mapper mappers converter util/mapper"
+                ;;
+            "sealed"|"result"|"resource")
+                echo "model data/model common"
+                ;;
+            "extension"|"ext"|"extensions")
+                echo "extension extensions ext util/ext"
+                ;;
+            "viewbinding"|"databinding"|"binding")
+                echo "ui layout"
+                ;;
+            "singleton"|"object"|"manager")
+                echo "manager singleton util"
+                ;;
             *)
                 echo ""
                 ;;
@@ -404,6 +452,16 @@ main() {
             echo "  - navigation / nav / navigator" >&2
             echo "  - adapter / recyclerview / viewholder" >&2
             echo "  - workmanager / worker / background" >&2
+            echo "" >&2
+            echo "Tier 2 patterns:" >&2
+            echo "  - activity" >&2
+            echo "  - service" >&2
+            echo "  - receiver / broadcastreceiver / broadcast" >&2
+            echo "  - mapper / converter" >&2
+            echo "  - sealed / result / resource" >&2
+            echo "  - extension / ext / extensions" >&2
+            echo "  - viewbinding / databinding / binding" >&2
+            echo "  - singleton / object / manager" >&2
         elif [ "$PROJECT_TYPE" = "typescript" ]; then
             echo "Supported patterns (TypeScript/React/Next.js):" >&2
             echo "" >&2
