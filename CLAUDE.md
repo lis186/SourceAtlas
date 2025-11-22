@@ -4,9 +4,13 @@
 
 ## 專案總覽
 
-**SourceAtlas v2.0** 是一個專為 AI 優化的代碼庫分析工具，設計用於快速理解任何代碼庫，通過掃描少於 5% 的檔案即可達到 70-95% 的理解深度。它使用資訊理論原則，優先處理高熵檔案（配置、文檔、模型）而非實作細節。
+**SourceAtlas** 是一個專為 AI 優化的代碼庫分析工具，設計用於快速理解任何代碼庫，通過掃描少於 5% 的檔案即可達到 70-95% 的理解深度。它使用資訊理論原則，優先處理高熵檔案（配置、文檔、模型）而非實作細節。
 
 **核心創新**：三階段分析框架，相比傳統代碼審查方法節省 95%+ 的時間和 token。
+
+**當前狀態**：
+- **v1.0** ✅ - 方法論驗證完成（2025-11-22）
+- **v2.5** 🔵 - Commands 架構實作中（目標：3-4 週）
 
 ## 架構
 
@@ -18,7 +22,7 @@
    - 掃描 <5% 檔案達到 70-80% 理解
    - 識別技術棧、架構模式、業務領域
    - 生成 10-15 個待驗證假設
-   - 輸出格式：`.toon` (Token Optimized Output Notation)
+   - 輸出格式：`.yaml` (v1.0 決策：YAML > TOON，生態系統優先)
 
 2. **Stage 1: 假設驗證** (~20-30 分鐘, ~30k tokens)
    - 系統化驗證 Stage 0 的假設
@@ -40,12 +44,12 @@
 - 結構 > 實作細節，更適合快速理解
 - 漸進式精煉勝過窮舉式掃描
 
-**TOON 格式** (Token Optimized Output Notation)：
+**格式選擇** (v1.0 決策)：
 
-- 針對 token 效率優化的自訂 YAML-like 格式
-- 相比 JSON 節省 30-50% tokens
-- 人類可讀且機器可解析
-- 用於 Stage 0 輸出
+- **YAML** 為主要格式（標準生態系統 > 14% token 優化）
+- TOON 格式已評估但未採用（詳見 `.dev-notes/toon-vs-yaml-analysis.md`）
+- 用於 Stage 0 輸出：`.yaml`
+- 用於 Stage 1-2 輸出：`.md`
 
 ## 目錄結構
 
@@ -53,12 +57,24 @@
 sourceatlas2/
 ├── PROMPTS.md              # 所有 3 個階段的完整 prompt 模板
 ├── README.md               # 使用者文檔（中文）
-├── PRD.md                  # 產品需求（未來 CLI 工具設計）
+├── PRD.md                  # 產品需求（v2.5 Commands 架構）
 ├── USAGE_GUIDE.md          # 詳細使用說明
-├── prompts/                # 個別 prompt 檔案
-│   ├── stage0-fingerprint.md
-│   ├── stage1-validation.md
-│   └── stage2-hotspots.md
+│
+├── .claude/commands/       # ⭐ Claude Code 斜線命令
+│   └── atlas-overview.md   # ✅ /atlas-overview (Stage 0)
+│
+├── scripts/atlas/          # ⭐ 輔助腳本
+│   ├── detect-project-enhanced.sh  # ✅ 規模感知偵測
+│   ├── scan-entropy.sh             # ✅ 高熵檔案掃描
+│   ├── benchmark.sh                # ✅ 效能測試
+│   └── compare-formats.sh          # ✅ 格式比較
+│
+├── .dev-notes/             # ⭐ 開發紀錄（關鍵學習）
+│   ├── v1-implementation-log.md    # v1.0 完整紀錄
+│   ├── toon-vs-yaml-analysis.md    # 格式決策分析
+│   ├── implementation-roadmap.md   # v2.5 實作路線圖
+│   └── NEXT_STEPS.md               # 下一步行動指南
+│
 ├── test_results/           # 驗證專案的分析輸出（已被 git 忽略）
 └── test_targets/           # 用於驗證的克隆代碼庫（已被 git 忽略）
 ```
@@ -81,15 +97,19 @@ sourceatlas2/
 - **500-2000 LOC**：使用 Stage 0-1
 - **>2000 LOC 且有 Git 歷史**：使用全部 3 個階段
 
-### 執行 Prompts
+### 執行分析
 
-所有 prompts 都在 `PROMPTS.md` 中。關鍵步驟：
-
+**v1.0 方式**（手動 Prompts）：
 1. 從 `PROMPTS.md` 複製相關階段的 prompt
 2. 將 `[PROJECT_PATH]` 替換為實際路徑
-3. 按照指示執行檔案讀取和 shell 命令
-4. 以指定格式生成輸出（Stage 0 用 .toon，Stage 1-2 用 .md）
-5. 將結果儲存在 `test_results/` 供參考
+3. 以指定格式生成輸出（Stage 0 用 .yaml，Stage 1-2 用 .md）
+
+**v2.5 方式**（Commands，開發中）：
+- `/atlas-overview` ✅ - Stage 0 專案指紋（已實作）
+- `/atlas-pattern` 🔵 - 學習設計模式（最高優先級，開發中）
+- `/atlas` 🔵 - 完整三階段分析（開發中）
+- `/atlas-impact` 🔵 - 影響範圍分析（開發中）
+- `/atlas-find` 🔵 - 智慧搜尋（開發中）
 
 **重要**：Stage prompts 彼此依賴。務必先完成 Stage 0 再做 Stage 1，先完成 Stage 1 再做 Stage 2。
 
@@ -128,35 +148,41 @@ SourceAtlas 的獨特能力之一是識別 AI 輔助開發模式：
 
 ## 檔案格式
 
-### TOON 格式 (.toon)
+### YAML 格式 (.yaml)
 
-用於 Stage 0 輸出。主要特性：
+用於 Stage 0 輸出（v1.0 決策）。主要特性：
 
-- 帶有 metadata 標頭的 YAML-like 語法
+- 標準 YAML 語法（廣泛生態系統支援）
 - 結構化區段：專案指紋、假設、掃描檔案
 - 所有推論的信心等級（0.0-1.0）
-- 為 AI 消費優化的 token 使用
+- 相比 TOON 僅多 14% tokens，但換取標準工具支援
 
 範例結構：
 
-```toon
+```yaml
 metadata:
   project_name: example
-  scan_time: 2025-11-19T10:00:00Z
+  scan_time: "2025-11-22T10:00:00Z"
   total_files: 500
   scanned_files: 12
-  scan_ratio: 2.4%
+  scan_ratio: "2.4%"
 
-## Project Fingerprint
-project_type: WEB_APP
-scale: MEDIUM
-# ...additional fields
+project_fingerprint:
+  project_type: WEB_APP
+  scale: MEDIUM
+  # ...additional fields
 
-## Hypotheses
-- hypothesis: "Uses JWT authentication"
-  confidence: 0.75
-  evidence: ["Found jwt dependency", "auth middleware present"]
+hypotheses:
+  architecture:
+    - hypothesis: "Uses JWT authentication"
+      confidence: 0.75
+      evidence: "Found jwt dependency, auth middleware present"
 ```
+
+**為什麼選擇 YAML 而非 TOON？**
+- 標準格式 > 自訂格式（極簡哲學）
+- 14% token 差異屬於邊際效益
+- 完整分析見 `.dev-notes/toon-vs-yaml-analysis.md`
 
 ### Markdown 報告 (.md)
 
@@ -223,7 +249,14 @@ scale: MEDIUM
 
 ## 版本控制
 
-當前版本：**v2.0**
+**當前版本**：
+- **v1.0** ✅ - 方法論驗證完成（2025-11-22）
+- **v2.5** 🔵 - Commands 實作中（預計 3-4 週）
+
+**版本歷程**：
+- v1.0 (2025-11-22): 完成 5 專案驗證、YAML vs TOON 決策、規模感知算法
+- v2.0 (2025-11-19): 手動 Prompts 方法論
+- v2.5 (進行中): Claude Code Commands 整合
 
 ### 忽略的目錄
 
@@ -243,18 +276,83 @@ scale: MEDIUM
 
 此工作流程確保功能的清晰分離，並允許 GitButler 自動組織 commits 和分支，無需手動介入。
 
-## 未來開發（v2.1+）
+## v1.0 關鍵學習（必讀！）
 
-基於 PRD.md，未來計劃包括：
+**2025-11-22 完成的 v1.0 驗證揭示了關鍵洞察**：
 
-- CLI 工具實作（`satlas` 命令）
-- 自動化索引和查詢
-- 多語言解析器支援
-- 大型代碼庫的效能優化（>100k LOC）
+### 1. 資訊理論確實有效 ✅
+- 掃描 <5% 檔案可達到 70-80% 理解（5/5 專案驗證）
+- README + package.json 提供不成比例的資訊量
+- 高熵優先策略節省 95%+ 時間
 
-實作這些功能時，維持核心原則：
+### 2. 規模感知至關重要 ⭐
+- 固定掃描數量對 TINY 專案失效（60% 掃描率）
+- 解決方案：規模感知文件限制和假設目標
+  - TINY (<5 files): 掃描 1-2 檔案，5-8 假設
+  - SMALL (5-15 files): 掃描 2-3 檔案，7-10 假設
+  - MEDIUM (15-50 files): 掃描 4-6 檔案，10-15 假設
+  - LARGE (50-150 files): 掃描 6-10 檔案，12-18 假設
+  - VERY_LARGE (>150 files): 掃描 10-15 檔案，15-20 假設
 
-- 基於資訊理論的優先級排序
-- Token 效率
-- 漸進式精煉
-- 基於證據的分析
+### 3. YAML > TOON（格式決策） ⭐
+- TOON 節省 14% tokens（非預期的 30-50%）
+- 原因：內容（假設、證據）佔主導，結構只是小部分
+- 決策：標準生態系統 > 14% 邊際優化
+- 符合"極簡"哲學：用標準工具，不重新發明
+
+### 4. 必須排除 .venv/node_modules
+- Python 專案：.venv 可虛增 1000+ 檔案
+- Node 專案：node_modules 同樣問題
+- `detect-project-enhanced.sh` 已實作正確排除邏輯
+
+### 5. 基準測試揭示真相
+- 5 專案測試發現規模感知問題
+- 速度/大小/tokens：100% 通過
+- 掃描率/假設數量：40% 通過（修正後改善）
+- 教訓：**在真實專案測試，不只是理論**
+
+### 6. AI 協作模式可檢測
+- Level 3 特徵：CLAUDE.md、15-20% 註解、100% Conventional Commits
+- 測試專案展示了不同成熟度等級
+- 可量化評估 AI 輔助開發
+
+**實作任何新功能時，謹記這些學習！**
+
+---
+
+## 開發中功能（v2.5）
+
+基於 PRD v2.5.2 和 v1.0 學習，當前開發路線：
+
+### Phase 1 (Week 1) - 最高優先級
+- [x] `/atlas-overview` - Stage 0 專案指紋 ✅
+- [ ] `/atlas-pattern` ⭐⭐⭐⭐⭐ - 學習設計模式（PRD #1 優先級）
+- [ ] `/atlas` - 完整三階段分析
+
+### Phase 2-4 (Week 2-4)
+- [ ] `/atlas-impact` ⭐⭐⭐⭐ - 影響範圍分析（API 變更場景）
+- [ ] `/atlas-find` - 智慧搜尋
+- [ ] `/atlas-explain` - 深入解釋
+- [ ] 完整測試與文檔
+
+### 未來（v3.0+）
+- SourceAtlas Monitor - 持續追蹤和趨勢分析
+- 技術債務量化
+- 健康度儀表板
+
+**詳細路線圖**：見 `.dev-notes/implementation-roadmap.md` 和 `.dev-notes/NEXT_STEPS.md`
+
+---
+
+## 實作核心原則（基於 v1.0 經驗）
+
+實作任何新功能時，**必須遵循**：
+
+1. **規模感知設計** - 不要一刀切，根據專案大小調整
+2. **標準優於自訂** - 用 YAML、Markdown，不發明格式
+3. **測試先行** - 在 3+ 真實專案測試，不只是理論
+4. **文檔同步** - 邊開發邊寫文檔，不要事後補
+5. **基準測量** - 建立指標，持續追蹤
+6. **排除目錄** - 永遠排除 .venv、node_modules、__pycache__
+7. **資訊理論** - 高熵優先，結構 > 實作細節
+8. **證據為本** - 每個論點需要證據（file:line 引用）

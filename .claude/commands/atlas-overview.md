@@ -80,7 +80,7 @@ bash scripts/atlas/scan-entropy.sh ${ARGUMENTS:-.} 2>/dev/null
 
 ### Phase 3: Generate Hypotheses (3-5 minutes)
 
-Based on scanned files, generate **10-15 hypotheses** about:
+Based on scanned files, generate **scale-appropriate hypotheses** (use targets from Phase 1) about:
 
 **Technology Stack**:
 - Primary language(s) and versions
@@ -218,11 +218,13 @@ recommended_next_steps:
 
 ## Critical Rules
 
-1. **<5% File Scan Rule**: Only read files that provide high information value
-2. **Time Limit**: Complete in 10-15 minutes
-3. **Hypothesis Quality**: Each must have confidence level and evidence
-4. **No Deep Diving**: Understand structure > implementation details
-5. **STOP after Stage 0**: Do not proceed to validation or git analysis
+1. **Scale-Aware Scanning**: Follow recommended file limits from Phase 1 detection
+2. **Exclude Common Bloat**: Never scan .venv/, node_modules/, vendor/, __pycache__, .git/
+3. **Time Limit**: Complete in 10-15 minutes (though usually takes 0-5 minutes)
+4. **Hypothesis Quality**: Each must have confidence level and evidence
+5. **Scale-Aware Targets**: Use hypothesis targets appropriate for project scale
+6. **No Deep Diving**: Understand structure > implementation details
+7. **STOP after Stage 0**: Do not proceed to validation or git analysis
 
 ---
 
