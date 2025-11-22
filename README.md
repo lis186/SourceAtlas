@@ -8,8 +8,9 @@
 - **v1.0** ✅ - 方法論驗證完成（2025-11-22）
 - **v2.5** 🔵 - Commands 架構開發中
 
-[![驗證狀態](https://img.shields.io/badge/驗證-5個專案-brightgreen)](./test_results/)
-[![準確率](https://img.shields.io/badge/準確率-87~100%25-blue)]()
+[![驗證狀態](https://img.shields.io/badge/驗證-14個專案-brightgreen)](./test_targets/)
+[![準確率](https://img.shields.io/badge/準確率-95~100%25-blue)]()
+[![支援語言](https://img.shields.io/badge/支援-Swift|TypeScript|Next.js-orange)]()
 [![Token節省](https://img.shields.io/badge/Token節省-95%25-yellow)]()
 
 ---
@@ -18,6 +19,7 @@
 
 - **🚀 極速分析**: 掃描 <5% 檔案，理解 70-80% 專案
 - **🎯 三階段設計**: Stage 0 (指紋) → Stage 1 (驗證) → Stage 2 (Git 分析)
+- **🌍 多語言支援**: Swift/iOS、TypeScript/React、Next.js（自動檢測專案類型）
 - **📊 系統化**: 可重複、可驗證的分析流程
 - **🤖 AI 識別**: 識別 AI 輔助開發模式（Level 0-4）
 - **💰 省時省錢**: 節省 95%+ 時間和 Token
@@ -64,10 +66,16 @@ cd /path/to/your/project
 - ✅ **測試模式**：如何測試此模式
 - ✅ **實作指南**：逐步實作指導
 
-**支援的模式**：api endpoint、file upload、authentication、background job、database query、swiftui view、view controller、networking 等
+**支援的模式**：
 
-**執行時間**：5-10 分鐘（掃描 <5% 檔案）
-**準確率**：95%+ (已在 3 個大型 iOS 專案驗證)
+*iOS/Swift*: api endpoint、background job、file upload、database query、authentication、swiftui view、view controller、networking
+
+*TypeScript/React*: react component、react hook、state management、form handling、api endpoint、database query (Prisma)、authentication
+
+*Next.js*: nextjs middleware、nextjs layout、nextjs page、nextjs loading、nextjs error
+
+**執行時間**：0.1-30 秒（根據專案規模和模式複雜度）
+**準確率**：95-100% (已在 14 個專案驗證：6 個 iOS、4 個 TypeScript、4 個 Next.js)
 
 詳見 [USAGE_GUIDE.md - `/atlas-pattern` 章節](./USAGE_GUIDE.md#-使用-atlas-pattern-學習設計模式)
 
