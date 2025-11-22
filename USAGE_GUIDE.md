@@ -65,6 +65,9 @@ cd /path/to/target/project
 - **view controller** / "viewcontroller" - UIKit 視圖控制器模式
 - **networking** / "network" - 網絡層、HTTP 客戶端
 - **view model** / "viewmodel" / "mvvm" - MVVM 模式、ObservableObject
+- **coordinator** / "navigation coordinator" - Coordinator 導航模式、Flow 流程
+- **core data** / "coredata" / "persistence" - Core Data 持久化、ManagedObject
+- **dependency injection** / "di" / "injection" - 依賴注入、Factory、Container
 
 #### TypeScript/React 模式
 - **react component** / "component" - React 組件模式（.tsx）
@@ -307,6 +310,173 @@ export function useChatHandler() {
 - ❌ 在條件語句中呼叫 hooks
 - ❌ 未定義 TypeScript 類型
 - ✅ 使用 ESLint react-hooks 規則檢查
+```
+
+**場景 5: iOS MVVM 架構學習 (Swiftfin)**
+
+```bash
+你: /atlas-pattern "view model"
+
+AI: # Pattern: MVVM Architecture - View Models
+
+## Overview
+此專案使用 MVVM 架構，包含 10 個 ViewModels 管理業務邏輯和狀態。所有 ViewModels 遵循 `*ViewModel.swift` 命名慣例，並使用 SwiftUI 的 `ObservableObject` 協議。
+
+## Best Examples
+
+### 1. Shared/ViewModels/UserSignInViewModel.swift:25
+**Purpose**: 使用者登入流程管理
+**Key Code**:
+```swift
+import SwiftUI
+import Combine
+
+class UserSignInViewModel: ObservableObject {
+    @Published var username: String = ""
+    @Published var password: String = ""
+    @Published var isLoading: Bool = false
+    @Published var errorMessage: String?
+
+    private let authService: AuthService
+    private var cancellables = Set<AnyCancellable>()
+
+    func signIn() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            try await authService.authenticate(username: username, password: password)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+```
+
+### 2. Shared/ViewModels/SettingsViewModel.swift:15
+**Purpose**: 設定頁面狀態管理
+**Key Code**:
+```swift
+class SettingsViewModel: ObservableObject {
+    @Published var theme: Theme = .system
+    @Published var notifications: Bool = true
+
+    func saveSettings() {
+        UserDefaults.standard.set(theme.rawValue, forKey: "theme")
+        UserDefaults.standard.set(notifications, forKey: "notifications")
+    }
+}
+```
+
+### 3. Shared/ViewModels/ServerConnectionViewModel.swift:40
+**Purpose**: 網路連線狀態管理
+**重要模式**: 使用 `async/await` 處理非同步操作，`@Published` 屬性自動觸發 UI 更新
+
+## Key Conventions
+- 所有 ViewModels 繼承自 `ObservableObject`
+- 使用 `@Published` 包裝需要觸發 UI 更新的屬性
+- ViewModels 放在 `Shared/ViewModels/` 目錄統一管理
+- 使用 `async/await` 處理非同步操作（取代 Combine publishers）
+- 依賴注入通過初始化器傳入（如 `AuthService`）
+
+## Common Pitfalls
+- ❌ 在 ViewModel 中直接操作 UI (應透過 `@Published` 屬性)
+- ❌ 忘記標記 class 為 `ObservableObject`
+- ❌ 在非 main thread 更新 `@Published` 屬性
+- ✅ 使用 `@MainActor` 確保 UI 更新在主線程
+
+## Architecture Insights
+- **架構模式**: MVVM (信心度: 0.9)
+- **狀態管理**: ObservableObject + @Published
+- **依賴注入**: Constructor injection
+- **非同步處理**: async/await (modern Swift)
+```
+
+**場景 6: iOS Coordinator 導航模式 (WordPress-iOS)**
+
+```bash
+你: /atlas-pattern "coordinator"
+
+AI: # Pattern: Coordinator Navigation Pattern
+
+## Overview
+此專案使用 Coordinator 模式管理複雜導航流程，共有 10+ Coordinators 處理不同功能模組。Coordinator 負責決定導航邏輯，View Controllers 只負責展示。
+
+## Best Examples
+
+### 1. Classes/ViewRelated/System/Coordinators/MySitesCoordinator.swift:30
+**Purpose**: My Sites 功能模組的導航管理
+**Key Code**:
+```swift
+class MySitesCoordinator {
+    private let navigationController: UINavigationController
+    private let blog: Blog
+
+    init(navigationController: UINavigationController, blog: Blog) {
+        self.navigationController = navigationController
+        self.blog = blog
+    }
+
+    func start() {
+        let viewController = MySitesViewController(blog: blog)
+        viewController.coordinator = self
+        navigationController.pushViewController(viewController, animated: true)
+    }
+
+    func showPostEditor() {
+        let editorCoordinator = EditorCoordinator(
+            navigationController: navigationController,
+            blog: blog
+        )
+        editorCoordinator.start()
+    }
+}
+```
+
+### 2. Classes/ViewRelated/QR Login/Coordinators/QRLoginCoordinator.swift:15
+**Purpose**: QR 碼登入多步驟流程管理
+**Key Code**:
+```swift
+class QRLoginCoordinator {
+    private let presenter: UIViewController
+
+    func start() {
+        showScanning()
+    }
+
+    private func showScanning() {
+        let scanVC = QRLoginScanningViewController()
+        scanVC.onSuccess = { [weak self] token in
+            self?.showVerification(token: token)
+        }
+        presenter.present(scanVC, animated: true)
+    }
+
+    private func showVerification(token: String) {
+        let verifyVC = QRLoginVerifyViewController(token: token)
+        // ... 驗證完成後導航
+    }
+}
+```
+
+## Key Conventions
+- Coordinators 放在各功能模組的 `Coordinators/` 目錄
+- 使用 `start()` 方法啟動流程
+- 透過 closure 或 delegate 回傳結果給父 Coordinator
+- View Controllers 持有弱引用到 Coordinator (`weak var coordinator`)
+- 使用 `UINavigationController` 或 `UIViewController.present` 執行導航
+
+## Common Pitfalls
+- ❌ View Controller 直接執行導航 (應委託給 Coordinator)
+- ❌ Coordinator 強引用 View Controller 造成循環引用
+- ❌ 忘記在流程結束時清理 Coordinator
+- ✅ 使用 `weak self` 避免循環引用
+
+## Architecture Insights
+- **導航模式**: Coordinator Pattern (信心度: 0.95)
+- **解耦程度**: 高 (View Controllers 不知道導航邏輯)
+- **測試友好**: 可以獨立測試導航流程
+- **適用場景**: 複雜多步驟流程 (登入、設定、編輯器)
 ```
 
 ### 測試結果

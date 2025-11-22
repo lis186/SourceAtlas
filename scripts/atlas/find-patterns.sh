@@ -140,6 +140,18 @@ get_file_patterns() {
             "networking"|"network")
                 echo "*Client.swift *Network*.swift *Service.swift *API*.swift *Request*.swift *HTTPClient*.swift"
                 ;;
+            "view model"|"viewmodel"|"mvvm")
+                echo "*ViewModel.swift *VM.swift"
+                ;;
+            "coordinator"|"navigation coordinator")
+                echo "*Coordinator.swift *Navigation*.swift *Flow*.swift"
+                ;;
+            "core data"|"coredata"|"persistence"|"data persistence")
+                echo "*.xcdatamodeld *+CoreDataProperties.swift *+CoreDataClass.swift *ManagedObject*.swift *CoreData*.swift"
+                ;;
+            "dependency injection"|"di"|"injection")
+                echo "*Injector.swift *Factory.swift *Container.swift *Dependencies.swift *DI*.swift *Assembly.swift"
+                ;;
             *)
                 echo ""
                 ;;
@@ -231,6 +243,18 @@ get_dir_patterns() {
             "networking"|"network")
                 echo "Networking Network Services API Client HTTP"
                 ;;
+            "view model"|"viewmodel"|"mvvm")
+                echo "ViewModels ViewModel MVVM Presentation"
+                ;;
+            "coordinator"|"navigation coordinator")
+                echo "Coordinators Navigation Flow Routing"
+                ;;
+            "core data"|"coredata"|"persistence"|"data persistence")
+                echo "CoreData Persistence Models Data Storage Database"
+                ;;
+            "dependency injection"|"di"|"injection")
+                echo "DI DependencyInjection Dependencies Injection Factory Container"
+                ;;
             *)
                 echo ""
                 ;;
@@ -276,6 +300,10 @@ main() {
             echo "  - swiftui view / view" >&2
             echo "  - view controller / viewcontroller" >&2
             echo "  - networking / network" >&2
+            echo "  - view model / viewmodel / mvvm" >&2
+            echo "  - coordinator / navigation coordinator" >&2
+            echo "  - core data / coredata / persistence / data persistence" >&2
+            echo "  - dependency injection / di / injection" >&2
         fi
         exit 1
     fi
