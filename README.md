@@ -68,15 +68,17 @@ cd /path/to/your/project
 
 **支援的模式**：
 
-*iOS/Swift*: api endpoint、background job、file upload、database query、authentication、swiftui view、view controller、networking、**view model (MVVM)、coordinator、core data、dependency injection** ⭐新增
+*iOS/Swift* (16 個模式): api endpoint、background job、file upload、database query、authentication、swiftui view、view controller、networking、view model (MVVM)、coordinator、core data、dependency injection、**cell、extension、view modifier、error handling** ⭐最新
 
-*TypeScript/React*: react component、react hook、state management、form handling、api endpoint、database query (Prisma)、authentication
+*TypeScript/React* (10 個模式): react component、react hook、state management、form handling、api endpoint、database query (Prisma)、authentication、networking、background job、file upload
 
-*Next.js*: nextjs middleware、nextjs layout、nextjs page、nextjs loading、nextjs error
+*Next.js* (5 個模式): nextjs middleware、nextjs layout、nextjs page、nextjs loading、nextjs error
 
 **執行時間**：0.1-30 秒（根據專案規模和模式複雜度）
 **準確率**：95-100% (已在 14 個專案驗證：6 個 iOS、4 個 TypeScript、4 個 Next.js)
-**最新更新 (2025-11-22)**: iOS 模式從 8 個擴展至 12 個 (+50%)，新增 MVVM、Coordinator、Core Data、DI 支援
+**最新更新 (2025-11-22)**:
+- **Tier 1**: iOS 模式從 8 → 12 個 (+50%) - MVVM、Coordinator、Core Data、DI
+- **Tier 2**: iOS 模式從 12 → 16 個 (+33%) - Cell、Extension、ViewModifier、Error Handling
 
 詳見 [USAGE_GUIDE.md - `/atlas-pattern` 章節](./USAGE_GUIDE.md#-使用-atlas-pattern-學習設計模式)
 

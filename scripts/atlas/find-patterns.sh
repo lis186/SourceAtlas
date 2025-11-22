@@ -152,6 +152,18 @@ get_file_patterns() {
             "dependency injection"|"di"|"injection")
                 echo "*Injector.swift *Factory.swift *Container.swift *Dependencies.swift *DI*.swift *Assembly.swift"
                 ;;
+            "table view cell"|"collection view cell"|"cell"|"cells")
+                echo "*Cell.swift *TableViewCell.swift *CollectionViewCell.swift"
+                ;;
+            "extension"|"extensions")
+                echo "*+*.swift *Extension*.swift"
+                ;;
+            "view modifier"|"viewmodifier"|"swiftui modifier"|"modifier")
+                echo "*Modifier.swift *ViewModifier.swift"
+                ;;
+            "error handling"|"error"|"errors")
+                echo "*Error.swift *ErrorHandler.swift *Result.swift *Failure.swift"
+                ;;
             *)
                 echo ""
                 ;;
@@ -255,6 +267,18 @@ get_dir_patterns() {
             "dependency injection"|"di"|"injection")
                 echo "DI DependencyInjection Dependencies Injection Factory Container"
                 ;;
+            "table view cell"|"collection view cell"|"cell"|"cells")
+                echo "Cells TableViewCells CollectionViewCells Views/Cells UI/Cells"
+                ;;
+            "extension"|"extensions")
+                echo "Extensions Utils Utilities Helpers Categories"
+                ;;
+            "view modifier"|"viewmodifier"|"swiftui modifier"|"modifier")
+                echo "Modifiers ViewModifiers Extensions/ViewModifiers Views/Modifiers"
+                ;;
+            "error handling"|"error"|"errors")
+                echo "Errors ErrorHandling Models/Errors Domain/Errors"
+                ;;
             *)
                 echo ""
                 ;;
@@ -304,6 +328,10 @@ main() {
             echo "  - coordinator / navigation coordinator" >&2
             echo "  - core data / coredata / persistence / data persistence" >&2
             echo "  - dependency injection / di / injection" >&2
+            echo "  - table view cell / collection view cell / cell / cells" >&2
+            echo "  - extension / extensions" >&2
+            echo "  - view modifier / viewmodifier / swiftui modifier / modifier" >&2
+            echo "  - error handling / error / errors" >&2
         fi
         exit 1
     fi
