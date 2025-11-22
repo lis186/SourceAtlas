@@ -365,7 +365,8 @@ main() {
     trap "rm -f $temp_file" EXIT
 
     # Find files matching any of the file patterns
-    find "$PROJECT_PATH" -type f \( "${find_args[@]}" \) \
+    # Note: .xcdatamodeld is a directory (bundle), so we allow both files and directories
+    find "$PROJECT_PATH" \( -type f -o -type d \) \( "${find_args[@]}" \) \
         ! -path "*/node_modules/*" \
         ! -path "*/.venv/*" \
         ! -path "*/venv/*" \
@@ -378,6 +379,10 @@ main() {
         ! -path "*/.build/*" \
         ! -path "*/Carthage/*" \
         2>/dev/null | while IFS= read -r file; do
+            # Skip directories unless they match .xcdatamodeld pattern
+            if [ -d "$file" ] && [[ ! "$file" =~ \.xcdatamodeld$ ]]; then
+                continue
+            fi
 
         local score=10  # Base score for file name match
 
