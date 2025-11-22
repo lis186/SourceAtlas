@@ -68,6 +68,10 @@ cd /path/to/target/project
 - **coordinator** / "navigation coordinator" - Coordinator 導航模式、Flow 流程
 - **core data** / "coredata" / "persistence" - Core Data 持久化、ManagedObject
 - **dependency injection** / "di" / "injection" - 依賴注入、Factory、Container
+- **table view cell** / "collection view cell" / "cell" - TableView/CollectionView Cell 組件
+- **extension** / "extensions" - Swift Extensions、類型擴展
+- **view modifier** / "viewmodifier" / "swiftui modifier" - SwiftUI ViewModifier、樣式組件
+- **error handling** / "error" / "errors" - 錯誤處理、Error 類型
 
 #### TypeScript/React 模式
 - **react component** / "component" - React 組件模式（.tsx）
