@@ -1,6 +1,6 @@
 #!/bin/bash
 # SourceAtlas - Pattern Detection Script (Ultra-Fast Version)
-# Multi-Language Support: Swift/iOS and TypeScript/React
+# Multi-Language Support: Swift/iOS, TypeScript/React, and Android/Kotlin
 #
 # Purpose: Identify files matching a given pattern type using filename/directory matching only
 # Philosophy: Scripts collect data quickly, AI does deep interpretation
@@ -29,9 +29,17 @@ set -euo pipefail
 PATTERN="${1:-}"
 PROJECT_PATH="${2:-.}"
 
-# Detect project type (swift vs typescript)
+# Detect project type (swift vs typescript vs android)
 detect_project_type() {
     local path="$1"
+
+    # Check for Android indicators (highest priority - most specific)
+    if [ -f "$path/build.gradle" ] || [ -f "$path/build.gradle.kts" ] || \
+       [ -f "$path/settings.gradle" ] || [ -f "$path/settings.gradle.kts" ] || \
+       find "$path" -maxdepth 3 -name "AndroidManifest.xml" 2>/dev/null | grep -q .; then
+        echo "android"
+        return
+    fi
 
     # Check for TypeScript/JavaScript indicators
     if [ -f "$path/package.json" ] || [ -f "$path/tsconfig.json" ]; then
@@ -40,7 +48,8 @@ detect_project_type() {
     fi
 
     # Check for Swift/iOS indicators
-    if [ -f "$path/Podfile" ] || [ -f "$path/Package.swift" ] || find "$path" -maxdepth 3 -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null | grep -q .; then
+    if [ -f "$path/Podfile" ] || [ -f "$path/Package.swift" ] || \
+       find "$path" -maxdepth 3 -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null | grep -q .; then
         echo "swift"
         return
     fi
@@ -61,7 +70,29 @@ get_file_patterns() {
     local pattern="$1"
     local proj_type="$2"
 
-    if [ "$proj_type" = "typescript" ]; then
+    if [ "$proj_type" = "android" ]; then
+        # Android/Kotlin patterns
+        case "$pattern" in
+            "viewmodel"|"view model"|"mvvm")
+                echo "*ViewModel.kt *ViewModel.java *VM.kt *VM.java"
+                ;;
+            "repository"|"repo")
+                echo "*Repository.kt *Repository.java *Repo.kt *Repo.java *DataSource.kt *DataSource.java"
+                ;;
+            "composable"|"compose"|"jetpack compose")
+                echo "*Screen.kt *Composable.kt Ui*.kt"
+                ;;
+            "fragment")
+                echo "*Fragment.kt *Fragment.java *Frag.kt *Frag.java"
+                ;;
+            "hilt"|"dagger"|"di"|"dependency injection")
+                echo "*Module.kt *Module.java *Component.kt *Component.java AppModule.kt NetworkModule.kt DatabaseModule.kt Di*.kt Di*.java"
+                ;;
+            *)
+                echo ""
+                ;;
+        esac
+    elif [ "$proj_type" = "typescript" ]; then
         # TypeScript/React patterns
         case "$pattern" in
             "api endpoint"|"api"|"endpoint")
@@ -176,7 +207,29 @@ get_dir_patterns() {
     local pattern="$1"
     local proj_type="$2"
 
-    if [ "$proj_type" = "typescript" ]; then
+    if [ "$proj_type" = "android" ]; then
+        # Android/Kotlin directory patterns
+        case "$pattern" in
+            "viewmodel"|"view model"|"mvvm")
+                echo "viewmodel viewmodels presentation ui/*/viewmodel"
+                ;;
+            "repository"|"repo")
+                echo "repository repositories data/repository data/source"
+                ;;
+            "composable"|"compose"|"jetpack compose")
+                echo "compose ui/compose ui/screen screens components ui/components"
+                ;;
+            "fragment")
+                echo "fragment fragments ui/fragment ui/*/fragment"
+                ;;
+            "hilt"|"dagger"|"di"|"dependency injection")
+                echo "di injection dagger hilt modules"
+                ;;
+            *)
+                echo ""
+                ;;
+        esac
+    elif [ "$proj_type" = "typescript" ]; then
         # TypeScript/React directory patterns
         case "$pattern" in
             "api endpoint"|"api"|"endpoint")
@@ -293,7 +346,16 @@ main() {
         echo "" >&2
         echo "Project type detected: $PROJECT_TYPE" >&2
         echo "" >&2
-        if [ "$PROJECT_TYPE" = "typescript" ]; then
+        if [ "$PROJECT_TYPE" = "android" ]; then
+            echo "Supported patterns (Android/Kotlin):" >&2
+            echo "" >&2
+            echo "Tier 1 patterns:" >&2
+            echo "  - viewmodel / view model / mvvm" >&2
+            echo "  - repository / repo" >&2
+            echo "  - composable / compose / jetpack compose" >&2
+            echo "  - fragment" >&2
+            echo "  - hilt / dagger / di / dependency injection" >&2
+        elif [ "$PROJECT_TYPE" = "typescript" ]; then
             echo "Supported patterns (TypeScript/React/Next.js):" >&2
             echo "" >&2
             echo "React/TypeScript patterns:" >&2
