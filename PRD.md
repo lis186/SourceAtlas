@@ -1,9 +1,9 @@
-# SourceAtlas PRD v2.5.1
+# SourceAtlas PRD v2.5.2
 
 **AI-Powered Codebase Understanding Assistant**
 
-- **版本**: 2.5.1
-- **更新日期**: 2025-11-20
+- **版本**: 2.5.2
+- **更新日期**: 2025-11-22
 - **狀態**: Active Development (Architecture Finalized)
 
 ---
@@ -442,7 +442,8 @@ sourceatlas2/
 ├── .claude/
 │   └── commands/
 │       ├── atlas.md             # ✨ /atlas - 完整分析（核心）
-│       ├── atlas-pattern.md     # ✨ /atlas-pattern - 學習模式 ⭐
+│       ├── atlas-overview.md    # ✨ /atlas-overview - 專案概覽 ⭐⭐⭐⭐⭐
+│       ├── atlas-pattern.md     # ✨ /atlas-pattern - 學習模式 ⭐⭐⭐⭐⭐
 │       ├── atlas-impact.md      # ✨ /atlas-impact - 影響分析
 │       ├── atlas-find.md        # /atlas-find - 快速搜尋
 │       └── atlas-explain.md     # /atlas-explain - 深入解釋
@@ -600,7 +601,9 @@ TOON 壓縮: 41 tokens (節省 74%)
 ### 6.1 核心命令（按優先級）
 
 ```bash
-# 優先級 ⭐⭐⭐⭐⭐ - 學習設計模式
+# 優先級 ⭐⭐⭐⭐⭐ - 最常用功能
+/atlas-overview                    # 專案概覽（Stage 0 指紋）
+/atlas-overview src/api            # 分析特定目錄
 /atlas-pattern "api endpoint"      # 學習專案如何實作 API 端點
 /atlas-pattern "background job"    # 學習背景任務模式
 /atlas-pattern "file upload"       # 學習檔案上傳流程
@@ -625,7 +628,50 @@ TOON 壓縮: 41 tokens (節省 74%)
 
 ### 6.2 Command 定義結構
 
-#### 範例 1: `/atlas-pattern` (最高優先級)
+#### 範例 1: `/atlas-overview` (專案概覽)
+
+```markdown
+# .claude/commands/atlas-overview.md
+
+---
+description: Get project overview - scan <5% of files to achieve 70-80% understanding
+allowed-tools: Bash, Glob, Grep, Read
+argument-hint: [optional: specific directory to analyze]
+---
+
+# SourceAtlas: Project Overview (Stage 0 Fingerprint)
+
+## Context
+
+Analysis Target: $ARGUMENTS
+
+Goal: Generate project fingerprint by scanning <5% of files in 10-15 minutes.
+
+## Your Task
+
+Execute Stage 0 Analysis using information theory principles:
+
+1. Run: `bash scripts/atlas/detect-project.sh`
+2. Run: `bash scripts/atlas/scan-entropy.sh`
+3. Apply high-entropy file prioritization
+4. Generate 10-15 hypotheses with confidence levels
+5. Output TOON format report
+
+### High-Entropy Priority:
+1. Documentation (README, CLAUDE.md)
+2. Config files (package.json, etc.)
+3. Core models (3-5 samples)
+4. Entry points (1-2 samples)
+5. Tests (1-2 samples)
+
+Output Format: TOON (Token Optimized Output Notation)
+Time Limit: 10-15 minutes
+Understanding Target: 70-80%
+
+STOP after Stage 0 - do not proceed to validation or git analysis.
+```
+
+#### 範例 2: `/atlas-pattern` (學習設計模式)
 
 ```markdown
 # .claude/commands/atlas-pattern.md
@@ -664,7 +710,7 @@ Output Format:
 Remember: Scan <5% of files, focus on patterns not exhaustive details.
 ```
 
-#### 範例 2: `/atlas` (完整分析)
+#### 範例 3: `/atlas` (完整分析)
 
 ```markdown
 # .claude/commands/atlas.md
@@ -1272,7 +1318,37 @@ When detecting user confusion, suggest:
 
 ## 更新日誌
 
-### v2.5.1 (2025-11-20) - 當前版本 ⭐
+### v2.5.2 (2025-11-22) - 當前版本 ⭐
+
+**重要新增**：
+- **新增 `/atlas-overview` 命令** - 專案概覽（Stage 0 指紋分析）
+- 填補 PRD 遺漏：提供獨立的快速理解能力
+- 不需執行完整三階段，10-15 分鐘即可獲得 70-80% 理解
+
+**實作內容**：
+- `.claude/commands/atlas-overview.md` - 專案概覽命令
+- `scripts/atlas/detect-project.sh` - 專案類型檢測腳本
+- `scripts/atlas/scan-entropy.sh` - 高熵文件掃描腳本
+
+**優先級調整**：
+- `/atlas-overview` 列為最高優先級 (⭐⭐⭐⭐⭐)
+- 與 `/atlas-pattern` 並列為最常用命令
+- 使用場景：接手新專案、Code Review 準備、快速技術棧評估
+
+**文檔更新**：
+- 第 3.3 節：檔案結構新增 atlas-overview.md
+- 第 6.1 節：核心命令新增 /atlas-overview
+- 第 6.2 節：新增 /atlas-overview 範例
+- 場景分類表：新增「快速理解新專案」場景
+
+**設計理念**：
+- `/atlas-overview` = 獨立 Stage 0（快速）
+- `/atlas` = 完整三階段（深入）
+- 給予用戶選擇權，不強制執行完整分析
+
+---
+
+### v2.5.1 (2025-11-20)
 
 **重大決策**：
 - **確定採用 Commands 而非 Skills** (決策 4)
