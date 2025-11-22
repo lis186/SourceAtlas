@@ -88,6 +88,27 @@ get_file_patterns() {
             "hilt"|"dagger"|"di"|"dependency injection")
                 echo "*Module.kt *Module.java *Component.kt *Component.java AppModule.kt NetworkModule.kt DatabaseModule.kt Di*.kt Di*.java"
                 ;;
+            "usecase"|"use case"|"interactor")
+                echo "*UseCase.kt *UseCase.java *Interactor.kt *Interactor.java Get*.kt Fetch*.kt Save*.kt"
+                ;;
+            "room"|"dao"|"database")
+                echo "*Dao.kt *Dao.java *Entity.kt *Entity.java *Database.kt *Database.java *RoomDatabase.kt"
+                ;;
+            "retrofit"|"api"|"networking"|"network")
+                echo "*ApiService.kt *ApiService.java *Api.kt *Api.java *Client.kt *Client.java *Interceptor.kt NetworkModule.kt"
+                ;;
+            "state"|"stateflow"|"livedata"|"state management")
+                echo "*State.kt *State.java *UiState.kt *Event.kt *Action.kt"
+                ;;
+            "navigation"|"nav"|"navigator")
+                echo "*Navigator.kt *Navigator.java *Coordinator.kt nav_graph.xml *Directions.kt"
+                ;;
+            "adapter"|"recyclerview"|"viewholder")
+                echo "*Adapter.kt *Adapter.java *RecyclerAdapter.kt *ViewHolder.kt *ViewHolder.java *ListAdapter.kt"
+                ;;
+            "workmanager"|"worker"|"background")
+                echo "*Worker.kt *Worker.java *WorkManager.kt *WorkRequest.kt"
+                ;;
             *)
                 echo ""
                 ;;
@@ -225,6 +246,27 @@ get_dir_patterns() {
             "hilt"|"dagger"|"di"|"dependency injection")
                 echo "di injection dagger hilt modules"
                 ;;
+            "usecase"|"use case"|"interactor")
+                echo "usecase usecases domain/usecase domain/interactor interactors"
+                ;;
+            "room"|"dao"|"database")
+                echo "database db data/local data/db room dao entity"
+                ;;
+            "retrofit"|"api"|"networking"|"network")
+                echo "network api remote data/remote service"
+                ;;
+            "state"|"stateflow"|"livedata"|"state management")
+                echo "state states ui/state event"
+                ;;
+            "navigation"|"nav"|"navigator")
+                echo "navigation nav coordinator"
+                ;;
+            "adapter"|"recyclerview"|"viewholder")
+                echo "adapter adapters ui/adapter recyclerview"
+                ;;
+            "workmanager"|"worker"|"background")
+                echo "worker workers work background"
+                ;;
             *)
                 echo ""
                 ;;
@@ -355,6 +397,13 @@ main() {
             echo "  - composable / compose / jetpack compose" >&2
             echo "  - fragment" >&2
             echo "  - hilt / dagger / di / dependency injection" >&2
+            echo "  - usecase / use case / interactor" >&2
+            echo "  - room / dao / database" >&2
+            echo "  - retrofit / api / networking / network" >&2
+            echo "  - state / stateflow / livedata / state management" >&2
+            echo "  - navigation / nav / navigator" >&2
+            echo "  - adapter / recyclerview / viewholder" >&2
+            echo "  - workmanager / worker / background" >&2
         elif [ "$PROJECT_TYPE" = "typescript" ]; then
             echo "Supported patterns (TypeScript/React/Next.js):" >&2
             echo "" >&2
