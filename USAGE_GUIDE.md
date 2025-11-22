@@ -66,6 +66,21 @@ cd /path/to/target/project
 - **networking** / "network" - 網絡層、HTTP 客戶端
 - **view model** / "viewmodel" / "mvvm" - MVVM 模式、ObservableObject
 
+#### TypeScript/React 模式
+- **react component** / "component" - React 組件模式（.tsx）
+- **react hook** / "hook" / "hooks" - 自定義 React Hooks（use*.ts）
+- **state management** / "store" / "state" - 狀態管理（Context、Redux、Zustand）
+- **form handling** / "form" - 表單處理、驗證模式
+
+#### Next.js 特有模式
+- **nextjs middleware** / "middleware" - Next.js 中間件（middleware.ts）
+- **nextjs layout** / "layout" - App Router 佈局組件（layout.tsx）
+- **nextjs page** / "page" - App Router 頁面組件（page.tsx）
+- **nextjs loading** / "loading" - 載入狀態組件（loading.tsx）
+- **nextjs error** / "error boundary" / "error" - 錯誤邊界組件（error.tsx）
+
+**注意**: 腳本會自動檢測專案類型（TypeScript vs Swift），並套用對應的模式。
+
 ### 輸出格式
 
 每個模式分析包含：
@@ -151,17 +166,190 @@ AI: # Pattern: File Upload & Storage
 ...
 ```
 
+**場景 3: Next.js App Router API 路由**
+
+```bash
+你: 我需要在 Next.js 專案中添加一個 API 端點來處理用戶註冊
+
+# 執行命令
+你: /atlas-pattern "api endpoint"
+
+AI: # Pattern: Next.js App Router API Routes
+
+## Overview
+此專案使用 Next.js 13+ App Router，API 路由定義在 `app/api/` 目錄。
+每個端點使用 `route.ts` 檔案，支援動態路由和請求處理。
+
+## Best Examples
+
+### 1. app/api/users/route.ts:10
+**Purpose**: REST API 端點標準模式
+**Key Code**:
+```typescript
+import { NextRequest, NextResponse } from 'next/server'
+import { createUser } from '@/lib/db/users'
+
+export async function POST(request: NextRequest) {
+  const body = await request.json()
+  const user = await createUser(body)
+  return NextResponse.json(user, { status: 201 })
+}
+```
+
+### 2. app/api/users/[userId]/route.ts:8
+**Purpose**: 動態路由參數處理
+**Key Code**:
+```typescript
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { userId: string } }
+) {
+  const user = await getUserById(params.userId)
+  if (!user) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+  return NextResponse.json(user)
+}
+```
+
+## Key Conventions
+- 所有 API 路由在 `app/api/` 目錄
+- 檔案名稱必須是 `route.ts` 或 `route.tsx`
+- 使用具名導出：GET, POST, PUT, DELETE, PATCH
+- 動態路由使用 `[paramName]` 語法
+- 錯誤統一返回 JSON 格式
+
+## Testing Pattern
+```typescript
+// __tests__/api/users.test.ts
+import { POST } from '@/app/api/users/route'
+
+describe('POST /api/users', () => {
+  it('should create a new user', async () => {
+    const request = new Request('http://localhost/api/users', {
+      method: 'POST',
+      body: JSON.stringify({ name: 'Test User', email: 'test@example.com' }),
+    })
+    const response = await POST(request as any)
+    expect(response.status).toBe(201)
+  })
+})
+```
+
+## Step-by-Step Implementation Guide
+1. 創建 `app/api/auth/register/route.ts`
+2. 導出 `POST` 函數處理註冊邏輯
+3. 使用 Zod 驗證輸入資料
+4. 呼叫 Prisma/資料庫創建用戶
+5. 返回 JWT token 或 session
+6. 添加錯誤處理和驗證邏輯
+```
+
+**場景 4: React Custom Hooks**
+
+```bash
+你: /atlas-pattern "react hook"
+
+AI: # Pattern: React Custom Hooks
+
+## Overview
+此專案使用自定義 Hooks 封裝可複用邏輯，所有 hooks 遵循 `use*` 命名慣例。
+
+## Best Examples
+
+### 1. lib/hooks/use-auth.ts:15
+**Purpose**: 認證狀態管理 Hook
+**Key Code**:
+```typescript
+import { useContext } from 'react'
+import { AuthContext } from '@/context/auth'
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider')
+  }
+  return context
+}
+```
+
+### 2. components/chat/chat-hooks/use-chat-handler.tsx:45
+**Purpose**: 複雜業務邏輯 Hook
+**Key Code**:
+```typescript
+export function useChatHandler() {
+  const [messages, setMessages] = useState<Message[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  const sendMessage = useCallback(async (content: string) => {
+    setIsLoading(true)
+    try {
+      const response = await api.sendMessage(content)
+      setMessages(prev => [...prev, response])
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  return { messages, isLoading, sendMessage }
+}
+```
+
+## Key Conventions
+- 所有 hooks 使用 `use` 前綴
+- 放在 `lib/hooks/` 或功能目錄下的 `hooks/` 子目錄
+- 使用 TypeScript 定義返回類型
+- 複雜 hooks 使用 `useCallback`、`useMemo` 優化性能
+- 必要時拋出錯誤（如未在 Provider 內使用）
+
+## Common Pitfalls
+- ❌ 忘記添加依賴陣列導致無限循環
+- ❌ 在條件語句中呼叫 hooks
+- ❌ 未定義 TypeScript 類型
+- ✅ 使用 ESLint react-hooks 規則檢查
+```
+
 ### 測試結果
 
-已在 3 個大型 iOS 專案測試：
+#### iOS/Swift 專案
+
+已在 6 個大型 iOS 專案測試：
 
 | 專案 | 規模 | 執行時間 | 準確率 | 結果 |
 |------|------|---------|--------|------|
 | **WordPress-iOS** | 3,639 檔案 (混合) | 15-20s | 95% | ✅ 18/19 標準符合 |
 | **Swiftfin** | 829 檔案 (純 SwiftUI) | 2s | 100% | ✅ 8/9 標準符合 |
 | **Telegram-iOS** | 9,231 檔案 (遺留) | 1.8-5.7s | 90%+ | ✅ 8/8 標準符合 |
+| **Signal-iOS** | 2,514 檔案 | 1.9-5.9s | 97% | ✅ 安全應用模式 |
+| **Calculator** | 3 檔案 (極小) | 0.078s | 100% | ✅ 性能基準 |
+| **firefox-ios** | 2,767 檔案 | 2.1-4.8s | 90% | ✅ 瀏覽器架構 |
 
-**總體成功率**: 95%+ (所有專案)
+#### TypeScript/React 專案
+
+已在 4 個 TypeScript 專案測試：
+
+| 專案 | 規模 | 執行時間 | 準確率 | 結果 |
+|------|------|---------|--------|------|
+| **excalidraw** | 540 檔案 (Monorepo) | 0.20-8.19s | 100% | ✅ 有 CLAUDE.md，AI Level 3 |
+| **shadcn-ui** | 2,663 檔案 (Turborepo) | 0.29s | 100% | ✅ UI 組件庫 |
+| **zustand** | 32 檔案 (小型庫) | 0.10-0.50s | 100% | ✅ 狀態管理庫 |
+| **react-email** | 636 檔案 (Monorepo) | 0.15s | 100% | ✅ Email 組件庫 |
+
+#### Next.js 專案
+
+已在 4 個 Next.js 應用測試：
+
+| 專案 | 規模 | 執行時間 | 準確率 | 結果 |
+|------|------|---------|--------|------|
+| **taxonomy** | 125 檔案 (App Router) | 0.12-2.0s | 100% | ✅ Blog/SaaS 模板 |
+| **chatbot-ui** | 256 檔案 (App Router) | 0.10-0.26s | 100% | ✅ AI 聊天介面 |
+| **dub** | 3,136 檔案 (Monorepo) | 0.60-30.1s | 100% | ✅ 企業級 SaaS |
+| **next-learn** | 131 檔案 (官方) | - | - | ✅ Vercel 官方教學 |
+
+**總體成功率**:
+- iOS/Swift: 95%+ (6/6 專案)
+- TypeScript/React: 100% (4/4 專案)
+- Next.js: 100% (4/4 專案)
 
 ### 何時使用 `/atlas-pattern`
 

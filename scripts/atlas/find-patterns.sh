@@ -80,7 +80,7 @@ get_file_patterns() {
                 echo "*upload.ts *upload.tsx *storage.ts *file.ts *media.ts"
                 ;;
             "database query"|"database"|"query")
-                echo "*repository.ts *model.ts *entity.ts *schema.ts *query.ts *dao.ts"
+                echo "*repository.ts *model.ts *entity.ts *schema.ts *query.ts *dao.ts schema.prisma"
                 ;;
             "authentication"|"auth"|"login")
                 echo "*auth.ts *auth.tsx *session.ts *login.ts *credential.ts *jwt.ts"
@@ -93,6 +93,21 @@ get_file_patterns() {
                 ;;
             "form handling"|"form")
                 echo "*form.tsx *form.ts *validation.ts *schema.ts"
+                ;;
+            "nextjs middleware"|"middleware")
+                echo "middleware.ts middleware.tsx"
+                ;;
+            "nextjs layout"|"layout")
+                echo "layout.tsx"
+                ;;
+            "nextjs page"|"page")
+                echo "page.tsx"
+                ;;
+            "nextjs loading"|"loading")
+                echo "loading.tsx"
+                ;;
+            "nextjs error"|"error boundary"|"error")
+                echo "error.tsx"
                 ;;
             *)
                 echo ""
@@ -156,7 +171,7 @@ get_dir_patterns() {
                 echo "upload storage media files lib"
                 ;;
             "database query"|"database"|"query")
-                echo "models entities repositories db database prisma"
+                echo "models entities repositories db database prisma schema"
                 ;;
             "authentication"|"auth"|"login")
                 echo "auth authentication session security middleware"
@@ -169,6 +184,21 @@ get_dir_patterns() {
                 ;;
             "form handling"|"form")
                 echo "forms components ui features"
+                ;;
+            "nextjs middleware"|"middleware")
+                echo "middleware app src"
+                ;;
+            "nextjs layout"|"layout")
+                echo "app src/app layouts"
+                ;;
+            "nextjs page"|"page")
+                echo "app src/app pages"
+                ;;
+            "nextjs loading"|"loading")
+                echo "app src/app"
+                ;;
+            "nextjs error"|"error boundary"|"error")
+                echo "app src/app components"
                 ;;
             *)
                 echo ""
@@ -216,17 +246,26 @@ main() {
         echo "Project type detected: $PROJECT_TYPE" >&2
         echo "" >&2
         if [ "$PROJECT_TYPE" = "typescript" ]; then
-            echo "Supported patterns (TypeScript/React):" >&2
+            echo "Supported patterns (TypeScript/React/Next.js):" >&2
+            echo "" >&2
+            echo "React/TypeScript patterns:" >&2
             echo "  - api endpoint / api / endpoint" >&2
             echo "  - react component / component" >&2
             echo "  - react hook / hook / hooks" >&2
             echo "  - state management / store / state" >&2
             echo "  - form handling / form" >&2
+            echo "  - authentication / auth / login" >&2
+            echo "  - database query / database / query (includes Prisma)" >&2
+            echo "  - networking / network / http client" >&2
             echo "  - background job / job / queue" >&2
             echo "  - file upload / upload / file storage" >&2
-            echo "  - database query / database / query" >&2
-            echo "  - authentication / auth / login" >&2
-            echo "  - networking / network / http client" >&2
+            echo "" >&2
+            echo "Next.js specific patterns:" >&2
+            echo "  - nextjs middleware / middleware" >&2
+            echo "  - nextjs layout / layout" >&2
+            echo "  - nextjs page / page" >&2
+            echo "  - nextjs loading / loading" >&2
+            echo "  - nextjs error / error boundary / error" >&2
         else
             echo "Supported patterns (Swift/iOS):" >&2
             echo "  - api endpoint / api / endpoint" >&2
