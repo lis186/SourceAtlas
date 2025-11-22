@@ -1,10 +1,10 @@
 ---
-description: Quick project mapping - scan <5% of files to achieve 70-80% understanding
+description: Get project overview - scan <5% of files to achieve 70-80% understanding
 allowed-tools: Bash, Glob, Grep, Read
 argument-hint: [optional: specific directory to analyze, e.g., "src/api"]
 ---
 
-# SourceAtlas: Project Map (Stage 0 Fingerprint)
+# SourceAtlas: Project Overview (Stage 0 Fingerprint)
 
 ## Context
 
@@ -16,34 +16,37 @@ argument-hint: [optional: specific directory to analyze, e.g., "src/api"]
 
 ## Your Task
 
-Execute **Stage 0 Analysis Only** - create a project map using information theory principles.
+Execute **Stage 0 Analysis Only** - generate a project overview using information theory principles.
 
-### Phase 1: Project Detection (2-3 minutes)
+### Phase 1: Project Detection & Scale-Aware Planning (2-3 minutes)
 
-Detect project type and collect basic statistics:
+**IMPORTANT**: Use the enhanced detection script for accurate file counts and scale-aware recommendations.
 
 ```bash
-# Run helper script (if available)
-bash scripts/atlas/detect-project.sh ${ARGUMENTS:-.} 2>/dev/null || {
-  # Fallback: manual detection
-  echo "=== Project Files Detection ==="
-  find ${ARGUMENTS:-.} -maxdepth 3 -type f \( \
-    -name "package.json" -o \
-    -name "composer.json" -o \
-    -name "Gemfile" -o \
-    -name "go.mod" -o \
-    -name "Cargo.toml" -o \
-    -name "requirements.txt" -o \
-    -name "pyproject.toml" -o \
-    -name "pom.xml" \
-  \) 2>/dev/null
-
-  echo ""
-  echo "=== Directory Structure ==="
-  tree -L 2 -d ${ARGUMENTS:-.} 2>/dev/null || \
-    find ${ARGUMENTS:-.} -maxdepth 2 -type d | head -20
-}
+# Run enhanced detection script (RECOMMENDED)
+bash scripts/atlas/detect-project-enhanced.sh ${ARGUMENTS:-.}
 ```
+
+The script will:
+- Detect project type and language
+- Count actual code files (excluding .venv, node_modules, vendor, etc.)
+- Determine project scale (TINY/SMALL/MEDIUM/LARGE/VERY_LARGE)
+- Recommend file scan limits (to stay <10%)
+- Suggest hypothesis targets (scale-aware)
+
+**Scale-Aware Scan Limits**:
+- **TINY** (<5 files): Scan 1-2 files max (50% max to avoid over-scanning tiny projects)
+- **SMALL** (5-15 files): Scan 2-3 files (10-20%)
+- **MEDIUM** (15-50 files): Scan 4-6 files (8-12%)
+- **LARGE** (50-150 files): Scan 6-10 files (4-7%)
+- **VERY_LARGE** (>150 files): Scan 10-15 files (3-7%)
+
+**Scale-Aware Hypothesis Targets**:
+- **TINY**: 5-8 hypotheses (simple projects have fewer dimensions)
+- **SMALL**: 7-10 hypotheses
+- **MEDIUM**: 10-15 hypotheses
+- **LARGE**: 12-18 hypotheses
+- **VERY_LARGE**: 15-20 hypotheses
 
 ### Phase 2: High-Entropy File Prioritization (5-8 minutes)
 
@@ -240,7 +243,7 @@ recommended_next_steps:
 
 ## What's Next?
 
-After `/atlas-map`, users can:
+After `/atlas-overview`, users can:
 - Use `/atlas-pattern` to learn specific design patterns
 - Use `/atlas-impact` to analyze change impact
 - Run full `/atlas` for complete 3-stage analysis (Stage 0 + 1 + 2)
