@@ -1,0 +1,701 @@
+# SourceAtlas Pattern Library
+# Version: 1.0
+# Date: 2025-11-22
+#
+# This file defines common iOS development patterns and their detection strategies.
+# Used by find-patterns.sh and /atlas-pattern command.
+#
+# How to add a new pattern:
+# 1. Add a new entry under 'patterns' with a unique key (use snake_case)
+# 2. Define aliases (user-facing pattern names)
+# 3. Specify detection strategies (file patterns, directories, keywords)
+# 4. Document common conventions and testing approaches
+# 5. Link related patterns
+
+patterns:
+  # ============================================================================
+  # Core iOS Patterns
+  # ============================================================================
+
+  api_endpoint:
+    aliases:
+      - "api endpoint"
+      - "api"
+      - "endpoint"
+      - "rest api"
+      - "api route"
+
+    description: "API endpoint implementation patterns - REST/GraphQL routes, controllers, and handlers"
+
+    detection:
+      file_patterns:
+        - "*Controller.swift"
+        - "*Router.swift"
+        - "*API.swift"
+        - "routes.*"
+        - "*Endpoint*.swift"
+        - "*Service.swift"
+        - "*Remote*.swift"
+
+      directory_patterns:
+        - "controllers"
+        - "routes"
+        - "api"
+        - "services"
+        - "networking"
+        - "endpoints"
+
+      content_keywords:
+        - "router"
+        - "endpoint"
+        - "route"
+        - "controller"
+        - "api"
+        - "rest"
+        - "URLRequest"
+        - "HTTPMethod"
+
+    common_conventions:
+      - "RESTful route naming (GET, POST, PUT, DELETE)"
+      - "Controller-based organization"
+      - "Middleware for auth/validation"
+      - "Service layer abstraction"
+      - "Codable for request/response serialization"
+
+    test_patterns:
+      - "API integration tests"
+      - "Request/response mocking"
+      - "URLSession stub/mock"
+      - "XCTest async/await testing"
+
+    related_patterns:
+      - "authentication"
+      - "networking"
+      - "database_query"
+
+  # --------------------------------------------------------------------------
+
+  background_job:
+    aliases:
+      - "background job"
+      - "job"
+      - "queue"
+      - "background task"
+      - "async task"
+
+    description: "Background job and async task processing patterns"
+
+    detection:
+      file_patterns:
+        - "*Job.swift"
+        - "*Worker.swift"
+        - "*Task.swift"
+        - "*Queue*.swift"
+        - "*Operation*.swift"
+        - "*Async*.swift"
+
+      directory_patterns:
+        - "jobs"
+        - "workers"
+        - "tasks"
+        - "operations"
+        - "background"
+        - "queues"
+
+      content_keywords:
+        - "OperationQueue"
+        - "DispatchQueue"
+        - "Task"
+        - "async"
+        - "await"
+        - "BackgroundTasks"
+        - "URLSessionDownloadTask"
+
+    common_conventions:
+      - "Operation/OperationQueue for complex tasks"
+      - "GCD (DispatchQueue) for simple async work"
+      - "Swift Concurrency (async/await) for modern code"
+      - "BackgroundTasks framework for iOS background execution"
+      - "Combine for reactive streams"
+
+    test_patterns:
+      - "Expectation-based async testing"
+      - "Mock OperationQueue"
+      - "Task cancellation testing"
+
+    related_patterns:
+      - "networking"
+      - "data_persistence"
+
+  # --------------------------------------------------------------------------
+
+  file_upload:
+    aliases:
+      - "file upload"
+      - "upload"
+      - "file storage"
+      - "media upload"
+      - "image upload"
+
+    description: "File upload, storage, and media handling patterns"
+
+    detection:
+      file_patterns:
+        - "*Upload*.swift"
+        - "*Storage*.swift"
+        - "*File*.swift"
+        - "*Media*.swift"
+        - "*Image*.swift"
+        - "*Attachment*.swift"
+        - "*Document*.swift"
+
+      directory_patterns:
+        - "uploads"
+        - "storage"
+        - "media"
+        - "files"
+        - "documents"
+        - "attachments"
+
+      content_keywords:
+        - "upload"
+        - "multipart"
+        - "FileManager"
+        - "PHPickerViewController"
+        - "UIImagePickerController"
+        - "URLSessionUploadTask"
+        - "CloudKit"
+        - "S3"
+
+    common_conventions:
+      - "PHPicker for photo/video selection (iOS 14+)"
+      - "FileManager for local file operations"
+      - "URLSession multipart/form-data for uploads"
+      - "Progress tracking with Progress/Combine"
+      - "Thumbnail generation for images"
+
+    test_patterns:
+      - "Mock file system operations"
+      - "URLSession upload mocking"
+      - "Test with sample files in bundle"
+
+    related_patterns:
+      - "networking"
+      - "data_persistence"
+
+  # --------------------------------------------------------------------------
+
+  database_query:
+    aliases:
+      - "database query"
+      - "database"
+      - "query"
+      - "data access"
+      - "orm"
+      - "persistence"
+
+    description: "Database query and data persistence patterns - CoreData, Realm, SQLite"
+
+    detection:
+      file_patterns:
+        - "*Repository.swift"
+        - "*Query.swift"
+        - "*Model.swift"
+        - "*Store.swift"
+        - "*Database*.swift"
+        - "*Entity*.swift"
+        - "*DAO*.swift"
+        - "*.xcdatamodeld"
+
+      directory_patterns:
+        - "models"
+        - "repositories"
+        - "queries"
+        - "stores"
+        - "database"
+        - "entities"
+        - "persistence"
+        - "data"
+
+      content_keywords:
+        - "NSManagedObject"
+        - "CoreData"
+        - "NSFetchRequest"
+        - "Realm"
+        - "SQLite"
+        - "FMDB"
+        - "NSPersistentContainer"
+        - "fetch"
+        - "save"
+
+    common_conventions:
+      - "Repository pattern for data access abstraction"
+      - "CoreData for complex object graphs"
+      - "UserDefaults for simple key-value storage"
+      - "Codable + FileManager for simple persistence"
+      - "Background context for heavy operations"
+
+    test_patterns:
+      - "In-memory CoreData store for testing"
+      - "Mock repositories"
+      - "Test fixtures for model data"
+
+    related_patterns:
+      - "api_endpoint"
+      - "background_job"
+
+  # --------------------------------------------------------------------------
+
+  authentication:
+    aliases:
+      - "authentication"
+      - "auth"
+      - "login"
+      - "session"
+      - "auth flow"
+
+    description: "Authentication and session management patterns"
+
+    detection:
+      file_patterns:
+        - "*Auth*.swift"
+        - "*Session*.swift"
+        - "*Login*.swift"
+        - "*Credential*.swift"
+        - "*Token*.swift"
+        - "*Security*.swift"
+        - "*OAuth*.swift"
+
+      directory_patterns:
+        - "auth"
+        - "authentication"
+        - "session"
+        - "security"
+        - "credentials"
+        - "login"
+
+      content_keywords:
+        - "authenticate"
+        - "login"
+        - "logout"
+        - "session"
+        - "token"
+        - "jwt"
+        - "oauth"
+        - "Keychain"
+        - "ASWebAuthenticationSession"
+
+    common_conventions:
+      - "Keychain for secure credential storage"
+      - "OAuth 2.0 / OpenID Connect flows"
+      - "JWT for API authentication"
+      - "Biometric authentication (FaceID/TouchID)"
+      - "Token refresh mechanisms"
+
+    test_patterns:
+      - "Mock authentication service"
+      - "Keychain wrapper for testing"
+      - "Auth state machine testing"
+
+    related_patterns:
+      - "api_endpoint"
+      - "networking"
+
+  # ============================================================================
+  # iOS UI Patterns
+  # ============================================================================
+
+  swiftui_view:
+    aliases:
+      - "swiftui view"
+      - "swiftui"
+      - "view"
+      - "swiftui component"
+
+    description: "SwiftUI view composition and component patterns"
+
+    detection:
+      file_patterns:
+        - "*View.swift"
+        - "*Screen.swift"
+        - "*Page.swift"
+        - "*Component.swift"
+
+      directory_patterns:
+        - "Views"
+        - "Screens"
+        - "Pages"
+        - "UI"
+        - "Components"
+        - "SwiftUI"
+
+      content_keywords:
+        - "View"
+        - "body"
+        - "@State"
+        - "@Binding"
+        - "@ObservedObject"
+        - "@StateObject"
+        - "@EnvironmentObject"
+        - "NavigationStack"
+        - "VStack"
+        - "HStack"
+
+    common_conventions:
+      - "View protocol conformance"
+      - "@State for local view state"
+      - "@ObservedObject/@StateObject for view models"
+      - "@EnvironmentObject for shared app state"
+      - "ViewModifier for reusable styling"
+      - "PreferenceKey for child-to-parent communication"
+
+    test_patterns:
+      - "ViewInspector for view testing"
+      - "Snapshot testing"
+      - "Preview providers for development"
+
+    related_patterns:
+      - "view_model"
+      - "navigation"
+
+  # --------------------------------------------------------------------------
+
+  view_controller:
+    aliases:
+      - "view controller"
+      - "viewcontroller"
+      - "uikit"
+      - "vc"
+
+    description: "UIKit view controller patterns"
+
+    detection:
+      file_patterns:
+        - "*ViewController.swift"
+        - "*VC.swift"
+        - "*Controller.swift"
+
+      directory_patterns:
+        - "ViewControllers"
+        - "Controllers"
+        - "UI"
+        - "Views"
+        - "Screens"
+
+      content_keywords:
+        - "UIViewController"
+        - "viewDidLoad"
+        - "viewWillAppear"
+        - "viewDidAppear"
+        - "UITableView"
+        - "UICollectionView"
+        - "navigationController"
+
+    common_conventions:
+      - "Subclass UIViewController for custom behavior"
+      - "viewDidLoad for initial setup"
+      - "viewWillAppear for state updates"
+      - "Delegate pattern for UITableView/UICollectionView"
+      - "Coordinator pattern for navigation"
+
+    test_patterns:
+      - "View controller unit tests"
+      - "Snapshot testing"
+      - "UI testing with XCUITest"
+
+    related_patterns:
+      - "navigation"
+      - "coordinator"
+
+  # --------------------------------------------------------------------------
+
+  networking:
+    aliases:
+      - "networking"
+      - "network"
+      - "http client"
+      - "api client"
+      - "network layer"
+
+    description: "Network layer and HTTP client implementation patterns"
+
+    detection:
+      file_patterns:
+        - "*Client.swift"
+        - "*Network*.swift"
+        - "*Service.swift"
+        - "*API*.swift"
+        - "*Request*.swift"
+        - "*HTTPClient*.swift"
+        - "*URLSession*.swift"
+
+      directory_patterns:
+        - "Networking"
+        - "Network"
+        - "Services"
+        - "API"
+        - "Client"
+        - "HTTP"
+
+      content_keywords:
+        - "URLSession"
+        - "URLRequest"
+        - "HTTPURLResponse"
+        - "Alamofire"
+        - "async"
+        - "await"
+        - "dataTask"
+        - "JSONDecoder"
+
+    common_conventions:
+      - "URLSession for standard networking"
+      - "Alamofire for advanced features"
+      - "Codable for JSON serialization"
+      - "async/await for modern Swift concurrency"
+      - "Result type for error handling"
+      - "Network reachability monitoring"
+
+    test_patterns:
+      - "URLProtocol mocking"
+      - "Mock URLSession"
+      - "Network response stubbing"
+      - "Integration tests with test server"
+
+    related_patterns:
+      - "api_endpoint"
+      - "authentication"
+
+  # ============================================================================
+  # Advanced iOS Patterns
+  # ============================================================================
+
+  view_model:
+    aliases:
+      - "view model"
+      - "viewmodel"
+      - "mvvm"
+      - "observable object"
+
+    description: "MVVM pattern with ObservableObject view models"
+
+    detection:
+      file_patterns:
+        - "*ViewModel.swift"
+        - "*VM.swift"
+        - "*Presenter.swift"
+
+      directory_patterns:
+        - "ViewModels"
+        - "Presenters"
+        - "MVVM"
+
+      content_keywords:
+        - "ObservableObject"
+        - "@Published"
+        - "ViewModel"
+        - "Presenter"
+        - "Combine"
+
+    common_conventions:
+      - "ObservableObject conformance"
+      - "@Published for reactive properties"
+      - "Combine for data flow"
+      - "Separate business logic from views"
+      - "Testable view models"
+
+    test_patterns:
+      - "View model unit tests"
+      - "Mock dependencies"
+      - "Publisher testing with XCTest"
+
+    related_patterns:
+      - "swiftui_view"
+      - "dependency_injection"
+
+  # --------------------------------------------------------------------------
+
+  coordinator:
+    aliases:
+      - "coordinator"
+      - "navigation"
+      - "flow coordinator"
+      - "routing"
+
+    description: "Coordinator pattern for navigation and flow control"
+
+    detection:
+      file_patterns:
+        - "*Coordinator.swift"
+        - "*Router.swift"
+        - "*Flow*.swift"
+        - "*Navigator*.swift"
+
+      directory_patterns:
+        - "Coordinators"
+        - "Navigation"
+        - "Routing"
+        - "Flows"
+
+      content_keywords:
+        - "Coordinator"
+        - "navigate"
+        - "push"
+        - "present"
+        - "dismiss"
+        - "UINavigationController"
+
+    common_conventions:
+      - "Coordinator protocol with start() method"
+      - "Child coordinators for sub-flows"
+      - "Delegate pattern for coordination"
+      - "NavigationController management"
+      - "Deep linking support"
+
+    test_patterns:
+      - "Mock coordinators"
+      - "Navigation flow testing"
+      - "Deep link testing"
+
+    related_patterns:
+      - "view_controller"
+      - "dependency_injection"
+
+  # --------------------------------------------------------------------------
+
+  dependency_injection:
+    aliases:
+      - "dependency injection"
+      - "di"
+      - "dependency container"
+      - "service locator"
+
+    description: "Dependency injection and inversion of control patterns"
+
+    detection:
+      file_patterns:
+        - "*Container.swift"
+        - "*DI*.swift"
+        - "*Injector*.swift"
+        - "*Resolver*.swift"
+        - "*ServiceLocator*.swift"
+
+      directory_patterns:
+        - "DI"
+        - "Container"
+        - "Dependencies"
+        - "Injection"
+
+      content_keywords:
+        - "register"
+        - "resolve"
+        - "inject"
+        - "container"
+        - "Swinject"
+        - "Factory"
+        - "@Injected"
+
+    common_conventions:
+      - "Constructor injection preferred"
+      - "Protocol-based abstractions"
+      - "Container for service registration"
+      - "Scope management (singleton, transient, etc.)"
+      - "Avoid service locator anti-pattern"
+
+    test_patterns:
+      - "Mock/stub dependencies"
+      - "Test-specific container configuration"
+      - "Dependency verification tests"
+
+    related_patterns:
+      - "coordinator"
+      - "view_model"
+
+  # --------------------------------------------------------------------------
+
+  data_persistence:
+    aliases:
+      - "data persistence"
+      - "persistence"
+      - "storage"
+      - "coredata"
+      - "realm"
+
+    description: "Data persistence strategies - CoreData, Realm, UserDefaults, FileManager"
+
+    detection:
+      file_patterns:
+        - "*Store.swift"
+        - "*Persistence*.swift"
+        - "*.xcdatamodeld"
+        - "*Cache*.swift"
+
+      directory_patterns:
+        - "Persistence"
+        - "Storage"
+        - "Cache"
+        - "CoreData"
+        - "Database"
+
+      content_keywords:
+        - "NSPersistentContainer"
+        - "CoreData"
+        - "Realm"
+        - "UserDefaults"
+        - "FileManager"
+        - "Codable"
+        - "NSManagedObjectContext"
+
+    common_conventions:
+      - "CoreData for complex object graphs"
+      - "UserDefaults for simple settings"
+      - "FileManager + Codable for custom storage"
+      - "Keychain for sensitive data"
+      - "Background context for heavy operations"
+
+    test_patterns:
+      - "In-memory store for testing"
+      - "Mock persistence layer"
+      - "Migration testing"
+
+    related_patterns:
+      - "database_query"
+      - "background_job"
+
+# ==============================================================================
+# Pattern Categories
+# ==============================================================================
+
+categories:
+  core:
+    - api_endpoint
+    - background_job
+    - file_upload
+    - database_query
+    - authentication
+
+  ui:
+    - swiftui_view
+    - view_controller
+    - view_model
+
+  architecture:
+    - coordinator
+    - dependency_injection
+    - data_persistence
+
+  networking:
+    - networking
+    - api_endpoint
+    - authentication
+
+# ==============================================================================
+# Metadata
+# ==============================================================================
+
+metadata:
+  version: "1.0"
+  last_updated: "2025-11-22"
+  platform: "iOS"
+  language: "Swift"
+  maintainer: "SourceAtlas"
+  total_patterns: 11
