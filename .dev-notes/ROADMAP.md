@@ -1,0 +1,126 @@
+# SourceAtlas Roadmap
+
+**Current Status**: v1.0 Complete → v2.5 In Progress (Week 4/16)
+**Last Updated**: 2025-11-23
+
+---
+
+## 🎯 Immediate Actions (This Week)
+
+### Phase 1 - Pattern Detection (Week 1) ✅ COMPLETE
+- [x] `/atlas-pattern` command
+- [x] `find-patterns.sh` script (ultra-fast version)
+- [x] Multi-project validation
+
+### Phase 2 - Pattern System Optimization (Week 2-4) ✅ COMPLETE
+- [x] TypeScript patterns expansion (13→22)
+- [x] iOS patterns consolidation (34→29)
+- [x] Objective-C support (all 29 patterns)
+- [x] Patterns audit & cleanup
+
+### Phase 3 - Core Commands (Week 5-8) 🔵 IN PROGRESS
+- [ ] `/atlas-overview` command (Stage 0)
+- [ ] `/atlas` command (full 3-stage analysis)
+- [ ] `/atlas-impact` command (change impact)
+- [ ] `/atlas-find` command (smart search)
+
+### Phase 4 - Testing & Polish (Week 9-16)
+- [ ] Comprehensive testing
+- [ ] Documentation update
+- [ ] Performance optimization
+- [ ] v2.5.0 Release
+
+---
+
+## 📅 Timeline
+
+### v2.5 (Current - Target: 3-4 weeks from 2025-11-20)
+
+**Week 1-4** ✅ (11/20-11/23):
+- Pattern Detection System
+- Multi-language Support
+- Pattern Optimization
+
+**Week 5-8** 🔵 (Next 4 weeks):
+- Core Commands Implementation
+- Stage 0-2 Integration
+- Testing Framework
+
+**Week 9-12**:
+- Advanced Commands
+- Performance Tuning
+- User Documentation
+
+**Week 13-16**:
+- Final Testing
+- Bug Fixes
+- v2.5.0 Release
+
+### v3.0+ (Future Vision)
+
+**SourceAtlas Monitor**:
+- Continuous tracking
+- Trend analysis
+- Health dashboard
+
+**Technical Debt Quantification**:
+- Automated debt detection
+- Refactoring suggestions
+- Priority ranking
+
+**Multi-Repository Support**:
+- Monorepo analysis
+- Cross-project patterns
+- Dependency mapping
+
+---
+
+## 🔥 Current Sprint (Week 5)
+
+### Priority P0 (Must Do)
+1. Complete `.dev-notes/` restructuring
+2. Update CLAUDE.md with management rules
+3. Start `/atlas-overview` implementation
+
+### Priority P1 (Should Do)
+4. Test patterns on 2+ new projects
+5. Document pattern detection methodology
+
+### Priority P2 (Nice to Have)
+6. Performance benchmarking
+7. Pattern statistics dashboard
+
+---
+
+## 📊 Progress Tracking
+
+### Completed Milestones ✅
+- [x] v1.0 Methodology Validation (2025-10-22)
+- [x] YAML Format Decision (2025-11-20)
+- [x] Atlas Pattern Command (2025-11-22)
+- [x] TypeScript Patterns Expansion (2025-11-23)
+- [x] iOS Patterns Consolidation (2025-11-23)
+- [x] Objective-C Support (2025-11-23)
+
+### In Progress 🔵
+- [ ] .dev-notes/ Restructuring (90% complete)
+- [ ] v2.5 Core Commands (20% complete)
+
+### Blocked ❌
+- None
+
+---
+
+## 🎓 Lessons Learned
+
+從 v1.0 到當前的關鍵學習：
+
+1. **資訊理論有效**: <5% 掃描確實能達 70-80% 理解
+2. **規模感知重要**: 不同大小專案需要不同策略
+3. **標準優於優化**: YAML > TOON（+14% tokens 但生態系統好）
+4. **混合專案挑戰**: Swift/ObjC 需要特殊處理
+5. **Pattern 一致性**: 跨語言命名慣例相似度高
+
+---
+
+**Next Review**: 每週日更新進度
