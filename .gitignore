@@ -2,3 +2,6 @@ reference/
 test_targets/
 test_results/
 *.backup*
+
+# SpecStory artifacts (IDE extension, not part of SourceAtlas)
+.specstory/
