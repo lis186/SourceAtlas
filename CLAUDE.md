@@ -254,6 +254,7 @@ hypotheses:
 - **v2.5** 🔵 - Commands 實作中（預計 3-4 週）
 
 **版本歷程**：
+- v2.5.1 (2025-11-23): **iOS Patterns 擴展完成** - 新增 18 個 iOS patterns (16 → 34, +112.5%)
 - v1.0 (2025-11-22): 完成 5 專案驗證、YAML vs TOON 決策、規模感知算法
 - v2.0 (2025-11-19): 手動 Prompts 方法論
 - v2.5 (進行中): Claude Code Commands 整合
@@ -290,6 +291,73 @@ hypotheses:
 > **詳細分析與證據**：見 `.dev-notes/KEY_LEARNINGS.md` 和 `.dev-notes/HISTORY.md`
 
 **實作任何新功能時，謹記這些學習！**
+
+---
+
+## iOS Patterns 擴展（v2.5.1）✅
+
+**2025-11-23 完成的 iOS patterns 全面擴展**：
+
+### 成果總結
+
+- ✅ **新增 18 個 iOS patterns**（10 Tier 1 + 8 Tier 2）
+- ✅ **Pattern 總數**: 16 → 34 (+112.5%)
+- ✅ **測試專案**: 7 個 iOS 專案（2K ~ 255K LOC）
+- ✅ **檔案檢測**: 152+ 檔案
+- ✅ **整體準確率**: 92%+
+- ✅ **架構覆蓋**: SwiftUI, UIKit, TCA, Redux, Clean Architecture
+
+### 關鍵技術發現⭐
+
+1. **DIContainer 是現代 Factory pattern** - Clean Architecture 專案使用 `*DIContainer.swift` 而非 `*Factory.swift`
+2. **TCA 使用 *Domain.swift** - The Composable Architecture 使用 `@Reducer` macro 搭配 `*Domain.swift` 命名
+3. **Middleware 是 Redux 架構專用** - Clean Architecture 使用 Use Cases，MVVM 使用 ViewModels
+4. **現代 iOS 趨勢（2025）**:
+   - `@Observable` > `ObservableObject`
+   - `async/await` > Combine
+   - 無 ViewModels（純 SwiftUI）
+
+### 新增的 Patterns
+
+**Tier 1 核心（10 個）**:
+1. Protocol/Delegate（UIKit 通訊）
+2. Combine/Publisher（Reactive）⚠️ 需內容分析
+3. async/await（並發）⚠️ 需內容分析
+4. Repository（資料抽象）
+5. Service Layer（業務邏輯）
+6. Use Case/Interactor（領域操作）
+7. UICollectionViewLayout（自訂佈局）
+8. Factory/DIContainer（物件創建）
+9. Animation（UI 動畫）
+10. Router（路由管理）
+
+**Tier 2 補充（8 個）**:
+11. ObservableObject（SwiftUI 狀態）
+12. Reducer (TCA)（Redux-like）
+13. Environment/Configuration（環境配置）
+14. Cache（快取管理）
+15. Theme/Style（主題樣式）
+16. Mock/Stub（測試基礎）
+17. Middleware（Redux 中介層）
+18. Localization（國際化）
+
+### 文檔產出
+
+所有文檔位於 `test_targets/ios-*.md`:
+1. `ios-patterns-expansion-research-report.md` - 研究報告
+2. `ios-tier1-phase1-implementation-report.md` - Week 1 實作
+3. `ios-tier1-phase1-week2-implementation-report.md` - Week 2 實作
+4. `ios-tier2-implementation-report.md` - Tier 2 實作
+5. `ios-patterns-expansion-complete-report.md` - 完整總結
+
+### 方法論傳承
+
+基於此次實戰，建立了可重複使用的框架：
+- **`.dev-notes/new-language-support-methodology.md`** - 6 階段系統化方法論
+- 適用於未來新增任何程式語言支援（Kotlin, Go, Rust, Flutter 等）
+- 包含完整檢查清單、快速啟動腳本、品質標準
+
+> **詳細報告**：見 `test_targets/ios-patterns-expansion-complete-report.md`
 
 ---
 

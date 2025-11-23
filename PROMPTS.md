@@ -139,10 +139,19 @@ find [PROJECT_PATH] -type f | grep -E "\.(ts|tsx|js|jsx|php|go|rs|py|java)$" | w
 
 **架構模式推論**:
 
-- MVC, MVVM, Clean Architecture
-- Repository Pattern
-- Service Layer
+- MVC, MVVM, MVP, Clean Architecture
+- Repository Pattern, Service Layer
+- Factory/DIContainer, Use Case/Interactor
+- Router (API/Navigation), Middleware
 - Policy-based Authorization
+
+**iOS 特定 Patterns** (34 patterns supported):
+- **SwiftUI**: ObservableObject, Reducer (TCA), Router
+- **UIKit**: Protocol/Delegate, UICollectionViewLayout, Animation
+- **架構**: Repository, Service Layer, Use Case/Interactor, Factory/DIContainer
+- **狀態管理**: Reducer (TCA), Middleware (Redux), ObservableObject
+- **輔助**: Cache, Theme/Style, Environment/Configuration, Localization, Mock/Stub
+- **現代**: async/await, Combine/Publisher (需內容分析)
 
 **代碼品質推論**:
 
