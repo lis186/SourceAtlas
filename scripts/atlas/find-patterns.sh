@@ -270,6 +270,30 @@ get_file_patterns() {
             "router"|"route"|"routing")
                 echo "*Router.swift *Route.swift *URLRouter.swift *Endpoint.swift"
                 ;;
+            "observable"|"observableobject"|"observable object")
+                echo "*ViewModel.swift *Store.swift"
+                ;;
+            "reducer"|"tca reducer"|"state reducer")
+                echo "*Reducer.swift *Action.swift *State.swift *Domain.swift"
+                ;;
+            "environment"|"configuration"|"config")
+                echo "*Environment.swift *Config.swift *Configuration.swift"
+                ;;
+            "cache"|"caching")
+                echo "*Cache.swift *CacheManager.swift *ImageCache.swift"
+                ;;
+            "theme"|"style"|"appearance")
+                echo "*Theme.swift *Style.swift *Appearance.swift"
+                ;;
+            "mock"|"stub"|"fake"|"test double")
+                echo "Mock*.swift *Mock.swift *Stub.swift Fake*.swift"
+                ;;
+            "middleware"|"interceptor")
+                echo "*Middleware.swift *Interceptor.swift"
+                ;;
+            "localization"|"i18n"|"l10n")
+                echo "Localizable.swift *Localization.swift *.strings"
+                ;;
             *)
                 echo ""
                 ;;
@@ -482,6 +506,30 @@ get_dir_patterns() {
             "router"|"route"|"routing")
                 echo "Routers Routing Navigation API/Routers Networking/Routers"
                 ;;
+            "observable"|"observableobject"|"observable object")
+                echo "ViewModels ViewModel Store Presentation State"
+                ;;
+            "reducer"|"tca reducer"|"state reducer")
+                echo "Reducers Store Features State TCA"
+                ;;
+            "environment"|"configuration"|"config")
+                echo "Configuration Config Environment Settings"
+                ;;
+            "cache"|"caching")
+                echo "Cache Storage Caching Data/Cache"
+                ;;
+            "theme"|"style"|"appearance")
+                echo "Theme Themes Styles Appearance UI/Theme"
+                ;;
+            "mock"|"stub"|"fake"|"test double")
+                echo "Mocks Testing Stubs Fakes Tests/Mocks"
+                ;;
+            "middleware"|"interceptor")
+                echo "Middleware Interceptors Networking/Middleware"
+                ;;
+            "localization"|"i18n"|"l10n")
+                echo "Localization Resources Locale *.lproj"
+                ;;
             *)
                 echo ""
                 ;;
@@ -557,6 +605,16 @@ main() {
             echo "  - factory / builder" >&2
             echo "  - animation / animator / transition" >&2
             echo "  - router / route / routing" >&2
+            echo "" >&2
+            echo "Supplementary patterns (Tier 2):" >&2
+            echo "  - observable / observableobject / observable object" >&2
+            echo "  - reducer / tca reducer / state reducer" >&2
+            echo "  - environment / configuration / config" >&2
+            echo "  - cache / caching" >&2
+            echo "  - theme / style / appearance" >&2
+            echo "  - mock / stub / fake / test double" >&2
+            echo "  - middleware / interceptor" >&2
+            echo "  - localization / i18n / l10n" >&2
             echo "" >&2
             echo "Architecture patterns:" >&2
             echo "  - api endpoint / api / endpoint" >&2
