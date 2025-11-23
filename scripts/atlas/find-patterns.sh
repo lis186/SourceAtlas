@@ -140,50 +140,74 @@ get_file_patterns() {
     elif [ "$proj_type" = "typescript" ]; then
         # TypeScript/React patterns
         case "$pattern" in
-            "api endpoint"|"api"|"endpoint")
-                echo "*route.ts *route.tsx *api.ts *api.tsx *controller.ts *service.ts *endpoint.ts *handler.ts *.api.ts"
-                ;;
+            # Tier 1 - Core Patterns (10)
             "react component"|"component")
                 echo "*.tsx *Component.tsx *component.tsx"
                 ;;
             "react hook"|"hook"|"hooks")
                 echo "use*.ts use*.tsx *hook.ts *hooks.ts"
                 ;;
-            "background job"|"job"|"queue")
-                echo "*worker.ts *job.ts *task.ts *queue.ts *processor.ts *cron.ts"
+            "state management"|"store"|"state")
+                echo "*store.ts *slice.ts *reducer.ts *context.tsx *provider.tsx *state.ts"
                 ;;
-            "file upload"|"upload"|"file storage")
-                echo "*upload.ts *upload.tsx *storage.ts *file.ts *media.ts"
-                ;;
-            "database query"|"database"|"query")
-                echo "*repository.ts *model.ts *entity.ts *schema.ts *query.ts *dao.ts schema.prisma"
+            "api endpoint"|"api"|"endpoint")
+                echo "*route.ts *route.tsx *api.ts *api.tsx *controller.ts *service.ts *endpoint.ts *handler.ts *.api.ts"
                 ;;
             "authentication"|"auth"|"login")
                 echo "*auth.ts *auth.tsx *session.ts *login.ts *credential.ts *jwt.ts"
                 ;;
-            "state management"|"store"|"state")
-                echo "*store.ts *slice.ts *reducer.ts *context.tsx *provider.tsx *state.ts"
+            "form handling"|"form"|"forms")
+                echo "*form.tsx *form.ts *validation.ts *schema.ts"
+                ;;
+            "database query"|"database"|"query")
+                echo "*repository.ts *model.ts *entity.ts *schema.ts *query.ts *dao.ts schema.prisma"
                 ;;
             "networking"|"network"|"http client")
                 echo "*client.ts *http.ts *fetch.ts *api.ts *request.ts *axios.ts"
                 ;;
-            "form handling"|"form")
-                echo "*form.tsx *form.ts *validation.ts *schema.ts"
+            "nextjs page"|"page")
+                echo "page.tsx page.ts"
                 ;;
+            "nextjs layout"|"layout")
+                echo "layout.tsx layout.ts"
+                ;;
+
+            # Tier 2 - Supplementary Patterns (12)
             "nextjs middleware"|"middleware")
                 echo "middleware.ts middleware.tsx"
                 ;;
-            "nextjs layout"|"layout")
-                echo "layout.tsx"
-                ;;
-            "nextjs page"|"page")
-                echo "page.tsx"
-                ;;
             "nextjs loading"|"loading")
-                echo "loading.tsx"
+                echo "loading.tsx loading.ts"
                 ;;
             "nextjs error"|"error boundary"|"error")
-                echo "error.tsx"
+                echo "error.tsx error.ts"
+                ;;
+            "background job"|"job"|"queue"|"worker")
+                echo "*worker.ts *job.ts *task.ts *queue.ts *processor.ts *cron.ts"
+                ;;
+            "file upload"|"upload"|"file storage"|"storage")
+                echo "*upload.ts *upload.tsx *storage.ts *file.ts *media.ts"
+                ;;
+            "test"|"testing"|"mock"|"e2e"|"unit test")
+                echo "*.test.ts *.test.tsx *.spec.ts *.spec.tsx *mock.ts *Mock.ts mock*.ts"
+                ;;
+            "theme"|"style"|"styling"|"design system")
+                echo "*theme.ts *theme.tsx *styles.ts *styled.ts *design.ts *tokens.ts"
+                ;;
+            "server component"|"rsc"|"server")
+                echo "*.server.tsx *.server.ts"
+                ;;
+            "server action"|"action"|"actions")
+                echo "*action.ts *actions.ts server-action.ts"
+                ;;
+            "context"|"context provider"|"provider")
+                echo "*Context.tsx *context.tsx *Provider.tsx *provider.tsx"
+                ;;
+            "types"|"type"|"interface"|"interfaces")
+                echo "*types.ts *type.ts *interface.ts *.d.ts"
+                ;;
+            "config"|"configuration"|"environment"|"env")
+                echo "*config.ts *configuration.ts *env.ts *.config.ts"
                 ;;
             *)
                 echo ""
@@ -376,50 +400,74 @@ get_dir_patterns() {
     elif [ "$proj_type" = "typescript" ]; then
         # TypeScript/React directory patterns
         case "$pattern" in
-            "api endpoint"|"api"|"endpoint")
-                echo "api routes controllers handlers services app/api pages/api"
-                ;;
+            # Tier 1
             "react component"|"component")
                 echo "components ui features modules views pages screens"
                 ;;
             "react hook"|"hook"|"hooks")
                 echo "hooks composables utils lib"
                 ;;
-            "background job"|"job"|"queue")
-                echo "jobs workers tasks queue background cron"
+            "state management"|"store"|"state")
+                echo "store state redux context providers slices"
                 ;;
-            "file upload"|"upload"|"file storage")
-                echo "upload storage media files lib"
-                ;;
-            "database query"|"database"|"query")
-                echo "models entities repositories db database prisma schema"
+            "api endpoint"|"api"|"endpoint")
+                echo "api routes controllers handlers services app/api pages/api"
                 ;;
             "authentication"|"auth"|"login")
                 echo "auth authentication session security middleware"
                 ;;
-            "state management"|"store"|"state")
-                echo "store state redux context providers slices"
+            "form handling"|"form"|"forms")
+                echo "forms components ui features"
+                ;;
+            "database query"|"database"|"query")
+                echo "models entities repositories db database prisma schema"
                 ;;
             "networking"|"network"|"http client")
                 echo "api lib services utils http client"
                 ;;
-            "form handling"|"form")
-                echo "forms components ui features"
-                ;;
-            "nextjs middleware"|"middleware")
-                echo "middleware app src"
+            "nextjs page"|"page")
+                echo "app src/app pages"
                 ;;
             "nextjs layout"|"layout")
                 echo "app src/app layouts"
                 ;;
-            "nextjs page"|"page")
-                echo "app src/app pages"
+
+            # Tier 2
+            "nextjs middleware"|"middleware")
+                echo "middleware app src"
                 ;;
             "nextjs loading"|"loading")
                 echo "app src/app"
                 ;;
             "nextjs error"|"error boundary"|"error")
                 echo "app src/app components"
+                ;;
+            "background job"|"job"|"queue"|"worker")
+                echo "jobs workers tasks queue background cron"
+                ;;
+            "file upload"|"upload"|"file storage"|"storage")
+                echo "upload storage media files lib"
+                ;;
+            "test"|"testing"|"mock"|"e2e"|"unit test")
+                echo "__tests__ tests test __mocks__ mocks e2e spec"
+                ;;
+            "theme"|"style"|"styling"|"design system")
+                echo "theme themes styles design tokens constants"
+                ;;
+            "server component"|"rsc"|"server")
+                echo "app src/app components"
+                ;;
+            "server action"|"action"|"actions")
+                echo "actions app/actions lib/actions server"
+                ;;
+            "context"|"context provider"|"provider")
+                echo "context providers contexts state"
+                ;;
+            "types"|"type"|"interface"|"interfaces")
+                echo "types @types interfaces models lib"
+                ;;
+            "config"|"configuration"|"environment"|"env")
+                echo "config configuration env lib constants"
                 ;;
             *)
                 echo ""
@@ -573,24 +621,31 @@ main() {
         elif [ "$PROJECT_TYPE" = "typescript" ]; then
             echo "Supported patterns (TypeScript/React/Next.js):" >&2
             echo "" >&2
-            echo "React/TypeScript patterns:" >&2
-            echo "  - api endpoint / api / endpoint" >&2
+            echo "Tier 1 - Core patterns (10):" >&2
             echo "  - react component / component" >&2
             echo "  - react hook / hook / hooks" >&2
             echo "  - state management / store / state" >&2
-            echo "  - form handling / form" >&2
+            echo "  - api endpoint / api / endpoint" >&2
             echo "  - authentication / auth / login" >&2
+            echo "  - form handling / form / forms" >&2
             echo "  - database query / database / query (includes Prisma)" >&2
             echo "  - networking / network / http client" >&2
-            echo "  - background job / job / queue" >&2
-            echo "  - file upload / upload / file storage" >&2
-            echo "" >&2
-            echo "Next.js specific patterns:" >&2
-            echo "  - nextjs middleware / middleware" >&2
-            echo "  - nextjs layout / layout" >&2
             echo "  - nextjs page / page" >&2
+            echo "  - nextjs layout / layout" >&2
+            echo "" >&2
+            echo "Tier 2 - Supplementary patterns (12):" >&2
+            echo "  - nextjs middleware / middleware" >&2
             echo "  - nextjs loading / loading" >&2
             echo "  - nextjs error / error boundary / error" >&2
+            echo "  - background job / job / queue / worker" >&2
+            echo "  - file upload / upload / file storage / storage" >&2
+            echo "  - test / testing / mock / e2e / unit test" >&2
+            echo "  - theme / style / styling / design system" >&2
+            echo "  - server component / rsc / server" >&2
+            echo "  - server action / action / actions" >&2
+            echo "  - context / context provider / provider" >&2
+            echo "  - types / type / interface / interfaces" >&2
+            echo "  - config / configuration / environment / env" >&2
         else
             echo "Supported patterns (Swift/iOS):" >&2
             echo "" >&2
