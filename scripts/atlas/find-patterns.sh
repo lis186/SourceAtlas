@@ -216,54 +216,7 @@ get_file_patterns() {
     else
         # Swift/iOS patterns
         case "$pattern" in
-            "api endpoint"|"api"|"endpoint")
-                echo "*Controller.swift *Router.swift *API.swift routes.* *Endpoint*.swift *Service.swift *Remote*.swift"
-                ;;
-            "background job"|"job"|"queue")
-                echo "*Job.swift *Worker.swift *Task.swift *Queue*.swift *Operation*.swift *Async*.swift"
-                ;;
-            "file upload"|"upload"|"file storage")
-                echo "*Upload*.swift *Storage*.swift *File*.swift *Media*.swift *Image*.swift *Attachment*.swift"
-                ;;
-            "database query"|"database"|"query")
-                echo "*Repository.swift *Query.swift *Model.swift *Store.swift *Database*.swift *Entity*.swift *DAO*.swift"
-                ;;
-            "authentication"|"auth"|"login")
-                echo "*Auth*.swift *Session*.swift *Login*.swift *Credential*.swift *Token*.swift *Security*.swift"
-                ;;
-            "swiftui view"|"view")
-                echo "*View.swift *Screen.swift *Page.swift"
-                ;;
-            "view controller"|"viewcontroller")
-                echo "*ViewController.swift *VC.swift *Controller.swift"
-                ;;
-            "networking"|"network")
-                echo "*Client.swift *Network*.swift *Service.swift *API*.swift *Request*.swift *HTTPClient*.swift"
-                ;;
-            "view model"|"viewmodel"|"mvvm")
-                echo "*ViewModel.swift *VM.swift"
-                ;;
-            "coordinator"|"navigation coordinator")
-                echo "*Coordinator.swift *Navigation*.swift *Flow*.swift"
-                ;;
-            "core data"|"coredata"|"persistence"|"data persistence")
-                echo "*.xcdatamodeld *+CoreDataProperties.swift *+CoreDataClass.swift *ManagedObject*.swift *CoreData*.swift"
-                ;;
-            "dependency injection"|"di"|"injection")
-                echo "*Injector.swift *Factory.swift *Container.swift *Dependencies.swift *DI*.swift *Assembly.swift"
-                ;;
-            "table view cell"|"collection view cell"|"cell"|"cells")
-                echo "*Cell.swift *TableViewCell.swift *CollectionViewCell.swift"
-                ;;
-            "extension"|"extensions")
-                echo "*+*.swift *Extension*.swift"
-                ;;
-            "view modifier"|"viewmodifier"|"swiftui modifier"|"modifier")
-                echo "*Modifier.swift *ViewModifier.swift"
-                ;;
-            "error handling"|"error"|"errors")
-                echo "*Error.swift *ErrorHandler.swift *Result.swift *Failure.swift"
-                ;;
+            # Tier 1 - Core Patterns (14)
             "protocol"|"delegate"|"protocol delegate")
                 echo "*Delegate.swift *DataSource.swift *Protocol.swift"
                 ;;
@@ -273,30 +226,41 @@ get_file_patterns() {
             "async"|"await"|"async await"|"concurrency")
                 echo "*Async*.swift *Task*.swift *Actor*.swift"
                 ;;
-            "repository"|"repo")
-                echo "*Repository.swift *DAO.swift *Store.swift *DataSource.swift"
+            "repository"|"repo"|"database"|"query"|"database query")
+                echo "*Repository.swift *DAO.swift *Store.swift *DataSource.swift *Query.swift *Model.swift *Database*.swift *Entity*.swift"
                 ;;
-            "service"|"service layer"|"manager")
-                echo "*Service.swift *Manager.swift *Provider.swift"
+            "service"|"service layer"|"manager"|"networking"|"network")
+                echo "*Service.swift *Manager.swift *Provider.swift *Client.swift *Network*.swift *API*.swift *Request*.swift *HTTPClient*.swift"
                 ;;
             "usecase"|"use case"|"interactor")
                 echo "*UseCase.swift *Interactor.swift *Command.swift"
                 ;;
+            "router"|"route"|"routing"|"api endpoint"|"api"|"endpoint")
+                echo "*Router.swift *Route.swift *URLRouter.swift *Endpoint.swift *Controller.swift *API.swift routes.*"
+                ;;
+            "factory"|"builder"|"dependency injection"|"di"|"injection")
+                echo "*Factory.swift *Builder.swift *Creator.swift *DIContainer.swift *Injector.swift *Container.swift *Dependencies.swift *DI*.swift *Assembly.swift"
+                ;;
+            "viewmodel"|"view model"|"mvvm"|"observable"|"observableobject"|"observable object")
+                echo "*ViewModel.swift *VM.swift *Store.swift"
+                ;;
+            "view controller"|"viewcontroller")
+                echo "*ViewController.swift *VC.swift *Controller.swift"
+                ;;
+            "swiftui view"|"view")
+                echo "*View.swift *Screen.swift *Page.swift"
+                ;;
+            "coordinator"|"navigation coordinator")
+                echo "*Coordinator.swift *Navigation*.swift *Flow*.swift"
+                ;;
+            "core data"|"coredata"|"persistence"|"data persistence")
+                echo "*.xcdatamodeld *+CoreDataProperties.swift *+CoreDataClass.swift *ManagedObject*.swift *CoreData*.swift"
+                ;;
             "layout"|"collection view layout"|"uicollectionviewlayout")
                 echo "*Layout.swift *FlowLayout.swift *CollectionViewLayout.swift"
                 ;;
-            "factory"|"builder")
-                echo "*Factory.swift *Builder.swift *Creator.swift *DIContainer.swift"
-                ;;
-            "animation"|"animator"|"transition")
-                echo "*Animation.swift *Animator.swift *Transition.swift"
-                ;;
-            "router"|"route"|"routing")
-                echo "*Router.swift *Route.swift *URLRouter.swift *Endpoint.swift"
-                ;;
-            "observable"|"observableobject"|"observable object")
-                echo "*ViewModel.swift *Store.swift"
-                ;;
+
+            # Tier 2 - Supplementary Patterns (15)
             "reducer"|"tca reducer"|"state reducer")
                 echo "*Reducer.swift *Action.swift *State.swift *Domain.swift"
                 ;;
@@ -317,6 +281,30 @@ get_file_patterns() {
                 ;;
             "localization"|"i18n"|"l10n")
                 echo "Localizable.swift *Localization.swift *.strings"
+                ;;
+            "animation"|"animator"|"transition")
+                echo "*Animation.swift *Animator.swift *Transition.swift"
+                ;;
+            "authentication"|"auth"|"login")
+                echo "*Auth*.swift *Session*.swift *Login*.swift *Credential*.swift *Token*.swift *Security*.swift"
+                ;;
+            "background job"|"job"|"queue")
+                echo "*Job.swift *Worker.swift *Task.swift *Queue*.swift *Operation*.swift *Async*.swift"
+                ;;
+            "file upload"|"upload"|"file storage")
+                echo "*Upload*.swift *Storage*.swift *File*.swift *Media*.swift *Image*.swift *Attachment*.swift"
+                ;;
+            "table view cell"|"collection view cell"|"cell"|"cells")
+                echo "*Cell.swift *TableViewCell.swift *CollectionViewCell.swift"
+                ;;
+            "extension"|"extensions")
+                echo "*+*.swift *Extension*.swift"
+                ;;
+            "view modifier"|"viewmodifier"|"swiftui modifier"|"modifier")
+                echo "*Modifier.swift *ViewModifier.swift"
+                ;;
+            "error handling"|"error"|"errors")
+                echo "*Error.swift *ErrorHandler.swift *Result.swift *Failure.swift"
                 ;;
             *)
                 echo ""
@@ -476,54 +464,7 @@ get_dir_patterns() {
     else
         # Swift/iOS directory patterns
         case "$pattern" in
-            "api endpoint"|"api"|"endpoint")
-                echo "controllers routes api services networking"
-                ;;
-            "background job"|"job"|"queue")
-                echo "jobs workers tasks operations background"
-                ;;
-            "file upload"|"upload"|"file storage")
-                echo "uploads storage media files documents attachments"
-                ;;
-            "database query"|"database"|"query")
-                echo "models repositories queries stores database entities persistence data"
-                ;;
-            "authentication"|"auth"|"login")
-                echo "auth authentication session security credentials login"
-                ;;
-            "swiftui view"|"view")
-                echo "Views Screens Pages UI Components"
-                ;;
-            "view controller"|"viewcontroller")
-                echo "ViewControllers Controllers UI Views"
-                ;;
-            "networking"|"network")
-                echo "Networking Network Services API Client HTTP"
-                ;;
-            "view model"|"viewmodel"|"mvvm")
-                echo "ViewModels ViewModel MVVM Presentation"
-                ;;
-            "coordinator"|"navigation coordinator")
-                echo "Coordinators Navigation Flow Routing"
-                ;;
-            "core data"|"coredata"|"persistence"|"data persistence")
-                echo "CoreData Persistence Models Data Storage Database"
-                ;;
-            "dependency injection"|"di"|"injection")
-                echo "DI DependencyInjection Dependencies Injection Factory Container"
-                ;;
-            "table view cell"|"collection view cell"|"cell"|"cells")
-                echo "Cells TableViewCells CollectionViewCells Views/Cells UI/Cells"
-                ;;
-            "extension"|"extensions")
-                echo "Extensions Utils Utilities Helpers Categories"
-                ;;
-            "view modifier"|"viewmodifier"|"swiftui modifier"|"modifier")
-                echo "Modifiers ViewModifiers Extensions/ViewModifiers Views/Modifiers"
-                ;;
-            "error handling"|"error"|"errors")
-                echo "Errors ErrorHandling Models/Errors Domain/Errors"
-                ;;
+            # Tier 1 - Core Patterns (14)
             "protocol"|"delegate"|"protocol delegate")
                 echo "Protocols Delegates Protocol/Delegates Domain/Protocols"
                 ;;
@@ -533,30 +474,41 @@ get_dir_patterns() {
             "async"|"await"|"async await"|"concurrency")
                 echo "Async Concurrency Tasks Actors Domain/Async"
                 ;;
-            "repository"|"repo")
-                echo "Repositories Data/Repositories DataLayer Domain/Repositories Data"
+            "repository"|"repo"|"database"|"query"|"database query")
+                echo "Repositories Data/Repositories DataLayer Domain/Repositories Data models queries stores database entities persistence"
                 ;;
-            "service"|"service layer"|"manager")
-                echo "Services Managers Business Domain/Services Application"
+            "service"|"service layer"|"manager"|"networking"|"network")
+                echo "Services Managers Business Domain/Services Application Networking Network API Client HTTP"
                 ;;
             "usecase"|"use case"|"interactor")
                 echo "UseCases Domain/UseCases Interactors Domain/Interactors Application/UseCases"
                 ;;
+            "router"|"route"|"routing"|"api endpoint"|"api"|"endpoint")
+                echo "Routers Routing Navigation API/Routers Networking/Routers controllers routes api services networking"
+                ;;
+            "factory"|"builder"|"dependency injection"|"di"|"injection")
+                echo "Factories Builders DI/Factories Domain/Factories Utilities/Factories DI DependencyInjection Dependencies Injection Factory Container"
+                ;;
+            "viewmodel"|"view model"|"mvvm"|"observable"|"observableobject"|"observable object")
+                echo "ViewModels ViewModel MVVM Presentation Store State"
+                ;;
+            "view controller"|"viewcontroller")
+                echo "ViewControllers Controllers UI Views"
+                ;;
+            "swiftui view"|"view")
+                echo "Views Screens Pages UI Components"
+                ;;
+            "coordinator"|"navigation coordinator")
+                echo "Coordinators Navigation Flow Routing"
+                ;;
+            "core data"|"coredata"|"persistence"|"data persistence")
+                echo "CoreData Persistence Models Data Storage Database"
+                ;;
             "layout"|"collection view layout"|"uicollectionviewlayout")
                 echo "Layouts CustomLayouts UI/Layouts Views/Layouts CollectionViewLayouts"
                 ;;
-            "factory"|"builder")
-                echo "Factories Builders DI/Factories Domain/Factories Utilities/Factories"
-                ;;
-            "animation"|"animator"|"transition")
-                echo "Animations Transitions Animators UI/Animations Views/Animations"
-                ;;
-            "router"|"route"|"routing")
-                echo "Routers Routing Navigation API/Routers Networking/Routers"
-                ;;
-            "observable"|"observableobject"|"observable object")
-                echo "ViewModels ViewModel Store Presentation State"
-                ;;
+
+            # Tier 2 - Supplementary Patterns (15)
             "reducer"|"tca reducer"|"state reducer")
                 echo "Reducers Store Features State TCA"
                 ;;
@@ -577,6 +529,30 @@ get_dir_patterns() {
                 ;;
             "localization"|"i18n"|"l10n")
                 echo "Localization Resources Locale *.lproj"
+                ;;
+            "animation"|"animator"|"transition")
+                echo "Animations Transitions Animators UI/Animations Views/Animations"
+                ;;
+            "authentication"|"auth"|"login")
+                echo "auth authentication session security credentials login"
+                ;;
+            "background job"|"job"|"queue")
+                echo "jobs workers tasks operations background"
+                ;;
+            "file upload"|"upload"|"file storage")
+                echo "uploads storage media files documents attachments"
+                ;;
+            "table view cell"|"collection view cell"|"cell"|"cells")
+                echo "Cells TableViewCells CollectionViewCells Views/Cells UI/Cells"
+                ;;
+            "extension"|"extensions")
+                echo "Extensions Utils Utilities Helpers Categories"
+                ;;
+            "view modifier"|"viewmodifier"|"swiftui modifier"|"modifier")
+                echo "Modifiers ViewModifiers Extensions/ViewModifiers Views/Modifiers"
+                ;;
+            "error handling"|"error"|"errors")
+                echo "Errors ErrorHandling Models/Errors Domain/Errors"
                 ;;
             *)
                 echo ""
@@ -649,20 +625,23 @@ main() {
         else
             echo "Supported patterns (Swift/iOS):" >&2
             echo "" >&2
-            echo "Core patterns (Tier 1):" >&2
+            echo "Tier 1 - Core patterns (14):" >&2
             echo "  - protocol / delegate / protocol delegate" >&2
             echo "  - combine / publisher / combine publisher (⚠️ needs content analysis)" >&2
             echo "  - async / await / async await / concurrency (⚠️ needs content analysis)" >&2
-            echo "  - repository / repo" >&2
-            echo "  - service / service layer / manager" >&2
+            echo "  - repository / repo / database / query" >&2
+            echo "  - service / service layer / manager / networking / network" >&2
             echo "  - usecase / use case / interactor" >&2
+            echo "  - router / route / routing / api endpoint / api" >&2
+            echo "  - factory / builder / dependency injection / di" >&2
+            echo "  - viewmodel / view model / mvvm / observable" >&2
+            echo "  - view controller / viewcontroller" >&2
+            echo "  - swiftui view / view" >&2
+            echo "  - coordinator / navigation coordinator" >&2
+            echo "  - core data / coredata / persistence" >&2
             echo "  - layout / collection view layout / uicollectionviewlayout" >&2
-            echo "  - factory / builder" >&2
-            echo "  - animation / animator / transition" >&2
-            echo "  - router / route / routing" >&2
             echo "" >&2
-            echo "Supplementary patterns (Tier 2):" >&2
-            echo "  - observable / observableobject / observable object" >&2
+            echo "Tier 2 - Supplementary patterns (15):" >&2
             echo "  - reducer / tca reducer / state reducer" >&2
             echo "  - environment / configuration / config" >&2
             echo "  - cache / caching" >&2
@@ -670,23 +649,13 @@ main() {
             echo "  - mock / stub / fake / test double" >&2
             echo "  - middleware / interceptor" >&2
             echo "  - localization / i18n / l10n" >&2
-            echo "" >&2
-            echo "Architecture patterns:" >&2
-            echo "  - api endpoint / api / endpoint" >&2
+            echo "  - animation / animator / transition" >&2
+            echo "  - authentication / auth / login" >&2
             echo "  - background job / job / queue" >&2
             echo "  - file upload / upload / file storage" >&2
-            echo "  - database query / database / query" >&2
-            echo "  - authentication / auth / login" >&2
-            echo "  - swiftui view / view" >&2
-            echo "  - view controller / viewcontroller" >&2
-            echo "  - networking / network" >&2
-            echo "  - view model / viewmodel / mvvm" >&2
-            echo "  - coordinator / navigation coordinator" >&2
-            echo "  - core data / coredata / persistence / data persistence" >&2
-            echo "  - dependency injection / di / injection" >&2
-            echo "  - table view cell / collection view cell / cell / cells" >&2
+            echo "  - table view cell / collection view cell / cell" >&2
             echo "  - extension / extensions" >&2
-            echo "  - view modifier / viewmodifier / swiftui modifier / modifier" >&2
+            echo "  - view modifier / viewmodifier / swiftui modifier" >&2
             echo "  - error handling / error / errors" >&2
         fi
         exit 1
