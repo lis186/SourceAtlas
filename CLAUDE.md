@@ -61,13 +61,18 @@ sourceatlas2/
 ├── USAGE_GUIDE.md          # 詳細使用說明
 │
 ├── .claude/commands/       # ⭐ Claude Code 斜線命令
-│   └── atlas-overview.md   # ✅ /atlas-overview (Stage 0)
+│   ├── atlas-overview.md   # ✅ /atlas-overview (Stage 0)
+│   └── atlas-pattern.md    # ✅ /atlas-pattern (Pattern Learning)
 │
 ├── scripts/atlas/          # ⭐ 輔助腳本
 │   ├── detect-project-enhanced.sh  # ✅ 規模感知偵測
 │   ├── scan-entropy.sh             # ✅ 高熵檔案掃描
+│   ├── find-patterns.sh            # ✅ 模式檢測
 │   ├── benchmark.sh                # ✅ 效能測試
 │   └── compare-formats.sh          # ✅ 格式比較
+│
+├── install-global.sh       # ⭐ 全局安裝腳本
+├── GLOBAL_INSTALLATION.md  # ⭐ 全局安裝指南
 │
 ├── .dev-notes/             # ⭐ 開發紀錄（關鍵學習）
 │   ├── v1-implementation-log.md    # v1.0 完整紀錄
@@ -79,9 +84,35 @@ sourceatlas2/
 └── test_targets/           # 用於驗證的克隆代碼庫（已被 git 忽略）
 ```
 
-## 使用分析 Prompts
+## 安裝與使用
 
-### 何時執行分析
+### 全局安裝（推薦）⭐
+
+**一次安裝，隨處可用**：
+
+```bash
+# 從 SourceAtlas 專案根目錄執行
+./install-global.sh
+
+# 現在可以在任何專案使用
+cd ~/projects/any-project
+/atlas-overview
+/atlas-pattern "api endpoint"
+```
+
+**安裝方式**：
+- **預設（Symlink）**：自動同步更新，推薦日常使用
+- **Copy 方式**：`INSTALL_METHOD=copy ./install-global.sh`，適合需要穩定版本
+
+**管理命令**：
+- `./install-global.sh --check` - 檢查安裝狀態
+- `./install-global.sh --remove` - 解除安裝
+
+📚 **完整指南**：見 [GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
+
+### 使用分析 Prompts
+
+#### 何時執行分析
 
 在以下情況執行 SourceAtlas 分析：
 

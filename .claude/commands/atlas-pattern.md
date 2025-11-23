@@ -34,6 +34,8 @@ Help the user understand how THIS codebase implements a specific pattern by:
 Use the tested `find-patterns.sh` script to identify relevant files:
 
 ```bash
+# Try global install first, then local
+bash ~/.claude/scripts/atlas/find-patterns.sh "$ARGUMENTS" 2>/dev/null || \
 bash scripts/atlas/find-patterns.sh "$ARGUMENTS"
 ```
 

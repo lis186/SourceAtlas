@@ -28,7 +28,27 @@
 
 ## 📖 快速開始
 
-### 5 分鐘入門（新手推薦）⭐
+### 全局安裝（推薦）⭐⭐⭐
+
+**一次安裝，隨處使用！** 讓 SourceAtlas 命令在任何專案都可用：
+
+```bash
+# 1. 克隆 SourceAtlas
+git clone https://github.com/your-org/sourceatlas2.git ~/dev/sourceatlas2
+
+# 2. 安裝全局命令
+cd ~/dev/sourceatlas2
+./install-global.sh
+
+# 3. 在任何專案中使用！
+cd ~/projects/my-project
+/atlas-overview
+/atlas-pattern "api endpoint"
+```
+
+📚 **詳細說明**: [GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
+
+### 5 分鐘入門（新手推薦）
 
 **最簡單的方式**：使用 `/atlas-overview` 命令（Claude Code）
 
