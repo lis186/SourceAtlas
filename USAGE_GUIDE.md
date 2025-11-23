@@ -32,6 +32,550 @@ cd /path/to/target/project
 
 ---
 
+## 🎨 使用 `/atlas-pattern` 學習設計模式
+
+### 什麼是 `/atlas-pattern`？
+
+`/atlas-pattern` 是 SourceAtlas v2.5 的核心命令，幫助開發者**學習當前代碼庫如何實作特定模式**，而非從零開始設計。
+
+**核心價值**: 確保一致性，避免重複造輪子，加速新功能開發。
+
+### 快速開始
+
+```bash
+/atlas-pattern "api endpoint"
+/atlas-pattern "file upload"
+/atlas-pattern "background job"
+```
+
+**執行時間**: 5-10 分鐘
+**掃描檔案**: <5% (遵循 SourceAtlas 資訊理論原則)
+
+### 支援的模式
+
+#### 核心模式
+- **api endpoint** / "api" / "endpoint" - REST/GraphQL API 路由、控制器
+- **background job** / "job" / "queue" - 異步任務處理、佇列、背景任務
+- **file upload** / "upload" / "file storage" - 檔案上傳、儲存、多媒體處理
+- **database query** / "database" / "query" - 資料庫存取、ORM 模式
+- **authentication** / "auth" / "login" - 認證流程、會話管理
+
+#### iOS/Swift 模式
+- **swiftui view** / "view" - SwiftUI 視圖組合模式
+- **view controller** / "viewcontroller" - UIKit 視圖控制器模式
+- **networking** / "network" - 網絡層、HTTP 客戶端
+- **view model** / "viewmodel" / "mvvm" - MVVM 模式、ObservableObject
+- **coordinator** / "navigation coordinator" - Coordinator 導航模式、Flow 流程
+- **core data** / "coredata" / "persistence" - Core Data 持久化、ManagedObject
+- **dependency injection** / "di" / "injection" - 依賴注入、Factory、Container
+- **table view cell** / "collection view cell" / "cell" - TableView/CollectionView Cell 組件
+- **extension** / "extensions" - Swift Extensions、類型擴展
+- **view modifier** / "viewmodifier" / "swiftui modifier" - SwiftUI ViewModifier、樣式組件
+- **error handling** / "error" / "errors" - 錯誤處理、Error 類型
+
+#### TypeScript/React 模式
+- **react component** / "component" - React 組件模式（.tsx）
+- **react hook** / "hook" / "hooks" - 自定義 React Hooks（use*.ts）
+- **state management** / "store" / "state" - 狀態管理（Context、Redux、Zustand）
+- **form handling** / "form" - 表單處理、驗證模式
+
+#### Next.js 特有模式
+- **nextjs middleware** / "middleware" - Next.js 中間件（middleware.ts）
+- **nextjs layout** / "layout" - App Router 佈局組件（layout.tsx）
+- **nextjs page** / "page" - App Router 頁面組件（page.tsx）
+- **nextjs loading** / "loading" - 載入狀態組件（loading.tsx）
+- **nextjs error** / "error boundary" / "error" - 錯誤邊界組件（error.tsx）
+
+**注意**: 腳本會自動檢測專案類型（TypeScript vs Swift），並套用對應的模式。
+
+### 輸出格式
+
+每個模式分析包含：
+
+1. **最佳範例檔案** (2-3 個，含 file:line 引用)
+2. **標準流程** (逐步執行路徑)
+3. **關鍵慣例** (命名、結構、組織)
+4. **測試模式** (如何測試此模式)
+5. **常見陷阱** (需要避免的錯誤)
+6. **實作指南** (具體步驟)
+
+### 使用範例
+
+**場景 1: 添加新的 API 端點**
+
+```bash
+# 使用者問題
+你: 我需要添加一個新的 API 端點來處理用戶註冊
+
+# 執行命令
+你: /atlas-pattern "api endpoint"
+
+# AI 回應範例
+AI: # Pattern: REST API Endpoints
+
+## Overview
+此代碼庫使用基於控制器的架構，路由定義在 `routes/` 目錄。
+
+## Best Examples
+
+### 1. app/controllers/UsersController.swift:23
+**Purpose**: 標準 CRUD 端點模式
+**Key Code**:
+```swift
+func create(req: Request) async throws -> UserResponse {
+    let input = try req.content.decode(CreateUserInput.self)
+    let user = try await userService.create(input)
+    return UserResponse(user)
+}
+```
+
+### 2. app/routes.swift:15
+**Purpose**: 路由註冊模式
+...
+
+## Key Conventions
+- 所有控制器繼承 `BaseController`
+- 使用 Codable 進行請求/回應序列化
+- Service 層處理業務邏輯
+...
+
+## Step-by-Step Implementation Guide
+1. 創建 `RegistrationController.swift` 在 `app/controllers/`
+2. 定義 `create` 方法，遵循 `UsersController` 模式
+3. 在 `routes.swift` 註冊路由
+...
+```
+
+**場景 2: 學習檔案上傳模式**
+
+```bash
+你: /atlas-pattern "file upload"
+
+AI: # Pattern: File Upload & Storage
+
+## Overview
+此專案使用多媒體協調器模式，支援多種來源（本地、Tenor GIF、Stock Photos）。
+
+## Best Examples
+
+### 1. Media/TenorMedia.swift:45
+**Purpose**: 外部媒體整合模式
+...
+
+### 2. Media/AztecMediaPickingCoordinator.swift:120
+**Purpose**: 媒體選擇流程協調
+...
+
+## Key Conventions
+- 所有媒體處理在 `ViewRelated/Media/` 目錄
+- 使用 Coordinator 模式管理選擇流程
+- 分離媒體模型、API 和視圖層
+...
+```
+
+**場景 3: Next.js App Router API 路由**
+
+```bash
+你: 我需要在 Next.js 專案中添加一個 API 端點來處理用戶註冊
+
+# 執行命令
+你: /atlas-pattern "api endpoint"
+
+AI: # Pattern: Next.js App Router API Routes
+
+## Overview
+此專案使用 Next.js 13+ App Router，API 路由定義在 `app/api/` 目錄。
+每個端點使用 `route.ts` 檔案，支援動態路由和請求處理。
+
+## Best Examples
+
+### 1. app/api/users/route.ts:10
+**Purpose**: REST API 端點標準模式
+**Key Code**:
+```typescript
+import { NextRequest, NextResponse } from 'next/server'
+import { createUser } from '@/lib/db/users'
+
+export async function POST(request: NextRequest) {
+  const body = await request.json()
+  const user = await createUser(body)
+  return NextResponse.json(user, { status: 201 })
+}
+```
+
+### 2. app/api/users/[userId]/route.ts:8
+**Purpose**: 動態路由參數處理
+**Key Code**:
+```typescript
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { userId: string } }
+) {
+  const user = await getUserById(params.userId)
+  if (!user) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+  return NextResponse.json(user)
+}
+```
+
+## Key Conventions
+- 所有 API 路由在 `app/api/` 目錄
+- 檔案名稱必須是 `route.ts` 或 `route.tsx`
+- 使用具名導出：GET, POST, PUT, DELETE, PATCH
+- 動態路由使用 `[paramName]` 語法
+- 錯誤統一返回 JSON 格式
+
+## Testing Pattern
+```typescript
+// __tests__/api/users.test.ts
+import { POST } from '@/app/api/users/route'
+
+describe('POST /api/users', () => {
+  it('should create a new user', async () => {
+    const request = new Request('http://localhost/api/users', {
+      method: 'POST',
+      body: JSON.stringify({ name: 'Test User', email: 'test@example.com' }),
+    })
+    const response = await POST(request as any)
+    expect(response.status).toBe(201)
+  })
+})
+```
+
+## Step-by-Step Implementation Guide
+1. 創建 `app/api/auth/register/route.ts`
+2. 導出 `POST` 函數處理註冊邏輯
+3. 使用 Zod 驗證輸入資料
+4. 呼叫 Prisma/資料庫創建用戶
+5. 返回 JWT token 或 session
+6. 添加錯誤處理和驗證邏輯
+```
+
+**場景 4: React Custom Hooks**
+
+```bash
+你: /atlas-pattern "react hook"
+
+AI: # Pattern: React Custom Hooks
+
+## Overview
+此專案使用自定義 Hooks 封裝可複用邏輯，所有 hooks 遵循 `use*` 命名慣例。
+
+## Best Examples
+
+### 1. lib/hooks/use-auth.ts:15
+**Purpose**: 認證狀態管理 Hook
+**Key Code**:
+```typescript
+import { useContext } from 'react'
+import { AuthContext } from '@/context/auth'
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider')
+  }
+  return context
+}
+```
+
+### 2. components/chat/chat-hooks/use-chat-handler.tsx:45
+**Purpose**: 複雜業務邏輯 Hook
+**Key Code**:
+```typescript
+export function useChatHandler() {
+  const [messages, setMessages] = useState<Message[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  const sendMessage = useCallback(async (content: string) => {
+    setIsLoading(true)
+    try {
+      const response = await api.sendMessage(content)
+      setMessages(prev => [...prev, response])
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  return { messages, isLoading, sendMessage }
+}
+```
+
+## Key Conventions
+- 所有 hooks 使用 `use` 前綴
+- 放在 `lib/hooks/` 或功能目錄下的 `hooks/` 子目錄
+- 使用 TypeScript 定義返回類型
+- 複雜 hooks 使用 `useCallback`、`useMemo` 優化性能
+- 必要時拋出錯誤（如未在 Provider 內使用）
+
+## Common Pitfalls
+- ❌ 忘記添加依賴陣列導致無限循環
+- ❌ 在條件語句中呼叫 hooks
+- ❌ 未定義 TypeScript 類型
+- ✅ 使用 ESLint react-hooks 規則檢查
+```
+
+**場景 5: iOS MVVM 架構學習 (Swiftfin)**
+
+```bash
+你: /atlas-pattern "view model"
+
+AI: # Pattern: MVVM Architecture - View Models
+
+## Overview
+此專案使用 MVVM 架構，包含 10 個 ViewModels 管理業務邏輯和狀態。所有 ViewModels 遵循 `*ViewModel.swift` 命名慣例，並使用 SwiftUI 的 `ObservableObject` 協議。
+
+## Best Examples
+
+### 1. Shared/ViewModels/UserSignInViewModel.swift:25
+**Purpose**: 使用者登入流程管理
+**Key Code**:
+```swift
+import SwiftUI
+import Combine
+
+class UserSignInViewModel: ObservableObject {
+    @Published var username: String = ""
+    @Published var password: String = ""
+    @Published var isLoading: Bool = false
+    @Published var errorMessage: String?
+
+    private let authService: AuthService
+    private var cancellables = Set<AnyCancellable>()
+
+    func signIn() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            try await authService.authenticate(username: username, password: password)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+```
+
+### 2. Shared/ViewModels/SettingsViewModel.swift:15
+**Purpose**: 設定頁面狀態管理
+**Key Code**:
+```swift
+class SettingsViewModel: ObservableObject {
+    @Published var theme: Theme = .system
+    @Published var notifications: Bool = true
+
+    func saveSettings() {
+        UserDefaults.standard.set(theme.rawValue, forKey: "theme")
+        UserDefaults.standard.set(notifications, forKey: "notifications")
+    }
+}
+```
+
+### 3. Shared/ViewModels/ServerConnectionViewModel.swift:40
+**Purpose**: 網路連線狀態管理
+**重要模式**: 使用 `async/await` 處理非同步操作，`@Published` 屬性自動觸發 UI 更新
+
+## Key Conventions
+- 所有 ViewModels 繼承自 `ObservableObject`
+- 使用 `@Published` 包裝需要觸發 UI 更新的屬性
+- ViewModels 放在 `Shared/ViewModels/` 目錄統一管理
+- 使用 `async/await` 處理非同步操作（取代 Combine publishers）
+- 依賴注入通過初始化器傳入（如 `AuthService`）
+
+## Common Pitfalls
+- ❌ 在 ViewModel 中直接操作 UI (應透過 `@Published` 屬性)
+- ❌ 忘記標記 class 為 `ObservableObject`
+- ❌ 在非 main thread 更新 `@Published` 屬性
+- ✅ 使用 `@MainActor` 確保 UI 更新在主線程
+
+## Architecture Insights
+- **架構模式**: MVVM (信心度: 0.9)
+- **狀態管理**: ObservableObject + @Published
+- **依賴注入**: Constructor injection
+- **非同步處理**: async/await (modern Swift)
+```
+
+**場景 6: iOS Coordinator 導航模式 (WordPress-iOS)**
+
+```bash
+你: /atlas-pattern "coordinator"
+
+AI: # Pattern: Coordinator Navigation Pattern
+
+## Overview
+此專案使用 Coordinator 模式管理複雜導航流程，共有 10+ Coordinators 處理不同功能模組。Coordinator 負責決定導航邏輯，View Controllers 只負責展示。
+
+## Best Examples
+
+### 1. Classes/ViewRelated/System/Coordinators/MySitesCoordinator.swift:30
+**Purpose**: My Sites 功能模組的導航管理
+**Key Code**:
+```swift
+class MySitesCoordinator {
+    private let navigationController: UINavigationController
+    private let blog: Blog
+
+    init(navigationController: UINavigationController, blog: Blog) {
+        self.navigationController = navigationController
+        self.blog = blog
+    }
+
+    func start() {
+        let viewController = MySitesViewController(blog: blog)
+        viewController.coordinator = self
+        navigationController.pushViewController(viewController, animated: true)
+    }
+
+    func showPostEditor() {
+        let editorCoordinator = EditorCoordinator(
+            navigationController: navigationController,
+            blog: blog
+        )
+        editorCoordinator.start()
+    }
+}
+```
+
+### 2. Classes/ViewRelated/QR Login/Coordinators/QRLoginCoordinator.swift:15
+**Purpose**: QR 碼登入多步驟流程管理
+**Key Code**:
+```swift
+class QRLoginCoordinator {
+    private let presenter: UIViewController
+
+    func start() {
+        showScanning()
+    }
+
+    private func showScanning() {
+        let scanVC = QRLoginScanningViewController()
+        scanVC.onSuccess = { [weak self] token in
+            self?.showVerification(token: token)
+        }
+        presenter.present(scanVC, animated: true)
+    }
+
+    private func showVerification(token: String) {
+        let verifyVC = QRLoginVerifyViewController(token: token)
+        // ... 驗證完成後導航
+    }
+}
+```
+
+## Key Conventions
+- Coordinators 放在各功能模組的 `Coordinators/` 目錄
+- 使用 `start()` 方法啟動流程
+- 透過 closure 或 delegate 回傳結果給父 Coordinator
+- View Controllers 持有弱引用到 Coordinator (`weak var coordinator`)
+- 使用 `UINavigationController` 或 `UIViewController.present` 執行導航
+
+## Common Pitfalls
+- ❌ View Controller 直接執行導航 (應委託給 Coordinator)
+- ❌ Coordinator 強引用 View Controller 造成循環引用
+- ❌ 忘記在流程結束時清理 Coordinator
+- ✅ 使用 `weak self` 避免循環引用
+
+## Architecture Insights
+- **導航模式**: Coordinator Pattern (信心度: 0.95)
+- **解耦程度**: 高 (View Controllers 不知道導航邏輯)
+- **測試友好**: 可以獨立測試導航流程
+- **適用場景**: 複雜多步驟流程 (登入、設定、編輯器)
+```
+
+### 測試結果
+
+#### iOS/Swift 專案
+
+已在 6 個大型 iOS 專案測試：
+
+| 專案 | 規模 | 執行時間 | 準確率 | 結果 |
+|------|------|---------|--------|------|
+| **WordPress-iOS** | 3,639 檔案 (混合) | 15-20s | 95% | ✅ 18/19 標準符合 |
+| **Swiftfin** | 829 檔案 (純 SwiftUI) | 2s | 100% | ✅ 8/9 標準符合 |
+| **Telegram-iOS** | 9,231 檔案 (遺留) | 1.8-5.7s | 90%+ | ✅ 8/8 標準符合 |
+| **Signal-iOS** | 2,514 檔案 | 1.9-5.9s | 97% | ✅ 安全應用模式 |
+| **Calculator** | 3 檔案 (極小) | 0.078s | 100% | ✅ 性能基準 |
+| **firefox-ios** | 2,767 檔案 | 2.1-4.8s | 90% | ✅ 瀏覽器架構 |
+
+#### TypeScript/React 專案
+
+已在 4 個 TypeScript 專案測試：
+
+| 專案 | 規模 | 執行時間 | 準確率 | 結果 |
+|------|------|---------|--------|------|
+| **excalidraw** | 540 檔案 (Monorepo) | 0.20-8.19s | 100% | ✅ 有 CLAUDE.md，AI Level 3 |
+| **shadcn-ui** | 2,663 檔案 (Turborepo) | 0.29s | 100% | ✅ UI 組件庫 |
+| **zustand** | 32 檔案 (小型庫) | 0.10-0.50s | 100% | ✅ 狀態管理庫 |
+| **react-email** | 636 檔案 (Monorepo) | 0.15s | 100% | ✅ Email 組件庫 |
+
+#### Next.js 專案
+
+已在 4 個 Next.js 應用測試：
+
+| 專案 | 規模 | 執行時間 | 準確率 | 結果 |
+|------|------|---------|--------|------|
+| **taxonomy** | 125 檔案 (App Router) | 0.12-2.0s | 100% | ✅ Blog/SaaS 模板 |
+| **chatbot-ui** | 256 檔案 (App Router) | 0.10-0.26s | 100% | ✅ AI 聊天介面 |
+| **dub** | 3,136 檔案 (Monorepo) | 0.60-30.1s | 100% | ✅ 企業級 SaaS |
+| **next-learn** | 131 檔案 (官方) | - | - | ✅ Vercel 官方教學 |
+
+**總體成功率**:
+- iOS/Swift: 95%+ (6/6 專案)
+- TypeScript/React: 100% (4/4 專案)
+- Next.js: 100% (4/4 專案)
+
+### 何時使用 `/atlas-pattern`
+
+✅ **適合的場景**:
+1. **開發新功能** - 確保遵循現有模式
+2. **新人入職** - 快速學習代碼庫慣例
+3. **代碼審查** - 驗證是否符合團隊標準
+4. **重構** - 理解現有實作再改進
+5. **技術決策** - 了解專案已有的解決方案
+
+❌ **不適合的場景**:
+1. **首次接觸代碼庫** - 先用 `/atlas-overview` 建立全局理解
+2. **尋找特定 Bug** - 用傳統 debug 工具
+3. **需要完整文檔** - 這只是快速模式學習
+
+### 最佳實踐
+
+1. **先全局後局部** - 先執行 `/atlas-overview`，再用 `/atlas-pattern` 深入
+2. **驗證範例** - 實際閱讀推薦的檔案，確認理解
+3. **遵循慣例** - 嚴格遵循發現的模式，維持一致性
+4. **測試驅動** - 參考測試模式，先寫測試再實作
+5. **記錄學習** - 記錄發現的模式，建立團隊知識庫
+
+### 進階用法
+
+#### 組合使用
+
+```bash
+# 步驟 1: 全局理解
+/atlas-overview
+
+# 步驟 2: 學習相關模式
+/atlas-pattern "api endpoint"
+/atlas-pattern "authentication"
+
+# 步驟 3: 實作新功能（遵循學到的模式）
+```
+
+#### 自定義模式（未來功能）
+
+如果需要的模式不在支援清單中，可以提供關鍵字：
+
+```bash
+# 通用搜尋
+/atlas-pattern "websocket connection"
+/atlas-pattern "payment processing"
+```
+
+AI 會嘗試找到最相關的檔案並提取模式。
+
+---
+
 ## 🎯 何時使用 SourceAtlas？
 
 ### ✅ 適合的場景
