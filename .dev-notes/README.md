@@ -11,7 +11,8 @@
 
 ## 最近更新
 
-- **2025-11-23**: iOS Patterns 整合 + Objective-C 支援完成
+- **2025-11-23**: **.dev-notes/ 整理重構完成** - 分層架構建立 + AI 管理規則編碼
+- **2025-11-23**: **Patterns 系統全面優化** - iOS 整合 (34→29) + Objective-C 支援 + TypeScript 擴充 (13→22)
 - **2025-11-22**: Atlas Pattern Command 實作完成
 - **2025-11-20**: TOON vs YAML 格式決策
 
