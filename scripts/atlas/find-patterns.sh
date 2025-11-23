@@ -218,93 +218,93 @@ get_file_patterns() {
         case "$pattern" in
             # Tier 1 - Core Patterns (14)
             "protocol"|"delegate"|"protocol delegate")
-                echo "*Delegate.swift *DataSource.swift *Protocol.swift"
+                echo "*Delegate.swift *Delegate.m *Delegate.h *DataSource.swift *DataSource.m *DataSource.h *Protocol.swift *Protocol.m *Protocol.h"
                 ;;
             "combine"|"publisher"|"combine publisher")
-                echo "*Publisher.swift *Subject.swift *Subscription.swift *Combine*.swift"
+                echo "*Publisher.swift *Publisher.m *Publisher.h *Subject.swift *Subject.m *Subject.h *Subscription.swift *Subscription.m *Subscription.h *Combine*.swift *Combine*.m *Combine*.h"
                 ;;
             "async"|"await"|"async await"|"concurrency")
-                echo "*Async*.swift *Task*.swift *Actor*.swift"
+                echo "*Async*.swift *Async*.m *Async*.h *Task*.swift *Task*.m *Task*.h *Actor*.swift *Actor*.m *Actor*.h"
                 ;;
             "repository"|"repo"|"database"|"query"|"database query")
-                echo "*Repository.swift *DAO.swift *Store.swift *DataSource.swift *Query.swift *Model.swift *Database*.swift *Entity*.swift"
+                echo "*Repository.swift *Repository.m *Repository.h *DAO.swift *DAO.m *DAO.h *Store.swift *Store.m *Store.h *DataSource.swift *DataSource.m *DataSource.h *Query.swift *Query.m *Query.h *Model.swift *Model.m *Model.h *Database*.swift *Database*.m *Database*.h *Entity*.swift *Entity*.m *Entity*.h"
                 ;;
             "service"|"service layer"|"manager"|"networking"|"network")
-                echo "*Service.swift *Manager.swift *Provider.swift *Client.swift *Network*.swift *API*.swift *Request*.swift *HTTPClient*.swift"
+                echo "*Service.swift *Service.m *Service.h *Manager.swift *Manager.m *Manager.h *Provider.swift *Provider.m *Provider.h *Client.swift *Client.m *Client.h *Network*.swift *Network*.m *Network*.h *API*.swift *API*.m *API*.h *Request*.swift *Request*.m *Request*.h *HTTPClient*.swift *HTTPClient*.m *HTTPClient*.h"
                 ;;
             "usecase"|"use case"|"interactor")
-                echo "*UseCase.swift *Interactor.swift *Command.swift"
+                echo "*UseCase.swift *UseCase.m *UseCase.h *Interactor.swift *Interactor.m *Interactor.h *Command.swift *Command.m *Command.h"
                 ;;
             "router"|"route"|"routing"|"api endpoint"|"api"|"endpoint")
-                echo "*Router.swift *Route.swift *URLRouter.swift *Endpoint.swift *Controller.swift *API.swift routes.*"
+                echo "*Router.swift *Router.m *Router.h *Route.swift *Route.m *Route.h *URLRouter.swift *URLRouter.m *URLRouter.h *Endpoint.swift *Endpoint.m *Endpoint.h *Controller.swift *Controller.m *Controller.h *API.swift *API.m *API.h routes.*"
                 ;;
             "factory"|"builder"|"dependency injection"|"di"|"injection")
-                echo "*Factory.swift *Builder.swift *Creator.swift *DIContainer.swift *Injector.swift *Container.swift *Dependencies.swift *DI*.swift *Assembly.swift"
+                echo "*Factory.swift *Factory.m *Factory.h *Builder.swift *Builder.m *Builder.h *Creator.swift *Creator.m *Creator.h *DIContainer.swift *DIContainer.m *DIContainer.h *Injector.swift *Injector.m *Injector.h *Container.swift *Container.m *Container.h *Dependencies.swift *Dependencies.m *Dependencies.h *DI*.swift *DI*.m *DI*.h *Assembly.swift *Assembly.m *Assembly.h"
                 ;;
             "viewmodel"|"view model"|"mvvm"|"observable"|"observableobject"|"observable object")
-                echo "*ViewModel.swift *VM.swift *Store.swift"
+                echo "*ViewModel.swift *ViewModel.m *ViewModel.h *VM.swift *VM.m *VM.h *Store.swift *Store.m *Store.h"
                 ;;
             "view controller"|"viewcontroller")
-                echo "*ViewController.swift *VC.swift *Controller.swift"
+                echo "*ViewController.swift *ViewController.m *ViewController.h *VC.swift *VC.m *VC.h *Controller.swift *Controller.m *Controller.h"
                 ;;
             "swiftui view"|"view")
                 echo "*View.swift *Screen.swift *Page.swift"
                 ;;
             "coordinator"|"navigation coordinator")
-                echo "*Coordinator.swift *Navigation*.swift *Flow*.swift"
+                echo "*Coordinator.swift *Coordinator.m *Coordinator.h *Navigation*.swift *Navigation*.m *Navigation*.h *Flow*.swift *Flow*.m *Flow*.h"
                 ;;
             "core data"|"coredata"|"persistence"|"data persistence")
-                echo "*.xcdatamodeld *+CoreDataProperties.swift *+CoreDataClass.swift *ManagedObject*.swift *CoreData*.swift"
+                echo "*.xcdatamodeld *+CoreDataProperties.swift *+CoreDataProperties.m *+CoreDataProperties.h *+CoreDataClass.swift *+CoreDataClass.m *+CoreDataClass.h *ManagedObject*.swift *ManagedObject*.m *ManagedObject*.h *CoreData*.swift *CoreData*.m *CoreData*.h"
                 ;;
             "layout"|"collection view layout"|"uicollectionviewlayout")
-                echo "*Layout.swift *FlowLayout.swift *CollectionViewLayout.swift"
+                echo "*Layout.swift *Layout.m *Layout.h *FlowLayout.swift *FlowLayout.m *FlowLayout.h *CollectionViewLayout.swift *CollectionViewLayout.m *CollectionViewLayout.h"
                 ;;
 
             # Tier 2 - Supplementary Patterns (15)
             "reducer"|"tca reducer"|"state reducer")
-                echo "*Reducer.swift *Action.swift *State.swift *Domain.swift"
+                echo "*Reducer.swift *Reducer.m *Reducer.h *Action.swift *Action.m *Action.h *State.swift *State.m *State.h *Domain.swift *Domain.m *Domain.h"
                 ;;
             "environment"|"configuration"|"config")
-                echo "*Environment.swift *Config.swift *Configuration.swift"
+                echo "*Environment.swift *Environment.m *Environment.h *Config.swift *Config.m *Config.h *Configuration.swift *Configuration.m *Configuration.h"
                 ;;
             "cache"|"caching")
-                echo "*Cache.swift *CacheManager.swift *ImageCache.swift"
+                echo "*Cache.swift *Cache.m *Cache.h *CacheManager.swift *CacheManager.m *CacheManager.h *ImageCache.swift *ImageCache.m *ImageCache.h"
                 ;;
             "theme"|"style"|"appearance")
-                echo "*Theme.swift *Style.swift *Appearance.swift"
+                echo "*Theme.swift *Theme.m *Theme.h *Style.swift *Style.m *Style.h *Appearance.swift *Appearance.m *Appearance.h"
                 ;;
             "mock"|"stub"|"fake"|"test double")
-                echo "Mock*.swift *Mock.swift *Stub.swift Fake*.swift"
+                echo "Mock*.swift Mock*.m Mock*.h *Mock.swift *Mock.m *Mock.h *Stub.swift *Stub.m *Stub.h Fake*.swift Fake*.m Fake*.h"
                 ;;
             "middleware"|"interceptor")
-                echo "*Middleware.swift *Interceptor.swift"
+                echo "*Middleware.swift *Middleware.m *Middleware.h *Interceptor.swift *Interceptor.m *Interceptor.h"
                 ;;
             "localization"|"i18n"|"l10n")
-                echo "Localizable.swift *Localization.swift *.strings"
+                echo "Localizable.swift Localizable.m Localizable.h *Localization.swift *Localization.m *Localization.h *.strings"
                 ;;
             "animation"|"animator"|"transition")
-                echo "*Animation.swift *Animator.swift *Transition.swift"
+                echo "*Animation.swift *Animation.m *Animation.h *Animator.swift *Animator.m *Animator.h *Transition.swift *Transition.m *Transition.h"
                 ;;
             "authentication"|"auth"|"login")
-                echo "*Auth*.swift *Session*.swift *Login*.swift *Credential*.swift *Token*.swift *Security*.swift"
+                echo "*Auth*.swift *Auth*.m *Auth*.h *Session*.swift *Session*.m *Session*.h *Login*.swift *Login*.m *Login*.h *Credential*.swift *Credential*.m *Credential*.h *Token*.swift *Token*.m *Token*.h *Security*.swift *Security*.m *Security*.h"
                 ;;
             "background job"|"job"|"queue")
-                echo "*Job.swift *Worker.swift *Task.swift *Queue*.swift *Operation*.swift *Async*.swift"
+                echo "*Job.swift *Job.m *Job.h *Worker.swift *Worker.m *Worker.h *Task.swift *Task.m *Task.h *Queue*.swift *Queue*.m *Queue*.h *Operation*.swift *Operation*.m *Operation*.h *Async*.swift *Async*.m *Async*.h"
                 ;;
             "file upload"|"upload"|"file storage")
-                echo "*Upload*.swift *Storage*.swift *File*.swift *Media*.swift *Image*.swift *Attachment*.swift"
+                echo "*Upload*.swift *Upload*.m *Upload*.h *Storage*.swift *Storage*.m *Storage*.h *File*.swift *File*.m *File*.h *Media*.swift *Media*.m *Media*.h *Image*.swift *Image*.m *Image*.h *Attachment*.swift *Attachment*.m *Attachment*.h"
                 ;;
             "table view cell"|"collection view cell"|"cell"|"cells")
-                echo "*Cell.swift *TableViewCell.swift *CollectionViewCell.swift"
+                echo "*Cell.swift *Cell.m *Cell.h *TableViewCell.swift *TableViewCell.m *TableViewCell.h *CollectionViewCell.swift *CollectionViewCell.m *CollectionViewCell.h"
                 ;;
             "extension"|"extensions")
-                echo "*+*.swift *Extension*.swift"
+                echo "*+*.swift *+*.m *+*.h *Extension*.swift *Extension*.m *Extension*.h"
                 ;;
             "view modifier"|"viewmodifier"|"swiftui modifier"|"modifier")
                 echo "*Modifier.swift *ViewModifier.swift"
                 ;;
             "error handling"|"error"|"errors")
-                echo "*Error.swift *ErrorHandler.swift *Result.swift *Failure.swift"
+                echo "*Error.swift *Error.m *Error.h *ErrorHandler.swift *ErrorHandler.m *ErrorHandler.h *Result.swift *Result.m *Result.h *Failure.swift *Failure.m *Failure.h"
                 ;;
             *)
                 echo ""
