@@ -240,6 +240,21 @@ get_file_patterns() {
             "error handling"|"error"|"errors")
                 echo "*Error.swift *ErrorHandler.swift *Result.swift *Failure.swift"
                 ;;
+            "protocol"|"delegate"|"protocol delegate")
+                echo "*Delegate.swift *DataSource.swift *Protocol.swift"
+                ;;
+            "combine"|"publisher"|"combine publisher")
+                echo "*Publisher.swift *Subject.swift *Subscription.swift *Combine*.swift"
+                ;;
+            "async"|"await"|"async await"|"concurrency")
+                echo "*Async*.swift *Task*.swift *Actor*.swift"
+                ;;
+            "repository"|"repo")
+                echo "*Repository.swift *DAO.swift *Store.swift *DataSource.swift"
+                ;;
+            "service"|"service layer"|"manager")
+                echo "*Service.swift *Manager.swift *Provider.swift"
+                ;;
             *)
                 echo ""
                 ;;
@@ -422,6 +437,21 @@ get_dir_patterns() {
             "error handling"|"error"|"errors")
                 echo "Errors ErrorHandling Models/Errors Domain/Errors"
                 ;;
+            "protocol"|"delegate"|"protocol delegate")
+                echo "Protocols Delegates Protocol/Delegates Domain/Protocols"
+                ;;
+            "combine"|"publisher"|"combine publisher")
+                echo "Publishers Reactive Combine Streams Domain/Publishers"
+                ;;
+            "async"|"await"|"async await"|"concurrency")
+                echo "Async Concurrency Tasks Actors Domain/Async"
+                ;;
+            "repository"|"repo")
+                echo "Repositories Data/Repositories DataLayer Domain/Repositories Data"
+                ;;
+            "service"|"service layer"|"manager")
+                echo "Services Managers Business Domain/Services Application"
+                ;;
             *)
                 echo ""
                 ;;
@@ -485,6 +515,15 @@ main() {
             echo "  - nextjs error / error boundary / error" >&2
         else
             echo "Supported patterns (Swift/iOS):" >&2
+            echo "" >&2
+            echo "Core patterns:" >&2
+            echo "  - protocol / delegate / protocol delegate" >&2
+            echo "  - combine / publisher / combine publisher" >&2
+            echo "  - async / await / async await / concurrency" >&2
+            echo "  - repository / repo" >&2
+            echo "  - service / service layer / manager" >&2
+            echo "" >&2
+            echo "Architecture patterns:" >&2
             echo "  - api endpoint / api / endpoint" >&2
             echo "  - background job / job / queue" >&2
             echo "  - file upload / upload / file storage" >&2
