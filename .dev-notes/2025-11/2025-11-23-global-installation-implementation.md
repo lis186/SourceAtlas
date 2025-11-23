@@ -239,6 +239,19 @@ cd ~/projects/any-project
 
 **Solution**: Install directly to `~/.claude/commands/`, making commands `/atlas-overview` as intended.
 
+### Challenge 4: ANSI Color Code Display
+
+**Problem**: Color codes displayed as raw escape sequences (`\033[0;34m`) instead of colored text.
+
+**Solution**: Added `-e` flag to `echo` commands that contain color variables:
+```bash
+# Before (shows escape codes)
+echo "  ${BLUE}/atlas-overview${NC} [directory]"
+
+# After (shows colors)
+echo -e "  ${BLUE}/atlas-overview${NC} [directory]"
+```
+
 ---
 
 ## Impact
