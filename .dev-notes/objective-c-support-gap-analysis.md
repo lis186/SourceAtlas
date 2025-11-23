@@ -230,8 +230,9 @@ ios_file_patterns() {
 
 ### 6.1 測試專案
 
-- ✅ **wikipedia-ios** (18% Objective-C) - 主要測試專案
-- ✅ **Signal-iOS** (3% Objective-C) - 驗證專案
+- ✅ **nineyiappshop** (55% Objective-C) - 重度混合測試專案 ⭐⭐⭐
+- ✅ **wikipedia-ios** (18% Objective-C) - 中度混合測試專案
+- ✅ **Signal-iOS** (3% Objective-C) - 輕度混合驗證專案
 
 ### 6.2 測試案例
 
