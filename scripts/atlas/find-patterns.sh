@@ -255,6 +255,21 @@ get_file_patterns() {
             "service"|"service layer"|"manager")
                 echo "*Service.swift *Manager.swift *Provider.swift"
                 ;;
+            "usecase"|"use case"|"interactor")
+                echo "*UseCase.swift *Interactor.swift *Command.swift"
+                ;;
+            "layout"|"collection view layout"|"uicollectionviewlayout")
+                echo "*Layout.swift *FlowLayout.swift *CollectionViewLayout.swift"
+                ;;
+            "factory"|"builder")
+                echo "*Factory.swift *Builder.swift *Creator.swift *DIContainer.swift"
+                ;;
+            "animation"|"animator"|"transition")
+                echo "*Animation.swift *Animator.swift *Transition.swift"
+                ;;
+            "router"|"route"|"routing")
+                echo "*Router.swift *Route.swift *URLRouter.swift *Endpoint.swift"
+                ;;
             *)
                 echo ""
                 ;;
@@ -452,6 +467,21 @@ get_dir_patterns() {
             "service"|"service layer"|"manager")
                 echo "Services Managers Business Domain/Services Application"
                 ;;
+            "usecase"|"use case"|"interactor")
+                echo "UseCases Domain/UseCases Interactors Domain/Interactors Application/UseCases"
+                ;;
+            "layout"|"collection view layout"|"uicollectionviewlayout")
+                echo "Layouts CustomLayouts UI/Layouts Views/Layouts CollectionViewLayouts"
+                ;;
+            "factory"|"builder")
+                echo "Factories Builders DI/Factories Domain/Factories Utilities/Factories"
+                ;;
+            "animation"|"animator"|"transition")
+                echo "Animations Transitions Animators UI/Animations Views/Animations"
+                ;;
+            "router"|"route"|"routing")
+                echo "Routers Routing Navigation API/Routers Networking/Routers"
+                ;;
             *)
                 echo ""
                 ;;
@@ -516,12 +546,17 @@ main() {
         else
             echo "Supported patterns (Swift/iOS):" >&2
             echo "" >&2
-            echo "Core patterns:" >&2
+            echo "Core patterns (Tier 1):" >&2
             echo "  - protocol / delegate / protocol delegate" >&2
-            echo "  - combine / publisher / combine publisher" >&2
-            echo "  - async / await / async await / concurrency" >&2
+            echo "  - combine / publisher / combine publisher (⚠️ needs content analysis)" >&2
+            echo "  - async / await / async await / concurrency (⚠️ needs content analysis)" >&2
             echo "  - repository / repo" >&2
             echo "  - service / service layer / manager" >&2
+            echo "  - usecase / use case / interactor" >&2
+            echo "  - layout / collection view layout / uicollectionviewlayout" >&2
+            echo "  - factory / builder" >&2
+            echo "  - animation / animator / transition" >&2
+            echo "  - router / route / routing" >&2
             echo "" >&2
             echo "Architecture patterns:" >&2
             echo "  - api endpoint / api / endpoint" >&2
