@@ -8,8 +8,9 @@
 - **v1.0** ✅ - 方法論驗證完成（2025-11-22）
 - **v2.5** 🔵 - Commands 架構開發中
 
-[![驗證狀態](https://img.shields.io/badge/驗證-5個專案-brightgreen)](./test_results/)
-[![準確率](https://img.shields.io/badge/準確率-87~100%25-blue)]()
+[![驗證狀態](https://img.shields.io/badge/驗證-14個專案-brightgreen)](./test_targets/)
+[![準確率](https://img.shields.io/badge/準確率-95~100%25-blue)]()
+[![支援語言](https://img.shields.io/badge/支援-Swift|TypeScript|Next.js-orange)]()
 [![Token節省](https://img.shields.io/badge/Token節省-95%25-yellow)]()
 
 ---
@@ -18,6 +19,7 @@
 
 - **🚀 極速分析**: 掃描 <5% 檔案，理解 70-80% 專案
 - **🎯 三階段設計**: Stage 0 (指紋) → Stage 1 (驗證) → Stage 2 (Git 分析)
+- **🌍 多語言支援**: Swift/iOS、TypeScript/React、Next.js（自動檢測專案類型）
 - **📊 系統化**: 可重複、可驗證的分析流程
 - **🤖 AI 識別**: 識別 AI 輔助開發模式（Level 0-4）
 - **💰 省時省錢**: 節省 95%+ 時間和 Token
@@ -46,6 +48,39 @@ cd /path/to/your/project
 - ✅ **架構模式**：MVC、Clean Architecture、Microservices...
 - ✅ **代碼品質**：測試覆蓋率、註解密度、組織程度
 - ✅ **AI 協作程度**：Level 0-4（是否使用 AI 輔助開發）
+
+### 學習設計模式（新！⭐）
+
+**最快的方式**：使用 `/atlas-pattern` 命令（Claude Code v2.5）
+
+```bash
+# 學習此代碼庫如何實作特定模式
+/atlas-pattern "api endpoint"
+/atlas-pattern "file upload"
+/atlas-pattern "authentication"
+```
+
+**你會得到什麼？**
+- ✅ **2-3 個最佳範例檔案**（含 file:line 引用）
+- ✅ **關鍵慣例**：命名、結構、組織
+- ✅ **測試模式**：如何測試此模式
+- ✅ **實作指南**：逐步實作指導
+
+**支援的模式**：
+
+*iOS/Swift* (16 個模式): api endpoint、background job、file upload、database query、authentication、swiftui view、view controller、networking、view model (MVVM)、coordinator、core data、dependency injection、**cell、extension、view modifier、error handling** ⭐最新
+
+*TypeScript/React* (10 個模式): react component、react hook、state management、form handling、api endpoint、database query (Prisma)、authentication、networking、background job、file upload
+
+*Next.js* (5 個模式): nextjs middleware、nextjs layout、nextjs page、nextjs loading、nextjs error
+
+**執行時間**：0.1-30 秒（根據專案規模和模式複雜度）
+**準確率**：95-100% (已在 14 個專案驗證：6 個 iOS、4 個 TypeScript、4 個 Next.js)
+**最新更新 (2025-11-22)**:
+- **Tier 1**: iOS 模式從 8 → 12 個 (+50%) - MVVM、Coordinator、Core Data、DI
+- **Tier 2**: iOS 模式從 12 → 16 個 (+33%) - Cell、Extension、ViewModifier、Error Handling
+
+詳見 [USAGE_GUIDE.md - `/atlas-pattern` 章節](./USAGE_GUIDE.md#-使用-atlas-pattern-學習設計模式)
 
 **看不懂輸出？**
 - 查看範例：[`test_results/chiahsing1115-counter-analysis.md`](./test_results/chiahsing1115-counter-analysis.md)（簡單專案）

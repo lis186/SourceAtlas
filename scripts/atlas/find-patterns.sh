@@ -1,0 +1,731 @@
+#!/bin/bash
+# SourceAtlas - Pattern Detection Script (Ultra-Fast Version)
+# Multi-Language Support: Swift/iOS, TypeScript/React, and Android/Kotlin
+#
+# Purpose: Identify files matching a given pattern type using filename/directory matching only
+# Philosophy: Scripts collect data quickly, AI does deep interpretation
+#
+# Ranking Algorithm (File/Dir Only - Ultra Fast):
+#   - File name match: +10 points
+#   - Directory name match: +8 points
+#   - Skips content analysis (AI can read top files later)
+#   - Skips recency check (too slow on large projects)
+#   - Skips file size analysis (minimal value, high cost)
+#
+# Trade-offs:
+#   + Blazing fast (<5s even on LARGE projects)
+#   + Simple and reliable
+#   + Good enough for pattern detection (80%+ accuracy)
+#   - Misses files with non-standard names
+#   - Can't rank by content relevance
+#
+# Usage: ./find-patterns.sh "pattern type" [project_path]
+# Example: ./find-patterns.sh "api endpoint" ./my-project
+#
+# Performance Target: <5s on ALL project sizes
+
+set -euo pipefail
+
+PATTERN="${1:-}"
+PROJECT_PATH="${2:-.}"
+
+# Detect project type (swift vs typescript vs android)
+detect_project_type() {
+    local path="$1"
+
+    # Check for Android indicators (highest priority - most specific)
+    if [ -f "$path/build.gradle" ] || [ -f "$path/build.gradle.kts" ] || \
+       [ -f "$path/settings.gradle" ] || [ -f "$path/settings.gradle.kts" ] || \
+       find "$path" -maxdepth 3 -name "AndroidManifest.xml" 2>/dev/null | grep -q .; then
+        echo "android"
+        return
+    fi
+
+    # Check for TypeScript/JavaScript indicators
+    if [ -f "$path/package.json" ] || [ -f "$path/tsconfig.json" ]; then
+        echo "typescript"
+        return
+    fi
+
+    # Check for Swift/iOS indicators
+    if [ -f "$path/Podfile" ] || [ -f "$path/Package.swift" ] || \
+       find "$path" -maxdepth 3 -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null | grep -q .; then
+        echo "swift"
+        return
+    fi
+
+    # Default to swift for backward compatibility
+    echo "swift"
+}
+
+PROJECT_TYPE=$(detect_project_type "$PROJECT_PATH")
+
+# Normalize pattern (lowercase, trim)
+normalize_pattern() {
+    echo "$1" | tr '[:upper:]' '[:lower:]' | xargs
+}
+
+# Get file patterns for pattern based on project type
+get_file_patterns() {
+    local pattern="$1"
+    local proj_type="$2"
+
+    if [ "$proj_type" = "android" ]; then
+        # Android/Kotlin patterns
+        case "$pattern" in
+            "viewmodel"|"view model"|"mvvm")
+                echo "*ViewModel.kt *ViewModel.java *VM.kt *VM.java"
+                ;;
+            "repository"|"repo")
+                echo "*Repository.kt *Repository.java *Repo.kt *Repo.java *DataSource.kt *DataSource.java"
+                ;;
+            "composable"|"compose"|"jetpack compose")
+                echo "*Screen.kt *Composable.kt Ui*.kt"
+                ;;
+            "fragment")
+                echo "*Fragment.kt *Fragment.java *Frag.kt *Frag.java"
+                ;;
+            "hilt"|"dagger"|"di"|"dependency injection")
+                echo "*Module.kt *Module.java *Component.kt *Component.java AppModule.kt NetworkModule.kt DatabaseModule.kt Di*.kt Di*.java"
+                ;;
+            "usecase"|"use case"|"interactor")
+                echo "*UseCase.kt *UseCase.java *Interactor.kt *Interactor.java Get*.kt Fetch*.kt Save*.kt"
+                ;;
+            "room"|"dao"|"database")
+                echo "*Dao.kt *Dao.java *Entity.kt *Entity.java *Database.kt *Database.java *RoomDatabase.kt"
+                ;;
+            "retrofit"|"api"|"networking"|"network")
+                echo "*ApiService.kt *ApiService.java *Api.kt *Api.java *Client.kt *Client.java *Interceptor.kt NetworkModule.kt"
+                ;;
+            "state"|"stateflow"|"livedata"|"state management")
+                echo "*State.kt *State.java *UiState.kt *Event.kt *Action.kt"
+                ;;
+            "navigation"|"nav"|"navigator")
+                echo "*Navigator.kt *Navigator.java *Coordinator.kt nav_graph.xml *Directions.kt"
+                ;;
+            "adapter"|"recyclerview"|"viewholder")
+                echo "*Adapter.kt *Adapter.java *RecyclerAdapter.kt *ViewHolder.kt *ViewHolder.java *ListAdapter.kt"
+                ;;
+            "workmanager"|"worker"|"background")
+                echo "*Worker.kt *Worker.java *WorkManager.kt *WorkRequest.kt"
+                ;;
+            "activity")
+                echo "*Activity.kt *Activity.java MainActivity.kt"
+                ;;
+            "service")
+                echo "*Service.kt *Service.java *ForegroundService.kt"
+                ;;
+            "receiver"|"broadcastreceiver"|"broadcast")
+                echo "*Receiver.kt *Receiver.java *BroadcastReceiver.kt *BroadcastReceiver.java"
+                ;;
+            "mapper"|"converter")
+                echo "*Mapper.kt *Mapper.java *Converter.kt *Converter.java *Transformer.kt"
+                ;;
+            "sealed"|"result"|"resource")
+                echo "*Result.kt *Result.java *Response.kt *Resource.kt UiState.kt"
+                ;;
+            "extension"|"ext"|"extensions")
+                echo "*Extensions.kt *Ext.kt *Extension.kt"
+                ;;
+            "viewbinding"|"databinding"|"binding")
+                echo "*Binding.kt *Binding.java"
+                ;;
+            "singleton"|"object"|"manager")
+                echo "*Manager.kt *Manager.java *Provider.kt *Singleton.kt AppConfig.kt"
+                ;;
+            *)
+                echo ""
+                ;;
+        esac
+    elif [ "$proj_type" = "typescript" ]; then
+        # TypeScript/React patterns
+        case "$pattern" in
+            # Tier 1 - Core Patterns (10)
+            "react component"|"component")
+                echo "*.tsx *Component.tsx *component.tsx"
+                ;;
+            "react hook"|"hook"|"hooks")
+                echo "use*.ts use*.tsx *hook.ts *hooks.ts"
+                ;;
+            "state management"|"store"|"state")
+                echo "*store.ts *slice.ts *reducer.ts *context.tsx *provider.tsx *state.ts"
+                ;;
+            "api endpoint"|"api"|"endpoint")
+                echo "*route.ts *route.tsx *api.ts *api.tsx *controller.ts *service.ts *endpoint.ts *handler.ts *.api.ts"
+                ;;
+            "authentication"|"auth"|"login")
+                echo "*auth.ts *auth.tsx *session.ts *login.ts *credential.ts *jwt.ts"
+                ;;
+            "form handling"|"form"|"forms")
+                echo "*form.tsx *form.ts *validation.ts *schema.ts"
+                ;;
+            "database query"|"database"|"query")
+                echo "*repository.ts *model.ts *entity.ts *schema.ts *query.ts *dao.ts schema.prisma"
+                ;;
+            "networking"|"network"|"http client")
+                echo "*client.ts *http.ts *fetch.ts *api.ts *request.ts *axios.ts"
+                ;;
+            "nextjs page"|"page")
+                echo "page.tsx page.ts"
+                ;;
+            "nextjs layout"|"layout")
+                echo "layout.tsx layout.ts"
+                ;;
+
+            # Tier 2 - Supplementary Patterns (12)
+            "nextjs middleware"|"middleware")
+                echo "middleware.ts middleware.tsx"
+                ;;
+            "nextjs loading"|"loading")
+                echo "loading.tsx loading.ts"
+                ;;
+            "nextjs error"|"error boundary"|"error")
+                echo "error.tsx error.ts"
+                ;;
+            "background job"|"job"|"queue"|"worker")
+                echo "*worker.ts *job.ts *task.ts *queue.ts *processor.ts *cron.ts"
+                ;;
+            "file upload"|"upload"|"file storage"|"storage")
+                echo "*upload.ts *upload.tsx *storage.ts *file.ts *media.ts"
+                ;;
+            "test"|"testing"|"mock"|"e2e"|"unit test")
+                echo "*.test.ts *.test.tsx *.spec.ts *.spec.tsx *mock.ts *Mock.ts mock*.ts"
+                ;;
+            "theme"|"style"|"styling"|"design system")
+                echo "*theme.ts *theme.tsx *styles.ts *styled.ts *design.ts *tokens.ts"
+                ;;
+            "server component"|"rsc"|"server")
+                echo "*.server.tsx *.server.ts"
+                ;;
+            "server action"|"action"|"actions")
+                echo "*action.ts *actions.ts server-action.ts"
+                ;;
+            "context"|"context provider"|"provider")
+                echo "*Context.tsx *context.tsx *Provider.tsx *provider.tsx"
+                ;;
+            "types"|"type"|"interface"|"interfaces")
+                echo "*types.ts *type.ts *interface.ts *.d.ts"
+                ;;
+            "config"|"configuration"|"environment"|"env")
+                echo "*config.ts *configuration.ts *env.ts *.config.ts"
+                ;;
+            *)
+                echo ""
+                ;;
+        esac
+    else
+        # Swift/iOS patterns
+        case "$pattern" in
+            # Tier 1 - Core Patterns (14)
+            "protocol"|"delegate"|"protocol delegate")
+                echo "*Delegate.swift *Delegate.m *Delegate.h *DataSource.swift *DataSource.m *DataSource.h *Protocol.swift *Protocol.m *Protocol.h"
+                ;;
+            "combine"|"publisher"|"combine publisher")
+                echo "*Publisher.swift *Publisher.m *Publisher.h *Subject.swift *Subject.m *Subject.h *Subscription.swift *Subscription.m *Subscription.h *Combine*.swift *Combine*.m *Combine*.h"
+                ;;
+            "async"|"await"|"async await"|"concurrency")
+                echo "*Async*.swift *Async*.m *Async*.h *Task*.swift *Task*.m *Task*.h *Actor*.swift *Actor*.m *Actor*.h"
+                ;;
+            "repository"|"repo"|"database"|"query"|"database query")
+                echo "*Repository.swift *Repository.m *Repository.h *DAO.swift *DAO.m *DAO.h *Store.swift *Store.m *Store.h *DataSource.swift *DataSource.m *DataSource.h *Query.swift *Query.m *Query.h *Model.swift *Model.m *Model.h *Database*.swift *Database*.m *Database*.h *Entity*.swift *Entity*.m *Entity*.h"
+                ;;
+            "service"|"service layer"|"manager"|"networking"|"network")
+                echo "*Service.swift *Service.m *Service.h *Manager.swift *Manager.m *Manager.h *Provider.swift *Provider.m *Provider.h *Client.swift *Client.m *Client.h *Network*.swift *Network*.m *Network*.h *API*.swift *API*.m *API*.h *Request*.swift *Request*.m *Request*.h *HTTPClient*.swift *HTTPClient*.m *HTTPClient*.h"
+                ;;
+            "usecase"|"use case"|"interactor")
+                echo "*UseCase.swift *UseCase.m *UseCase.h *Interactor.swift *Interactor.m *Interactor.h *Command.swift *Command.m *Command.h"
+                ;;
+            "router"|"route"|"routing"|"api endpoint"|"api"|"endpoint")
+                echo "*Router.swift *Router.m *Router.h *Route.swift *Route.m *Route.h *URLRouter.swift *URLRouter.m *URLRouter.h *Endpoint.swift *Endpoint.m *Endpoint.h *Controller.swift *Controller.m *Controller.h *API.swift *API.m *API.h routes.*"
+                ;;
+            "factory"|"builder"|"dependency injection"|"di"|"injection")
+                echo "*Factory.swift *Factory.m *Factory.h *Builder.swift *Builder.m *Builder.h *Creator.swift *Creator.m *Creator.h *DIContainer.swift *DIContainer.m *DIContainer.h *Injector.swift *Injector.m *Injector.h *Container.swift *Container.m *Container.h *Dependencies.swift *Dependencies.m *Dependencies.h *DI*.swift *DI*.m *DI*.h *Assembly.swift *Assembly.m *Assembly.h"
+                ;;
+            "viewmodel"|"view model"|"mvvm"|"observable"|"observableobject"|"observable object")
+                echo "*ViewModel.swift *ViewModel.m *ViewModel.h *VM.swift *VM.m *VM.h *Store.swift *Store.m *Store.h"
+                ;;
+            "view controller"|"viewcontroller")
+                echo "*ViewController.swift *ViewController.m *ViewController.h *VC.swift *VC.m *VC.h *Controller.swift *Controller.m *Controller.h"
+                ;;
+            "swiftui view"|"view")
+                echo "*View.swift *Screen.swift *Page.swift"
+                ;;
+            "coordinator"|"navigation coordinator")
+                echo "*Coordinator.swift *Coordinator.m *Coordinator.h *Navigation*.swift *Navigation*.m *Navigation*.h *Flow*.swift *Flow*.m *Flow*.h"
+                ;;
+            "core data"|"coredata"|"persistence"|"data persistence")
+                echo "*.xcdatamodeld *+CoreDataProperties.swift *+CoreDataProperties.m *+CoreDataProperties.h *+CoreDataClass.swift *+CoreDataClass.m *+CoreDataClass.h *ManagedObject*.swift *ManagedObject*.m *ManagedObject*.h *CoreData*.swift *CoreData*.m *CoreData*.h"
+                ;;
+            "layout"|"collection view layout"|"uicollectionviewlayout")
+                echo "*Layout.swift *Layout.m *Layout.h *FlowLayout.swift *FlowLayout.m *FlowLayout.h *CollectionViewLayout.swift *CollectionViewLayout.m *CollectionViewLayout.h"
+                ;;
+
+            # Tier 2 - Supplementary Patterns (15)
+            "reducer"|"tca reducer"|"state reducer")
+                echo "*Reducer.swift *Reducer.m *Reducer.h *Action.swift *Action.m *Action.h *State.swift *State.m *State.h *Domain.swift *Domain.m *Domain.h"
+                ;;
+            "environment"|"configuration"|"config")
+                echo "*Environment.swift *Environment.m *Environment.h *Config.swift *Config.m *Config.h *Configuration.swift *Configuration.m *Configuration.h"
+                ;;
+            "cache"|"caching")
+                echo "*Cache.swift *Cache.m *Cache.h *CacheManager.swift *CacheManager.m *CacheManager.h *ImageCache.swift *ImageCache.m *ImageCache.h"
+                ;;
+            "theme"|"style"|"appearance")
+                echo "*Theme.swift *Theme.m *Theme.h *Style.swift *Style.m *Style.h *Appearance.swift *Appearance.m *Appearance.h"
+                ;;
+            "mock"|"stub"|"fake"|"test double")
+                echo "Mock*.swift Mock*.m Mock*.h *Mock.swift *Mock.m *Mock.h *Stub.swift *Stub.m *Stub.h Fake*.swift Fake*.m Fake*.h"
+                ;;
+            "middleware"|"interceptor")
+                echo "*Middleware.swift *Middleware.m *Middleware.h *Interceptor.swift *Interceptor.m *Interceptor.h"
+                ;;
+            "localization"|"i18n"|"l10n")
+                echo "Localizable.swift Localizable.m Localizable.h *Localization.swift *Localization.m *Localization.h *.strings"
+                ;;
+            "animation"|"animator"|"transition")
+                echo "*Animation.swift *Animation.m *Animation.h *Animator.swift *Animator.m *Animator.h *Transition.swift *Transition.m *Transition.h"
+                ;;
+            "authentication"|"auth"|"login")
+                echo "*Auth*.swift *Auth*.m *Auth*.h *Session*.swift *Session*.m *Session*.h *Login*.swift *Login*.m *Login*.h *Credential*.swift *Credential*.m *Credential*.h *Token*.swift *Token*.m *Token*.h *Security*.swift *Security*.m *Security*.h"
+                ;;
+            "background job"|"job"|"queue")
+                echo "*Job.swift *Job.m *Job.h *Worker.swift *Worker.m *Worker.h *Task.swift *Task.m *Task.h *Queue*.swift *Queue*.m *Queue*.h *Operation*.swift *Operation*.m *Operation*.h *Async*.swift *Async*.m *Async*.h"
+                ;;
+            "file upload"|"upload"|"file storage")
+                echo "*Upload*.swift *Upload*.m *Upload*.h *Storage*.swift *Storage*.m *Storage*.h *File*.swift *File*.m *File*.h *Media*.swift *Media*.m *Media*.h *Image*.swift *Image*.m *Image*.h *Attachment*.swift *Attachment*.m *Attachment*.h"
+                ;;
+            "table view cell"|"collection view cell"|"cell"|"cells")
+                echo "*Cell.swift *Cell.m *Cell.h *TableViewCell.swift *TableViewCell.m *TableViewCell.h *CollectionViewCell.swift *CollectionViewCell.m *CollectionViewCell.h"
+                ;;
+            "extension"|"extensions")
+                echo "*+*.swift *+*.m *+*.h *Extension*.swift *Extension*.m *Extension*.h"
+                ;;
+            "view modifier"|"viewmodifier"|"swiftui modifier"|"modifier")
+                echo "*Modifier.swift *ViewModifier.swift"
+                ;;
+            "error handling"|"error"|"errors")
+                echo "*Error.swift *Error.m *Error.h *ErrorHandler.swift *ErrorHandler.m *ErrorHandler.h *Result.swift *Result.m *Result.h *Failure.swift *Failure.m *Failure.h"
+                ;;
+            *)
+                echo ""
+                ;;
+        esac
+    fi
+}
+
+# Get directory patterns for pattern based on project type
+get_dir_patterns() {
+    local pattern="$1"
+    local proj_type="$2"
+
+    if [ "$proj_type" = "android" ]; then
+        # Android/Kotlin directory patterns
+        case "$pattern" in
+            "viewmodel"|"view model"|"mvvm")
+                echo "viewmodel viewmodels presentation ui/*/viewmodel"
+                ;;
+            "repository"|"repo")
+                echo "repository repositories data/repository data/source"
+                ;;
+            "composable"|"compose"|"jetpack compose")
+                echo "compose ui/compose ui/screen screens components ui/components"
+                ;;
+            "fragment")
+                echo "fragment fragments ui/fragment ui/*/fragment"
+                ;;
+            "hilt"|"dagger"|"di"|"dependency injection")
+                echo "di injection dagger hilt modules"
+                ;;
+            "usecase"|"use case"|"interactor")
+                echo "usecase usecases domain/usecase domain/interactor interactors"
+                ;;
+            "room"|"dao"|"database")
+                echo "database db data/local data/db room dao entity"
+                ;;
+            "retrofit"|"api"|"networking"|"network")
+                echo "network api remote data/remote service"
+                ;;
+            "state"|"stateflow"|"livedata"|"state management")
+                echo "state states ui/state event"
+                ;;
+            "navigation"|"nav"|"navigator")
+                echo "navigation nav coordinator"
+                ;;
+            "adapter"|"recyclerview"|"viewholder")
+                echo "adapter adapters ui/adapter recyclerview"
+                ;;
+            "workmanager"|"worker"|"background")
+                echo "worker workers work background"
+                ;;
+            "activity")
+                echo "activity activities ui/activity"
+                ;;
+            "service")
+                echo "service services background"
+                ;;
+            "receiver"|"broadcastreceiver"|"broadcast")
+                echo "receiver receivers broadcast"
+                ;;
+            "mapper"|"converter")
+                echo "mapper mappers converter util/mapper"
+                ;;
+            "sealed"|"result"|"resource")
+                echo "model data/model common"
+                ;;
+            "extension"|"ext"|"extensions")
+                echo "extension extensions ext util/ext"
+                ;;
+            "viewbinding"|"databinding"|"binding")
+                echo "ui layout"
+                ;;
+            "singleton"|"object"|"manager")
+                echo "manager singleton util"
+                ;;
+            *)
+                echo ""
+                ;;
+        esac
+    elif [ "$proj_type" = "typescript" ]; then
+        # TypeScript/React directory patterns
+        case "$pattern" in
+            # Tier 1
+            "react component"|"component")
+                echo "components ui features modules views pages screens"
+                ;;
+            "react hook"|"hook"|"hooks")
+                echo "hooks composables utils lib"
+                ;;
+            "state management"|"store"|"state")
+                echo "store state redux context providers slices"
+                ;;
+            "api endpoint"|"api"|"endpoint")
+                echo "api routes controllers handlers services app/api pages/api"
+                ;;
+            "authentication"|"auth"|"login")
+                echo "auth authentication session security middleware"
+                ;;
+            "form handling"|"form"|"forms")
+                echo "forms components ui features"
+                ;;
+            "database query"|"database"|"query")
+                echo "models entities repositories db database prisma schema"
+                ;;
+            "networking"|"network"|"http client")
+                echo "api lib services utils http client"
+                ;;
+            "nextjs page"|"page")
+                echo "app src/app pages"
+                ;;
+            "nextjs layout"|"layout")
+                echo "app src/app layouts"
+                ;;
+
+            # Tier 2
+            "nextjs middleware"|"middleware")
+                echo "middleware app src"
+                ;;
+            "nextjs loading"|"loading")
+                echo "app src/app"
+                ;;
+            "nextjs error"|"error boundary"|"error")
+                echo "app src/app components"
+                ;;
+            "background job"|"job"|"queue"|"worker")
+                echo "jobs workers tasks queue background cron"
+                ;;
+            "file upload"|"upload"|"file storage"|"storage")
+                echo "upload storage media files lib"
+                ;;
+            "test"|"testing"|"mock"|"e2e"|"unit test")
+                echo "__tests__ tests test __mocks__ mocks e2e spec"
+                ;;
+            "theme"|"style"|"styling"|"design system")
+                echo "theme themes styles design tokens constants"
+                ;;
+            "server component"|"rsc"|"server")
+                echo "app src/app components"
+                ;;
+            "server action"|"action"|"actions")
+                echo "actions app/actions lib/actions server"
+                ;;
+            "context"|"context provider"|"provider")
+                echo "context providers contexts state"
+                ;;
+            "types"|"type"|"interface"|"interfaces")
+                echo "types @types interfaces models lib"
+                ;;
+            "config"|"configuration"|"environment"|"env")
+                echo "config configuration env lib constants"
+                ;;
+            *)
+                echo ""
+                ;;
+        esac
+    else
+        # Swift/iOS directory patterns
+        case "$pattern" in
+            # Tier 1 - Core Patterns (14)
+            "protocol"|"delegate"|"protocol delegate")
+                echo "Protocols Delegates Protocol/Delegates Domain/Protocols"
+                ;;
+            "combine"|"publisher"|"combine publisher")
+                echo "Publishers Reactive Combine Streams Domain/Publishers"
+                ;;
+            "async"|"await"|"async await"|"concurrency")
+                echo "Async Concurrency Tasks Actors Domain/Async"
+                ;;
+            "repository"|"repo"|"database"|"query"|"database query")
+                echo "Repositories Data/Repositories DataLayer Domain/Repositories Data models queries stores database entities persistence"
+                ;;
+            "service"|"service layer"|"manager"|"networking"|"network")
+                echo "Services Managers Business Domain/Services Application Networking Network API Client HTTP"
+                ;;
+            "usecase"|"use case"|"interactor")
+                echo "UseCases Domain/UseCases Interactors Domain/Interactors Application/UseCases"
+                ;;
+            "router"|"route"|"routing"|"api endpoint"|"api"|"endpoint")
+                echo "Routers Routing Navigation API/Routers Networking/Routers controllers routes api services networking"
+                ;;
+            "factory"|"builder"|"dependency injection"|"di"|"injection")
+                echo "Factories Builders DI/Factories Domain/Factories Utilities/Factories DI DependencyInjection Dependencies Injection Factory Container"
+                ;;
+            "viewmodel"|"view model"|"mvvm"|"observable"|"observableobject"|"observable object")
+                echo "ViewModels ViewModel MVVM Presentation Store State"
+                ;;
+            "view controller"|"viewcontroller")
+                echo "ViewControllers Controllers UI Views"
+                ;;
+            "swiftui view"|"view")
+                echo "Views Screens Pages UI Components"
+                ;;
+            "coordinator"|"navigation coordinator")
+                echo "Coordinators Navigation Flow Routing"
+                ;;
+            "core data"|"coredata"|"persistence"|"data persistence")
+                echo "CoreData Persistence Models Data Storage Database"
+                ;;
+            "layout"|"collection view layout"|"uicollectionviewlayout")
+                echo "Layouts CustomLayouts UI/Layouts Views/Layouts CollectionViewLayouts"
+                ;;
+
+            # Tier 2 - Supplementary Patterns (15)
+            "reducer"|"tca reducer"|"state reducer")
+                echo "Reducers Store Features State TCA"
+                ;;
+            "environment"|"configuration"|"config")
+                echo "Configuration Config Environment Settings"
+                ;;
+            "cache"|"caching")
+                echo "Cache Storage Caching Data/Cache"
+                ;;
+            "theme"|"style"|"appearance")
+                echo "Theme Themes Styles Appearance UI/Theme"
+                ;;
+            "mock"|"stub"|"fake"|"test double")
+                echo "Mocks Testing Stubs Fakes Tests/Mocks"
+                ;;
+            "middleware"|"interceptor")
+                echo "Middleware Interceptors Networking/Middleware"
+                ;;
+            "localization"|"i18n"|"l10n")
+                echo "Localization Resources Locale *.lproj"
+                ;;
+            "animation"|"animator"|"transition")
+                echo "Animations Transitions Animators UI/Animations Views/Animations"
+                ;;
+            "authentication"|"auth"|"login")
+                echo "auth authentication session security credentials login"
+                ;;
+            "background job"|"job"|"queue")
+                echo "jobs workers tasks operations background"
+                ;;
+            "file upload"|"upload"|"file storage")
+                echo "uploads storage media files documents attachments"
+                ;;
+            "table view cell"|"collection view cell"|"cell"|"cells")
+                echo "Cells TableViewCells CollectionViewCells Views/Cells UI/Cells"
+                ;;
+            "extension"|"extensions")
+                echo "Extensions Utils Utilities Helpers Categories"
+                ;;
+            "view modifier"|"viewmodifier"|"swiftui modifier"|"modifier")
+                echo "Modifiers ViewModifiers Extensions/ViewModifiers Views/Modifiers"
+                ;;
+            "error handling"|"error"|"errors")
+                echo "Errors ErrorHandling Models/Errors Domain/Errors"
+                ;;
+            *)
+                echo ""
+                ;;
+        esac
+    fi
+}
+
+# Main execution
+main() {
+    if [ -z "$PATTERN" ]; then
+        echo "Usage: $0 \"pattern type\" [project_path]" >&2
+        echo "" >&2
+        echo "Project type detected: $PROJECT_TYPE" >&2
+        echo "" >&2
+        if [ "$PROJECT_TYPE" = "android" ]; then
+            echo "Supported patterns (Android/Kotlin):" >&2
+            echo "" >&2
+            echo "Tier 1 patterns:" >&2
+            echo "  - viewmodel / view model / mvvm" >&2
+            echo "  - repository / repo" >&2
+            echo "  - composable / compose / jetpack compose" >&2
+            echo "  - fragment" >&2
+            echo "  - hilt / dagger / di / dependency injection" >&2
+            echo "  - usecase / use case / interactor" >&2
+            echo "  - room / dao / database" >&2
+            echo "  - retrofit / api / networking / network" >&2
+            echo "  - state / stateflow / livedata / state management" >&2
+            echo "  - navigation / nav / navigator" >&2
+            echo "  - adapter / recyclerview / viewholder" >&2
+            echo "  - workmanager / worker / background" >&2
+            echo "" >&2
+            echo "Tier 2 patterns:" >&2
+            echo "  - activity" >&2
+            echo "  - service" >&2
+            echo "  - receiver / broadcastreceiver / broadcast" >&2
+            echo "  - mapper / converter" >&2
+            echo "  - sealed / result / resource" >&2
+            echo "  - extension / ext / extensions" >&2
+            echo "  - viewbinding / databinding / binding" >&2
+            echo "  - singleton / object / manager" >&2
+        elif [ "$PROJECT_TYPE" = "typescript" ]; then
+            echo "Supported patterns (TypeScript/React/Next.js):" >&2
+            echo "" >&2
+            echo "Tier 1 - Core patterns (10):" >&2
+            echo "  - react component / component" >&2
+            echo "  - react hook / hook / hooks" >&2
+            echo "  - state management / store / state" >&2
+            echo "  - api endpoint / api / endpoint" >&2
+            echo "  - authentication / auth / login" >&2
+            echo "  - form handling / form / forms" >&2
+            echo "  - database query / database / query (includes Prisma)" >&2
+            echo "  - networking / network / http client" >&2
+            echo "  - nextjs page / page" >&2
+            echo "  - nextjs layout / layout" >&2
+            echo "" >&2
+            echo "Tier 2 - Supplementary patterns (12):" >&2
+            echo "  - nextjs middleware / middleware" >&2
+            echo "  - nextjs loading / loading" >&2
+            echo "  - nextjs error / error boundary / error" >&2
+            echo "  - background job / job / queue / worker" >&2
+            echo "  - file upload / upload / file storage / storage" >&2
+            echo "  - test / testing / mock / e2e / unit test" >&2
+            echo "  - theme / style / styling / design system" >&2
+            echo "  - server component / rsc / server" >&2
+            echo "  - server action / action / actions" >&2
+            echo "  - context / context provider / provider" >&2
+            echo "  - types / type / interface / interfaces" >&2
+            echo "  - config / configuration / environment / env" >&2
+        else
+            echo "Supported patterns (Swift/iOS):" >&2
+            echo "" >&2
+            echo "Tier 1 - Core patterns (14):" >&2
+            echo "  - protocol / delegate / protocol delegate" >&2
+            echo "  - combine / publisher / combine publisher (⚠️ needs content analysis)" >&2
+            echo "  - async / await / async await / concurrency (⚠️ needs content analysis)" >&2
+            echo "  - repository / repo / database / query" >&2
+            echo "  - service / service layer / manager / networking / network" >&2
+            echo "  - usecase / use case / interactor" >&2
+            echo "  - router / route / routing / api endpoint / api" >&2
+            echo "  - factory / builder / dependency injection / di" >&2
+            echo "  - viewmodel / view model / mvvm / observable" >&2
+            echo "  - view controller / viewcontroller" >&2
+            echo "  - swiftui view / view" >&2
+            echo "  - coordinator / navigation coordinator" >&2
+            echo "  - core data / coredata / persistence" >&2
+            echo "  - layout / collection view layout / uicollectionviewlayout" >&2
+            echo "" >&2
+            echo "Tier 2 - Supplementary patterns (15):" >&2
+            echo "  - reducer / tca reducer / state reducer" >&2
+            echo "  - environment / configuration / config" >&2
+            echo "  - cache / caching" >&2
+            echo "  - theme / style / appearance" >&2
+            echo "  - mock / stub / fake / test double" >&2
+            echo "  - middleware / interceptor" >&2
+            echo "  - localization / i18n / l10n" >&2
+            echo "  - animation / animator / transition" >&2
+            echo "  - authentication / auth / login" >&2
+            echo "  - background job / job / queue" >&2
+            echo "  - file upload / upload / file storage" >&2
+            echo "  - table view cell / collection view cell / cell" >&2
+            echo "  - extension / extensions" >&2
+            echo "  - view modifier / viewmodifier / swiftui modifier" >&2
+            echo "  - error handling / error / errors" >&2
+        fi
+        exit 1
+    fi
+
+    # Normalize and get pattern components
+    local normalized=$(normalize_pattern "$PATTERN")
+    local file_patterns=$(get_file_patterns "$normalized" "$PROJECT_TYPE")
+    local dir_patterns=$(get_dir_patterns "$normalized" "$PROJECT_TYPE")
+
+    if [ -z "$file_patterns" ]; then
+        echo "Error: Unknown pattern '$PATTERN'" >&2
+        echo "Run with no arguments to see supported patterns." >&2
+        exit 1
+    fi
+
+    # Use find with -name patterns (very fast)
+    # Build find command with all file patterns
+    local find_args=()
+    local first=true
+    for pattern in $file_patterns; do
+        if [ "$first" = true ]; then
+            find_args+=( "-name" "$pattern" )
+            first=false
+        else
+            find_args+=( "-o" "-name" "$pattern" )
+        fi
+    done
+
+    # Find all matching files and score them
+    local temp_file=$(mktemp)
+    trap "rm -f $temp_file" EXIT
+
+    # Find files matching any of the file patterns
+    # Note: .xcdatamodeld is a directory (bundle), so we allow both files and directories
+    find "$PROJECT_PATH" \( -type f -o -type d \) \( "${find_args[@]}" \) \
+        ! -path "*/node_modules/*" \
+        ! -path "*/.venv/*" \
+        ! -path "*/venv/*" \
+        ! -path "*/vendor/*" \
+        ! -path "*/Pods/*" \
+        ! -path "*/__pycache__/*" \
+        ! -path "*/.git/*" \
+        ! -path "*/DerivedData/*" \
+        ! -path "*/build/*" \
+        ! -path "*/.build/*" \
+        ! -path "*/Carthage/*" \
+        2>/dev/null | while IFS= read -r file; do
+            # Skip directories unless they match .xcdatamodeld pattern
+            if [ -d "$file" ] && [[ ! "$file" =~ \.xcdatamodeld$ ]]; then
+                continue
+            fi
+
+        local score=10  # Base score for file name match
+
+        # Check if in a relevant directory (+8 points)
+        local dirname=$(dirname "$file")
+        for dir_pattern in $dir_patterns; do
+            if echo "$dirname" | tr '[:upper:]' '[:lower:]' | grep -qi "$dir_pattern"; then
+                score=$((score + 8))
+                break
+            fi
+        done
+
+        echo "$score|$file"
+    done > "$temp_file"
+
+    # Sort by score (descending) and output top 10 files
+    sort -t'|' -k1 -nr "$temp_file" | head -10 | cut -d'|' -f2
+}
+
+# Run main
+main
