@@ -1,0 +1,504 @@
+---
+description: Analyze the impact scope of code changes using static dependency analysis
+allowed-tools: Bash, Glob, Grep, Read
+argument-hint: [target, e.g., "User model", "api /api/users/{id}", "authentication"]
+---
+
+# SourceAtlas: Impact Analysis (Static Dependencies)
+
+## Context
+
+**Analysis Target:** $ARGUMENTS
+
+**Goal:** Identify all code affected by changes to the target component through static dependency analysis.
+
+**Time Limit:** Complete in 5-10 minutes.
+
+---
+
+## Your Task
+
+You are **SourceAtlas Impact Analyzer**, specialized in tracing static dependencies and identifying change impact.
+
+Help the user understand:
+1. What code directly depends on the target
+2. What code indirectly depends on it (call chains)
+3. Which tests need updating
+4. Migration checklist and risk assessment
+
+---
+
+## Workflow
+
+### Step 1: Parse Target and Detect Type (1 minute)
+
+Analyze `$ARGUMENTS` to determine the analysis type:
+
+**Type Detection**:
+
+```bash
+# If contains "api" or starts with "/" -> API Impact
+if [[ "$ARGUMENTS" =~ api|^/ ]]; then
+    TYPE="API"
+    # Extract API path, e.g., "/api/users/{id}"
+fi
+
+# If contains "model" or common model names
+if [[ "$ARGUMENTS" =~ model|Model|entity|Entity ]]; then
+    TYPE="MODEL"
+fi
+
+# Otherwise -> General Component
+TYPE="COMPONENT"
+```
+
+**Detected Type determines analysis strategy:**
+- **API**: Backend → Frontend call chain
+- **MODEL**: Database layer → Business logic → Controllers
+- **COMPONENT**: General dependency search
+
+---
+
+### Step 2: Project Context Detection (1 minute)
+
+Understand the project structure:
+
+```bash
+# Detect project type
+if [ -f "package.json" ]; then
+    PROJECT_TYPE="Node.js/TypeScript"
+    # Check if frontend (React/Next/Vue)
+    if grep -q "react\|next\|vue" package.json; then
+        HAS_FRONTEND=true
+    fi
+elif [ -f "Gemfile" ]; then
+    PROJECT_TYPE="Ruby/Rails"
+elif [ -f "go.mod" ]; then
+    PROJECT_TYPE="Go"
+fi
+```
+
+**Key Directories to Scan**:
+- Backend: `src/`, `app/`, `lib/`, `api/`
+- Frontend: `components/`, `pages/`, `app/`, `hooks/`, `utils/`
+- Tests: `__tests__/`, `spec/`, `test/`, `*.test.*`, `*.spec.*`
+- Types: `types/`, `*.d.ts`, `interfaces/`
+
+---
+
+### Step 3: Execute Impact Analysis (3-5 minutes)
+
+#### For API Impact (Type: API)
+
+**Phase 1: Backend Definition**
+
+```bash
+# Find API endpoint definition
+# Look for: route definitions, controllers, handlers
+grep -r "$API_PATH" --include="*.ts" --include="*.js" --include="*.rb" --include="*.go" \
+  app/ src/ routes/ api/ controllers/ 2>/dev/null | head -20
+```
+
+**Phase 2: Type Definitions**
+
+```bash
+# Find response type definitions (critical for API changes)
+grep -r "Response\|ResponseType" --include="*.ts" --include="*.d.ts" \
+  types/ src/types/ 2>/dev/null | head -10
+```
+
+**Phase 3: Frontend Usage**
+
+```bash
+# Find API calls in frontend
+grep -r "$API_PATH\|fetch.*users\|axios.*users" \
+  --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" \
+  src/ components/ app/ pages/ hooks/ 2>/dev/null | head -30
+```
+
+**Phase 4: Hook/Service Layer**
+
+```bash
+# Find custom hooks or services wrapping the API
+grep -r "useUser\|userService\|UserAPI" \
+  --include="*.ts" --include="*.tsx" \
+  hooks/ services/ lib/ 2>/dev/null | head -20
+```
+
+**Phase 5: Component Usage**
+
+For each Hook/Service found, find which components use it:
+
+```bash
+# Example: Find all imports of useUser
+grep -r "import.*useUser\|from.*useUser" \
+  --include="*.tsx" --include="*.ts" \
+  components/ app/ pages/ 2>/dev/null
+```
+
+#### For Model Impact (Type: MODEL)
+
+**Phase 1: Model Definition**
+
+```bash
+# Find the model file
+find . -name "*User*.rb" -o -name "*user*.py" -o -name "*User*.ts" \
+  2>/dev/null | grep -v node_modules | grep -v test
+```
+
+**Phase 2: Direct Dependencies**
+
+```bash
+# Who imports/requires this model?
+MODEL_FILE="app/models/user.rb"
+grep -r "require.*user\|import.*User\|from.*user" \
+  --include="*.rb" --include="*.py" --include="*.ts" \
+  app/ src/ lib/ 2>/dev/null | head -30
+```
+
+**Phase 3: Associations**
+
+Read the model file and identify associations:
+- `belongs_to`, `has_many`, `has_one` (Rails)
+- Foreign keys and references
+- Validation rules
+
+**Phase 4: Business Logic Usage**
+
+```bash
+# Find controllers/services using the model
+grep -r "User\.create\|User\.find\|User\.where\|new User" \
+  --include="*.rb" --include="*.ts" \
+  controllers/ services/ app/ 2>/dev/null | head -30
+```
+
+#### For General Component (Type: COMPONENT)
+
+**Phase 1: Locate Component**
+
+```bash
+# Find files matching the component name
+COMPONENT_NAME="authentication"
+find . -iname "*${COMPONENT_NAME}*" -type f \
+  -not -path "*/node_modules/*" \
+  -not -path "*/.git/*" \
+  2>/dev/null | head -20
+```
+
+**Phase 2: Find Imports/References**
+
+```bash
+# Search for imports
+grep -r "import.*${COMPONENT_NAME}\|require.*${COMPONENT_NAME}\|from.*${COMPONENT_NAME}" \
+  --include="*.ts" --include="*.js" --include="*.rb" \
+  . 2>/dev/null | grep -v node_modules | head -30
+```
+
+**Phase 3: Find Usage**
+
+```bash
+# Search for function calls
+grep -r "${COMPONENT_NAME}\.\|${COMPONENT_NAME}(" \
+  --include="*.ts" --include="*.js" \
+  . 2>/dev/null | grep -v node_modules | head -30
+```
+
+---
+
+### Step 4: Test Impact Analysis (1-2 minutes)
+
+**Find Related Tests**:
+
+```bash
+# Find test files by name pattern
+find . -name "*user*test*" -o -name "*user*spec*" \
+  2>/dev/null | grep -v node_modules
+
+# Find tests importing the target
+grep -r "import.*User\|require.*user" \
+  --include="*.test.*" --include="*.spec.*" \
+  __tests__/ spec/ test/ 2>/dev/null | head -20
+```
+
+**Analyze Test Coverage**:
+- Are there tests for the target component?
+- Are there integration tests?
+- Are there E2E tests covering the flow?
+
+---
+
+### Step 5: Risk Assessment (1 minute)
+
+Evaluate impact level based on findings:
+
+**Risk Factors**:
+- Number of direct dependents (>10 = HIGH)
+- Presence in critical path (auth, payment = HIGH)
+- Test coverage (<50% = HIGH risk)
+- Type of change (breaking change = HIGH)
+
+**Risk Levels**:
+- 🟢 **LOW**: 1-5 dependents, well-tested, non-critical
+- 🟡 **MEDIUM**: 5-15 dependents, partial tests, business logic
+- 🔴 **HIGH**: >15 dependents OR critical path OR breaking change
+
+---
+
+## Output Format
+
+### For API Impact
+
+```markdown
+=== API Impact Analysis ===
+
+📍 **API Endpoint**: $API_PATH
+
+📊 **Impact Summary**:
+- Backend files: [count]
+- Frontend files: [count]
+- Test files: [count]
+- **Risk Level**: 🔴/🟡/🟢 [reason]
+
+---
+
+## 1. Backend Layer
+
+### API Definition
+- File: [path:line]
+- Handler: [function name]
+- Request/Response types: [types]
+
+### Response Structure
+```[language]
+// Current structure from types
+interface UserResponse {
+  id: string
+  role: string  // ⚠️ If changing this
+  ...
+}
+```
+
+---
+
+## 2. Frontend Layer
+
+### API Client/Service
+- File: [path:line]
+- Wrapper function: [function name]
+
+### Custom Hooks (React)
+- `useUser` ([path:line])
+  - Used by [count] components
+  - Components: [list]
+
+### Direct API Calls
+- [component:line] - [usage description]
+
+---
+
+## 3. Component Impact
+
+**High Priority** (Directly affected):
+1. [Component A] ([path:line])
+   - Usage: [how it uses the API/field]
+   - Impact: [what breaks]
+
+2. [Component B] ([path:line])
+   - Usage: [description]
+
+**Medium Priority** (Indirectly affected):
+3. [Component C] - Uses Hook that wraps API
+
+---
+
+## 4. Field Usage Analysis
+
+**Field: `role`** (⚠️ Changing from string → array)
+- Total occurrences: [count]
+- Locations:
+  1. [file:line] - `if (user.role === 'admin')`
+  2. [file:line] - `user.role.toUpperCase()`
+
+**Breaking Change Assessment**:
+- All usages assume string type
+- Migration required: Yes
+- Backward compatibility: Possible with adapter
+
+---
+
+## 5. Test Impact
+
+**Test Files to Update**:
+- `user.test.ts` - Mock data structure
+- `useUser.test.ts` - Hook logic
+- `UserBadge.test.tsx` - Component rendering
+- `e2e/user-profile.spec.ts` - E2E scenarios
+
+**Test Coverage Gaps**:
+- ⚠️ No tests for [Component X]
+- ⚠️ Missing integration tests for [Flow Y]
+
+---
+
+## 6. Migration Checklist
+
+- [ ] Update API response type definition
+- [ ] Update [N] API call sites
+- [ ] Update [N] components using the field
+- [ ] Add backward compatibility layer (if needed)
+- [ ] Update [N] test files
+- [ ] Test all affected pages manually
+- [ ] Update API documentation
+
+**Estimated Effort**: [X-Y hours]
+**Risk Level**: 🔴 HIGH | 🟡 MEDIUM | 🟢 LOW
+
+---
+
+## 7. Recommendations
+
+1. [Recommendation 1]
+2. [Recommendation 2]
+3. [Recommendation 3]
+```
+
+### For Model Impact
+
+```markdown
+=== Model Change Impact Analysis ===
+
+📍 **Model**: $MODEL_NAME
+
+📊 **Impact Summary**:
+- Controllers: [count]
+- Services: [count]
+- Associated models: [count]
+- Test files: [count]
+- **Risk Level**: 🔴/🟡/🟢 [reason]
+
+---
+
+## 1. Model Definition
+- File: [path]
+- Table: [table_name]
+- Key fields: [list]
+
+### Associations
+- `belongs_to :organization`
+- `has_many :orders`
+- `has_one :profile`
+
+### Validations
+- `validates :email, presence: true, uniqueness: true`
+- [other validations]
+
+---
+
+## 2. Direct Dependencies
+
+### Controllers ([count])
+1. `UsersController#create` ([path:line])
+   - Creates new User instances
+   - Validation-dependent
+
+2. `Admin::UsersController#update` ([path:line])
+   - Updates User attributes
+
+### Services ([count])
+1. `UserImportService` ([path:line])
+   - Bulk creates Users
+   - ⚠️ No validation error handling
+
+---
+
+## 3. Cascade Impact
+
+### Associated Models
+1. **Order model** ([path:line])
+   - `belongs_to :user, validates: true`
+   - **Impact**: Will fail if User validation fails
+
+2. **Notification model** ([path:line])
+   - Assumes `user.email` is always valid
+   - **Risk**: May send to invalid emails
+
+---
+
+## 4. Test Coverage
+
+**Existing Tests**:
+- `users_controller_spec.rb` - Basic CRUD
+- `user_spec.rb` - Model validations
+
+**Coverage Gaps**:
+- ⚠️ UserImportService has no validation failure tests
+- ⚠️ Order-User association not tested with invalid user
+
+---
+
+## 5. Migration Checklist
+
+- [ ] Review validation rules for edge cases
+- [ ] Add tests for validation failures
+- [ ] Update controllers to handle new validation errors
+- [ ] Check associated models for assumptions
+- [ ] Add integration tests for cascade effects
+- [ ] Update API documentation
+
+**Estimated Effort**: [X-Y hours]
+**Risk Level**: 🔴 HIGH | 🟡 MEDIUM | 🟢 LOW
+```
+
+---
+
+## Critical Rules
+
+1. **Static Analysis Only**: Analyze code structure, not runtime behavior
+2. **Evidence-Based**: Every claim must reference file:line
+3. **Prioritize Impact**: Show high-priority dependencies first
+4. **Practical Output**: Focus on actionable migration steps
+5. **Risk Assessment**: Always provide risk level and reasoning
+6. **Test First**: Identify test gaps before changes
+7. **Time Limit**: Complete analysis in 5-10 minutes
+
+---
+
+## Error Handling
+
+**If target not found**:
+- Search with fuzzy matching
+- Suggest similar components
+- Ask user to clarify
+
+**If too many results** (>100):
+- Sample top 20-30 most relevant
+- Group by category (controllers, services, etc.)
+- Warn about incomplete analysis
+
+**If no dependencies found**:
+- Verify target exists
+- Check if it's a leaf component (no dependents)
+- Suggest dead code possibility
+
+---
+
+## Tips for Accurate Analysis
+
+- **Use precise grep patterns**: Match import statements, not comments
+- **Follow the call chain**: From definition → usage → components
+- **Check test files separately**: Different directory structure
+- **Consider indirect dependencies**: Hooks/Services wrapping the target
+- **Language-specific patterns**:
+  - TypeScript: `import { X } from`, `X.method()`, type definitions
+  - Ruby: `require`, `include`, `Class.method`
+  - Go: `import`, package usage
+  - Python: `from X import`, `import X`
+
+---
+
+## What's Next?
+
+After `/atlas-impact`, users can:
+- Use `/atlas-pattern` to learn how to implement changes consistently
+- Use `/atlas-overview` for broader context
+- Create migration plan based on the checklist
