@@ -443,7 +443,7 @@ echo "You can now use /atlas-overview and /atlas-pattern in any project"
 如果你遇到問題或有改進建議：
 
 1. 檢查 `./install-global.sh --check` 輸出
-2. 查看 `.dev-notes/` 中的實作記錄
+2. 查看 `dev-notes/` 中的實作記錄
 3. 提交 issue 或 PR
 
 ---
