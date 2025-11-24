@@ -484,7 +484,7 @@ AI 回應：
 └─────────────────────────────────────────────┘
 ```
 
-> **歷史演進**：SourceAtlas 從獨立 CLI 設計演進為 Claude Code Commands 整合。完整演進過程見 `.dev-notes/HISTORY.md`
+> **歷史演進**：SourceAtlas 從獨立 CLI 設計演進為 Claude Code Commands 整合。完整演進過程見 `dev-notes/HISTORY.md`
 
 ### 3.2 檔案結構
 
@@ -646,7 +646,7 @@ AI 分析：
 4. **符合"極簡"哲學** - 使用標準工具，不重新發明輪子
 5. **開發效率** - 無需維護自訂解析器和文檔
 
-**完整分析**：見 `.dev-notes/toon-vs-yaml-analysis.md`
+**完整分析**：見 `dev-notes/toon-vs-yaml-analysis.md`
 
 ### 5.2 YAML 格式規範
 
@@ -679,7 +679,7 @@ hypotheses:
       validation_method: "檢查 Service 類別結構和呼叫方式"
 ```
 
-> **格式決策歷史**：v1.0 評估了自訂 TOON 格式（14% token 節省），但最終選擇 YAML 以獲得生態系統支援。詳見 `.dev-notes/HISTORY.md` 和 `.dev-notes/toon-vs-yaml-analysis.md`
+> **格式決策歷史**：v1.0 評估了自訂 TOON 格式（14% token 節省），但最終選擇 YAML 以獲得生態系統支援。詳見 `dev-notes/HISTORY.md` 和 `dev-notes/toon-vs-yaml-analysis.md`
 
 ---
 
@@ -1380,7 +1380,7 @@ When detecting user confusion, suggest:
   - `/atlas-impact` ⏳ - 影響分析（Phase 2）
   - 其他命令（Phase 2-3）
 
-> **完整版本歷史與決策記錄**：見 `.dev-notes/HISTORY.md`
+> **完整版本歷史與決策記錄**：見 `dev-notes/HISTORY.md`
 
 ---
 
