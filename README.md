@@ -15,6 +15,36 @@
 
 ---
 
+## 🗺️ 專案導航
+
+| 我想... | 去這裡 |
+|---------|--------|
+| 🚀 **馬上使用** | [快速開始](#-快速開始) ↓ |
+| 📖 **理解原理** | [dev-notes/METHODOLOGY.md](./dev-notes/METHODOLOGY.md) |
+| 🔍 **看關鍵學習** | [dev-notes/KEY_LEARNINGS.md](./dev-notes/KEY_LEARNINGS.md) |
+| 💡 **看未來功能** | [proposals/](./proposals/) |
+| 🧪 **看實驗想法** | [ideas/](./ideas/) |
+| 📚 **學習範例** | [examples/](./examples/) |
+| 📜 **開發歷史** | [dev-notes/HISTORY.md](./dev-notes/HISTORY.md) |
+
+<details>
+<summary>📁 <b>完整目錄結構</b></summary>
+
+```
+sourceatlas2/
+├── scripts/          # 分析腳本
+├── proposals/        # 功能提案（未實作）
+├── dev-notes/        # 開發記錄與方法論
+├── ideas/            # 實驗性想法
+└── examples/         # 參考專案
+```
+
+詳見 [CLAUDE.md](./CLAUDE.md#目錄結構)
+
+</details>
+
+---
+
 ## ✨ 核心特色
 
 - **🚀 極速分析**: 掃描 <5% 檔案，理解 70-80% 專案
