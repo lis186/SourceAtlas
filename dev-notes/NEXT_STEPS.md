@@ -201,13 +201,13 @@ cd /path/to/test/project
 ## 🔗 Key Resources
 
 **Implementation Details**:
-- [Implementation Roadmap](.dev-notes/implementation-roadmap.md) - Complete plan
+- [Implementation Roadmap](./implementation-roadmap.md) - Complete plan
 - [PRD v2.5.2](PRD.md) - Product requirements
 - [PROMPTS.md](PROMPTS.md) - Stage 0/1/2 prompts (reference for `/atlas`)
 
 **v1.0 Learnings**:
-- [Implementation Log](.dev-notes/v1-implementation-log.md) - What we learned
-- [TOON vs YAML Analysis](.dev-notes/toon-vs-yaml-analysis.md) - Format decision
+- [Implementation Log](./v1-implementation-log.md) - What we learned
+- [TOON vs YAML Analysis](./toon-vs-yaml-analysis.md) - Format decision
 
 **Existing Work**:
 - `.claude/commands/atlas-overview.md` - Working Stage 0 command

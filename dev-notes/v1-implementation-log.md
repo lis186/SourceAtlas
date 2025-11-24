@@ -569,7 +569,7 @@ For **TINY/SMALL** projects (5 files), scanning 2 files = 40% is still high.
 
 **Decision Matrix Score**: YAML (4 wins) vs TOON (3 wins)
 
-See full analysis: `.dev-notes/toon-vs-yaml-analysis.md`
+See full analysis: `./toon-vs-yaml-analysis.md`
 
 
 

@@ -404,7 +404,7 @@ This feature transforms SourceAtlas from a project-specific tool to a **true dev
 - `install-global.sh` (250 lines)
 - `GLOBAL_INSTALLATION.md` (800 lines)
 - `verify-global-install.sh` (50 lines)
-- `.dev-notes/2025-11/2025-11-23-global-installation-implementation.md` (this file)
+- `../2025-11/2025-11-23-global-installation-implementation.md` (this file)
 
 ### Modified Files
 - `.claude/commands/atlas-overview.md` (updated script paths)
