@@ -78,7 +78,7 @@
 ## 🔥 Current Sprint (Week 5)
 
 ### Priority P0 (Must Do)
-1. Complete `.dev-notes/` restructuring
+1. Complete `dev-notes/` restructuring
 2. Update CLAUDE.md with management rules
 3. Start `/atlas-overview` implementation
 
@@ -103,7 +103,7 @@
 - [x] Objective-C Support (2025-11-23)
 
 ### In Progress 🔵
-- [ ] .dev-notes/ Restructuring (90% complete)
+- [x] dev-notes/ Restructuring (100% complete)
 - [ ] v2.5 Core Commands (20% complete)
 
 ### Blocked ❌

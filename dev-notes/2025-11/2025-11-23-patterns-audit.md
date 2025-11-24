@@ -2,7 +2,7 @@
 
 **日期**: 2025-11-23
 **目的**: 檢查 find-patterns.sh 的現有 pattern 支援，識別不足或不適當的 patterns
-**參考**: `.dev-notes/new-language-support-methodology.md`
+**參考**: `../new-language-support-methodology.md`
 
 ---
 
@@ -371,7 +371,7 @@
 - [ ] 建立跨語言 pattern 對照表
 
 **新語言支援**:
-- [ ] 使用 `.dev-notes/new-language-support-methodology.md` 框架
+- [ ] 使用 `../new-language-support-methodology.md` 框架
 - [ ] 候選語言：Kotlin (Multiplatform), Go, Rust, Flutter
 
 ---
@@ -415,7 +415,7 @@
 
 ## 7. 品質標準
 
-根據 `.dev-notes/new-language-support-methodology.md`，每個 pattern 必須：
+根據 `../new-language-support-methodology.md`，每個 pattern 必須：
 
 **必須達成**:
 - [ ] 準確率 >80%
@@ -475,5 +475,5 @@
 **下次審查**: 實作 Phase 1 後
 
 **參考文檔**:
-- `.dev-notes/new-language-support-methodology.md` - 新語言支援方法論
+- `../new-language-support-methodology.md` - 新語言支援方法論
 - `test_targets/ios-patterns-expansion-complete-report.md` - iOS 擴展經驗

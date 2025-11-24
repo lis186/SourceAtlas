@@ -817,7 +817,7 @@ A: 看 commit message 一致性、註解密度、CLAUDE.md 等檔案。
 - 完整的 IDE 和工具支援
 - 包含完整的 metadata
 
-**v1.0 決策**: 選擇 YAML 而非自訂 TOON 格式（詳見 `.dev-notes/toon-vs-yaml-analysis.md`）
+**v1.0 決策**: 選擇 YAML 而非自訂 TOON 格式（詳見 `dev-notes/toon-vs-yaml-analysis.md`）
 
 **範例**:
 ```yaml

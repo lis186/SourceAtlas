@@ -1046,14 +1046,14 @@ echo "🚀 Quick Start: $LANG Pattern Support"
 
 # 1. 建立工作目錄
 mkdir -p "test_targets/${LANG}"
-mkdir -p ".dev-notes/${LANG}"
+mkdir -p "../../${LANG}"
 
 # 2. 複製模板
-cp .dev-notes/new-language-support-methodology.md ".dev-notes/${LANG}/methodology.md"
-cp templates/research-report-template.md ".dev-notes/${LANG}/${LANG}-research-report.md"
+cp ../../new-language-support-methodology.md "../../${LANG}/methodology.md"
+cp templates/research-report-template.md "../../${LANG}/${LANG}-research-report.md"
 
 # 3. 建立 checklist
-cat > ".dev-notes/${LANG}/checklist.md" <<EOF
+cat > "../../${LANG}/checklist.md" <<EOF
 # ${LANG} Pattern Support Checklist
 
 ## Research Phase (Day 1-2)
@@ -1095,9 +1095,9 @@ EOF
 echo "✅ Created ${LANG} support structure"
 echo ""
 echo "Next steps:"
-echo "1. Read .dev-notes/${LANG}/methodology.md"
-echo "2. Fill in .dev-notes/${LANG}/${LANG}-research-report.md"
-echo "3. Follow .dev-notes/${LANG}/checklist.md"
+echo "1. Read ../../${LANG}/methodology.md"
+echo "2. Fill in ../../${LANG}/${LANG}-research-report.md"
+echo "3. Follow ../../${LANG}/checklist.md"
 echo ""
 echo "📚 Reference: iOS implementation in test_targets/ios-*-report.md"
 ```

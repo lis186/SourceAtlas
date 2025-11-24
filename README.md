@@ -539,7 +539,7 @@ SourceAtlas 不僅是分析工具，也是研究 AI 時代軟體工程的平台�
 3. 完整的 IDE 和工具支援
 4. 包含 metadata
 
-**v1.0 決策**: 曾評估自訂 TOON 格式（14% token 節省），但最終選擇 YAML 以獲得生態系統支援。詳見 `.dev-notes/toon-vs-yaml-analysis.md`
+**v1.0 決策**: 曾評估自訂 TOON 格式（14% token 節省），但最終選擇 YAML 以獲得生態系統支援。詳見 `dev-notes/toon-vs-yaml-analysis.md`
 
 **範例**:
 
@@ -676,7 +676,7 @@ project_fingerprint:
 - [ ] `/atlas-find` - 智慧搜尋
 - [ ] `/atlas-explain` - 深入解釋
 
-**進度追蹤**：見 `.dev-notes/implementation-roadmap.md`
+**進度追蹤**：見 `dev-notes/implementation-roadmap.md`
 
 ### v3.0 (未來) 🔮
 

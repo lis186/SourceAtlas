@@ -643,7 +643,7 @@ bash scripts/atlas/find-patterns.sh "theme" test_targets/nextjs-example/examples
 
 ### 8.3 品質標準
 
-根據 `.dev-notes/new-language-support-methodology.md`:
+根據 `../new-language-support-methodology.md`:
 - ✅ 每個 pattern 準確率 >80%
 - ✅ 至少 2 個測試專案驗證（未來）
 - ✅ 檔案/目錄模式明確
@@ -705,5 +705,5 @@ bash scripts/atlas/find-patterns.sh "theme" test_targets/nextjs-example/examples
 **狀態**: ✅ Production Ready
 
 **參考文檔**:
-- `.dev-notes/patterns-audit-report.md` - 審查報告
-- `.dev-notes/new-language-support-methodology.md` - 方法論
+- `../patterns-audit-report.md` - 審查報告
+- `../new-language-support-methodology.md` - 方法論

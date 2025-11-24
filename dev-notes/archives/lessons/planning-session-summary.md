@@ -63,7 +63,7 @@
 
 ### 1. 實作路線圖（36 頁）
 
-**檔案**: `.dev-notes/implementation-roadmap.md`
+**檔案**: `../../implementation-roadmap.md`
 
 **內容**:
 - 執行摘要和缺口分析
@@ -83,7 +83,7 @@
 
 ### 2. 下一步指南
 
-**檔案**: `.dev-notes/NEXT_STEPS.md`
+**檔案**: `../../NEXT_STEPS.md`
 
 **內容**:
 - 立即行動（今天開始）
@@ -278,13 +278,13 @@ cd ***REMOVED***
 ## 📚 可用資源
 
 ### 規劃文檔
-- [實作路線圖](.dev-notes/implementation-roadmap.md) - 36 頁詳細計畫
-- [下一步指南](.dev-notes/NEXT_STEPS.md) - 快速開始和檢查清單
-- [本摘要](.dev-notes/planning-session-summary.md) - 你在這裡
+- [實作路線圖](../../implementation-roadmap.md) - 36 頁詳細計畫
+- [下一步指南](../../NEXT_STEPS.md) - 快速開始和檢查清單
+- [本摘要](../../planning-session-summary.md) - 你在這裡
 
 ### v1.0 學習
-- [v1 實作日誌](.dev-notes/v1-implementation-log.md) - 完整會議歷史
-- [TOON vs YAML 分析](.dev-notes/toon-vs-yaml-analysis.md) - 格式決策理由
+- [v1 實作日誌](../../v1-implementation-log.md) - 完整會議歷史
+- [TOON vs YAML 分析](../../toon-vs-yaml-analysis.md) - 格式決策理由
 
 ### 產品文檔
 - [PRD v2.5.2](PRD.md) - 產品需求和架構
