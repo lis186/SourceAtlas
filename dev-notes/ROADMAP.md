@@ -1,7 +1,7 @@
 # SourceAtlas Roadmap
 
-**Current Status**: v1.0 Complete → v2.5 In Progress (Week 4/16)
-**Last Updated**: 2025-11-23
+**Current Status**: v1.0 Complete → v2.5 In Progress (Week 5/16)
+**Last Updated**: 2025-11-24
 
 ---
 
@@ -19,10 +19,11 @@
 - [x] Patterns audit & cleanup
 
 ### Phase 3 - Core Commands (Week 5-8) 🔵 IN PROGRESS
-- [ ] `/atlas-overview` command (Stage 0)
-- [ ] `/atlas` command (full 3-stage analysis)
-- [ ] `/atlas-impact` command (change impact)
+- [x] `/atlas-overview` command (Stage 0) ✅ (2025-11-20)
+- [x] Command architecture simplification ✅ (2025-11-24)
+- [ ] `/atlas-impact` command (change impact) ⭐ NEXT
 - [ ] `/atlas-find` command (smart search)
+- [ ] `/atlas-explain` command (deep dive)
 
 ### Phase 4 - Testing & Polish (Week 9-16)
 - [ ] Comprehensive testing
@@ -77,18 +78,20 @@
 
 ## 🔥 Current Sprint (Week 5)
 
-### Priority P0 (Must Do)
-1. Complete `dev-notes/` restructuring
-2. Update CLAUDE.md with management rules
-3. Start `/atlas-overview` implementation
+### Priority P0 (Must Do) ⭐
+1. **Start `/atlas-impact` implementation**
+   - Static dependency analysis
+   - API change impact tracking
+   - Test on 3+ real scenarios
 
 ### Priority P1 (Should Do)
-4. Test patterns on 2+ new projects
-5. Document pattern detection methodology
+2. Document command architecture decisions (✅ Done 11/24)
+3. Test `/atlas-overview` and `/atlas-pattern` on new projects
+4. Collect user feedback
 
 ### Priority P2 (Nice to Have)
-6. Performance benchmarking
-7. Pattern statistics dashboard
+5. Performance benchmarking
+6. Pattern statistics dashboard
 
 ---
 
@@ -97,14 +100,17 @@
 ### Completed Milestones ✅
 - [x] v1.0 Methodology Validation (2025-10-22)
 - [x] YAML Format Decision (2025-11-20)
+- [x] Atlas Overview Command (2025-11-20)
 - [x] Atlas Pattern Command (2025-11-22)
 - [x] TypeScript Patterns Expansion (2025-11-23)
 - [x] iOS Patterns Consolidation (2025-11-23)
 - [x] Objective-C Support (2025-11-23)
+- [x] Command Architecture Simplification (2025-11-24)
+- [x] Version Number Unification (2025-11-24)
 
 ### In Progress 🔵
 - [x] dev-notes/ Restructuring (100% complete)
-- [ ] v2.5 Core Commands (20% complete)
+- [ ] v2.5 Core Commands (40% complete - 2/5 done)
 
 ### Blocked ❌
 - None
@@ -120,6 +126,8 @@
 3. **標準優於優化**: YAML > TOON（+14% tokens 但生態系統好）
 4. **混合專案挑戰**: Swift/ObjC 需要特殊處理
 5. **Pattern 一致性**: 跨語言命名慣例相似度高
+6. **使用場景驅動設計** (2025-11-24): 從真實場景倒推功能需求，發現 `/atlas` 無實際使用場景
+7. **命令命名重要性** (2025-11-24): 技術性命名（如 "coupling"）不易理解，發現重疊後果斷簡化
 
 ---
 
