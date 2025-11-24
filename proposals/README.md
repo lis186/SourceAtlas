@@ -4,14 +4,21 @@ SourceAtlas 未來功能的完整設計文檔。
 
 ## 📋 當前提案
 
-### 🟢 已批准待實作
+### 🟢 已批准待實作（v3.0）
 
 - **[code-maat Integration](./code-maat-integration/SOURCEATLAS_CODEMAAT_INTEGRATION.md)** (v3.0 候選)
-  - **目標**: 為 SourceAtlas 增加時序分析能力
-  - **命令**: 3 個新命令 (`/changes`, `/impact`, `/expert`)
-  - **狀態**: 設計完成，待排入 roadmap
+  - **目標**: 為 SourceAtlas v3.0 增加時序分析能力
+  - **命令**: 2 個新命令（簡化版）
+    - `/atlas-changes` - 歷史查詢（變更頻率、**耦合度**、熱點、風險評估）
+    - `/atlas-expert` - 專家查詢（代碼所有權、知識地圖）
+  - **狀態**: 設計完成，待 v2.5 完成後排入 roadmap
+  - **說明**:
+    - ✅ 簡化為 2 個命令（移除獨立的 `/atlas-coupling`，整合到 `/atlas-changes`）
+    - ✅ `/atlas-changes` 整合完整時序分析功能
+    - ✅ 所有命令已加上 `/atlas-` 前綴（符合命名規範）
+    - ✅ 與 v2.5 `/atlas-impact`（靜態分析）互補不衝突
   - **文檔**:
-    - [完整提案](./code-maat-integration/SOURCEATLAS_CODEMAAT_INTEGRATION.md) (2679 行)
+    - [完整提案](./code-maat-integration/SOURCEATLAS_CODEMAAT_INTEGRATION.md) (2,679 行)
     - [快速參考](./code-maat-integration/CODE_MAAT_FORMAT_CHEATSHEET.md)
     - [效能考量](./code-maat-integration/PERFORMANCE_CONSIDERATIONS.md)
     - [更新歷史](./code-maat-integration/UPDATES_SUMMARY.md)
