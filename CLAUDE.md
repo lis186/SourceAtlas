@@ -150,10 +150,12 @@ cd ~/projects/any-project
 
 **v2.5 方式**（Commands，開發中）：
 - `/atlas-overview` ✅ - Stage 0 專案指紋（已實作）
-- `/atlas-pattern` 🔵 - 學習設計模式（最高優先級，開發中）
-- `/atlas` 🔵 - 完整三階段分析（開發中）
+- `/atlas-pattern` ✅ - 學習設計模式（已實作）
 - `/atlas-impact` 🔵 - 影響範圍分析（開發中）
 - `/atlas-find` 🔵 - 智慧搜尋（開發中）
+
+**完整三階段分析**（罕見場景）：
+針對深度盡職調查（評估開源專案、招聘評估、技術盡調），使用 `PROMPTS.md` 手動執行 Stage 0-1-2
 
 **重要**：Stage prompts 彼此依賴。務必先完成 Stage 0 再做 Stage 1，先完成 Stage 1 再做 Stage 2。
 
@@ -293,7 +295,11 @@ hypotheses:
 
 ## 版本控制
 
-**當前版本**：
+**版本號說明**：
+- **SourceAtlas 產品版本**（如 v2.5.2）：追蹤整個產品的開發階段
+- **提案文檔版本**（如 proposals/ 下的 v2.1）：追蹤個別提案的設計變更
+
+**當前產品版本**：
 - **v1.0** ✅ - 方法論驗證完成（2025-11-22）
 - **v2.5** 🔵 - Commands 實作中（預計 3-4 週）
 
