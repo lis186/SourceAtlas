@@ -1,7 +1,24 @@
-reference/
+# Test and example projects (large files)
 test_targets/
 test_results/
+
+# Example projects (cloned repos, only track README)
+examples/*
+!examples/README.md
+!examples/.gitignore
+
+# Ideas (草稿筆記，but track them for transparency)
+# ideas/* - 不忽略，保持可見
+
+# Backup files
 *.backup*
 
 # SpecStory artifacts (IDE extension, not part of SourceAtlas)
 .specstory/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
