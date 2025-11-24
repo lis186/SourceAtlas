@@ -1,4 +1,6 @@
-# SourceAtlas Development Notes
+# dev-notes/ - SourceAtlas 知識庫
+
+> 💡 **為什麼公開？** SourceAtlas 的價值不只是工具，更是分析方法論。這裡記錄了完整的開發歷史、關鍵決策和思考過程。
 
 這個資料夾記錄 SourceAtlas 的**完整開發歷史**、**關鍵決策**和**方法論**。
 
@@ -11,7 +13,7 @@
 
 ## 最近更新
 
-- **2025-11-23**: **.dev-notes/ 整理重構完成** - 分層架構建立 + AI 管理規則編碼
+- **2025-11-23**: **dev-notes/ 整理重構完成** - 分層架構建立 + AI 管理規則編碼
 - **2025-11-23**: **Patterns 系統全面優化** - iOS 整合 (34→29) + Objective-C 支援 + TypeScript 擴充 (13→22)
 - **2025-11-22**: Atlas Pattern Command 實作完成
 - **2025-11-20**: TOON vs YAML 格式決策
@@ -55,7 +57,28 @@
 4. ✅ **同主題內容必須合併**
 5. ✅ **每月更新月度 README**
 
-詳細規則請參考：`/Users/justinlee/dev/sourceatlas2/CLAUDE.md` 中的「.dev-notes/ 管理規則」章節
+詳細規則請參考：`../CLAUDE.md` 中的「dev-notes/ 管理規則」章節
+
+---
+
+## 與其他資料夾的關係
+
+SourceAtlas 採用三層想法孵化架構：
+
+| 資料夾 | 成熟度 | 用途 | 可見性 |
+|--------|--------|------|--------|
+| `ideas/` | 0-30% | 實驗性想法、草稿筆記 | ✅ 可見 |
+| `proposals/` | 70-90% | 成熟提案、待實作功能 | ✅ 可見 |
+| `dev-notes/` | 100% | 已完成的實作記錄 | ✅ 可見 |
+
+**生命週期**：
+```
+ideas/*.md
+  ↓ 研究驗證
+proposals/feature/
+  ↓ 開始實作
+dev-notes/YYYY-MM/implementation.md
+```
 
 ---
 
