@@ -47,7 +47,7 @@
 **格式選擇** (v1.0 決策)：
 
 - **YAML** 為主要格式（標準生態系統 > 14% token 優化）
-- TOON 格式已評估但未採用（詳見 `.dev-notes/toon-vs-yaml-analysis.md`）
+- TOON 格式已評估但未採用（詳見 `dev-notes/toon-vs-yaml-analysis.md`）
 - 用於 Stage 0 輸出：`.yaml`
 - 用於 Stage 1-2 輸出：`.md`
 
@@ -226,7 +226,7 @@ hypotheses:
 **為什麼選擇 YAML 而非 TOON？**
 - 標準格式 > 自訂格式（極簡哲學）
 - 14% token 差異屬於邊際效益
-- 完整分析見 `.dev-notes/toon-vs-yaml-analysis.md`
+- 完整分析見 `dev-notes/toon-vs-yaml-analysis.md`
 
 ### Markdown 報告 (.md)
 
@@ -585,7 +585,7 @@ else:
 
 ```bash
 # 驗證結構
-.dev-notes/scripts/validate.sh
+dev-notes/scripts/validate.sh
 
 # 檢查項目：
 ✅ 檔名符合規範（大寫或日期前綴）
