@@ -6,7 +6,13 @@
 
 ## 2025-11（當前月份）
 
-### Week 4 (11/20-11/23): Patterns 系統全面優化
+### Week 4 (11/20-11/24): Patterns 系統全面優化 + 架構簡化
+
+**命令架構簡化** (11/24):
+- 版本號統一：產品版本 vs 文檔版本（清晰語意）
+- 移除 `/atlas` 命令（避免與 `/atlas-overview` 混淆）
+- code-maat 提案簡化：3→2 命令（移除 coupling 重複）
+→ [完整決策](./2025-11/2025-11-24-atlas-command-simplification-decision.md)
 
 **iOS Patterns 整合** (11/23):
 - 34→29 patterns（-15%），消除 Architecture section 重複
@@ -63,6 +69,7 @@
 
 | 日期 | 事件 | 影響 | 連結 |
 |------|------|------|------|
+| 2025-11-24 | 命令架構簡化 | 版本號統一、移除 `/atlas` | [詳細](./2025-11/2025-11-24-atlas-command-simplification-decision.md) |
 | 2025-11-23 | Objective-C 支援 | 完整混合專案支援 | [詳細](./2025-11/2025-11-23-objective-c-support.md) |
 | 2025-11-23 | iOS Patterns 整合 | 消除重複，架構優化 | [詳細](./2025-11/2025-11-23-ios-patterns.md) |
 | 2025-11-22 | Atlas Pattern 實作 | v2.5 核心功能 | [詳細](./2025-11/2025-11-22-atlas-pattern.md) |
@@ -85,4 +92,4 @@
 
 ---
 
-**最後更新**: 2025-11-23
+**最後更新**: 2025-11-24
