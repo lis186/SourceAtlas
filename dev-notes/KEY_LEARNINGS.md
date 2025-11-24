@@ -17,7 +17,7 @@
 - README + package.json provide disproportionate information
 - High-entropy prioritization saves 95%+ time
 
-**Source**: `.dev-notes/v1-implementation-log.md` - Progress Update 4
+**Source**: `./v1-implementation-log.md` - Progress Update 4
 
 ### 2. Scale-Aware is NON-NEGOTIABLE ⭐
 
@@ -29,7 +29,7 @@
 
 **Details**: See [Scale-Aware Algorithm](#scale-aware-algorithm)
 
-**Source**: `.dev-notes/v1-implementation-log.md` - Progress Update 3-4
+**Source**: `./v1-implementation-log.md` - Progress Update 3-4
 
 ### 3. YAML > TOON (14% vs Ecosystem) ⭐
 
@@ -39,7 +39,7 @@
 
 **Rationale**: Standard format > marginal optimization
 
-**Source**: `.dev-notes/toon-vs-yaml-analysis.md` - Full Analysis
+**Source**: `./toon-vs-yaml-analysis.md` - Full Analysis
 
 ### 4. .venv/node_modules MUST Be Excluded
 
@@ -53,7 +53,7 @@
 - PHP: vendor/
 - General: .git/, .DS_Store
 
-**Source**: `.dev-notes/v1-implementation-log.md` - Progress Update 4
+**Source**: `./v1-implementation-log.md` - Progress Update 4
 
 ### 5. Test on Real Projects, Not Theory
 
@@ -69,7 +69,7 @@
 - Measure everything (speed, size, tokens, scan ratio)
 - Iterate based on data, not assumptions
 
-**Source**: All `.dev-notes/` files
+**Source**: All `./` files
 
 ### 6. AI Collaboration is Detectable and Quantifiable
 
@@ -82,7 +82,7 @@
 
 **Application**: Can objectively assess AI maturity
 
-**Source**: `CLAUDE.md` - AI 協作檢測, `.dev-notes/v1-implementation-log.md`
+**Source**: `CLAUDE.md` - AI 協作檢測, `./v1-implementation-log.md`
 
 ---
 
@@ -101,7 +101,7 @@
 **Perfect**: Speed, size, tokens
 **Needs work**: Scan ratio (scale-aware), hypotheses (scale-aware)
 
-**Source**: `.dev-notes/v1-implementation-log.md` - Progress Update 4
+**Source**: `./v1-implementation-log.md` - Progress Update 4
 
 ### Format Comparison
 
@@ -112,7 +112,7 @@
 
 **Trade-off**: 131 extra tokens for entire ecosystem support = worth it
 
-**Source**: `.dev-notes/toon-vs-yaml-analysis.md`
+**Source**: `./toon-vs-yaml-analysis.md`
 
 ---
 
@@ -140,7 +140,7 @@
 
 **Key Insight**: TINY projects with 60% scan ratio are acceptable because even 2 files (README + package.json) provide critical insights. Alternative would be scanning only 1 file = missing technical details.
 
-**Source**: `.dev-notes/v1-implementation-log.md` - Progress Update 5, `CLAUDE.md`
+**Source**: `./v1-implementation-log.md` - Progress Update 5, `CLAUDE.md`
 
 ---
 
@@ -227,7 +227,7 @@ esac
 
 **Why**: Fixed counts cause 60% scan ratio on TINY projects
 
-**Source**: `.dev-notes/v1-implementation-log.md` - Progress Update 3
+**Source**: `./v1-implementation-log.md` - Progress Update 3
 
 ### 2. Don't Forget to Exclude Bloat Directories ❌
 
@@ -248,7 +248,7 @@ TOTAL_FILES=$(find . -name "*.py" \
 
 **Why**: .venv can inflate file count by 1000x, breaking metrics
 
-**Source**: `.dev-notes/v1-implementation-log.md` - Progress Update 4
+**Source**: `./v1-implementation-log.md` - Progress Update 4
 
 ### 3. Don't Optimize Format Before Testing ❌
 
@@ -271,7 +271,7 @@ TOTAL_FILES=$(find . -name "*.py" \
 
 **Why**: Test assumptions before committing to custom solutions
 
-**Source**: `.dev-notes/toon-vs-yaml-analysis.md`
+**Source**: `./toon-vs-yaml-analysis.md`
 
 ### 4. Don't Target Arbitrary Percentage for All Scales ❌
 
@@ -291,7 +291,7 @@ TOTAL_FILES=$(find . -name "*.py" \
 
 **Why**: High-entropy files are essential even if they represent high % of total
 
-**Source**: `.dev-notes/v1-implementation-log.md` - Progress Update 5
+**Source**: `./v1-implementation-log.md` - Progress Update 5
 
 ### 5. Don't Skip Benchmarking ❌
 
@@ -314,7 +314,7 @@ TOTAL_FILES=$(find . -name "*.py" \
 
 **Why**: You can't improve what you don't measure
 
-**Source**: `scripts/atlas/benchmark.sh`, `.dev-notes/v1-implementation-log.md`
+**Source**: `scripts/atlas/benchmark.sh`, `./v1-implementation-log.md`
 
 ---
 
@@ -351,7 +351,7 @@ TOTAL_FILES=$(find . -name "*.py" \
 - For 1000 analyses: $0.39 savings
 - **Verdict**: Not worth custom format overhead
 
-**Source**: `.dev-notes/toon-vs-yaml-analysis.md` - Cost-Benefit Analysis
+**Source**: `./toon-vs-yaml-analysis.md` - Cost-Benefit Analysis
 
 ---
 
@@ -369,7 +369,7 @@ TOTAL_FILES=$(find . -name "*.py" \
 
 **Better optimization**: Select fewer files (content reduction)
 
-**Source**: `.dev-notes/toon-vs-yaml-analysis.md` - Root Cause Analysis
+**Source**: `./toon-vs-yaml-analysis.md` - Root Cause Analysis
 
 ### 2. Percentage Metrics Break for Small Samples
 
@@ -383,7 +383,7 @@ TOTAL_FILES=$(find . -name "*.py" \
 
 **Lesson**: Metrics need context, especially for small N
 
-**Source**: `.dev-notes/v1-implementation-log.md` - Progress Update 5
+**Source**: `./v1-implementation-log.md` - Progress Update 5
 
 ### 3. Ecosystem Value > Pure Efficiency
 
@@ -403,7 +403,7 @@ TOTAL_FILES=$(find . -name "*.py" \
 
 **Lesson**: Developer experience has high but hard-to-quantify value
 
-**Source**: `.dev-notes/toon-vs-yaml-analysis.md` - Decision Matrix
+**Source**: `./toon-vs-yaml-analysis.md` - Decision Matrix
 
 ### 4. "極簡" (Extreme Minimal) Means Standard Tools
 
@@ -418,7 +418,7 @@ TOTAL_FILES=$(find . -name "*.py" \
 
 **Philosophy**: Minimalism is about simplicity, not optimization
 
-**Source**: `.dev-notes/toon-vs-yaml-analysis.md` - Final Decision
+**Source**: `./toon-vs-yaml-analysis.md` - Final Decision
 
 ---
 
@@ -442,7 +442,7 @@ TOTAL_FILES=$(find . -name "*.py" \
 
 **Lesson**: Rapid iteration beats prolonged planning
 
-**Source**: `.dev-notes/v1-implementation-log.md` - Full session
+**Source**: `./v1-implementation-log.md` - Full session
 
 ---
 
@@ -456,14 +456,14 @@ TOTAL_FILES=$(find . -name "*.py" \
 
 ### Implementation Details
 
-4. **`.dev-notes/implementation-roadmap.md`** - v2.5 plan (36 pages)
-5. **`.dev-notes/NEXT_STEPS.md`** - Immediate actions
-6. **`.dev-notes/v1-implementation-log.md`** - Complete v1 session history
+4. **`./implementation-roadmap.md`** - v2.5 plan (36 pages)
+5. **`./NEXT_STEPS.md`** - Immediate actions
+6. **`./v1-implementation-log.md`** - Complete v1 session history
 
 ### Deep Dives
 
-7. **`.dev-notes/toon-vs-yaml-analysis.md`** - Format decision rationale
-8. **`.dev-notes/planning-session-summary.md`** - v2.5 planning overview
+7. **`./toon-vs-yaml-analysis.md`** - Format decision rationale
+8. **`./planning-session-summary.md`** - v2.5 planning overview
 9. **PRD.md** - Product requirements v2.5.2
 10. **PROMPTS.md** - Stage 0/1/2 methodology
 

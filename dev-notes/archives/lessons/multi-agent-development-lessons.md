@@ -1073,9 +1073,9 @@ Edge cases 清單：
 
 **複製這些到你的專案**：
 
-1. **`.dev-notes/bash-checklist.md`** - Bash 開發檢查清單
-2. **`.dev-notes/test-report-template.md`** - 測試報告模板
-3. **`.dev-notes/pre-task-checklist.md`** - 任務前檢查清單
+1. **`../../bash-checklist.md`** - Bash 開發檢查清單
+2. **`../../test-report-template.md`** - 測試報告模板
+3. **`../../pre-task-checklist.md`** - 任務前檢查清單
 4. **`scripts/test-runner.sh`** - 自動化測試執行器
 
 **範例**：

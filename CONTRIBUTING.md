@@ -23,8 +23,8 @@
 4. **.dev-notes/implementation-roadmap.md** (15 分鐘) - 詳細實作計畫
 
 **進階閱讀**：
-- `.dev-notes/KEY_LEARNINGS.md` - v1.0 關鍵學習
-- `.dev-notes/HISTORY.md` - 完整歷史和決策記錄
+- `dev-notes/KEY_LEARNINGS.md` - v1.0 關鍵學習
+- `dev-notes/HISTORY.md` - 完整歷史和決策記錄
 - `PRD.md` - 產品需求文檔
 
 ---
