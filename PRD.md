@@ -501,7 +501,7 @@ sourceatlas2/
 │   # ├── atlas-find.md                  # ⏳ /atlas-find（Phase 3）
 │   # └── atlas-explain.md               # ⏳ /atlas-explain（Phase 3）
 │
-├── .dev-notes/                          # ⭐ v1.0 開發記錄（重要！）
+├── dev-notes/                           # ⭐ v1.0 開發記錄（重要！）
 │   ├── HISTORY.md                       # ✅ 完整歷史與決策記錄
 │   ├── KEY_LEARNINGS.md                 # ✅ v1.0 關鍵學習總結
 │   ├── toon-vs-yaml-analysis.md         # ✅ 格式決策分析
