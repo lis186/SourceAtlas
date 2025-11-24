@@ -1,11 +1,79 @@
 # SourceAtlas + code-maat 整合文檔更新摘要
 
 **更新日期**: 2025-11-24
-**版本**: 2.0
+**版本**: 2.1
 
 ---
 
 ## 📋 更新歷史
+
+### v2.1 (2025-11-24) - 命令簡化（3→2）⭐
+
+#### 重大變更
+
+**命令數量簡化**：3 個命令 → **2 個命令**
+
+| 原 v2.0 | v2.1 最終設計 | 變更原因 |
+|---------|--------------|----------|
+| `/atlas-changes` | `/atlas-changes` | ✅ **擴充**：整合耦合度分析功能 |
+| `/atlas-coupling` | **已移除** | ⚠️ 功能整合到 `/atlas-changes` |
+| `/atlas-expert` | `/atlas-expert` | ✅ 保持不變 |
+
+**簡化理由**：
+1. **功能重疊**：`/atlas-changes` 已有 `--coupling` 選項
+2. **避免混淆**：用戶不需要在 changes 和 coupling 之間選擇
+3. **職責清晰**：`/atlas-changes` = 完整時序分析，`/atlas-expert` = 專家查詢
+4. **學習成本低**：2 個命令比 3 個更容易記憶和使用
+
+**更新內容**：
+
+1. **PRD.md v3.0 規劃**
+   - 候選功能 A：2 個命令（原 3 個）
+   - `/atlas-changes` 整合功能列表
+   - 更新範例使用場景
+
+2. **proposals/README.md**
+   - 更新命令列表（3 → 2）
+   - 強調 `/atlas-changes` 整合耦合度分析
+
+3. **SOURCEATLAS_CODEMAAT_INTEGRATION.md**
+   - 更新「重要說明」章節
+   - 更新 Executive Summary（2 個命令）
+   - 更新命令總覽（簡化版）
+   - **移除整個 `/atlas-coupling` 章節**（238 行）
+   - 擴充 `/atlas-changes` 功能說明
+   - `/atlas-expert` 編號：3 → 2
+
+**最終 v3.0 命令清單**：
+```bash
+/atlas-changes     # 歷史查詢 + 耦合度 + 熱點 + 風險評估
+/atlas-expert      # 專家查詢 + 知識地圖
+```
+
+**與 v2.5 的對比**：
+```bash
+# v2.5 靜態分析
+/atlas-overview    # 專案指紋 ✅
+/atlas-pattern     # 模式學習 ✅
+/atlas-impact      # 靜態影響分析（API、類型）⏳
+
+# v3.0 時序分析（簡化）
+/atlas-changes     # 歷史 + 耦合度 + 風險
+/atlas-expert      # 專家查詢
+```
+
+**影響範圍**：
+- ✅ PRD.md 更新完成
+- ✅ proposals/README.md 更新完成
+- ✅ SOURCEATLAS_CODEMAAT_INTEGRATION.md 更新完成（移除 238 行）
+- ✅ 文檔版本：2.0 → 2.1
+
+**向後相容性**：
+- ⚠️ 破壞性變更（移除 `/atlas-coupling`）
+- ✅ 但提案尚未實作，不影響現有系統
+- ✅ 簡化後更容易實作和維護
+
+---
 
 ### v2.0 (2025-11-24) - 命名規範與版本定位
 

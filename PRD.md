@@ -1173,11 +1173,10 @@ templates:
 
 #### 候選功能 A：code-maat 時序分析整合 ⭐
 
-基於 [code-maat 提案](./proposals/code-maat-integration/)，新增 3 個時序分析命令：
+基於 [code-maat 提案](./proposals/code-maat-integration/)，新增 2 個時序分析命令：
 
 ```bash
-/atlas-changes     # 歷史查詢（變更頻率、熱點、專家）
-/atlas-coupling    # 耦合度分析（時序影響）
+/atlas-changes     # 歷史查詢（變更頻率、耦合度、熱點、風險評估）
 /atlas-expert      # 專家查詢（代碼所有權、知識地圖）
 ```
 
@@ -1187,29 +1186,38 @@ templates:
 - 快速找到領域專家
 - 基於 code-maat 工具（成熟穩定）
 
+**`/atlas-changes` 整合功能**：
+- ✅ 變更頻率分析（哪些檔案改最多）
+- ✅ 耦合度分析（哪些檔案常一起改）
+- ✅ 熱點識別（高風險區域）
+- ✅ 風險評估（基於歷史 bug 和變更模式）
+- ✅ PR 影響分析（基於歷史耦合度）
+
 **與 v2.5 的互補**：
 
-| v2.5 命令 | v3.0 命令 | 差異 |
-|----------|----------|------|
-| `/atlas-impact` | `/atlas-coupling` | 靜態 vs 時序 |
-| 分析代碼結構（import、調用） | 分析變更歷史（耦合度） | 互補使用 |
-| API 變更影響（前後端） | 重構風險評估（歷史） | 不同場景 |
+| v2.5 命令 | v3.0 命令 | 分析方法 | 適用場景 |
+|----------|----------|----------|----------|
+| `/atlas-impact` | `/atlas-changes` | 靜態 vs 時序 | API 變更 vs 重構風險 |
 
 **範例使用場景**：
 
 ```bash
 # v2.5 靜態分析（API 變更）
 /atlas-impact api "/api/users/{id}"
-→ 找出所有調用這個 API 的前端代碼
+→ 找出所有「調用」這個 API 的代碼（靜態依賴）
 
 # v3.0 時序分析（重構風險）
-/atlas-coupling src/payment_service.rb
-→ 找出歷史上常一起修改的檔案（耦合度）
+/atlas-changes src/payment_service.rb
+→ 找出歷史上「常一起改」的檔案（時序耦合）
+
+# v3.0 完整分析（包含耦合度）
+/atlas-changes src/payment_service.rb --coupling
+→ 完整的歷史分析 + 耦合關係 + 風險評估
 ```
 
 **提案狀態**：
 - 📋 設計完成（2,679 行完整文檔）
-- ⚠️ 原提案的 `/impact` 已改名為 `/atlas-coupling`（避免與 v2.5 衝突）
+- ✅ 簡化為 2 個命令（移除獨立的 coupling 命令，整合到 changes）
 - 🔮 待 v2.5 完成後排入 roadmap
 
 ---
