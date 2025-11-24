@@ -1,8 +1,43 @@
 # SourceAtlas + code-maat 整合開發文檔
 
-**版本**: 1.0  
-**日期**: 2025-11-24  
-**目標**: 為 SourceAtlas v2.5 增加時序分析能力
+**文檔版本**: 2.1 (2025-11-24)
+**目標產品版本**: SourceAtlas v3.0 ⭐
+
+---
+
+## ⚠️ 重要說明（2025-11-24 更新）
+
+### 目標版本變更
+
+本提案設計用於 **SourceAtlas v3.0**（非 v2.5）。
+
+**原因**：v2.5 已規劃 `/atlas-impact` 命令用於靜態影響分析，與本提案功能互補但不重疊。
+
+### 命令簡化（2025-11-24 更新）
+
+原提案有 3 個命令，現簡化為 **2 個命令**：
+
+| 原提案 | v3.0 最終設計 | 說明 |
+|--------|--------------|------|
+| `/changes` | `/atlas-changes` | ✅ 整合完整時序分析功能 |
+| `/impact` | **已移除** | ⚠️ 整合到 `/atlas-changes` |
+| `/expert` | `/atlas-expert` | ✅ 保持獨立 |
+
+**簡化理由**：
+- `/atlas-changes` 已包含耦合度分析（`--coupling` 選項）
+- 避免功能重疊和用戶混淆
+- 保持命令職責清晰
+
+### v2.5 vs v3.0 的分析區別
+
+| 命令 | 版本 | 分析方法 | 適用場景 | 狀態 |
+|------|------|---------|---------|------|
+| `/atlas-impact` | v2.5 | **靜態分析**（代碼結構） | API 變更、前後端影響 | Phase 2 |
+| `/atlas-changes` | v3.0 | **時序分析**（git 歷史） | 變更頻率、耦合度、風險評估 | 提案階段 |
+
+**兩者互補使用**：
+- 改 API 前：用 `/atlas-impact` 找靜態依賴（誰調用了這個 API）
+- 改核心邏輯前：用 `/atlas-changes` 看時序耦合（歷史上常一起改的檔案）
 
 ---
 
@@ -24,10 +59,9 @@
 ## Executive Summary
 
 ### 目標
-為 SourceAtlas 增加 3 個新命令，提供程式碼的時序分析能力：
-- `/changes` - 歷史查詢通用命令
-- `/impact` - 影響範圍分析
-- `/expert` - 專家查詢
+為 SourceAtlas v3.0 增加 2 個新命令，提供程式碼的時序分析能力：
+- `/atlas-changes` - 歷史查詢（整合變更頻率、**耦合度分析**、熱點、風險評估）
+- `/atlas-expert` - 專家查詢
 
 ### 關鍵決策
 - **工具選擇**: 使用 code-maat 進行 git 歷史分析
@@ -183,29 +217,37 @@ payment_controller.rb,Bob,890,1200,0.74
 
 ### 命令總覽
 
-```toon
-SourceAtlas v2.5 Commands:
-  
-  靜態分析:
-    /overview → 結構概覽
-    /pattern  → 模式識別
-    
-  動態分析 (新增):
-    /changes  → 歷史查詢
-    /impact   → 影響分析
-    /expert   → 專家查詢
+```
+SourceAtlas Commands:
+
+  靜態分析 (v2.5):
+    /atlas-overview  → 專案指紋 ✅
+    /atlas-pattern   → 模式識別 ✅
+    /atlas-impact    → 靜態影響分析（API、類型）⏳
+
+  時序分析 (v3.0 新增 - 簡化版):
+    /atlas-changes   → 歷史查詢 + 耦合度分析 + 熱點 + 風險評估
+    /atlas-expert    → 專家查詢
 ```
 
 ---
 
-### 1. `/changes` - 歷史查詢通用命令
+### 1. `/atlas-changes` - 歷史查詢 + 耦合度分析
 
 #### 用途
-查詢程式碼的變更歷史、熱點、專家等時序資訊。
+查詢程式碼的變更歷史、**耦合度分析**、熱點、風險評估等完整時序資訊。
+
+**整合功能**（簡化版設計）：
+- ✅ 變更頻率分析（哪些檔案改最多）
+- ✅ **耦合度分析**（哪些檔案常一起改）← 整合原 `/atlas-coupling`
+- ✅ 熱點識別（高風險區域）
+- ✅ 風險評估（基於歷史 bug 和變更模式）
+- ✅ PR 影響分析（基於歷史耦合度）
+- ✅ 專家資訊（誰改了什麼）
 
 #### 語法
 ```bash
-/changes <target> [options]
+/atlas-changes <target> [options]
 
 target: 檔案路徑 | 模組名稱 | . (整個專案)
 options:
@@ -219,7 +261,7 @@ options:
 
 **基本用法 - 檔案歷史**
 ```bash
-/changes src/payment_service.rb
+/atlas-changes src/payment_service.rb
 ```
 
 **輸出 YAML 格式**：
@@ -294,7 +336,7 @@ risk_assessment:
 
 **進階用法 - 找專家**
 ```bash
-/changes payment --who
+/atlas-changes payment --who
 ```
 
 **輸出**：
@@ -335,7 +377,7 @@ knowledge_risk:
 
 **進階用法 - 熱點分析**
 ```bash
-/changes . --hotspots
+/atlas-changes . --hotspots
 ```
 
 **輸出**：
@@ -380,231 +422,14 @@ project_health:
 
 ---
 
-### 2. `/impact` - 影響範圍分析
-
-#### 用途
-分析修改某段程式碼會影響哪些地方，評估風險。
-
-#### 語法
-```bash
-/impact <target>
-
-target: 
-  - 檔案路徑
-  - 方法名稱 (file::method)
-  - PR/MR 編號 (PR#123)
-    * GitHub: 需要 gh CLI
-    * GitLab: 需要 glab CLI
-```
-
-#### 使用範例
-
-**分析檔案影響**
-```bash
-/impact src/payment_service.rb
-```
-
-**輸出**：
-```yaml
-target: src/payment_service.rb
-analysis_type: impact
-
-risk_assessment:
-  overall_risk: high
-  risk_score: 8.5
-  confidence: 0.85
-  
-  factors:
-    - reason: "245次變更歷史"
-      weight: 0.3
-    - reason: "8個檔案直接依賴"
-      weight: 0.2
-    - reason: "過去3次改動導致bug"
-      weight: 0.3
-    - reason: "高複雜度 (8.5)"
-      weight: 0.2
-      
-dependencies:
-  static:  # 靜態依賴（import/require）
-    - file: payment_controller.rb
-      type: import
-      usage: "調用 calculate_total, process_payment"
-      
-    - file: order_service.rb
-      type: import
-      usage: "調用 validate_payment"
-      
-  temporal:  # 時序耦合（常一起改）
-    must_check:  # 80%+ 機率
-      - file: payment_controller.rb
-        coupling: 0.92
-        evidence: "18/20次一起改"
-        last_together: 2024-11-15
-        
-      - file: payment_spec.rb
-        coupling: 0.88
-        evidence: "測試很脆弱，改了通常要修"
-        last_broken: 2024-11-18
-        
-    likely_affected:  # 50-80% 機率
-      - file: stripe_webhook.rb
-        coupling: 0.65
-        evidence: "一半機率需要同步"
-        
-test_impact:
-  direct_tests:
-    - payment_service_spec.rb
-      coverage: 60%
-      fragility: high
-      note: "上次改動花了2小時修測試"
-      
-  related_tests:
-    - integration/payment_flow_spec.rb
-    - e2e/checkout_spec.rb
-    
-historical_issues:
-  - title: "幣別轉換問題"
-    when: 2024-08-15
-    who: Alice
-    root_cause: "沒處理四捨五入"
-    lesson: "改金額計算時注意精度"
-    fix_commit: a3b4c5d
-    
-  - title: "Timezone問題"
-    when: 2024-07-20
-    who: Bob
-    root_cause: "UTC vs Local time混用"
-    lesson: "時間處理要統一"
-    fix_commit: e7f8g9h
-    
-safety_checklist:
-  required:
-    - action: "加測試（現在覆蓋率60%）"
-      priority: high
-    - action: "小步提交，每次commit都跑測試"
-      priority: high
-    - action: "用 feature flag 漸進上線"
-      priority: medium
-      
-  recommended:
-    - action: "staging 環境泡1天"
-      priority: medium
-    - action: "改完後通知前端團隊"
-      priority: low
-      
-estimated_scope:
-  files_to_modify: 4
-  tests_to_update: 6
-  estimated_time: "4-6 hours"
-  risk_mitigation_time: "2 hours"  # 加測試、準備rollback等
-```
-
-**分析 PR 影響**
-```bash
-/impact PR#123
-```
-
-**輸出**：
-```yaml
-target: PR#123
-title: "Add payment priority feature"
-analysis_type: pr_impact
-platform: github  # 或 gitlab
-
-change_summary:
-  files_changed: 15
-  lines_added: 450
-  lines_removed: 120
-  
-change_analysis:
-  expected_changes:  # 符合歷史模式
-    count: 12
-    files:
-      - payment_service.rb
-        reason: "新功能的核心，正常"
-      - payment_controller.rb
-        reason: "API入口，正常"
-      - payment_spec.rb
-        reason: "對應測試，必須"
-        
-  suspicious_changes:  # 不尋常的改動
-    count: 3
-    files:
-      - file: user_model.rb
-        issue: "為什麼付款功能要改 user model？"
-        history: "這兩個檔案很少一起改（歷史耦合度0.05）"
-        suggestion: "請作者說明原因"
-        severity: medium
-        
-      - file: config/database.yml
-        issue: "DB設定變更"
-        risk: "可能誤提交"
-        suggestion: "確認這是必要的改動"
-        severity: high
-        
-      - file: legacy_importer.rb
-        issue: "這個跟付款無關吧？"
-        suggestion: "考慮拆成另一個PR"
-        severity: low
-        
-stability_analysis:
-  changed_files_stability:
-    unstable:
-      - payment_service.rb
-        score: 3.5
-        reason: "3次bug/6個月，不穩定"
-        
-    stable:
-      - payment_controller.rb
-        score: 8.2
-        reason: "6個月無bug，穩定"
-        
-pattern_match:
-  similar_successful_changes:
-    - pr: PR#89
-      title: "Add multi-currency payment"
-      date: 2024-08-15
-      pattern: "也改了這3個核心檔案"
-      outcome: "成功上線，無問題"
-      lesson: "這個改法可行"
-      
-  similar_failed_changes:
-    - pr: PR#76
-      title: "Add payment webhook retry"
-      date: 2024-06-20
-      pattern: "類似的改法"
-      outcome: "上線後出bug"
-      issue: "沒處理 concurrent access"
-      lesson: "要注意併發問題"
-      
-recommendations:
-  high_priority:
-    - "⚠️ 重點review user_model.rb 的改動（不尋常）"
-    - "⚠️ 檢查併發處理（過去有案例）"
-    
-  medium_priority:
-    - "✅ payment_controller 的改法有成功前例"
-    - "💡 建議加強測試（目前60%覆蓋率）"
-    
-  reference:
-    - "參考 PR#89 的成功經驗"
-    
-overall_assessment:
-  risk_level: medium
-  confidence: 0.78
-  approval_suggestion: "建議修正可疑改動後再merge"
-```
-
----
-
-### 3. `/expert` - 專家查詢
+### 2. `/atlas-expert` - 專家查詢
 
 #### 用途
 找出模組或檔案的專家，以及反向查詢開發者的專長領域。
 
 #### 語法
 ```bash
-/expert <query>
+/atlas-expert <query>
 
 query:
   - 模組名稱（例: payment）
@@ -616,7 +441,7 @@ query:
 
 **找模組專家**
 ```bash
-/expert payment
+/atlas-expert payment
 ```
 
 **輸出**：
@@ -711,7 +536,7 @@ suggested_reviewers:
 
 **反向查詢 - 開發者的專長**
 ```bash
-/expert Alice
+/atlas-expert Alice
 ```
 
 **輸出**：
