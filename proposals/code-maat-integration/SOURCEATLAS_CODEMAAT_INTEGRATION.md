@@ -1,8 +1,37 @@
 # SourceAtlas + code-maat 整合開發文檔
 
-**版本**: 1.0  
-**日期**: 2025-11-24  
-**目標**: 為 SourceAtlas v2.5 增加時序分析能力
+**版本**: 2.0
+**日期**: 2025-11-24
+**目標版本**: SourceAtlas v3.0 ⭐
+
+---
+
+## ⚠️ 重要說明（2025-11-24 更新）
+
+### 目標版本變更
+
+本提案設計用於 **SourceAtlas v3.0**（非 v2.5）。
+
+**原因**：v2.5 已規劃 `/atlas-impact` 命令用於靜態影響分析，與本提案功能互補但不重疊。
+
+### 命名變更（符合 /atlas- 前綴規範）
+
+| 原提案 | v3.0 正式名稱 | 變更原因 |
+|--------|--------------|---------|
+| `/changes` | `/atlas-changes` | 保持 atlas- 前綴一致性 |
+| `/impact` | `/atlas-coupling` ⚠️ | 避免與 v2.5 `/atlas-impact` 衝突 |
+| `/expert` | `/atlas-expert` | 保持 atlas- 前綴一致性 |
+
+### v2.5 vs v3.0 的 Impact 分析區別
+
+| 命令 | 版本 | 分析方法 | 適用場景 | 狀態 |
+|------|------|---------|---------|------|
+| `/atlas-impact` | v2.5 | **靜態分析**（代碼結構） | API 變更、前後端影響 | Phase 2 |
+| `/atlas-coupling` | v3.0 | **時序分析**（git 歷史） | 重構風險、耦合熱點 | 提案階段 |
+
+**兩者互補使用**：
+- 改 API 前：先用 `/atlas-impact` 找靜態依賴
+- 改核心邏輯前：用 `/atlas-coupling` 看歷史耦合
 
 ---
 
@@ -24,10 +53,10 @@
 ## Executive Summary
 
 ### 目標
-為 SourceAtlas 增加 3 個新命令，提供程式碼的時序分析能力：
-- `/changes` - 歷史查詢通用命令
-- `/impact` - 影響範圍分析
-- `/expert` - 專家查詢
+為 SourceAtlas v3.0 增加 3 個新命令，提供程式碼的時序分析能力：
+- `/atlas-changes` - 歷史查詢通用命令
+- `/atlas-coupling` - 耦合度分析（原 `/impact`）
+- `/atlas-expert` - 專家查詢
 
 ### 關鍵決策
 - **工具選擇**: 使用 code-maat 進行 git 歷史分析
@@ -183,29 +212,30 @@ payment_controller.rb,Bob,890,1200,0.74
 
 ### 命令總覽
 
-```toon
-SourceAtlas v2.5 Commands:
-  
-  靜態分析:
-    /overview → 結構概覽
-    /pattern  → 模式識別
-    
-  動態分析 (新增):
-    /changes  → 歷史查詢
-    /impact   → 影響分析
-    /expert   → 專家查詢
+```
+SourceAtlas Commands:
+
+  靜態分析 (v2.5):
+    /atlas-overview  → 專案指紋
+    /atlas-pattern   → 模式識別 ✅
+    /atlas-impact    → 靜態影響分析（API、類型）
+
+  時序分析 (v3.0 新增):
+    /atlas-changes   → 歷史查詢
+    /atlas-coupling  → 耦合度分析（時序影響）
+    /atlas-expert    → 專家查詢
 ```
 
 ---
 
-### 1. `/changes` - 歷史查詢通用命令
+### 1. `/atlas-changes` - 歷史查詢通用命令
 
 #### 用途
 查詢程式碼的變更歷史、熱點、專家等時序資訊。
 
 #### 語法
 ```bash
-/changes <target> [options]
+/atlas-changes <target> [options]
 
 target: 檔案路徑 | 模組名稱 | . (整個專案)
 options:
@@ -219,7 +249,7 @@ options:
 
 **基本用法 - 檔案歷史**
 ```bash
-/changes src/payment_service.rb
+/atlas-changes src/payment_service.rb
 ```
 
 **輸出 YAML 格式**：
@@ -294,7 +324,7 @@ risk_assessment:
 
 **進階用法 - 找專家**
 ```bash
-/changes payment --who
+/atlas-changes payment --who
 ```
 
 **輸出**：
@@ -335,7 +365,7 @@ knowledge_risk:
 
 **進階用法 - 熱點分析**
 ```bash
-/changes . --hotspots
+/atlas-changes . --hotspots
 ```
 
 **輸出**：
@@ -380,16 +410,38 @@ project_health:
 
 ---
 
-### 2. `/impact` - 影響範圍分析
+### 2. `/atlas-coupling` - 耦合度分析（時序影響）
 
 #### 用途
-分析修改某段程式碼會影響哪些地方，評估風險。
+分析修改某段程式碼會影響哪些地方，基於**歷史變更模式**評估風險。
+
+#### 與 v2.5 `/atlas-impact` 的區別
+
+| 命令 | 版本 | 分析方法 | 適用場景 |
+|------|------|---------|---------|
+| `/atlas-impact` | v2.5 | **靜態分析**（代碼結構） | API 變更、前後端影響 |
+| `/atlas-coupling` | v3.0 | **時序分析**（git 歷史） | 重構風險、耦合熱點 |
+
+**範例**：
+```bash
+# v2.5 靜態分析
+/atlas-impact api "/api/users/{id}"
+→ 找出所有調用這個 API 的前端代碼
+
+# v3.0 時序分析
+/atlas-coupling src/payment_service.rb
+→ 找出歷史上常一起修改的檔案（耦合度）
+```
+
+兩者**互補使用**：
+- 改 API 前，先用 `/atlas-impact` 找靜態依賴
+- 改核心邏輯前，用 `/atlas-coupling` 看歷史耦合
 
 #### 語法
 ```bash
-/impact <target>
+/atlas-coupling <target>
 
-target: 
+target:
   - 檔案路徑
   - 方法名稱 (file::method)
   - PR/MR 編號 (PR#123)
@@ -401,7 +453,7 @@ target:
 
 **分析檔案影響**
 ```bash
-/impact src/payment_service.rb
+/atlas-coupling src/payment_service.rb
 ```
 
 **輸出**：
@@ -501,7 +553,7 @@ estimated_scope:
 
 **分析 PR 影響**
 ```bash
-/impact PR#123
+/atlas-coupling PR#123
 ```
 
 **輸出**：
@@ -597,14 +649,14 @@ overall_assessment:
 
 ---
 
-### 3. `/expert` - 專家查詢
+### 3. `/atlas-expert` - 專家查詢
 
 #### 用途
 找出模組或檔案的專家，以及反向查詢開發者的專長領域。
 
 #### 語法
 ```bash
-/expert <query>
+/atlas-expert <query>
 
 query:
   - 模組名稱（例: payment）
@@ -616,7 +668,7 @@ query:
 
 **找模組專家**
 ```bash
-/expert payment
+/atlas-expert payment
 ```
 
 **輸出**：
@@ -711,7 +763,7 @@ suggested_reviewers:
 
 **反向查詢 - 開發者的專長**
 ```bash
-/expert Alice
+/atlas-expert Alice
 ```
 
 **輸出**：

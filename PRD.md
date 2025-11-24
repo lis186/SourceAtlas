@@ -493,9 +493,9 @@ AI 回應：
 ```
 sourceatlas2/
 ├── .claude/commands/                    # Claude Code Commands
-│   └── atlas-overview.md                # ✅ /atlas-overview（已完成）
+│   ├── atlas-overview.md                # ✅ /atlas-overview（已完成）
+│   └── atlas-pattern.md                 # ✅ /atlas-pattern（已完成）⭐
 │   # 計畫中：
-│   # ├── atlas-pattern.md               # 🔵 /atlas-pattern（Phase 1）
 │   # ├── atlas.md                       # 🔵 /atlas（Phase 1）
 │   # ├── atlas-impact.md                # ⏳ /atlas-impact（Phase 2）
 │   # ├── atlas-find.md                  # ⏳ /atlas-find（Phase 3）
@@ -517,10 +517,10 @@ sourceatlas2/
 ├── scripts/atlas/                       # 輔助腳本
 │   ├── detect-project-enhanced.sh       # ✅ 規模感知偵測
 │   ├── scan-entropy.sh                  # ✅ 高熵檔案掃描
+│   ├── find-patterns.sh                 # ✅ 模式識別（已完成）⭐
 │   ├── benchmark.sh                     # ✅ 效能測試
 │   └── compare-formats.sh               # ✅ 格式比較
 │   # 計畫中：
-│   # ├── find-patterns.sh               # ⏳ 模式識別（Phase 1）
 │   # ├── collect-git.sh                 # ⏳ Git 統計（Phase 2）
 │   # └── analyze-dependencies.sh        # ⏳ 依賴分析（Phase 3）
 │
@@ -1066,30 +1066,23 @@ templates:
 ### 9.2 開發優先級
 
 #### Phase 1: 核心 Commands 框架 (Week 1)
-- [ ] 創建 `.claude/commands/` 目錄結構
-- [ ] 實作 `/atlas` - 完整三階段分析
-- [ ] 實作 `/atlas-pattern` - 學習模式 ⭐⭐⭐⭐⭐
-- [ ] 基礎 Scripts（detect-project.sh, scan-entropy.sh）
+- [x] 創建 `.claude/commands/` 目錄結構 ✅
+- [x] 實作 `/atlas-pattern` - 學習模式 ⭐⭐⭐⭐⭐ ✅ (2025-11-22)
+- [x] 實作 `find-patterns.sh` 腳本 ✅ (2025-11-22)
 - [x] YAML 格式輸出 ✅ (v1.0 決策)
+- [ ] 實作 `/atlas` - 完整三階段分析 🔵
 
-#### Phase 2: 優先功能 (Week 1-2)
-- [ ] 完善 `/atlas-pattern` 命令和 Script
-- [ ] 實作 `find-patterns.sh` ⭐
-- [ ] 在真實專案測試 `/atlas-pattern`
-- [ ] 收集回饋並迭代優化
+#### Phase 2: 影響分析功能
+- [ ] 實作 `/atlas-impact` - 靜態影響分析 ⭐⭐⭐⭐
+  - API 變更影響（場景 3B）
+  - 前後端調用鏈分析
+  - 測試影響評估
 
-#### Phase 3: 影響分析功能 (Week 2)
-- [ ] 實作 `/atlas-impact` - 功能影響分析
-- [ ] 實作 `/atlas-impact api` - API 影響分析
-- [ ] 相關 Scripts（analyze-dependencies.sh）
-- [ ] 測試驗證
-
-#### Phase 4: 輔助功能與優化 (Week 2-3)
+#### Phase 3: 輔助功能
 - [ ] 實作 `/atlas-find` - 快速搜尋
 - [ ] 實作 `/atlas-explain` - 深入解釋
 - [ ] 完善 Git 分析 Scripts
 - [ ] 整體測試與文檔
-- [ ] 確保所有輸出使用 YAML 格式
 
 ---
 
@@ -1123,17 +1116,19 @@ templates:
 ### 10.3 驗收標準
 
 #### 基本功能
-- [x] Stage 0 能在 15 分鐘內完成分析
-- [x] Stage 1 驗證率 >80%
-- [x] Stage 2 識別 AI 協作模式
-- [ ] /atlas find 能找到正確檔案
-- [ ] /atlas pattern 能識別設計模式
+- [x] Stage 0 能在 15 分鐘內完成分析 ✅
+- [x] Stage 1 驗證率 >80% ✅
+- [x] Stage 2 識別 AI 協作模式 ✅
+- [x] `/atlas-pattern` 能識別設計模式 ✅ (2025-11-22, 95%+ 準確率)
+- [ ] `/atlas` 完整三階段分析 🔵
+- [ ] `/atlas-impact` 靜態影響分析 ⏳
+- [ ] `/atlas-find` 能找到正確檔案 ⏳
 
 #### 質量標準
-- [ ] 在 4+ 真實專案測試通過
-- [ ] 使用者回饋 >4/5 分
-- [ ] Scripts 在 Linux/macOS 都能運行
-- [ ] 錯誤時提供清晰訊息
+- [x] 在 4+ 真實專案測試通過 ✅ (`/atlas-pattern` 在 3 個大型專案測試)
+- [x] Scripts 在 macOS 運行 ✅ (Linux 待測試)
+- [x] 錯誤時提供清晰訊息 ✅
+- [ ] 使用者回饋 >4/5 分 (待收集)
 
 ---
 
@@ -1168,13 +1163,61 @@ templates:
 
 ---
 
-### v3.0.0 - SourceAtlas Monitor (未來)
+### v3.0.0 - SourceAtlas Monitor + 時序分析 (未來)
 
-**目標**：持續追蹤和趨勢分析
+**目標**：持續追蹤和時序分析
 
-**時程**：3-6 個月
+**時程**：v2.5 完成後評估（依使用者回饋決定）
 
-**功能規劃**：
+---
+
+#### 候選功能 A：code-maat 時序分析整合 ⭐
+
+基於 [code-maat 提案](./proposals/code-maat-integration/)，新增 3 個時序分析命令：
+
+```bash
+/atlas-changes     # 歷史查詢（變更頻率、熱點、專家）
+/atlas-coupling    # 耦合度分析（時序影響）
+/atlas-expert      # 專家查詢（代碼所有權、知識地圖）
+```
+
+**特色**：
+- 分析 git 歷史中的演化模式
+- 識別耦合熱點和風險區域
+- 快速找到領域專家
+- 基於 code-maat 工具（成熟穩定）
+
+**與 v2.5 的互補**：
+
+| v2.5 命令 | v3.0 命令 | 差異 |
+|----------|----------|------|
+| `/atlas-impact` | `/atlas-coupling` | 靜態 vs 時序 |
+| 分析代碼結構（import、調用） | 分析變更歷史（耦合度） | 互補使用 |
+| API 變更影響（前後端） | 重構風險評估（歷史） | 不同場景 |
+
+**範例使用場景**：
+
+```bash
+# v2.5 靜態分析（API 變更）
+/atlas-impact api "/api/users/{id}"
+→ 找出所有調用這個 API 的前端代碼
+
+# v3.0 時序分析（重構風險）
+/atlas-coupling src/payment_service.rb
+→ 找出歷史上常一起修改的檔案（耦合度）
+```
+
+**提案狀態**：
+- 📋 設計完成（2,679 行完整文檔）
+- ⚠️ 原提案的 `/impact` 已改名為 `/atlas-coupling`（避免與 v2.5 衝突）
+- 🔮 待 v2.5 完成後排入 roadmap
+
+---
+
+#### 候選功能 B：SourceAtlas Monitor（原規劃）
+
+持續追蹤和健康度儀表板：
+
 ```yaml
 持續追蹤:
   - 自動偵測變更
@@ -1182,8 +1225,8 @@ templates:
   - 趨勢分析
 
 影響分析:
-  - 靜態依賴分析
-  - Git 歷史關聯
+  - 靜態依賴分析（v2.5 已有）
+  - Git 歷史關聯（code-maat 提供）
   - 測試覆蓋追蹤
 
 健康度儀表板:
@@ -1192,10 +1235,19 @@ templates:
   - 風險區域識別
 ```
 
-**是否開發取決於**：
-1. v2.5 使用者回饋
-2. 是否確實需要持續追蹤
-3. 開發資源和時間
+---
+
+#### v3.0 決策點
+
+**v2.5 完成後評估**：
+1. `/atlas-impact`（靜態）使用情況如何？
+2. 使用者是否需要時序分析（git 歷史）？
+3. 選擇輕量整合（選項 A）或完整 Monitor（選項 B）？
+
+**可能的整合方式**：
+- **輕量級**：只整合 code-maat（3 個新命令，2-3 週開發）
+- **完整版**：code-maat + Monitor（持續追蹤系統，3-6 個月）
+- **混合式**：先整合 code-maat，根據回饋決定是否建立 Monitor
 
 ---
 
