@@ -12,7 +12,7 @@
 - ❌ 想改程式，不敢動，怕影響其他地方
 - ❌ 想學習專案的設計模式，找不到好範例
 
-**→ 用 SourceAtlas：10 分鐘理解專案、0.1 秒找範例、1 分鐘分析影響**
+**→ 用 SourceAtlas：5-15 分鐘理解專案、0.1-30 秒找範例、1-2 分鐘分析影響**
 
 ---
 
@@ -24,9 +24,9 @@
 /atlas-overview
 ```
 
-**10 分鐘得到**：技術棧、架構模式、程式品質、專案規模
+**5-15 分鐘得到**：技術棧、架構模式、程式品質、專案規模
 
-**範例**：接手一個 50K LOC 的專案，10 分鐘內知道它用什麼框架、MVVM 還是 Clean Architecture、測試覆蓋率多少
+**範例**：接手一個 50K LOC 的專案，10-15 分鐘內知道它用什麼框架、MVVM 還是 Clean Architecture、測試覆蓋率多少
 
 ---
 
@@ -38,7 +38,7 @@
 /atlas-pattern "authentication"
 ```
 
-**0.1 秒找到**：2-3 個最佳範例檔案 + file:line 引用 + 實作指南
+**0.1-30 秒找到**：2-3 個最佳範例檔案 + file:line 引用 + 實作指南
 
 **範例**：想知道這個專案怎麼處理 API，直接找到 `UserAPI.swift:45` 和測試範例
 
@@ -53,32 +53,39 @@
 /atlas-impact api "/api/users/{id}"
 ```
 
-**1 分鐘得到**：誰在用、會不會 breaking、要改哪些測試、遷移步驟
+**1-2 分鐘得到**：誰在用、會不會 breaking、要改哪些測試、遷移步驟
 
-**範例**：要重構 User API，1 分鐘內知道 23 個檔案在用，有 5 個 breaking changes
+**範例**：要重構 User API，1-2 分鐘內知道 23 個檔案在用，有 5 個 breaking changes
 
 **iOS 專案特別功能**：自動檢查 Swift/ObjC interop 風險（nullability、@objc 暴露、memory 問題）
 
 ---
 
-## 📦 安裝（2 分鐘）
+## 🔧 前置需求
+
+- **Claude Code** - [安裝指南](https://claude.ai/code)
+- **Git** - 版本控制工具
+- **macOS/Linux** - 目前支援的平台
+
+---
+
+## 📦 安裝
+
+**完整安裝指南**：[GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
+
+### 快速安裝（2 分鐘）
 
 ```bash
-# 1. 克隆專案
-git clone https://github.com/your-org/sourceatlas2.git ~/dev/sourceatlas2
+git clone https://github.com/lis186/SourceAtlas2.git ~/dev/sourceatlas2
+cd ~/dev/sourceatlas2 && ./install-global.sh
+```
 
-# 2. 安裝
-cd ~/dev/sourceatlas2
-./install-global.sh
+安裝一次，所有專案都能用：
 
-# 3. 在任何專案使用
+```bash
 cd ~/projects/any-project
 /atlas-overview
 ```
-
-安裝一次，所有專案都能用。
-
-**詳細說明**：[GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
 
 ---
 
@@ -128,7 +135,7 @@ A: 可用手動方式（見 [PROMPTS.md](./PROMPTS.md)），但建議用 Claude 
 
 ## 🤝 回饋與貢獻
 
-- 回報問題：[GitHub Issues](https://github.com/your-repo/issues)
+- 回報問題：[GitHub Issues](https://github.com/lis186/SourceAtlas2/issues)
 - 貢獻程式：歡迎 PR
 - 新增語言：Python、Ruby、Go、Rust...
 

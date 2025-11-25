@@ -18,24 +18,16 @@
 
 ## 安裝
 
-### 全局安裝（推薦）
+**完整安裝指南**：[GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
+
+### 快速開始
 
 ```bash
-# 1. 克隆專案
-git clone https://github.com/your-org/sourceatlas2.git ~/dev/sourceatlas2
-
-# 2. 執行安裝
-cd ~/dev/sourceatlas2
-./install-global.sh
-
-# 3. 驗證安裝
-cd ~/projects/any-project
-/atlas-overview --help
+git clone https://github.com/lis186/SourceAtlas2.git ~/dev/sourceatlas2
+cd ~/dev/sourceatlas2 && ./install-global.sh
 ```
 
 安裝一次，所有專案都能用。
-
-詳細說明：[GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
 
 ---
 
@@ -110,59 +102,129 @@ key_directories:
 
 ### 支援的 Patterns (71 個)
 
-#### iOS/Swift (29 個)
+#### 快速總覽
 
-**核心架構**:
+| 語言 | Pattern 數量 | 主要類別 |
+|------|-------------|----------|
+| **iOS/Swift** | 29 | 架構、UI、資料處理、功能模組 |
+| **TypeScript/React** | 22 | React 基礎、Next.js、後端整合 |
+| **Android/Kotlin** | 20 | Architecture Components、UI、資料層 |
+
+#### 熱門 Patterns（跨語言）
+
+1. `api endpoint` - REST/GraphQL API 實作
+2. `authentication` - 登入/認證流程
+3. `view controller` - 畫面/頁面組件
+4. `networking` - HTTP 客戶端模式
+5. `state management` - 應用程式狀態管理
+
+<details>
+<summary><b>📱 iOS/Swift Patterns (29 個)</b></summary>
+
+#### 核心架構 (4)
 - `mvvm` - MVVM 架構模式
 - `coordinator` - Coordinator 導航模式
 - `dependency injection` - DI Container/Factory
 - `repository` - Repository 資料存取模式
 
-**UI 組件**:
+#### UI 組件 (7)
 - `swiftui view` - SwiftUI 視圖組合
 - `view controller` - UIKit ViewController
 - `table view cell` - TableView/CollectionView Cell
 - `view modifier` - SwiftUI ViewModifier
+- `custom view` - 自訂 UI 元件
+- `collection view layout` - CollectionView 自訂佈局
+- `animation` - UI 動畫
 
-**資料處理**:
+#### 資料處理 (8)
 - `networking` - 網絡層、API Client
 - `core data` - Core Data 持久化
 - `api endpoint` - REST/GraphQL API
+- `cache` - 快取管理
+- `user defaults` - 本地儲存
+- `keychain` - 安全儲存
+- `codable` - JSON 編解碼
+- `combine publisher` - Reactive 資料流
 
-**功能模組**:
+#### 功能模組 (10)
 - `authentication` - 認證流程
 - `file upload` - 檔案上傳
 - `background job` - 異步任務
 - `error handling` - 錯誤處理
+- `localization` - 國際化
+- `push notification` - 推播通知
+- `deep linking` - Deep Link 處理
+- `image loading` - 圖片載入與快取
+- `biometric auth` - Face ID/Touch ID
+- `analytics` - 事件追蹤
 
-#### TypeScript/React (22 個)
+</details>
 
-**React 基礎**:
+<details>
+<summary><b>⚛️ TypeScript/React Patterns (22 個)</b></summary>
+
+#### React 基礎 (6)
 - `react component` - React 組件
 - `react hook` - 自定義 Hooks
 - `state management` - 狀態管理
 - `form handling` - 表單處理
+- `context provider` - Context API
+- `error boundary` - 錯誤邊界
 
-**Next.js 專屬**:
+#### Next.js 專屬 (8)
 - `nextjs middleware` - 中間件
 - `nextjs layout` - App Router 佈局
 - `nextjs page` - 頁面組件
 - `nextjs loading` - 載入狀態
-- `nextjs error` - 錯誤邊界
+- `nextjs error` - 錯誤處理
+- `server component` - 伺服器組件
+- `server action` - Server Actions
+- `route handler` - API 路由處理
 
-**後端整合**:
+#### 後端整合 (8)
 - `api endpoint` - API 路由
 - `database query` - Prisma/ORM
 - `authentication` - Auth.js/NextAuth
+- `api client` - Fetch/Axios 封裝
+- `websocket` - WebSocket 連線
+- `graphql` - GraphQL 查詢
+- `file upload` - 檔案上傳
+- `caching strategy` - 快取策略
 
-#### Android/Kotlin (20 個)
+</details>
 
+<details>
+<summary><b>🤖 Android/Kotlin Patterns (20 個)</b></summary>
+
+#### Architecture Components (8)
 - `view controller` - Activity/Fragment
 - `view model` - ViewModel (AAC)
 - `repository` - Repository Pattern
 - `use case` - UseCase/Interactor
 - `dependency injection` - Hilt/Koin
-- ...and more
+- `navigation component` - Navigation 架構
+- `room database` - Room 持久化
+- `data store` - DataStore 偏好設定
+
+#### UI 層 (6)
+- `compose ui` - Jetpack Compose
+- `recycler view` - RecyclerView Adapter
+- `view binding` - ViewBinding
+- `custom view` - 自訂 View
+- `animation` - 動畫效果
+- `material design` - Material Components
+
+#### 資料與網路 (6)
+- `retrofit api` - Retrofit 網路請求
+- `coroutines` - Kotlin Coroutines
+- `flow` - Kotlin Flow
+- `api endpoint` - REST API 實作
+- `authentication` - 登入認證
+- `file handling` - 檔案處理
+
+</details>
+
+**試用範例**：`/atlas-pattern "api endpoint"`
 
 ### 執行時間
 
@@ -478,7 +540,7 @@ cd ../api
 - **技術細節**: [CLAUDE.md](./CLAUDE.md)
 - **開發歷史**: [dev-notes/HISTORY.md](./dev-notes/HISTORY.md)
 - **功能提案**: [proposals/](./proposals/)
-- **回報問題**: [GitHub Issues](https://github.com/your-repo/issues)
+- **回報問題**: [GitHub Issues](https://github.com/lis186/SourceAtlas2/issues)
 
 ---
 
