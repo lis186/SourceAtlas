@@ -45,8 +45,8 @@ cd ~/dev/sourceatlas2 && ./install-global.sh
 
 - **技術棧**：語言、框架、資料庫
 - **架構模式**：MVC、MVVM、Clean Architecture...
-- **專案規模**：檔案數、代碼行數
-- **代碼品質**：測試覆蓋率、註解密度
+- **專案規模**：檔案數、程式碼行數
+- **程式碼品質**：測試覆蓋率、註解密度
 - **目錄結構**：關鍵資料夾和檔案
 
 ### 使用時機
@@ -91,7 +91,7 @@ key_directories:
 
 **你學到什麼**：
 - 這是用 Next.js 14 + React 的全端專案
-- 使用 Clean Architecture（代碼品質高）
+- 使用 Clean Architecture（程式碼品質高）
 - 測試覆蓋率 85%（專業團隊）
 - 主要邏輯在 src/app/（App Router 架構）
 
@@ -344,7 +344,7 @@ key_directories:
 
 ## 命令 3: /atlas-impact
 
-**分析代碼變更影響**
+**分析程式碼變更影響**
 
 ### 使用方式
 
@@ -361,8 +361,8 @@ key_directories:
 
 ### 你會得到什麼
 
-1. **依賴追蹤**：誰在使用這個 API/Model/Component
-2. **Breaking Changes**：哪些變更會破壞現有代碼
+1. **依賴追蹤**：哪些檔案使用這個 API/Model/Component
+2. **Breaking Changes**：哪些變更會破壞現有程式碼
 3. **測試影響**：需要更新哪些測試
 4. **Migration Checklist**：逐步遷移指南
 
@@ -423,7 +423,7 @@ key_directories:
 
 #### 範例 2: iOS Model 修改
 
-**情境**：要修改 Swift Model，擔心影響 Objective-C 代碼（混合專案）
+**情境**：要修改 Swift Model，擔心影響 Objective-C 程式碼（混合專案）
 
 **命令**：
 ```bash
@@ -517,9 +517,9 @@ cp scripts/atlas/patterns/ios/networking.sh scripts/atlas/patterns/ios/custom-pa
 - 不會自動保存檔案
 - 可以手動複製結果儲存
 
-### Q: 可以分析私有代碼庫嗎？
+### Q: 可以分析私有 codebase 嗎？
 
-**A**: 可以！所有分析都在本地執行，代碼不會上傳。
+**A**: 可以！所有分析都在本地執行，程式碼不會上傳。
 
 ### Q: 效能如何？會不會很慢？
 
@@ -669,7 +669,7 @@ head -20 ~/.claude/commands/atlas-overview.md
 | 情況 | 原因 | 改善方法 |
 |------|------|---------|
 | 找到測試檔案而非實作 | Pattern 太通用 | 使用更具體的關鍵字：`/atlas-pattern "api endpoint"` |
-| 找到舊代碼 | 專案有歷史遺留 | 檢查檔案的最後修改日期，關注最新的 |
+| 找到舊程式碼 | 專案有歷史遺留 | 檢查檔案的最後修改日期，關注最新的 |
 | 語言混用 | 多語言專案 | 指定目錄：先 `cd ios/` 再執行命令 |
 | 零結果 | 關鍵字不符專案慣例 | 嘗試同義詞：`"controller"` → `"view model"` |
 

@@ -56,7 +56,7 @@
 /atlas-impact api "/api/users/{id}"
 ```
 
-**1-2 分鐘得到**：誰在用、會不會 breaking、要改哪些測試、遷移步驟
+**1-2 分鐘得到**：依賴清單、Breaking Changes 風險、測試影響範圍、遷移步驟
 
 **範例**：要重構 User API，1-2 分鐘內知道 23 個檔案在用，有 5 個 breaking changes
 
@@ -150,7 +150,7 @@ ls ~/.claude/commands/atlas-*.md
 │   → 0.1-30 秒找到：範例檔案 + 實作指南
 │   → 例如：/atlas-pattern "api endpoint"
 │
-├─ ⚠️ 要改代碼，擔心影響其他地方
+├─ ⚠️ 要改程式碼，擔心影響其他地方
 │   → 用 /atlas-impact "檔案或API"
 │   → 1-2 分鐘得到：依賴清單 + Breaking Changes
 │   → 例如：/atlas-impact "src/api/users.ts"
@@ -238,7 +238,7 @@ Claude Code + 2 分鐘安裝
 
 可以！所有分析都在本地執行，但需注意：
 
-- ⚠️ 代碼會傳送到 Claude API 進行分析
+- ⚠️ 程式碼會傳送到 Claude API 進行分析
 - ⚠️ 請參考 [Anthropic 隱私政策](https://www.anthropic.com/legal/privacy)
 - ✅ 可以選擇只在公開專案使用
 
@@ -251,7 +251,7 @@ Claude Code + 2 分鐘安裝
 
 1. **小型專案**（<2K LOC）- 直接閱讀更快
 2. **需要 100% 精確度**（如生產決策）- 使用靜態分析工具
-3. **高度敏感代碼**（金融、醫療）- 考慮隱私政策限制
+3. **高度敏感程式碼**（金融、醫療）- 考慮隱私政策限制
 4. **離線環境** - 需要網路連接到 Claude API
 
 ✅ **適合的場景**：

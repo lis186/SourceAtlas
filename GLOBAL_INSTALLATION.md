@@ -81,7 +81,7 @@ cd ~/projects/any-project
 快速理解專案全貌
 
 - **時間**: 10-15 分鐘
-- **得到**: 技術棧、架構模式、代碼品質、專案規模
+- **得到**: 技術棧、架構模式、程式碼品質、專案規模
 
 ### `/atlas-pattern [pattern]`
 
@@ -93,7 +93,7 @@ cd ~/projects/any-project
 
 ### `/atlas-impact [target]`
 
-分析代碼變更影響
+分析程式碼變更影響
 
 - **時間**: 1-2 分鐘
 - **得到**: 依賴追蹤、Breaking Changes、Migration Checklist
