@@ -174,6 +174,7 @@ ls ~/.claude/commands/atlas-*.md
 
 - **[使用指南](./USAGE_GUIDE.md)** - 完整的命令說明、71 個 patterns、疑難排解
 - **[全局安裝](./GLOBAL_INSTALLATION.md)** - 安裝選項、管理命令、疑難排解
+- **[Benchmark](./BENCHMARK.md)** - 8 個真實專案的測試結果、準確率數據
 
 ### 開發者資源
 
@@ -206,9 +207,18 @@ Claude Code + 2 分鐘安裝
 <details>
 <summary><b>Q: 準確嗎？</b></summary>
 
-- **Pattern 準確率**: 92-100% （基於 8 個測試專案）
-- **Impact 分析**: 4.2/5 星
-- **測試範圍**: 2K - 255K LOC 專案
+**在 8 個真實專案上測試**：
+
+| 指標 | 結果 | 專案數 |
+|------|------|--------|
+| **Pattern 檢測** | 92-100% | 7 個 iOS 專案 |
+| **Impact 分析** | 95%+ 準確率 | 4 個測試場景 |
+| **Overview 理解** | 80-95% 深度 | 1 個 TypeScript 專案 |
+| **專案規模** | 2K - 255K LOC | 8 個專案（127x 差距）|
+
+**架構覆蓋**: SwiftUI, UIKit, MVVM, Clean Architecture, TCA, Redux, Swift/ObjC 混合
+
+📊 **完整數據**: [BENCHMARK.md](./BENCHMARK.md)
 
 </details>
 
