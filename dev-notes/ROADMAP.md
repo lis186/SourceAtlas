@@ -1,7 +1,7 @@
 # SourceAtlas Roadmap
 
 **Current Status**: v1.0 Complete → v2.5 In Progress (Week 5/16)
-**Last Updated**: 2025-11-24
+**Last Updated**: 2025-11-25
 
 ---
 
@@ -21,8 +21,8 @@
 ### Phase 3 - Core Commands (Week 5-8) 🔵 IN PROGRESS
 - [x] `/atlas-overview` command (Stage 0) ✅ (2025-11-20)
 - [x] Command architecture simplification ✅ (2025-11-24)
-- [ ] `/atlas-impact` command (change impact) ⭐ NEXT
-- [ ] `/atlas-find` command (smart search)
+- [x] `/atlas-impact` command (change impact) ✅ (2025-11-25)
+- [ ] `/atlas-find` command (smart search) ⭐ NEXT
 - [ ] `/atlas-explain` command (deep dive)
 
 ### Phase 4 - Testing & Polish (Week 9-16)
@@ -79,14 +79,15 @@
 ## 🔥 Current Sprint (Week 5)
 
 ### Priority P0 (Must Do) ⭐
-1. **Start `/atlas-impact` implementation**
+1. **`/atlas-impact` implementation** ✅ (Done 11/25)
    - Static dependency analysis
    - API change impact tracking
-   - Test on 3+ real scenarios
+   - Tested on 5 real scenarios (100% success)
+   - **Key decision**: Remove automatic time estimation
 
 ### Priority P1 (Should Do)
-2. Document command architecture decisions (✅ Done 11/24)
-3. Test `/atlas-overview` and `/atlas-pattern` on new projects
+2. Document command architecture decisions ✅ (Done 11/24)
+3. **Next**: Start `/atlas-find` command implementation ⭐
 4. Collect user feedback
 
 ### Priority P2 (Nice to Have)
@@ -107,10 +108,12 @@
 - [x] Objective-C Support (2025-11-23)
 - [x] Command Architecture Simplification (2025-11-24)
 - [x] Version Number Unification (2025-11-24)
+- [x] Atlas Impact Command (2025-11-25)
+- [x] Time Estimation Decision (2025-11-25)
 
 ### In Progress 🔵
 - [x] dev-notes/ Restructuring (100% complete)
-- [ ] v2.5 Core Commands (40% complete - 2/5 done)
+- [ ] v2.5 Core Commands (60% complete - 3/5 done)
 
 ### Blocked ❌
 - None
