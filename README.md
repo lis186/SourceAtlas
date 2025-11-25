@@ -1,6 +1,6 @@
 # SourceAtlas
 
-**3 個斜線命令，快速理解任何代碼庫**
+** 3 個斜線命令，快速理解任何 codebase **
 
 適用於 Claude Code | 支援 iOS/TypeScript/Android
 
@@ -9,7 +9,7 @@
 ## 💡 能幫你做什麼？
 
 - ❌ 接手新專案，花好幾天還是看不懂架構
-- ❌ 想改代碼，不敢動，怕影響其他地方
+- ❌ 想改程式，不敢動，怕影響其他地方
 - ❌ 想學習專案的設計模式，找不到好範例
 
 **→ 用 SourceAtlas：10 分鐘理解專案、0.1 秒找範例、1 分鐘分析影響**
@@ -24,7 +24,7 @@
 /atlas-overview
 ```
 
-**10 分鐘得到**：技術棧、架構模式、代碼品質、專案規模
+**10 分鐘得到**：技術棧、架構模式、程式品質、專案規模
 
 **範例**：接手一個 50K LOC 的專案，10 分鐘內知道它用什麼框架、MVVM 還是 Clean Architecture、測試覆蓋率多少
 
@@ -46,7 +46,7 @@
 
 ---
 
-### 3. 分析代碼影響
+### 3. 分析程式影響
 
 ```bash
 /atlas-impact "src/api/users.ts"
@@ -96,7 +96,7 @@ A: Pattern 準確率 92-100%、Impact 分析 4.2/5 星（8 個專案測試）
 **Q: 會很慢嗎？**
 A: `/atlas-overview` 10-15 分鐘、`/atlas-pattern` 0.1 秒、`/atlas-impact` 1-2 分鐘
 
-**Q: 私有代碼庫可以用嗎？**
+**Q: 私有 codebase 可以用嗎？**
 A: 可以！所有分析都在本地執行
 
 **Q: 沒有 Claude Code 怎麼辦？**
@@ -129,12 +129,12 @@ A: 可用手動方式（見 [PROMPTS.md](./PROMPTS.md)），但建議用 Claude 
 ## 🤝 回饋與貢獻
 
 - 回報問題：[GitHub Issues](https://github.com/your-repo/issues)
-- 貢獻代碼：歡迎 PR
+- 貢獻程式：歡迎 PR
 - 新增語言：Python、Ruby、Go、Rust...
 
 ---
 
-**SourceAtlas** - Claude Code 的代碼分析助手
+**SourceAtlas** - Claude Code 的程式分析助手
 v2.5 | 最新更新: 2025-11-25 | MIT License
 
 Made with ❤️ and 🤖
