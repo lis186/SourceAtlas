@@ -75,6 +75,9 @@ elif [ -f "Gemfile" ]; then
     PROJECT_TYPE="Ruby/Rails"
 elif [ -f "go.mod" ]; then
     PROJECT_TYPE="Go"
+elif [ -d "*.xcodeproj" ] || [ -d "*.xcworkspace" ]; then
+    PROJECT_TYPE="iOS/Swift"
+    NEEDS_SWIFT_ANALYSIS=true
 fi
 ```
 
@@ -83,6 +86,7 @@ fi
 - Frontend: `components/`, `pages/`, `app/`, `hooks/`, `utils/`
 - Tests: `__tests__/`, `spec/`, `test/`, `*.test.*`, `*.spec.*`
 - Types: `types/`, `*.d.ts`, `interfaces/`
+- iOS: `Sources/`, `**/Classes/`, `*.xcodeproj/`, `Tests/`
 
 ---
 
@@ -227,7 +231,40 @@ grep -r "import.*User\|require.*user" \
 
 ---
 
-### Step 5: Risk Assessment (1 minute)
+### Step 5: Language-Specific Deep Analysis (1-2 minutes, optional)
+
+**When to Run**: If `NEEDS_SWIFT_ANALYSIS=true` AND target file is `.swift`, `.m`, or `.h`
+
+Execute the Swift/Objective-C deep analyzer for additional insights:
+
+```bash
+# Check if this is an iOS project with Swift/ObjC target
+if [[ "$TARGET_FILE" =~ \.(swift|m|h)$ ]] && [[ "$PROJECT_TYPE" == "iOS/Swift" ]]; then
+    echo "Running Swift/Objective-C deep analysis..."
+
+    # Execute analyzer (located at scripts/atlas/analyzers/swift-analyzer.sh)
+    SWIFT_ANALYSIS_OUTPUT=$(./scripts/atlas/analyzers/swift-analyzer.sh "$TARGET_FILE" "$PROJECT_ROOT" 2>&1)
+
+    # Parse key findings from the output
+    # - Nullability coverage percentage
+    # - @objc exposure count
+    # - Memory management warnings
+    # - UI framework architecture
+fi
+```
+
+**What This Provides**:
+- Nullability annotation coverage (CRITICAL for Swift interop)
+- @objc exposure detection (breaking change risks)
+- Memory management warnings (unowned, retain cycles)
+- Bridging header circular dependency checks
+- SwiftUI vs UIKit architecture detection
+
+**Integration**: Include key findings in the final report's "Language-Specific Risks" section
+
+---
+
+### Step 6: Risk Assessment (1 minute)
 
 Evaluate impact level based on findings:
 
@@ -356,7 +393,44 @@ interface UserResponse {
 
 ---
 
-## 7. Recommendations
+## 7. Language-Specific Deep Analysis
+
+**⚠️ Swift/Objective-C Interop Risks** (iOS Projects Only)
+
+### Critical Issues 🔴
+
+**Nullability Coverage**: [X]% ([N] files missing NS_ASSUME_NONNULL)
+- **Impact**: Runtime crashes due to `!` force unwrapping
+- **Auto-fix**: Run provided sed script to add annotations
+- **Priority**: CRITICAL - Fix before making changes
+
+### Medium Risks 🟡
+
+**@objc Exposure**: [N] classes + [M] @objcMembers
+- Classes exposing members to Objective-C
+- **Risk**: Renaming/removing will break ObjC callers
+- **Target file impact**: [Is/Is not] in interop boundary
+
+**Memory Management**: [N] unowned references detected
+- **Risk**: Crashes if referenced object is deallocated
+- **Recommendation**: Review and convert to `weak` where appropriate
+
+### Architecture Info ℹ️
+
+**UI Framework**: [SwiftUI|UIKit|Hybrid]
+- SwiftUI files: [N]
+- UIKit files: [M]
+- Integration points: [N] UIViewRepresentable, [M] UIHostingController
+
+**Bridging Headers**: [N] found
+- Largest imports: [N] headers
+- Circular dependencies: [None|Detected]
+
+💡 **Full Swift Analysis**: Run `/atlas-impact [target].m` to see complete 7-section analysis
+
+---
+
+## 8. Recommendations
 
 1. [Recommendation 1]
 2. [Recommendation 2]
@@ -449,6 +523,13 @@ interface UserResponse {
 **Risk Level**: 🔴 HIGH | 🟡 MEDIUM | 🟢 LOW
 
 💡 **Note**: Time estimation depends on team velocity and complexity. Discuss with your team based on the checklist above.
+
+---
+
+## 6. Language-Specific Deep Analysis
+
+*(Same format as API Impact - include if iOS/Swift project)*
+
 ```
 
 ---
