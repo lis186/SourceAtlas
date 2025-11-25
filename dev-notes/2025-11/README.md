@@ -56,7 +56,7 @@
 
 - **實作天數**: 4 天（11/20-11/23）
 - **主要檔案修改**: `scripts/atlas/find-patterns.sh`（~300 行）
-- **測試專案**: 6 個（wikipedia-ios, Signal-iOS, nineyiappshop, Swiftfin, Telegram, WordPress）
+- **測試專案**: 6 個（wikipedia-ios, Signal-iOS, 大型商業 App, Swiftfin, Telegram, WordPress）
 - **文檔產出**: 8 份完整報告
 - **Patterns 總數**:
   - iOS: 29 (27 支援 ObjC)
