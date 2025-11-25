@@ -169,7 +169,7 @@ AI 分析後回應（10-15 分鐘）：
 
 **使用 SourceAtlas**：
 ```
-Alice: /atlas find "order list authorization"
+Alice: /atlas-find "order list authorization"
 
 AI 回應：
 訂單列表的授權鏈路：
@@ -202,7 +202,7 @@ PM: "我們要加新功能：用戶可以匯出發票 PDF"
 
 **使用 SourceAtlas**：
 ```
-Bob: /atlas pattern "file generation"
+Bob: /atlas-pattern "file generation"
 
 AI 回應：
 此專案的檔案生成模式（範例：訂單 PDF）：
@@ -244,7 +244,7 @@ AI 回應：
 
 **使用 SourceAtlas**：
 ```
-Developer: /atlas impact "User model validation"
+Developer: /atlas-impact "User model validation"
 
 AI 回應：
 User model 驗證變更的影響範圍：
@@ -286,7 +286,7 @@ User model 驗證變更的影響範圍：
 
 **使用 SourceAtlas**：
 ```
-Developer: /atlas impact api "/api/users/{id}"
+Developer: /atlas-impact api "/api/users/{id}"
 
 AI 回應：
 === API Impact Analysis ===
@@ -368,7 +368,7 @@ Reviewer 不熟悉支付模組，需要快速理解上下文
 
 **使用 SourceAtlas**：
 ```
-Reviewer: /atlas review PR#123
+Reviewer: /atlas-review PR#123
 
 AI 回應：
 此 PR 在支付模組新增退款服務
@@ -407,7 +407,7 @@ Tech Lead 需要向 CTO 報告：
 
 **使用 SourceAtlas**：
 ```
-Tech Lead: /atlas health
+Tech Lead: /atlas-health
 
 AI 回應：
 專案健康度報告
@@ -495,7 +495,7 @@ sourceatlas2/
 │   ├── atlas-overview.md                # ✅ /atlas-overview（已完成）
 │   └── atlas-pattern.md                 # ✅ /atlas-pattern（已完成）⭐
 │   # 計畫中：
-│   # ├── atlas-impact.md                # ⏳ /atlas-impact（Phase 2）
+│   ├── atlas-impact.md                # ✅ /atlas-impact（已完成）
 │   # ├── atlas-find.md                  # ⏳ /atlas-find（Phase 3）
 │   # └── atlas-explain.md               # ⏳ /atlas-explain（Phase 3）
 │
@@ -569,7 +569,7 @@ sourceatlas2/
 
 #### Find（智慧搜尋）
 ```
-/atlas find "authentication flow"
+/atlas-find "authentication flow"
 
 AI 自動：
 1. 理解搜尋意圖
@@ -581,7 +581,7 @@ AI 自動：
 
 #### Pattern（模式識別）
 ```
-/atlas pattern "api endpoint"
+/atlas-pattern "api endpoint"
 
 AI 識別：
 1. 找到最佳範例檔案
@@ -592,7 +592,7 @@ AI 識別：
 
 #### Explain（深入解釋）
 ```
-/atlas explain app/services/payment_service.rb
+/atlas-explain app/services/payment_service.rb
 
 AI 分析：
 1. 檔案目的和職責
@@ -1043,10 +1043,11 @@ templates:
 - [x] YAML 格式輸出 ✅ (v1.0 決策)
 
 #### Phase 2: 影響分析功能
-- [ ] 實作 `/atlas-impact` - 靜態影響分析 ⭐⭐⭐⭐
+- [x] 實作 `/atlas-impact` - 靜態影響分析 ⭐⭐⭐⭐ ✅ (2025-11-25)
   - API 變更影響（場景 3B）
   - 前後端調用鏈分析
   - 測試影響評估
+  - Swift/ObjC 語言深度分析（自動觸發）
 
 #### Phase 3: 輔助功能
 - [ ] 實作 `/atlas-find` - 快速搜尋
@@ -1090,7 +1091,7 @@ templates:
 - [x] Stage 1 驗證率 >80% ✅
 - [x] Stage 2 識別 AI 協作模式 ✅
 - [x] `/atlas-pattern` 能識別設計模式 ✅ (2025-11-22, 95%+ 準確率)
-- [ ] `/atlas-impact` 靜態影響分析 ⏳
+- [x] `/atlas-impact` 靜態影響分析 ✅ (2025-11-25, 4.2/5 平均評分, 8 subagent 測試)
 - [ ] `/atlas-find` 能找到正確檔案 ⏳
 
 #### 質量標準
@@ -1347,17 +1348,17 @@ detect_files() { find . -name "*.rb"; }
    - 用戶可輕鬆查看和修改
 
 4. **符合優先級排序**
+   - `/atlas-overview` ⭐⭐⭐⭐⭐ (專案指紋)
    - `/atlas-pattern` ⭐⭐⭐⭐⭐ (最常用)
-   - `/atlas-impact` ⭐⭐⭐⭐
-   - `/atlas` ⭐⭐⭐ (完整分析)
+   - `/atlas-impact` ⭐⭐⭐⭐ (影響分析)
    - 不同優先級需要不同命令入口
 
 **實作方案**：
 
 ```
 .claude/commands/
-├── atlas.md              # /atlas - 完整三階段分析
-├── atlas-pattern.md      # /atlas-pattern - 學習模式 (最優先)
+├── atlas-overview.md     # /atlas-overview - 專案指紋 ✅
+├── atlas-pattern.md      # /atlas-pattern - 學習模式 ✅
 ├── atlas-impact.md       # /atlas-impact - 影響分析
 ├── atlas-find.md         # /atlas-find - 快速搜尋
 └── atlas-explain.md      # /atlas-explain - 深入解釋
@@ -1404,7 +1405,7 @@ When detecting user confusion, suggest:
 - v2.5 🔵 - Commands 架構開發中（預計 2-3 週）
   - `/atlas-overview` ✅ - 專案概覽（已完成，2025-11-20）
   - `/atlas-pattern` ✅ - 模式學習（已完成，2025-11-22）⭐
-  - `/atlas-impact` ⏳ - 靜態影響分析（Phase 2）
+  - `/atlas-impact` ✅ - 靜態影響分析（已完成 2025-11-25）
   - `/atlas-find`, `/atlas-explain` ⏳ - 輔助功能（Phase 3）
 - **完整三階段分析**：使用 `PROMPTS.md` 手動執行（深度盡職調查場景）
 
