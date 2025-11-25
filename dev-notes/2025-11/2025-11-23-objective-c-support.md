@@ -90,11 +90,11 @@ Tested on three mixed Swift/Objective-C projects:
 
 | Project | Swift Files | ObjC Files | ObjC % | Test Status |
 |---------|-------------|------------|--------|-------------|
-| *****REMOVED***** | 147 | 179 | **55%** | ✅ PASSED |
+| **大型商業App** | 147 | 179 | **55%** | ✅ PASSED |
 | **wikipedia-ios** | 559 | 121 | **18%** | ✅ PASSED |
 | **Signal-iOS** | 2514 | 73 | **3%** | ✅ PASSED |
 
-### 2.2 ***REMOVED*** (55% Objective-C) - ✅ PASSED
+### 2.2 大型商業App (55% Objective-C) - ✅ PASSED
 
 **Test**: `view controller` pattern
 
@@ -107,12 +107,12 @@ Script found (top 10): 10 total, 6 Objective-C ✅
 
 **Sample Objective-C files found**:
 ```
-test_targets/***REMOVED***/NYCore/NYCore/Classes/ObjC/NYPagerViewController/NYPagerViewController.m
-test_targets/***REMOVED***/NYCore/NYCore/Classes/ObjC/NYPagerViewController/NYPagerViewController.h
-test_targets/***REMOVED***/NYCore/NYCore/Classes/ObjC/NYLoginViewController/NYThirdPartyLoginWebBrowserVC.m
-test_targets/***REMOVED***/NYCore/NYCore/Classes/ObjC/NYLoginViewController/NYThirdPartyLoginWebBrowserVC.h
-test_targets/***REMOVED***/NYCore/NYCore/Classes/ObjC/NYLoginViewController/NYLoginViewController.m
-test_targets/***REMOVED***/NYCore/NYCore/Classes/ObjC/NYLoginViewController/NYLoginViewController.h
+test_targets/大型商業App/NYCore/NYCore/Classes/ObjC/NYPagerViewController/NYPagerViewController.m
+test_targets/大型商業App/NYCore/NYCore/Classes/ObjC/NYPagerViewController/NYPagerViewController.h
+test_targets/大型商業App/NYCore/NYCore/Classes/ObjC/NYLoginViewController/NYThirdPartyLoginWebBrowserVC.m
+test_targets/大型商業App/NYCore/NYCore/Classes/ObjC/NYLoginViewController/NYThirdPartyLoginWebBrowserVC.h
+test_targets/大型商業App/NYCore/NYCore/Classes/ObjC/NYLoginViewController/NYLoginViewController.m
+test_targets/大型商業App/NYCore/NYCore/Classes/ObjC/NYLoginViewController/NYLoginViewController.h
 ```
 
 **Conclusion**: ✅ **Objective-C support fully working** - 60% of top 10 results are .m/.h files
@@ -168,7 +168,7 @@ Script found (top 10): 10 total, 0 Objective-C ✅
 
 **Pattern**: `*ViewController.swift *ViewController.m *ViewController.h *VC.swift *VC.m *VC.h *Controller.swift *Controller.m *Controller.h`
 
-**Test on ***REMOVED*****:
+**Test on 大型商業App**:
 - ✅ Found: NYLoginViewController.m/.h
 - ✅ Found: NYPagerViewController.m/.h
 - ✅ Found: NYThirdPartyLoginWebBrowserVC.m/.h
@@ -177,7 +177,7 @@ Script found (top 10): 10 total, 0 Objective-C ✅
 
 **Pattern**: `*Manager.swift *Manager.m *Manager.h *Service.swift *Service.m *Service.h *Client.swift *Client.m *Client.h ...`
 
-**Test on ***REMOVED*****:
+**Test on 大型商業App**:
 - ✅ Found: NYCookieManager.m/.h (exists)
 - ✅ Found: NYFavoriteManager.m/.h (exists)
 - ✅ Found: NYTrackingClient.m/.h (in top 10)
@@ -189,7 +189,7 @@ Script found (top 10): 10 total, 0 Objective-C ✅
 
 **Pattern**: `*+*.swift *+*.m *+*.h *Extension*.swift *Extension*.m *Extension*.h`
 
-**Test on ***REMOVED*****:
+**Test on 大型商業App**:
 - ✅ Category syntax supported: `*+*.m` and `*+*.h`
 - ✅ Found: NSNumber+DiscountRateConverter.m/.h (exists)
 
@@ -201,7 +201,7 @@ Script found (top 10): 10 total, 0 Objective-C ✅
 
 | Metric | Before (Swift only) | After (Swift + ObjC) | Change |
 |--------|---------------------|----------------------|--------|
-| *****REMOVED***** | | | |
+| **大型商業App** | | | |
 | Swift files found | 5 | 4 | -1 |
 | ObjC files found | 0 ❌ | 6 ✅ | +6 |
 | **Total coverage** | **5/17** (29%) | **10/17** (59%) | **+30%** ✅ |
@@ -215,7 +215,7 @@ Script found (top 10): 10 total, 0 Objective-C ✅
 
 | Project | Before | After | Improvement |
 |---------|--------|-------|-------------|
-| ***REMOVED*** (55% ObjC) | 29% covered ❌ | 59% covered ✅ | **+30%** |
+| 大型商業App (55% ObjC) | 29% covered ❌ | 59% covered ✅ | **+30%** |
 | wikipedia-ios (18% ObjC) | 89% covered ⚠️ | 100% findable ✅ | **+11%** |
 | Signal-iOS (3% ObjC) | 100% covered ✅ | 100% covered ✅ | 0% (already optimal) |
 
@@ -312,13 +312,13 @@ find project/ -name "*ViewController.m" -o -name "*ViewController.h"
 
 ```bash
 # Test View Controller pattern
-./scripts/atlas/find-patterns.sh "view controller" test_targets/***REMOVED*** | grep "\.m$\|\.h$"
+./scripts/atlas/find-patterns.sh "view controller" test_targets/大型商業App | grep "\.m$\|\.h$"
 
 # Test Manager pattern
-./scripts/atlas/find-patterns.sh "manager" test_targets/***REMOVED*** | grep "Manager\.\(m\|h\)$"
+./scripts/atlas/find-patterns.sh "manager" test_targets/大型商業App | grep "Manager\.\(m\|h\)$"
 
 # Test Extension/Category pattern
-./scripts/atlas/find-patterns.sh "extension" test_targets/***REMOVED*** | grep "+.*\.\(m\|h\)$"
+./scripts/atlas/find-patterns.sh "extension" test_targets/大型商業App | grep "+.*\.\(m\|h\)$"
 
 # Verify ObjC files exist
 find test_targets/wikipedia-ios -name "*ViewController.m" | head -5
@@ -328,10 +328,10 @@ find test_targets/wikipedia-ios -name "*ViewController.m" | head -5
 
 ```bash
 # Count total ObjC files found
-./scripts/atlas/find-patterns.sh "view controller" test_targets/***REMOVED*** | grep -c "\.m$\|\.h$"
+./scripts/atlas/find-patterns.sh "view controller" test_targets/大型商業App | grep -c "\.m$\|\.h$"
 
 # Show all ObjC results (bypass top 10 limit)
-find test_targets/***REMOVED*** -name "*ViewController.m" -o -name "*ViewController.h"
+find test_targets/大型商業App -name "*ViewController.m" -o -name "*ViewController.h"
 ```
 
 ---
@@ -393,7 +393,7 @@ Objective-C support is fully functional and ready for use. The implementation:
 
 ## Appendix: Test Data
 
-### A.1 ***REMOVED*** Objective-C Files Found
+### A.1 大型商業App Objective-C Files Found
 
 **ViewControllers** (6 in top 10):
 ```
