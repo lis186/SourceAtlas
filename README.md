@@ -106,6 +106,12 @@ A: `/atlas-overview` 10-15 分鐘、`/atlas-pattern` 0.1 秒、`/atlas-impact` 1
 **Q: 私有 codebase 可以用嗎？**
 A: 可以！所有分析都在本地執行
 
+**Q: 什麼時候不適合用？**
+A:
+- 小型專案（<2K LOC）- 直接閱讀更快
+- 需要 100% 精確度（如生產決策）- 使用靜態分析工具
+- 敏感代碼庫 - 需要考慮 Claude API 隱私政策
+
 **Q: 沒有 Claude Code 怎麼辦？**
 A: 可用手動方式（見 [PROMPTS.md](./PROMPTS.md)），但建議用 Claude Code
 
