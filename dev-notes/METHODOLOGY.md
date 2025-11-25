@@ -162,7 +162,7 @@ implement_feature && run_tests && commit
 **iOS 範例**:
 - wikipedia-ios (18% ObjC, LARGE)
 - Signal-iOS (3% ObjC, VERY_LARGE)
-- ***REMOVED*** (55% ObjC, MEDIUM) - 極端案例
+- 大型商業 App (55% ObjC, MEDIUM) - 極端案例
 
 ### 5.2 驗證指標
 

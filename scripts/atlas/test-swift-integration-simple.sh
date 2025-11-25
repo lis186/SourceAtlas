@@ -6,7 +6,7 @@ set -euo pipefail
 echo "=== Swift Analyzer Integration Test (Simplified) ==="
 echo ""
 
-TEST_PROJECT="test_targets/***REMOVED***"
+TEST_PROJECT="test_targets/ios-test-project"
 TARGET_FILE="$TEST_PROJECT/NYCore/NYCore/Classes/ObjC/NYUIComponent/CustomCollectionViewCell/NYProductCell.m"
 
 # Test 1: Execute analyzer

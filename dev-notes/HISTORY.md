@@ -6,7 +6,15 @@
 
 ## 2025-11（當前月份）
 
-### Week 5 (11/25-12/01): `/atlas-impact` 命令完成 ⭐
+### Week 5 (11/25-12/01): `/atlas-impact` 命令完成 + Swift Analyzer 整合 ⭐⭐
+
+**Swift Analyzer 整合** (11/25):
+- 開發 Swift/ObjC Deep Analyzer (7 sections, 482 lines)
+- 語言分析覆蓋率：70% → 90%+ (+20%)
+- 整合到 `/atlas-impact` 命令（自動觸發）
+- 8 個 subagent 多使用者測試驗證
+- 關鍵功能：Nullability (6% 覆蓋), @objc exposure (1,135 classes), Memory (112 unowned)
+→ [完整實作記錄](./2025-11/2025-11-25-swift-analyzer-integration-implementation.md)
 
 **測試與驗證完成** (11/25):
 - 5 個真實場景測試：SwiftUI, Clean Arch, Swift/ObjC interop, Enterprise, API 變更
@@ -39,7 +47,7 @@
 **Objective-C 支援** (11/23):
 - 擴充所有 29 iOS patterns 支援 .m/.h 檔案
 - Category 語法支援（`*+*.m`）
-- 測試 3 個混合專案：***REMOVED*** (55%), wikipedia-ios (18%), Signal-iOS (3%)
+- 測試 3 個混合專案：大型商業 App (55%), wikipedia-ios (18%), Signal-iOS (3%)
 - 從遺漏 55% → 0% 遺漏
 → [完整報告](./2025-11/2025-11-23-objective-c-support.md)
 
@@ -103,7 +111,7 @@
 - **總計**: 71 patterns
 
 ### 測試專案
-- wikipedia-ios, Signal-iOS, ***REMOVED***（iOS 混合專案）
+- wikipedia-ios, Signal-iOS, 大型商業 App（iOS 混合專案）
 - Swiftfin, Telegram, WordPress（多語言驗證）
 
 ---
