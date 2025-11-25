@@ -350,8 +350,9 @@ interface UserResponse {
 - [ ] Test all affected pages manually
 - [ ] Update API documentation
 
-**Estimated Effort**: [X-Y hours]
 **Risk Level**: 🔴 HIGH | 🟡 MEDIUM | 🟢 LOW
+
+💡 **Note**: Time estimation depends on team velocity and complexity. Discuss with your team based on the checklist above.
 
 ---
 
@@ -445,8 +446,9 @@ interface UserResponse {
 - [ ] Add integration tests for cascade effects
 - [ ] Update API documentation
 
-**Estimated Effort**: [X-Y hours]
 **Risk Level**: 🔴 HIGH | 🟡 MEDIUM | 🟢 LOW
+
+💡 **Note**: Time estimation depends on team velocity and complexity. Discuss with your team based on the checklist above.
 ```
 
 ---
