@@ -1,12 +1,12 @@
 # CLAUDE.md
 
-本檔案為 Claude Code (claude.ai/code) 在此代碼庫工作時提供指導。
+本檔案為 Claude Code (claude.ai/code) 在此 codebase 工作時提供指導。
 
 ## 專案總覽
 
-**SourceAtlas** 是一個專為 AI 優化的代碼庫分析工具，設計用於快速理解任何代碼庫，通過掃描少於 5% 的檔案即可達到 70-95% 的理解深度。它使用資訊理論原則，優先處理高熵檔案（配置、文檔、模型）而非實作細節。
+**SourceAtlas** 是一個專為 AI 優化的 codebase 分析工具，設計用於快速理解任何 codebase，通過掃描少於 5% 的檔案即可達到 70-95% 的理解深度。它使用資訊理論原則，優先處理高熵檔案（配置、文檔、模型）而非實作細節。
 
-**核心創新**：三階段分析框架，相比傳統代碼審查方法節省 95%+ 的時間和 token。
+**核心創新**：三階段分析框架，相比傳統程式碼審查方法節省 95%+ 的時間和 token。
 
 **當前狀態**：
 - **v1.0** ✅ - 方法論驗證完成（2025-11-22）
@@ -129,8 +129,8 @@ cd ~/projects/any-project
 
 在以下情況執行 SourceAtlas 分析：
 
-- 接手新的代碼庫
-- 進行代碼審查或技術盡職調查
+- 接手新的 codebase
+- 進行程式碼審查或技術盡職調查
 - 評估開發者候選人的 GitHub 專案
 - 學習開源專案
 - 評估 AI 協作成熟度
@@ -170,9 +170,9 @@ SourceAtlas 的獨特能力之一是識別 AI 輔助開發模式：
 - **Level 3**：系統化 AI 協作 ⭐
   - 有 `CLAUDE.md` 或類似的 AI 配置
   - 15-20% 註解密度（相比人工的 5-8%）
-  - 98%+ 代碼一致性
+  - 98%+ 程式碼一致性
   - 100% Conventional Commits
-  - 文檔/代碼比 >1:1
+  - 文檔/程式碼比 >1:1
 - **Level 4**：生態級別（團隊級 AI 整合）
 
 **關鍵指標**：尋找 CLAUDE.md、.cursor/rules/、高註解密度、完美的 commit 訊息一致性和豐富的文檔。
@@ -181,7 +181,7 @@ SourceAtlas 的獨特能力之一是識別 AI 輔助開發模式：
 
 ### 已驗證專案
 
-本代碼庫包含來自多個驗證專案的分析，涵蓋不同規模、語言和成熟度等級。由於隱私考量，測試專案和結果檔案已從 git 歷史中移除，但分析方法論和框架仍然完整保留。
+本 codebase 包含來自多個驗證專案的分析，涵蓋不同規模、語言和成熟度等級。由於隱私考量，測試專案和結果檔案已從 git 歷史中移除，但分析方法論和框架仍然完整保留。
 
 ### 將測試結果用作範例
 
@@ -287,10 +287,25 @@ hypotheses:
 
 ## 語言和本地化
 
-- 主要文檔使用繁體中文（zh-TW）
-- 代碼和技術術語使用英文
+### 核心原則：台灣用語優先 ⭐
+
+**重要**：所有文檔必須使用**台灣繁體中文**術語，避免中國大陸用語。
+
+| 正確（台灣） | 錯誤（中國） | 英文替代 |
+|------------|------------|---------|
+| 程式碼 | 代碼 | code |
+| 軟體 | 软件 | software |
+| 資料庫 | 数据库 | database |
+| 網路 | 网络 | network |
+| 伺服器 | 服务器 | server |
+| codebase | 代碼庫 | codebase |
+
+**語言使用規範**：
+- 主要文檔使用繁體中文（zh-TW，**台灣用語**）
+- 程式碼和技術術語使用英文
+- **當不確定台灣用語時，直接使用英文原文**（如：codebase, commit, repository）
 - 生成報告時，匹配專案的主要語言
-- 使用者文檔（README、USAGE_GUIDE）使用中文
+- 使用者文檔（README、USAGE_GUIDE）使用台灣繁體中文
 - 技術規格（PRD、PROMPTS）混合使用中英文
 
 ## 版本控制
@@ -311,17 +326,17 @@ hypotheses:
 
 ### 忽略的目錄
 
-- `test_targets/` - 用於驗證的克隆代碼庫（大型，不追蹤到 git）
+- `test_targets/` - 用於驗證的克隆 codebase（大型，不追蹤到 git）
 - `test_results/` - 生成的分析輸出（可以重新生成）
 - `examples/*` - clone 的參考專案（僅追蹤 README.md）
 
-這些被 git 忽略以保持代碼庫精簡，同時保護測試專案的隱私。
+這些被 git 忽略以保持 codebase 精簡，同時保護測試專案的隱私。
 
 ---
 
 ## 資訊分層與想法孵化
 
-SourceAtlas 是**方法論型專案**，價值不只在代碼，更在思考過程。因此採用**全部可見**的透明化策略。
+SourceAtlas 是**方法論型專案**，價值不只在程式碼，更在思考過程。因此採用**全部可見**的透明化策略。
 
 ### 三層架構
 
@@ -447,7 +462,7 @@ dev-notes/YYYY-MM/implementation.md
 ### Git 和版本控制
 
 - **絕對不要使用 `git commit` 命令** - GitButler 正在使用其內部流程和 `but` CLI hooks 自動管理所有 commits 和分支
-- **專注於編寫乾淨的代碼和測試** - 不要擔心 commits 或分支
+- **專注於編寫乾淨的程式碼和測試** - 不要擔心 commits 或分支
 - **當任務完成時，停止工作**並允許 GitButler hooks 執行後處理命令
 
 此工作流程確保功能的清晰分離，並允許 GitButler 自動組織 commits 和分支，無需手動介入。
@@ -704,7 +719,7 @@ touch test-results.md
 ### 方法論傳承
 
 基於此次實戰，建立了可重複使用的框架：
-- **[dev-notes/new-language-support-methodology.md](./dev-notes/new-language-support-methodology.md)** - 6 階段系統化方法論
+- **[dev-notes/archives/lessons/new-language-support-methodology.md](./dev-notes/archives/lessons/new-language-support-methodology.md)** - 6 階段系統化方法論
 - 適用於未來新增任何程式語言支援（Kotlin, Go, Rust, Flutter 等）
 - 包含完整檢查清單、快速啟動腳本、品質標準
 
