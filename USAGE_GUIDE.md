@@ -62,8 +62,18 @@ cd ~/dev/sourceatlas2 && ./install-global.sh
 - **中型專案** (5K-50K LOC): 10-15 分鐘
 - **大型專案** (>50K LOC): 15-20 分鐘
 
-### 範例輸出
+### 使用範例
 
+#### 範例 1: 接手新專案
+
+**情境**：加入團隊第一天，需要快速理解 50K LOC 的專案
+
+**命令**：
+```bash
+/atlas-overview
+```
+
+**輸出**（摘要）：
 ```yaml
 project_type: WEB_APP
 primary_language: TypeScript
@@ -79,6 +89,14 @@ key_directories:
   - prisma/ (Database Schema)
 ```
 
+**你學到什麼**：
+- 這是用 Next.js 14 + React 的全端專案
+- 使用 Clean Architecture（代碼品質高）
+- 測試覆蓋率 85%（專業團隊）
+- 主要邏輯在 src/app/（App Router 架構）
+
+**下一步**：用 `/atlas-pattern "api endpoint"` 學習 API 實作方式
+
 ---
 
 ## 命令 2: /atlas-pattern
@@ -92,6 +110,16 @@ key_directories:
 /atlas-pattern "file upload"
 /atlas-pattern "authentication"
 ```
+
+### 什麼是 "Pattern"？
+
+在 SourceAtlas 中，**Pattern（模式）** 是指專案中重複出現的程式碼結構與設計方式：
+
+- **架構模式**：MVVM、Clean Architecture、Repository
+- **實作模式**：API endpoint、檔案上傳、身份驗證
+- **UI 模式**：SwiftUI view、React component、自訂按鈕
+
+簡單說就是：**「這個專案通常怎麼實作 X？」**
 
 ### 你會得到什麼
 
@@ -234,11 +262,14 @@ key_directories:
 
 #### 範例 1: 學習 API 設計
 
+**情境**：要新增一個 API endpoint，不確定專案的寫法
+
+**命令**：
 ```bash
 /atlas-pattern "api endpoint"
 ```
 
-**輸出**:
+**輸出**（摘要）：
 ```
 ## Best Examples
 
@@ -261,13 +292,24 @@ key_directories:
 4. Return NextResponse.json()
 ```
 
+**你學到什麼**：
+- 這個專案用 Next.js App Router（不是 Pages Router）
+- API 都在 `app/api/` 目錄，用 `route.ts` 命名
+- 統一用 Prisma 存取資料庫
+- 錯誤處理用 try-catch + NextResponse
+
+**下一步**：照著 Implementation Guide 建立你的新 API
+
 #### 範例 2: 學習 SwiftUI 組件
 
+**情境**：要寫一個自訂 SwiftUI 元件，想學習專案的慣例
+
+**命令**：
 ```bash
 /atlas-pattern "swiftui view"
 ```
 
-**輸出**:
+**輸出**（摘要）：
 ```
 ## Best Examples
 
@@ -289,6 +331,14 @@ key_directories:
 3. Struct [Name]: View { var body: some View { ... } }
 4. Add PreviewProvider
 ```
+
+**你學到什麼**：
+- 所有 SwiftUI 組件都放在 `Views/` 目錄
+- 小型可重用元件放在 `Views/Components/`
+- 每個組件必須有 PreviewProvider（團隊標準）
+- 命名慣例：大寫開頭的 PascalCase
+
+**下一步**：照著範例檔案的結構，建立你的新元件
 
 ---
 
@@ -330,13 +380,14 @@ key_directories:
 
 #### 範例 1: API 重構
 
-**場景**: 要重構 `/api/users/{id}` 端點
+**情境**：要重構 `/api/users/{id}` 端點，擔心影響現有功能
 
+**命令**：
 ```bash
 /atlas-impact api "/api/users/{id}"
 ```
 
-**輸出**:
+**輸出**（摘要）：
 ```
 ## Impact Analysis: /api/users/{id}
 
@@ -362,15 +413,24 @@ key_directories:
 - [ ] Update API documentation
 ```
 
+**你學到什麼**：
+- 這個 API 被 23 個檔案使用（影響範圍大）
+- 有 3 種可能的 Breaking Changes
+- 需要更新 8 個測試檔案
+- 有完整的 Migration Checklist 可以照著做
+
+**下一步**：照著 Migration Checklist 逐步修改，避免遺漏
+
 #### 範例 2: iOS Model 修改
 
-**場景**: 要修改 Swift Model，擔心影響 Objective-C 代碼
+**情境**：要修改 Swift Model，擔心影響 Objective-C 代碼（混合專案）
 
+**命令**：
 ```bash
 /atlas-impact "User.swift"
 ```
 
-**輸出**:
+**輸出**（摘要）：
 ```
 ## Impact Analysis: User.swift
 
@@ -397,6 +457,14 @@ find . -name '*.h' -not -path '*/Pods/*' -exec \
 2. `UserCell.m:35` - TableView Cell
 ...
 ```
+
+**你學到什麼**：
+- 這是 Swift/ObjC 混合專案（iOS 特殊場景）
+- Nullability 覆蓋率只有 6%（高風險！）
+- 修改 User.swift 會影響 45 個 ObjC 檔案
+- 有自動修復腳本可以加上 NS_ASSUME_NONNULL
+
+**下一步**：先執行 Auto-fix 腳本改善 Nullability，再修改 Model
 
 ---
 
@@ -523,15 +591,30 @@ cd ../api
 
 **症狀**: `/atlas-overview` 超過 20 分鐘還沒完成
 
-**可能原因**:
-- 專案過大 (>100K LOC)
-- 網絡慢（Claude API）
-- 專案包含大量二進制檔案
+**診斷步驟**（執行這些命令找出原因）:
 
-**解決方式**:
-1. 確認 `.gitignore` 正確排除 `node_modules/`、`Pods/` 等
-2. 在較小的子目錄執行
-3. 等待完成（只需執行一次）
+```bash
+# 1. 檢查實際程式碼行數（應 <100K）
+find . -name "*.swift" -o -name "*.ts" -o -name "*.kt" | \
+  grep -v "node_modules\|Pods\|build" | \
+  xargs wc -l 2>/dev/null | tail -1
+
+# 2. 檢查大型二進制檔案（應被排除）
+find . -type f -size +10M | head -10
+
+# 3. 檢查 .gitignore 設定
+cat .gitignore | grep -E "node_modules|Pods|build|\.app"
+```
+
+**解決方式**：
+
+| 根本原因 | 修復方法 | 預期改善 |
+|---------|---------|---------|
+| 缺少 .gitignore | 加入 `node_modules/`, `Pods/`, `*.app` | 速度提升 80% |
+| 專案過大 (>100K LOC) | 在子目錄執行：`cd src && /atlas-overview` | 依子目錄數量分散時間 |
+| 網路延遲 | 檢查 [Claude API 狀態](https://status.anthropic.com) | 等待或稍後重試 |
+
+**仍然緩慢？** 請[回報問題](https://github.com/lis186/SourceAtlas2/issues)並附上診斷結果
 
 ---
 
