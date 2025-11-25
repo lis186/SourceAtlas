@@ -462,7 +462,7 @@ dev-notes/YYYY-MM/implementation.md
 ### Git 和版本控制
 
 - **絕對不要使用 `git commit` 命令** - GitButler 正在使用其內部流程和 `but` CLI hooks 自動管理所有 commits 和分支
-- **專注於編寫乾淨的代碼和測試** - 不要擔心 commits 或分支
+- **專注於編寫乾淨的程式碼和測試** - 不要擔心 commits 或分支
 - **當任務完成時，停止工作**並允許 GitButler hooks 執行後處理命令
 
 此工作流程確保功能的清晰分離，並允許 GitButler 自動組織 commits 和分支，無需手動介入。
