@@ -6,6 +6,30 @@
 
 ## 2025-11（當前月份）
 
+### Week 5 (11/25-12/01): `/atlas-impact` 命令完成 + Swift Analyzer 整合 ⭐⭐
+
+**Swift Analyzer 整合** (11/25):
+- 開發 Swift/ObjC Deep Analyzer (7 sections, 482 lines)
+- 語言分析覆蓋率：70% → 90%+ (+20%)
+- 整合到 `/atlas-impact` 命令（自動觸發）
+- 8 個 subagent 多使用者測試驗證
+- 關鍵功能：Nullability (6% 覆蓋), @objc exposure (1,135 classes), Memory (112 unowned)
+→ [完整實作記錄](./2025-11/2025-11-25-swift-analyzer-integration-implementation.md)
+
+**測試與驗證完成** (11/25):
+- 5 個真實場景測試：SwiftUI, Clean Arch, Swift/ObjC interop, Enterprise, API 變更
+- 100% 測試成功率，92%+ 準確率
+- 關鍵發現：Swift/ObjC nullability 風險檢測、API 變更跨團隊協調價值
+- **重大決策**：移除自動時間估算（只提供客觀事實，由團隊自行判斷）
+→ [完整測試報告](./2025-11/2025-11-25-atlas-impact-testing.md)
+
+**命令實作** (11/25):
+- 創建 `.claude/commands/atlas-impact.md`（557 行）
+- 自適應類型檢測：API/MODEL/COMPONENT
+- 完整 call chain 追蹤、breaking changes 識別
+- Migration checklist 生成
+→ [命令實作](../.claude/commands/atlas-impact.md)
+
 ### Week 4 (11/20-11/24): Patterns 系統全面優化 + 架構簡化
 
 **命令架構簡化** (11/24):
@@ -23,7 +47,7 @@
 **Objective-C 支援** (11/23):
 - 擴充所有 29 iOS patterns 支援 .m/.h 檔案
 - Category 語法支援（`*+*.m`）
-- 測試 3 個混合專案：***REMOVED*** (55%), wikipedia-ios (18%), Signal-iOS (3%)
+- 測試 3 個混合專案：大型商業 App (55%), wikipedia-ios (18%), Signal-iOS (3%)
 - 從遺漏 55% → 0% 遺漏
 → [完整報告](./2025-11/2025-11-23-objective-c-support.md)
 
@@ -87,7 +111,7 @@
 - **總計**: 71 patterns
 
 ### 測試專案
-- wikipedia-ios, Signal-iOS, ***REMOVED***（iOS 混合專案）
+- wikipedia-ios, Signal-iOS, 大型商業 App（iOS 混合專案）
 - Swiftfin, Telegram, WordPress（多語言驗證）
 
 ---
