@@ -704,7 +704,7 @@ touch test-results.md
 ### 方法論傳承
 
 基於此次實戰，建立了可重複使用的框架：
-- **[dev-notes/new-language-support-methodology.md](./dev-notes/new-language-support-methodology.md)** - 6 階段系統化方法論
+- **[dev-notes/archives/lessons/new-language-support-methodology.md](./dev-notes/archives/lessons/new-language-support-methodology.md)** - 6 階段系統化方法論
 - 適用於未來新增任何程式語言支援（Kotlin, Go, Rust, Flutter 等）
 - 包含完整檢查清單、快速啟動腳本、品質標準
 
