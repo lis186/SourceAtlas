@@ -6,6 +6,31 @@ v2.5 | 更新時間: 2025-11-25
 
 ---
 
+## 系統需求
+
+在開始前，請確認系統符合以下需求：
+
+| 需求 | 最低版本 | 檢查方式 |
+|------|---------|---------|
+| **Claude Code** | 0.3+ | 在 Claude Code 執行 `/help` |
+| **Git** | 2.0+ | `git --version` |
+| **Bash** | 3.2+ | `bash --version` |
+| **作業系統** | macOS 11+ / Ubuntu 20.04+ | `uname -a` |
+
+**快速驗證**：
+
+```bash
+# 一鍵檢查所有依賴
+echo "Claude Code: 需手動檢查（執行 /help）"
+echo "Git: $(git --version 2>&1 | head -1)"
+echo "Bash: $(bash --version 2>&1 | head -1)"
+echo "OS: $(uname -s) $(uname -r)"
+```
+
+⚠️ **不符合需求？** 見[疑難排解](#疑難排解)章節
+
+---
+
 ## 快速開始
 
 ### 1. 安裝
