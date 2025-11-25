@@ -2,14 +2,14 @@
 
 **AI-powered codebase understanding assistant for Claude Code**
 
-SourceAtlas helps developers quickly understand any codebase through pattern learning, impact analysis, and three-stage analysis methodology.
+SourceAtlas helps developers quickly understand any codebase through pattern learning and impact analysis.
 
 ## ✨ Features
 
 - **🎯 Pattern Learning** (`/atlas-pattern`) - Learn design patterns from existing code
 - **📊 Impact Analysis** (`/atlas-impact`) - Analyze change impact (Coming Soon)
 - **🔍 Quick Search** (`/atlas-find`) - Rapidly locate functionality (Coming Soon)
-- **📖 Complete Analysis** (`/atlas`) - Full three-stage codebase analysis (Coming Soon)
+- **🔍 Project Overview** (`/atlas-overview`) - Quick project understanding
 
 ## 🚀 Installation
 
