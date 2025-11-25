@@ -148,7 +148,7 @@ AI 分析後回應（10-15 分鐘）：
 
 **後續行動**：
 - 需要學習特定模式時 → `/atlas-pattern`
-- 需要修改代碼時 → `/atlas-impact` 評估影響
+- 需要修改程式碼時 → `/atlas-impact` 評估影響
 
 ---
 
@@ -608,7 +608,7 @@ AI 分析：
 
 | Level | 特徵 | 識別方法 |
 |-------|------|---------|
-| **Level 0** | 無 AI | 傳統代碼風格 |
+| **Level 0** | 無 AI | 傳統程式碼風格 |
 | **Level 1-2** | 基礎使用 | 偶爾的 AI 痕跡 |
 | **Level 3** | 系統化 | CLAUDE.md、高一致性、詳細註解 |
 | **Level 4** | 生態化 | 團隊級 AI 協作（未來） |
@@ -937,7 +937,7 @@ main
 高熵檔案：README.md, Models, 配置檔
   → 包含專案級理解、資料結構、架構決策
 
-低熵檔案：重複的 CRUD Controllers, 樣板代碼
+低熵檔案：重複的 CRUD Controllers, 樣板程式碼
   → 模式可預測，單獨看價值低
 ```
 
@@ -1146,7 +1146,7 @@ templates:
 
 ```bash
 /atlas-changes     # 歷史查詢（變更頻率、耦合度、熱點、風險評估）
-/atlas-expert      # 專家查詢（代碼所有權、知識地圖）
+/atlas-expert      # 專家查詢（程式碼所有權、知識地圖）
 ```
 
 **特色**：
@@ -1173,7 +1173,7 @@ templates:
 ```bash
 # v2.5 靜態分析（API 變更）
 /atlas-impact api "/api/users/{id}"
-→ 找出所有「調用」這個 API 的代碼（靜態依賴）
+→ 找出所有「調用」這個 API 的程式碼（靜態依賴）
 
 # v3.0 時序分析（重構風險）
 /atlas-changes src/payment_service.rb

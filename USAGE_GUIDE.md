@@ -1,1080 +1,726 @@
 # SourceAtlas - 使用指南
 
-**版本**: v1.0 完成，v2.5 開發中
-**更新時間**: 2025-11-22
+**3 個斜線命令的完整使用說明**
+
+適用於 Claude Code | v2.5
 
 ---
 
-## 📖 快速開始
+## 目錄
 
-### 5 分鐘入門
-
-**步驟 1: 選擇要分析的專案**
-```bash
-cd /path/to/target/project
-```
-
-**步驟 2: 執行 Stage 0 分析**
-
-將 `PROMPTS.md` 中的 "Stage 0: Project Fingerprint" prompt 複製到 Claude，替換 `[PROJECT_PATH]` 為實際路徑。
-
-**步驟 3: 查看結果**
-
-你會得到一個 `.yaml` 格式的報告，包含：
-- 技術棧識別
-- 架構模式推論
-- 10-15 個假設（供 Stage 1 驗證）
-- 開發者能力初步評估
-
-**步驟 4: （可選）執行 Stage 1-2**
-
-如果需要更深入的理解，繼續執行 Stage 1 和 Stage 2。
+1. [安裝](#安裝)
+2. [命令 1: /atlas-overview](#命令-1-atlas-overview)
+3. [命令 2: /atlas-pattern](#命令-2-atlas-pattern)
+4. [命令 3: /atlas-impact](#命令-3-atlas-impact)
+5. [常見問題](#常見問題)
 
 ---
 
-## 🎨 使用 `/atlas-pattern` 學習設計模式
+## 安裝
 
-### 什麼是 `/atlas-pattern`？
-
-`/atlas-pattern` 是 SourceAtlas v2.5 的核心命令，幫助開發者**學習當前代碼庫如何實作特定模式**，而非從零開始設計。
-
-**核心價值**: 確保一致性，避免重複造輪子，加速新功能開發。
+**完整安裝指南**：[GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
 
 ### 快速開始
 
 ```bash
-/atlas-pattern "api endpoint"
-/atlas-pattern "file upload"
-/atlas-pattern "background job"
+git clone https://github.com/lis186/SourceAtlas2.git ~/dev/sourceatlas2
+cd ~/dev/sourceatlas2 && ./install-global.sh
 ```
 
-**執行時間**: 5-10 分鐘
-**掃描檔案**: <5% (遵循 SourceAtlas 資訊理論原則)
+安裝一次，所有專案都能用。
 
-### 支援的模式
+---
 
-#### 核心模式
-- **api endpoint** / "api" / "endpoint" - REST/GraphQL API 路由、控制器
-- **background job** / "job" / "queue" - 異步任務處理、佇列、背景任務
-- **file upload** / "upload" / "file storage" - 檔案上傳、儲存、多媒體處理
-- **database query** / "database" / "query" - 資料庫存取、ORM 模式
-- **authentication** / "auth" / "login" - 認證流程、會話管理
+## 命令 1: /atlas-overview
 
-#### iOS/Swift 模式
-- **swiftui view** / "view" - SwiftUI 視圖組合模式
-- **view controller** / "viewcontroller" - UIKit 視圖控制器模式
-- **networking** / "network" - 網絡層、HTTP 客戶端
-- **view model** / "viewmodel" / "mvvm" - MVVM 模式、ObservableObject
-- **coordinator** / "navigation coordinator" - Coordinator 導航模式、Flow 流程
-- **core data** / "coredata" / "persistence" - Core Data 持久化、ManagedObject
-- **dependency injection** / "di" / "injection" - 依賴注入、Factory、Container
-- **table view cell** / "collection view cell" / "cell" - TableView/CollectionView Cell 組件
-- **extension** / "extensions" - Swift Extensions、類型擴展
-- **view modifier** / "viewmodifier" / "swiftui modifier" - SwiftUI ViewModifier、樣式組件
-- **error handling** / "error" / "errors" - 錯誤處理、Error 類型
+**快速理解專案全貌**
 
-#### TypeScript/React 模式
-- **react component** / "component" - React 組件模式（.tsx）
-- **react hook** / "hook" / "hooks" - 自定義 React Hooks（use*.ts）
-- **state management** / "store" / "state" - 狀態管理（Context、Redux、Zustand）
-- **form handling** / "form" - 表單處理、驗證模式
+### 使用方式
 
-#### Next.js 特有模式
-- **nextjs middleware** / "middleware" - Next.js 中間件（middleware.ts）
-- **nextjs layout** / "layout" - App Router 佈局組件（layout.tsx）
-- **nextjs page** / "page" - App Router 頁面組件（page.tsx）
-- **nextjs loading** / "loading" - 載入狀態組件（loading.tsx）
-- **nextjs error** / "error boundary" / "error" - 錯誤邊界組件（error.tsx）
+```bash
+/atlas-overview
+```
 
-**注意**: 腳本會自動檢測專案類型（TypeScript vs Swift），並套用對應的模式。
+### 你會得到什麼
 
-### 輸出格式
+- **技術棧**：語言、框架、資料庫
+- **架構模式**：MVC、MVVM、Clean Architecture...
+- **專案規模**：檔案數、程式碼行數
+- **程式碼品質**：測試覆蓋率、註解密度
+- **目錄結構**：關鍵資料夾和檔案
 
-每個模式分析包含：
+### 使用時機
 
-1. **最佳範例檔案** (2-3 個，含 file:line 引用)
-2. **標準流程** (逐步執行路徑)
-3. **關鍵慣例** (命名、結構、組織)
-4. **測試模式** (如何測試此模式)
-5. **常見陷阱** (需要避免的錯誤)
-6. **實作指南** (具體步驟)
+- ✅ 接手新專案
+- ✅ Code Review
+- ✅ 技術評估
+- ✅ 招聘評估（看候選人的 GitHub 專案）
+
+### 執行時間
+
+- **小專案** (<5K LOC): 5-10 分鐘
+- **中型專案** (5K-50K LOC): 10-15 分鐘
+- **大型專案** (>50K LOC): 15-20 分鐘
 
 ### 使用範例
 
-**場景 1: 添加新的 API 端點**
+#### 範例 1: 接手新專案
+
+**情境**：加入團隊第一天，需要快速理解 50K LOC 的專案
+
+**命令**：
+```bash
+/atlas-overview
+```
+
+**輸出**（摘要）：
+```yaml
+project_type: WEB_APP
+primary_language: TypeScript
+frameworks:
+  - Next.js 14
+  - React 18
+  - Prisma
+architecture_pattern: CLEAN_ARCHITECTURE
+test_coverage: 85%
+key_directories:
+  - src/app/ (Next.js App Router)
+  - src/components/ (React Components)
+  - prisma/ (Database Schema)
+```
+
+**你學到什麼**：
+- 這是用 Next.js 14 + React 的全端專案
+- 使用 Clean Architecture（程式碼品質高）
+- 測試覆蓋率 85%（專業團隊）
+- 主要邏輯在 src/app/（App Router 架構）
+
+**下一步**：用 `/atlas-pattern "api endpoint"` 學習 API 實作方式
+
+---
+
+## 命令 2: /atlas-pattern
+
+**學習專案的設計模式**
+
+### 使用方式
 
 ```bash
-# 使用者問題
-你: 我需要添加一個新的 API 端點來處理用戶註冊
+/atlas-pattern "api endpoint"
+/atlas-pattern "file upload"
+/atlas-pattern "authentication"
+```
 
-# 執行命令
-你: /atlas-pattern "api endpoint"
+### 什麼是 "Pattern"？
 
-# AI 回應範例
-AI: # Pattern: REST API Endpoints
+在 SourceAtlas 中，**Pattern（模式）** 是指專案中重複出現的程式碼結構與設計方式：
 
-## Overview
-此代碼庫使用基於控制器的架構，路由定義在 `routes/` 目錄。
+- **架構模式**：MVVM、Clean Architecture、Repository
+- **實作模式**：API endpoint、檔案上傳、身份驗證
+- **UI 模式**：SwiftUI view、React component、自訂按鈕
 
+簡單說就是：**「這個專案通常怎麼實作 X？」**
+
+### 你會得到什麼
+
+1. **最佳範例檔案** (2-3 個) + file:line 引用
+2. **關鍵慣例**：命名、結構、組織方式
+3. **測試模式**：如何測試這個功能
+4. **實作指南**：逐步實作新功能
+
+### 支援的 Patterns (71 個)
+
+#### 快速總覽
+
+| 語言 | Pattern 數量 | 主要類別 |
+|------|-------------|----------|
+| **iOS/Swift** | 29 | 架構、UI、資料處理、功能模組 |
+| **TypeScript/React** | 22 | React 基礎、Next.js、後端整合 |
+| **Android/Kotlin** | 20 | Architecture Components、UI、資料層 |
+
+#### 熱門 Patterns（跨語言）
+
+1. `api endpoint` - REST/GraphQL API 實作
+2. `authentication` - 登入/認證流程
+3. `view controller` - 畫面/頁面組件
+4. `networking` - HTTP 客戶端模式
+5. `state management` - 應用程式狀態管理
+
+<details>
+<summary><b>📱 iOS/Swift Patterns (29 個)</b></summary>
+
+#### 核心架構 (4)
+- `mvvm` - MVVM 架構模式
+- `coordinator` - Coordinator 導航模式
+- `dependency injection` - DI Container/Factory
+- `repository` - Repository 資料存取模式
+
+#### UI 組件 (7)
+- `swiftui view` - SwiftUI 視圖組合
+- `view controller` - UIKit ViewController
+- `table view cell` - TableView/CollectionView Cell
+- `view modifier` - SwiftUI ViewModifier
+- `custom view` - 自訂 UI 元件
+- `collection view layout` - CollectionView 自訂佈局
+- `animation` - UI 動畫
+
+#### 資料處理 (8)
+- `networking` - 網絡層、API Client
+- `core data` - Core Data 持久化
+- `api endpoint` - REST/GraphQL API
+- `cache` - 快取管理
+- `user defaults` - 本地儲存
+- `keychain` - 安全儲存
+- `codable` - JSON 編解碼
+- `combine publisher` - Reactive 資料流
+
+#### 功能模組 (10)
+- `authentication` - 認證流程
+- `file upload` - 檔案上傳
+- `background job` - 異步任務
+- `error handling` - 錯誤處理
+- `localization` - 國際化
+- `push notification` - 推播通知
+- `deep linking` - Deep Link 處理
+- `image loading` - 圖片載入與快取
+- `biometric auth` - Face ID/Touch ID
+- `analytics` - 事件追蹤
+
+</details>
+
+<details>
+<summary><b>⚛️ TypeScript/React Patterns (22 個)</b></summary>
+
+#### React 基礎 (6)
+- `react component` - React 組件
+- `react hook` - 自定義 Hooks
+- `state management` - 狀態管理
+- `form handling` - 表單處理
+- `context provider` - Context API
+- `error boundary` - 錯誤邊界
+
+#### Next.js 專屬 (8)
+- `nextjs middleware` - 中間件
+- `nextjs layout` - App Router 佈局
+- `nextjs page` - 頁面組件
+- `nextjs loading` - 載入狀態
+- `nextjs error` - 錯誤處理
+- `server component` - 伺服器組件
+- `server action` - Server Actions
+- `route handler` - API 路由處理
+
+#### 後端整合 (8)
+- `api endpoint` - API 路由
+- `database query` - Prisma/ORM
+- `authentication` - Auth.js/NextAuth
+- `api client` - Fetch/Axios 封裝
+- `websocket` - WebSocket 連線
+- `graphql` - GraphQL 查詢
+- `file upload` - 檔案上傳
+- `caching strategy` - 快取策略
+
+</details>
+
+<details>
+<summary><b>🤖 Android/Kotlin Patterns (20 個)</b></summary>
+
+#### Architecture Components (8)
+- `view controller` - Activity/Fragment
+- `view model` - ViewModel (AAC)
+- `repository` - Repository Pattern
+- `use case` - UseCase/Interactor
+- `dependency injection` - Hilt/Koin
+- `navigation component` - Navigation 架構
+- `room database` - Room 持久化
+- `data store` - DataStore 偏好設定
+
+#### UI 層 (6)
+- `compose ui` - Jetpack Compose
+- `recycler view` - RecyclerView Adapter
+- `view binding` - ViewBinding
+- `custom view` - 自訂 View
+- `animation` - 動畫效果
+- `material design` - Material Components
+
+#### 資料與網路 (6)
+- `retrofit api` - Retrofit 網路請求
+- `coroutines` - Kotlin Coroutines
+- `flow` - Kotlin Flow
+- `api endpoint` - REST API 實作
+- `authentication` - 登入認證
+- `file handling` - 檔案處理
+
+</details>
+
+**試用範例**：`/atlas-pattern "api endpoint"`
+
+### 執行時間
+
+**0.1 - 30 秒**（取決於專案大小）
+
+### 使用範例
+
+#### 範例 1: 學習 API 設計
+
+**情境**：要新增一個 API endpoint，不確定專案的寫法
+
+**命令**：
+```bash
+/atlas-pattern "api endpoint"
+```
+
+**輸出**（摘要）：
+```
 ## Best Examples
 
-### 1. app/controllers/UsersController.swift:23
-**Purpose**: 標準 CRUD 端點模式
-**Key Code**:
-```swift
-func create(req: Request) async throws -> UserResponse {
-    let input = try req.content.decode(CreateUserInput.self)
-    let user = try await userService.create(input)
-    return UserResponse(user)
-}
-```
-
-### 2. app/routes.swift:15
-**Purpose**: 路由註冊模式
-...
+1. `src/app/api/users/route.ts:15` - GET /api/users
+2. `src/app/api/users/[id]/route.ts:20` - GET /api/users/:id
+3. `src/app/api/posts/route.ts:10` - POST /api/posts
 
 ## Key Conventions
-- 所有控制器繼承 `BaseController`
-- 使用 Codable 進行請求/回應序列化
-- Service 層處理業務邏輯
-...
 
-## Step-by-Step Implementation Guide
-1. 創建 `RegistrationController.swift` 在 `app/controllers/`
-2. 定義 `create` 方法，遵循 `UsersController` 模式
-3. 在 `routes.swift` 註冊路由
-...
+- File: `app/api/[resource]/route.ts`
+- Export: `GET`, `POST`, `PUT`, `DELETE`
+- Response: `NextResponse.json(data, { status })`
+- Error: Try-catch with NextResponse
+
+## Implementation Guide
+
+1. Create `app/api/[resource]/route.ts`
+2. Export async function GET/POST
+3. Use Prisma for database access
+4. Return NextResponse.json()
 ```
 
-**場景 2: 學習檔案上傳模式**
+**你學到什麼**：
+- 這個專案用 Next.js App Router（不是 Pages Router）
+- API 都在 `app/api/` 目錄，用 `route.ts` 命名
+- 統一用 Prisma 存取資料庫
+- 錯誤處理用 try-catch + NextResponse
 
+**下一步**：照著 Implementation Guide 建立你的新 API
+
+#### 範例 2: 學習 SwiftUI 組件
+
+**情境**：要寫一個自訂 SwiftUI 元件，想學習專案的慣例
+
+**命令**：
 ```bash
-你: /atlas-pattern "file upload"
+/atlas-pattern "swiftui view"
+```
 
-AI: # Pattern: File Upload & Storage
-
-## Overview
-此專案使用多媒體協調器模式，支援多種來源（本地、Tenor GIF、Stock Photos）。
-
+**輸出**（摘要）：
+```
 ## Best Examples
 
-### 1. Media/TenorMedia.swift:45
-**Purpose**: 外部媒體整合模式
+1. `Views/ProductCard.swift:10` - Reusable Card Component
+2. `Views/UserProfile.swift:25` - Screen-level View
+3. `Views/Components/Button.swift:5` - Custom Button
+
+## Key Conventions
+
+- File: `Views/[ComponentName].swift`
+- Struct: Conform to `View` protocol
+- Body: Use ViewBuilder
+- Preview: Always include PreviewProvider
+
+## Implementation Guide
+
+1. Create new Swift file in Views/
+2. Import SwiftUI
+3. Struct [Name]: View { var body: some View { ... } }
+4. Add PreviewProvider
+```
+
+**你學到什麼**：
+- 所有 SwiftUI 組件都放在 `Views/` 目錄
+- 小型可重用元件放在 `Views/Components/`
+- 每個組件必須有 PreviewProvider（團隊標準）
+- 命名慣例：大寫開頭的 PascalCase
+
+**下一步**：照著範例檔案的結構，建立你的新元件
+
+---
+
+## 命令 3: /atlas-impact
+
+**分析程式碼變更影響**
+
+### 使用方式
+
+```bash
+# 分析檔案
+/atlas-impact "src/api/users.ts"
+
+# 分析 API
+/atlas-impact api "/api/users/{id}"
+
+# 分析 Model
+/atlas-impact "User model"
+```
+
+### 你會得到什麼
+
+1. **依賴追蹤**：哪些檔案使用這個 API/Model/Component
+2. **Breaking Changes**：哪些變更會破壞現有程式碼
+3. **測試影響**：需要更新哪些測試
+4. **Migration Checklist**：逐步遷移指南
+
+**iOS 專案特別功能** ⭐:
+- Swift/ObjC Interop 風險分析
+- Nullability 檢查
+- @objc 暴露分析
+- Memory 管理問題
+
+### 執行時間
+
+**1-2 分鐘**（大型專案可能需要 2-3 分鐘）
+
+### 使用範例
+
+#### 範例 1: API 重構
+
+**情境**：要重構 `/api/users/{id}` 端點，擔心影響現有功能
+
+**命令**：
+```bash
+/atlas-impact api "/api/users/{id}"
+```
+
+**輸出**（摘要）：
+```
+## Impact Analysis: /api/users/{id}
+
+### Direct Dependencies (23 files)
+
+1. `src/components/UserProfile.tsx:45` - Fetch user data
+2. `src/components/UserCard.tsx:20` - Display user info
+3. `src/app/dashboard/page.tsx:30` - Load user list
 ...
 
-### 2. Media/AztecMediaPickingCoordinator.swift:120
-**Purpose**: 媒體選擇流程協調
+### Breaking Changes 🔴
+
+1. Changing response structure → 15 components need update
+2. Adding authentication → 8 API calls need headers
+3. Renaming fields → 12 TypeScript interfaces need update
+
+### Migration Checklist
+
+- [ ] Update UserProfile component
+- [ ] Update UserCard component
+- [ ] Update TypeScript types
+- [ ] Update tests (8 test files)
+- [ ] Update API documentation
+```
+
+**你學到什麼**：
+- 這個 API 被 23 個檔案使用（影響範圍大）
+- 有 3 種可能的 Breaking Changes
+- 需要更新 8 個測試檔案
+- 有完整的 Migration Checklist 可以照著做
+
+**下一步**：照著 Migration Checklist 逐步修改，避免遺漏
+
+#### 範例 2: iOS Model 修改
+
+**情境**：要修改 Swift Model，擔心影響 Objective-C 程式碼（混合專案）
+
+**命令**：
+```bash
+/atlas-impact "User.swift"
+```
+
+**輸出**（摘要）：
+```
+## Impact Analysis: User.swift
+
+### Swift/ObjC Interop Risks 🔴
+
+**Nullability Coverage**: 6% (CRITICAL)
+- 2,255 header files missing NS_ASSUME_NONNULL
+- Impact: Properties become `!` in Swift → Runtime crashes
+
+**@objc Exposure**:
+- 1,135 classes exposed to ObjC
+- Changing User.swift affects 45 ObjC files
+
+**Auto-fix Available**:
+```bash
+# Add nullability to all headers
+find . -name '*.h' -not -path '*/Pods/*' -exec \
+  sed -i '' '1i\NS_ASSUME_NONNULL_BEGIN' {} \;
+```
+
+### Direct Dependencies (45 files)
+
+1. `UserViewController.m:120` - ObjC View Controller
+2. `UserCell.m:35` - TableView Cell
 ...
-
-## Key Conventions
-- 所有媒體處理在 `ViewRelated/Media/` 目錄
-- 使用 Coordinator 模式管理選擇流程
-- 分離媒體模型、API 和視圖層
-...
 ```
 
-**場景 3: Next.js App Router API 路由**
+**你學到什麼**：
+- 這是 Swift/ObjC 混合專案（iOS 特殊場景）
+- Nullability 覆蓋率只有 6%（高風險！）
+- 修改 User.swift 會影響 45 個 ObjC 檔案
+- 有自動修復腳本可以加上 NS_ASSUME_NONNULL
 
+**下一步**：先執行 Auto-fix 腳本改善 Nullability，再修改 Model
+
+---
+
+## 常見問題
+
+### Q: 命令執行失敗怎麼辦？
+
+**A**: 檢查以下幾點：
+
+1. **確認安裝**:
+   ```bash
+   ls ~/.claude/commands/atlas-*.md
+   ```
+
+2. **確認在專案目錄**:
+   ```bash
+   pwd  # 應該在你的專案根目錄
+   ```
+
+3. **查看錯誤訊息**: 命令會顯示詳細錯誤，通常是路徑問題
+
+### Q: 可以自定義 patterns 嗎？
+
+**A**: 可以！編輯 `scripts/atlas/patterns/` 下的配置檔案。
+
+範例：新增自定義 pattern
 ```bash
-你: 我需要在 Next.js 專案中添加一個 API 端點來處理用戶註冊
+# 1. 複製現有 pattern
+cp scripts/atlas/patterns/ios/networking.sh scripts/atlas/patterns/ios/custom-pattern.sh
 
-# 執行命令
-你: /atlas-pattern "api endpoint"
-
-AI: # Pattern: Next.js App Router API Routes
-
-## Overview
-此專案使用 Next.js 13+ App Router，API 路由定義在 `app/api/` 目錄。
-每個端點使用 `route.ts` 檔案，支援動態路由和請求處理。
-
-## Best Examples
-
-### 1. app/api/users/route.ts:10
-**Purpose**: REST API 端點標準模式
-**Key Code**:
-```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import { createUser } from '@/lib/db/users'
-
-export async function POST(request: NextRequest) {
-  const body = await request.json()
-  const user = await createUser(body)
-  return NextResponse.json(user, { status: 201 })
-}
+# 2. 修改檔案內容
+# 3. 重新載入 Claude Code
 ```
 
-### 2. app/api/users/[userId]/route.ts:8
-**Purpose**: 動態路由參數處理
-**Key Code**:
-```typescript
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { userId: string } }
-) {
-  const user = await getUserById(params.userId)
-  if (!user) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  }
-  return NextResponse.json(user)
-}
-```
+### Q: 支援哪些專案類型？
 
-## Key Conventions
-- 所有 API 路由在 `app/api/` 目錄
-- 檔案名稱必須是 `route.ts` 或 `route.tsx`
-- 使用具名導出：GET, POST, PUT, DELETE, PATCH
-- 動態路由使用 `[paramName]` 語法
-- 錯誤統一返回 JSON 格式
+**A**: 目前支援：
 
-## Testing Pattern
-```typescript
-// __tests__/api/users.test.ts
-import { POST } from '@/app/api/users/route'
+- ✅ iOS (Swift + Objective-C)
+- ✅ TypeScript (React + Next.js)
+- ✅ Android (Kotlin)
+- 🔵 Python (開發中)
+- 🔵 Ruby (開發中)
+- 🔵 Go (開發中)
 
-describe('POST /api/users', () => {
-  it('should create a new user', async () => {
-    const request = new Request('http://localhost/api/users', {
-      method: 'POST',
-      body: JSON.stringify({ name: 'Test User', email: 'test@example.com' }),
-    })
-    const response = await POST(request as any)
-    expect(response.status).toBe(201)
-  })
-})
-```
+### Q: 分析結果保存在哪裡？
 
-## Step-by-Step Implementation Guide
-1. 創建 `app/api/auth/register/route.ts`
-2. 導出 `POST` 函數處理註冊邏輯
-3. 使用 Zod 驗證輸入資料
-4. 呼叫 Prisma/資料庫創建用戶
-5. 返回 JWT token 或 session
-6. 添加錯誤處理和驗證邏輯
-```
+**A**:
+- 輸出直接顯示在 Claude Code 對話中
+- 不會自動保存檔案
+- 可以手動複製結果儲存
 
-**場景 4: React Custom Hooks**
+### Q: 可以分析私有 codebase 嗎？
 
+**A**: 可以！所有分析都在本地執行，程式碼不會上傳。
+
+### Q: 效能如何？會不會很慢？
+
+**A**:
+- `/atlas-overview`: 10-15 分鐘
+- `/atlas-pattern`: 0.1-30 秒
+- `/atlas-impact`: 1-2 分鐘
+
+使用資訊理論原則，只掃描 <5% 檔案。
+
+### Q: 支援 Monorepo 嗎？
+
+**A**: 支援！建議在每個子專案目錄執行命令。
+
+範例：
 ```bash
-你: /atlas-pattern "react hook"
-
-AI: # Pattern: React Custom Hooks
-
-## Overview
-此專案使用自定義 Hooks 封裝可複用邏輯，所有 hooks 遵循 `use*` 命名慣例。
-
-## Best Examples
-
-### 1. lib/hooks/use-auth.ts:15
-**Purpose**: 認證狀態管理 Hook
-**Key Code**:
-```typescript
-import { useContext } from 'react'
-import { AuthContext } from '@/context/auth'
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
-  }
-  return context
-}
-```
-
-### 2. components/chat/chat-hooks/use-chat-handler.tsx:45
-**Purpose**: 複雜業務邏輯 Hook
-**Key Code**:
-```typescript
-export function useChatHandler() {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-
-  const sendMessage = useCallback(async (content: string) => {
-    setIsLoading(true)
-    try {
-      const response = await api.sendMessage(content)
-      setMessages(prev => [...prev, response])
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  return { messages, isLoading, sendMessage }
-}
-```
-
-## Key Conventions
-- 所有 hooks 使用 `use` 前綴
-- 放在 `lib/hooks/` 或功能目錄下的 `hooks/` 子目錄
-- 使用 TypeScript 定義返回類型
-- 複雜 hooks 使用 `useCallback`、`useMemo` 優化性能
-- 必要時拋出錯誤（如未在 Provider 內使用）
-
-## Common Pitfalls
-- ❌ 忘記添加依賴陣列導致無限循環
-- ❌ 在條件語句中呼叫 hooks
-- ❌ 未定義 TypeScript 類型
-- ✅ 使用 ESLint react-hooks 規則檢查
-```
-
-**場景 5: iOS MVVM 架構學習 (Swiftfin)**
-
-```bash
-你: /atlas-pattern "view model"
-
-AI: # Pattern: MVVM Architecture - View Models
-
-## Overview
-此專案使用 MVVM 架構，包含 10 個 ViewModels 管理業務邏輯和狀態。所有 ViewModels 遵循 `*ViewModel.swift` 命名慣例，並使用 SwiftUI 的 `ObservableObject` 協議。
-
-## Best Examples
-
-### 1. Shared/ViewModels/UserSignInViewModel.swift:25
-**Purpose**: 使用者登入流程管理
-**Key Code**:
-```swift
-import SwiftUI
-import Combine
-
-class UserSignInViewModel: ObservableObject {
-    @Published var username: String = ""
-    @Published var password: String = ""
-    @Published var isLoading: Bool = false
-    @Published var errorMessage: String?
-
-    private let authService: AuthService
-    private var cancellables = Set<AnyCancellable>()
-
-    func signIn() async {
-        isLoading = true
-        defer { isLoading = false }
-
-        do {
-            try await authService.authenticate(username: username, password: password)
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-}
-```
-
-### 2. Shared/ViewModels/SettingsViewModel.swift:15
-**Purpose**: 設定頁面狀態管理
-**Key Code**:
-```swift
-class SettingsViewModel: ObservableObject {
-    @Published var theme: Theme = .system
-    @Published var notifications: Bool = true
-
-    func saveSettings() {
-        UserDefaults.standard.set(theme.rawValue, forKey: "theme")
-        UserDefaults.standard.set(notifications, forKey: "notifications")
-    }
-}
-```
-
-### 3. Shared/ViewModels/ServerConnectionViewModel.swift:40
-**Purpose**: 網路連線狀態管理
-**重要模式**: 使用 `async/await` 處理非同步操作，`@Published` 屬性自動觸發 UI 更新
-
-## Key Conventions
-- 所有 ViewModels 繼承自 `ObservableObject`
-- 使用 `@Published` 包裝需要觸發 UI 更新的屬性
-- ViewModels 放在 `Shared/ViewModels/` 目錄統一管理
-- 使用 `async/await` 處理非同步操作（取代 Combine publishers）
-- 依賴注入通過初始化器傳入（如 `AuthService`）
-
-## Common Pitfalls
-- ❌ 在 ViewModel 中直接操作 UI (應透過 `@Published` 屬性)
-- ❌ 忘記標記 class 為 `ObservableObject`
-- ❌ 在非 main thread 更新 `@Published` 屬性
-- ✅ 使用 `@MainActor` 確保 UI 更新在主線程
-
-## Architecture Insights
-- **架構模式**: MVVM (信心度: 0.9)
-- **狀態管理**: ObservableObject + @Published
-- **依賴注入**: Constructor injection
-- **非同步處理**: async/await (modern Swift)
-```
-
-**場景 6: iOS Coordinator 導航模式 (WordPress-iOS)**
-
-```bash
-你: /atlas-pattern "coordinator"
-
-AI: # Pattern: Coordinator Navigation Pattern
-
-## Overview
-此專案使用 Coordinator 模式管理複雜導航流程，共有 10+ Coordinators 處理不同功能模組。Coordinator 負責決定導航邏輯，View Controllers 只負責展示。
-
-## Best Examples
-
-### 1. Classes/ViewRelated/System/Coordinators/MySitesCoordinator.swift:30
-**Purpose**: My Sites 功能模組的導航管理
-**Key Code**:
-```swift
-class MySitesCoordinator {
-    private let navigationController: UINavigationController
-    private let blog: Blog
-
-    init(navigationController: UINavigationController, blog: Blog) {
-        self.navigationController = navigationController
-        self.blog = blog
-    }
-
-    func start() {
-        let viewController = MySitesViewController(blog: blog)
-        viewController.coordinator = self
-        navigationController.pushViewController(viewController, animated: true)
-    }
-
-    func showPostEditor() {
-        let editorCoordinator = EditorCoordinator(
-            navigationController: navigationController,
-            blog: blog
-        )
-        editorCoordinator.start()
-    }
-}
-```
-
-### 2. Classes/ViewRelated/QR Login/Coordinators/QRLoginCoordinator.swift:15
-**Purpose**: QR 碼登入多步驟流程管理
-**Key Code**:
-```swift
-class QRLoginCoordinator {
-    private let presenter: UIViewController
-
-    func start() {
-        showScanning()
-    }
-
-    private func showScanning() {
-        let scanVC = QRLoginScanningViewController()
-        scanVC.onSuccess = { [weak self] token in
-            self?.showVerification(token: token)
-        }
-        presenter.present(scanVC, animated: true)
-    }
-
-    private func showVerification(token: String) {
-        let verifyVC = QRLoginVerifyViewController(token: token)
-        // ... 驗證完成後導航
-    }
-}
-```
-
-## Key Conventions
-- Coordinators 放在各功能模組的 `Coordinators/` 目錄
-- 使用 `start()` 方法啟動流程
-- 透過 closure 或 delegate 回傳結果給父 Coordinator
-- View Controllers 持有弱引用到 Coordinator (`weak var coordinator`)
-- 使用 `UINavigationController` 或 `UIViewController.present` 執行導航
-
-## Common Pitfalls
-- ❌ View Controller 直接執行導航 (應委託給 Coordinator)
-- ❌ Coordinator 強引用 View Controller 造成循環引用
-- ❌ 忘記在流程結束時清理 Coordinator
-- ✅ 使用 `weak self` 避免循環引用
-
-## Architecture Insights
-- **導航模式**: Coordinator Pattern (信心度: 0.95)
-- **解耦程度**: 高 (View Controllers 不知道導航邏輯)
-- **測試友好**: 可以獨立測試導航流程
-- **適用場景**: 複雜多步驟流程 (登入、設定、編輯器)
-```
-
-### 測試結果
-
-#### iOS/Swift 專案
-
-已在 6 個大型 iOS 專案測試：
-
-| 專案 | 規模 | 執行時間 | 準確率 | 結果 |
-|------|------|---------|--------|------|
-| **WordPress-iOS** | 3,639 檔案 (混合) | 15-20s | 95% | ✅ 18/19 標準符合 |
-| **Swiftfin** | 829 檔案 (純 SwiftUI) | 2s | 100% | ✅ 8/9 標準符合 |
-| **Telegram-iOS** | 9,231 檔案 (遺留) | 1.8-5.7s | 90%+ | ✅ 8/8 標準符合 |
-| **Signal-iOS** | 2,514 檔案 | 1.9-5.9s | 97% | ✅ 安全應用模式 |
-| **Calculator** | 3 檔案 (極小) | 0.078s | 100% | ✅ 性能基準 |
-| **firefox-ios** | 2,767 檔案 | 2.1-4.8s | 90% | ✅ 瀏覽器架構 |
-
-#### TypeScript/React 專案
-
-已在 4 個 TypeScript 專案測試：
-
-| 專案 | 規模 | 執行時間 | 準確率 | 結果 |
-|------|------|---------|--------|------|
-| **excalidraw** | 540 檔案 (Monorepo) | 0.20-8.19s | 100% | ✅ 有 CLAUDE.md，AI Level 3 |
-| **shadcn-ui** | 2,663 檔案 (Turborepo) | 0.29s | 100% | ✅ UI 組件庫 |
-| **zustand** | 32 檔案 (小型庫) | 0.10-0.50s | 100% | ✅ 狀態管理庫 |
-| **react-email** | 636 檔案 (Monorepo) | 0.15s | 100% | ✅ Email 組件庫 |
-
-#### Next.js 專案
-
-已在 4 個 Next.js 應用測試：
-
-| 專案 | 規模 | 執行時間 | 準確率 | 結果 |
-|------|------|---------|--------|------|
-| **taxonomy** | 125 檔案 (App Router) | 0.12-2.0s | 100% | ✅ Blog/SaaS 模板 |
-| **chatbot-ui** | 256 檔案 (App Router) | 0.10-0.26s | 100% | ✅ AI 聊天介面 |
-| **dub** | 3,136 檔案 (Monorepo) | 0.60-30.1s | 100% | ✅ 企業級 SaaS |
-| **next-learn** | 131 檔案 (官方) | - | - | ✅ Vercel 官方教學 |
-
-**總體成功率**:
-- iOS/Swift: 95%+ (6/6 專案)
-- TypeScript/React: 100% (4/4 專案)
-- Next.js: 100% (4/4 專案)
-
-### 何時使用 `/atlas-pattern`
-
-✅ **適合的場景**:
-1. **開發新功能** - 確保遵循現有模式
-2. **新人入職** - 快速學習代碼庫慣例
-3. **代碼審查** - 驗證是否符合團隊標準
-4. **重構** - 理解現有實作再改進
-5. **技術決策** - 了解專案已有的解決方案
-
-❌ **不適合的場景**:
-1. **首次接觸代碼庫** - 先用 `/atlas-overview` 建立全局理解
-2. **尋找特定 Bug** - 用傳統 debug 工具
-3. **需要完整文檔** - 這只是快速模式學習
-
-### 最佳實踐
-
-1. **先全局後局部** - 先執行 `/atlas-overview`，再用 `/atlas-pattern` 深入
-2. **驗證範例** - 實際閱讀推薦的檔案，確認理解
-3. **遵循慣例** - 嚴格遵循發現的模式，維持一致性
-4. **測試驅動** - 參考測試模式，先寫測試再實作
-5. **記錄學習** - 記錄發現的模式，建立團隊知識庫
-
-### 進階用法
-
-#### 組合使用
-
-```bash
-# 步驟 1: 全局理解
+cd packages/web
 /atlas-overview
 
-# 步驟 2: 學習相關模式
+cd ../api
+/atlas-overview
+```
+
+---
+
+## 進階使用
+
+### 組合使用命令
+
+**場景**: 接手新專案並要新增功能
+
+```bash
+# Step 1: 理解專案 (10 分鐘)
+/atlas-overview
+
+# Step 2: 學習現有實作 (0.1 秒)
 /atlas-pattern "api endpoint"
 /atlas-pattern "authentication"
 
-# 步驟 3: 實作新功能（遵循學到的模式）
+# Step 3: 分析影響 (1 分鐘)
+/atlas-impact "src/api/auth.ts"
 ```
 
-#### 自定義模式（未來功能）
+**總時間**: 15 分鐘內完整掌握專案
 
-如果需要的模式不在支援清單中，可以提供關鍵字：
+---
+
+## 疑難排解
+
+### 問題 1: 找不到 patterns
+
+**症狀**: `/atlas-pattern` 回報「No patterns found」
+
+**解決方式**:
+1. 確認專案類型是否支援（iOS/TypeScript/Android）
+2. 檢查檔案結構是否符合慣例
+3. 嘗試更通用的 pattern 名稱（如用 "api" 而非 "api endpoint"）
+
+### 問題 2: Swift Analyzer 沒有執行
+
+**症狀**: iOS 專案沒有顯示 Swift/ObjC interop 分析
+
+**解決方式**:
+1. 確認專案有 `.xcodeproj` 或 `.xcworkspace`
+2. 確認目標檔案是 `.swift`、`.m` 或 `.h`
+3. 檢查 `scripts/atlas/analyzers/swift-analyzer.sh` 是否存在
+
+### 問題 3: 執行時間過長
+
+**症狀**: `/atlas-overview` 超過 20 分鐘還沒完成
+
+**診斷步驟**（執行這些命令找出原因）:
 
 ```bash
-# 通用搜尋
-/atlas-pattern "websocket connection"
-/atlas-pattern "payment processing"
+# 1. 檢查實際程式碼行數（應 <100K）
+find . -name "*.swift" -o -name "*.ts" -o -name "*.kt" | \
+  grep -v "node_modules\|Pods\|build" | \
+  xargs wc -l 2>/dev/null | tail -1
+
+# 2. 檢查大型二進制檔案（應被排除）
+find . -type f -size +10M | head -10
+
+# 3. 檢查 .gitignore 設定
+cat .gitignore | grep -E "node_modules|Pods|build|\.app"
 ```
 
-AI 會嘗試找到最相關的檔案並提取模式。
+**解決方式**：
 
----
+| 根本原因 | 修復方法 | 預期改善 |
+|---------|---------|---------|
+| 缺少 .gitignore | 加入 `node_modules/`, `Pods/`, `*.app` | 速度提升 80% |
+| 專案過大 (>100K LOC) | 在子目錄執行：`cd src && /atlas-overview` | 依子目錄數量分散時間 |
+| 網路延遲 | 檢查 [Claude API 狀態](https://status.anthropic.com) | 等待或稍後重試 |
 
-## 🎯 何時使用 SourceAtlas？
+**仍然緩慢？** 請[回報問題](https://github.com/lis186/SourceAtlas2/issues)並附上診斷結果
 
-### ✅ 適合的場景
+### 問題 4: 命令找不到
 
-1. **接手新專案**
-   - 快速理解專案架構
-   - 識別技術債務
-   - 評估代碼品質
+**症狀**: 執行 `/atlas-overview` 時顯示「Command not found」
 
-2. **Code Review**
-   - 了解開發者能力
-   - 識別潛在問題
-   - 驗證架構設計
-
-3. **技術盡職調查**
-   - 評估收購目標的代碼品質
-   - 估算維護成本
-   - 識別風險
-
-4. **學習優秀專案**
-   - 理解專案結構
-   - 學習架構模式
-   - 研究開發流程
-
-5. **招聘評估**
-   - 評估候選人的 GitHub 專案
-   - 驗證能力聲明
-   - 了解開發習慣
-
-### ❌ 不適合的場景
-
-1. **極小專案** (<500 行)
-   - 直接讀完整專案更快
-
-2. **需要深度理解業務邏輯**
-   - SourceAtlas 專注於架構和模式
-   - 不深入具體業務細節
-
-3. **需要找特定 Bug**
-   - 用傳統 debug 工具更合適
-
----
-
-## 📊 Stage 選擇指南
-
-### 決策樹
-
-```
-專案代碼量？
-├─ <500 行
-│  └─ 不需要 SourceAtlas，直接讀完整專案
-│
-├─ 500-2000 行
-│  └─ 使用 Stage 0-1
-│     ├─ Stage 0: 建立輪廓
-│     └─ Stage 1: 驗證假設
-│
-└─ >2000 行
-   └─ 使用 Stage 0-2 (完整流程)
-      ├─ Stage 0: 建立輪廓
-      ├─ Stage 1: 驗證假設
-      └─ Stage 2: Git 分析
-```
-
-### Stage 對比
-
-| 需求 | Stage 0 | Stage 1 | Stage 2 |
-|------|---------|---------|---------|
-| 快速了解技術棧 | ✅ | - | - |
-| 驗證架構假設 | - | ✅ | - |
-| 了解開發模式 | - | - | ✅ |
-| 評估開發者能力 | ⭐ | ⭐⭐ | ⭐⭐⭐ |
-| 識別 AI 協作 | ⭐ | ⭐⭐ | ⭐⭐⭐ |
-| 時間投入 | 10-15 分鐘 | 20-30 分鐘 | 15-20 分鐘 |
-| Token 使用 | ~20k | ~30k | ~20k |
-
----
-
-## 🔍 詳細使用流程
-
-### Stage 0: Project Fingerprint
-
-**目標**: 掃描 <5% 檔案達到 70-80% 理解
-
-**準備工作**:
-1. 確保專案目錄可訪問
-2. 確認有 Git 歷史（optional，但有助於分析）
-3. 準備好執行 shell 命令的權限
-
-**執行步驟**:
-
-1. **使用 Prompt**
-   ```
-   複製 PROMPTS.md 中的 "Stage 0: Project Fingerprint" prompt
-   替換 [PROJECT_PATH] 為實際路徑
-   提交給 Claude
-   ```
-
-2. **Claude 會自動**:
-   - 掃描配置檔案 (package.json, composer.json)
-   - 讀取 README.md
-   - 掃描專案結構
-   - 讀取 3-5 個核心 Model 檔案
-   - 生成假設
-
-3. **你會得到**:
-   - 一個 `.yaml` 格式的報告
-   - 10-15 個待驗證的假設（規模感知調整）
-   - 技術棧和架構的推論
-   - 開發者能力初步評估
-
-**檢查清單**:
-- [ ] 技術棧識別正確？
-- [ ] 有明確的假設清單？
-- [ ] 開發者能力評估合理？
-- [ ] 掃描檔案數 <5%？
-
-**常見問題**:
-
-Q: Stage 0 輸出太長怎麼辦？
-A: 這是正常的，YAML 格式設計為完整記錄。可以重點看 `project_fingerprint` 和 `hypotheses` 部分。
-
-Q: 假設太多/太少？
-A: 理想是 10-15 個。太多說明不夠聚焦，太少可能遺漏重點。
-
-Q: 信心等級如何解讀？
-A: 0.0-0.5 (低), 0.5-0.7 (中), 0.7-0.85 (高), 0.85-1.0 (極高)
-
----
-
-### Stage 1: Hypothesis Validation
-
-**目標**: 驗證 Stage 0 的假設，達到 85-95% 理解
-
-**準備工作**:
-1. 完成 Stage 0 分析
-2. 閱讀 Stage 0 報告，理解假設清單
-3. 準備好執行驗證命令
-
-**執行步驟**:
-
-1. **提供 Stage 0 報告**
-   ```
-   先讓 Claude 讀取 Stage 0 報告
-   然後使用 Stage 1 prompt
-   ```
-
-2. **Claude 會自動**:
-   - 提取所有假設
-   - 為每個假設設計驗證方法
-   - 執行驗證（grep, ls, find 等）
-   - 記錄證據
-   - 更新信心等級
-
-3. **你會得到**:
-   - 驗證報告 (.md 格式)
-   - 每個假設的確認/推翻結果
-   - 驗證準確率統計
-   - 更新後的專案理解
-
-**檢查清單**:
-- [ ] 所有假設都被驗證？
-- [ ] 每個結論有明確證據？
-- [ ] 準確率 >80%？
-- [ ] 識別出 Stage 0 的錯誤？
-
-**常見問題**:
-
-Q: 準確率低於 80% 怎麼辦？
-A: 這是正常的！Stage 0 是推論，有些推論會被推翻。重要的是學習為什麼推翻。
-
-Q: 如何改進 Stage 0？
-A: Stage 1 報告會提供改進建議。基於這些建議優化 Stage 0 prompt。
-
-Q: 無法驗證某些假設？
-A: 標記為"需要更多資訊"，說明為什麼無法驗證。
-
----
-
-### Stage 2: Git Hotspots Analysis
-
-**目標**: 識別開發模式和演進，理解深度達到 95%+
-
-**準備工作**:
-1. 確認專案有 Git 歷史
-2. 完成 Stage 0-1 (optional，但有助於理解)
-3. 確保可以執行 Git 命令
-
-**執行步驟**:
-
-1. **使用 Prompt**
-   ```
-   複製 Stage 2 prompt
-   替換 [PROJECT_PATH]
-   提交給 Claude
-   ```
-
-2. **Claude 會自動**:
-   - 分析 commit 歷史
-   - 識別檔案熱點
-   - 重建時間線
-   - 分析開發模式
-   - 評估 AI 協作證據
-
-3. **你會得到**:
-   - Git 熱點報告 (.md 格式)
-   - 完整的時間線重建
-   - 開發模式分析
-   - 開發者能力評估
-
-**檢查清單**:
-- [ ] 時間線完整？
-- [ ] 識別所有關鍵階段？
-- [ [ 找出檔案熱點？
-- [ ] AI 協作證據充分？
-
-**常見問題**:
-
-Q: 專案沒有 Git 歷史怎麼辦？
-A: 跳過 Stage 2，或者只做部分分析（如果有部分歷史）。
-
-Q: Git 歷史太長（1000+ commits）？
-A: Stage 2 仍然有效。Git 命令會自動聚合和統計。
-
-Q: 如何識別 AI 協作？
-A: 看 commit message 一致性、註解密度、CLAUDE.md 等檔案。
-
----
-
-## 📋 輸出格式說明
-
-### YAML 格式 (.yaml)
-
-**用於**: Stage 0 報告
-
-**特點**:
-- 標準格式，廣泛生態系統支援
-- 極佳的人類可讀性
-- 完整的 IDE 和工具支援
-- 包含完整的 metadata
-
-**v1.0 決策**: 選擇 YAML 而非自訂 TOON 格式（詳見 `dev-notes/toon-vs-yaml-analysis.md`）
-
-**範例**:
-```yaml
-metadata:
-  project_name: example
-  developer: john_doe
-  scan_time: "2025-11-22T10:00:00Z"
-
-project_fingerprint:
-  project_type: WEB_APP
-  architecture: MVC
-  scale: MEDIUM
-```
-
-### Markdown 格式 (.md)
-
-**用於**: Stage 1-2 報告
-
-**特點**:
-- 易讀
-- 支援表格、列表
-- 可以直接在 GitHub 上查看
-
----
-
-## 🎯 進階技巧
-
-### 技巧 1: 並行分析多專案
+**診斷步驟**:
 
 ```bash
-# 創建批次分析腳本
-for project in project1 project2 project3; do
-  echo "Analyzing $project..."
-  # 對每個專案執行 Stage 0-2
-done
+# 1. 檢查命令檔案是否存在
+ls -la ~/.claude/commands/atlas-*.md
+
+# 2. 檢查檔案權限
+ls -l ~/.claude/commands/atlas-*.md
+
+# 3. 檢查 Claude Code 版本
+# 在 Claude Code 中執行：/help
 ```
 
-### 技巧 2: 自定義假設
+**解決方式**：
 
-在 Stage 0 後，你可以手動添加假設到清單中，然後在 Stage 1 驗證。
+| 檢查結果 | 原因 | 修復方法 |
+|---------|------|---------|
+| 檔案不存在 | 未安裝或安裝失敗 | 重新執行 `./install-global.sh` |
+| 權限錯誤（---x------） | Symlink 指向不存在的位置 | `./install-global.sh --remove` 後重裝 |
+| Claude Code 版本過舊 | 不支援 Slash Commands | 更新 Claude Code 到最新版本 |
 
-### 技巧 3: 聚焦特定領域
+### 問題 5: 輸出格式不正確
 
-修改 Prompt，聚焦於特定領域：
-- 只分析測試相關
-- 只分析安全性
-- 只分析性能
+**症狀**: `/atlas-overview` 輸出純文字而非 YAML 格式
 
-### 技巧 4: 對比分析
+**診斷步驟**:
 
-使用三方對比報告模板，對比多個專案或開發者。
+```bash
+# 檢查 prompt 文件內容
+head -20 ~/.claude/commands/atlas-overview.md
+```
 
-### 技巧 5: 持續追蹤
+**可能原因**：
 
-定期（如每月）執行分析，追蹤專案演進和開發者成長。
+| 症狀 | 原因 | 修復方法 |
+|------|------|---------|
+| 缺少 frontmatter (---) | 檔案損壞 | `git restore .claude/commands/` 後重裝 |
+| 內容是舊版本 | 未更新到最新版 | `cd ~/dev/sourceatlas2 && git pull && ./install-global.sh` |
+| YAML 語法錯誤 | AI 解析問題 | 重新執行命令（Claude 隨機性） |
 
----
+### 問題 6: Pattern 搜尋結果不準確
 
-## ⚠️ 常見陷阱
+**症狀**: `/atlas-pattern "api"` 回傳不相關的檔案
 
-### 陷阱 1: 過度依賴 Stage 0
+**常見原因與解決**：
 
-**問題**: Stage 0 是推論，不是事實。
+| 情況 | 原因 | 改善方法 |
+|------|------|---------|
+| 找到測試檔案而非實作 | Pattern 太通用 | 使用更具體的關鍵字：`/atlas-pattern "api endpoint"` |
+| 找到舊程式碼 | 專案有歷史遺留 | 檢查檔案的最後修改日期，關注最新的 |
+| 語言混用 | 多語言專案 | 指定目錄：先 `cd ios/` 再執行命令 |
+| 零結果 | 關鍵字不符專案慣例 | 嘗試同義詞：`"controller"` → `"view model"` |
 
-**解決**:
-- 總是執行 Stage 1 驗證關鍵假設
-- 對低信心的推論保持懷疑
+**改善搜尋準確度的技巧**：
 
-### 陷阱 2: 忽略上下文
+1. **從通用到具體**：先用 `"api"` 看有什麼，再精煉為 `"api endpoint"`
+2. **查看 Pattern 列表**：參考 [支援的 Patterns](#支援的-patterns-71-個)
+3. **結合 overview**：先用 `/atlas-overview` 了解架構後再搜尋
 
-**問題**: 代碼品質評估需要考慮專案類型。
+### 快速診斷檢查清單
 
-**解決**:
-- 學習專案 vs 生產專案有不同標準
-- 個人專案 vs 團隊專案有不同標準
+執行以下命令做完整健康檢查：
 
-### 陷阱 3: 只看數字
+```bash
+# === SourceAtlas 健康檢查 ===
 
-**問題**: 測試覆蓋率 90% 不代表高品質。
+echo "1. 檢查安裝..."
+ls -la ~/.claude/commands/atlas-*.md
 
-**解決**:
-- 結合多個維度評估
-- 看質量，不只是數量
+echo -e "\n2. 檢查腳本..."
+ls -la ~/.claude/scripts/atlas/
 
-### 陷阱 4: 忘記更新理解
+echo -e "\n3. 檢查專案根目錄..."
+pwd
 
-**問題**: Stage 1 推翻了假設，但沒更新理解。
+echo -e "\n4. 檢查 Git 狀態..."
+git status 2>&1 | head -5
 
-**解決**:
-- 基於驗證結果更新專案理解
-- 記錄為什麼某些假設被推翻
+echo -e "\n5. 檢查程式碼規模..."
+find . -name "*.swift" -o -name "*.ts" -o -name "*.kt" 2>/dev/null | \
+  grep -v "node_modules\|Pods\|build" | wc -l
 
----
+echo -e "\n=== 檢查完成 ==="
+```
 
-## 📊 結果解讀指南
-
-### 開發者能力評估
-
-**評分標準**:
-
-| 等級 | 總分 | 特徵 | 代表 |
-|------|------|------|------|
-| **初學者** | 0-3 | 缺乏基礎知識，代碼混亂 | chiahsing1115 |
-| **中級** | 4-6 | 掌握基礎，有架構意識 | - |
-| **高級** | 7-8 | 專業品質，高測試覆蓋率 | taiwan-calendar |
-| **專家/AI** | 9-10 | 極高產能或 AI 協作 | Mir01 |
-
-**關鍵指標**:
-- 代碼規模（lines of code）
-- 測試覆蓋率（test coverage）
-- Git 習慣（commit quality）
-- 架構清晰度（architecture clarity）
-- 文檔完整度（documentation）
-
-### AI 協作識別
-
-**Level 0: 無 AI**
-- 無 AI 配置檔案
-- 註解密度 <5%
-- Commit message 不規範
-
-**Level 1-2: 基礎使用**
-- 偶爾使用 AI 工具
-- 無系統化流程
-
-**Level 3: 系統化 ⭐**
-- 有 CLAUDE.md 或類似規範
-- 註解密度 15-20%
-- 100% Conventional Commits
-- 代碼一致性 98%+
-
-**Level 4: 生態化**
-- 團隊級別 AI 協作
-- 跨專案知識沉澱
-- （尚未見到實例）
-
-### 技術債務評估
-
-**極低**: 有系統化追蹤，及時修復
-- 例: taiwan-calendar
-
-**低**: 有識別，計劃修復
-- 例: Mir01
-
-**中**: 有識別，未計劃
-- 大多數專案
-
-**高**: 沒有識別，累積嚴重
-- 例: chiahsing1115
+**預期結果**：
+- ✅ 看到 3 個 .md 檔案（overview, pattern, impact）
+- ✅ 看到 scripts/atlas/ 目錄
+- ✅ 在專案根目錄（有 .git/）
+- ✅ 程式碼檔案數 < 1000（TINY/SMALL）或 < 5000（MEDIUM/LARGE）
 
 ---
 
-## 🎓 學習案例
+## 更多資源
 
-### 案例 1: 評估初學者專案
-
-**背景**: chiahsing1115 的 5 個專案
-
-**分析結果**:
-- Stage 0: 快速識別缺乏數據持久化
-- Stage 1: 驗證所有 5 個專案都無持久化
-- Stage 2: Git 習慣極差（1-2 commits）
-
-**洞察**:
-- 正在學習基礎
-- 需要導師指導
-- 建議優先學習數據持久化
-
-### 案例 2: 評估專業專案
-
-**背景**: taiwan-calendar-mcp-server (15k 行)
-
-**分析結果**:
-- Stage 0: 識別出專業級架構
-- Stage 1: 100% 假設驗證成功
-- Stage 2: 發現 92.27% 測試覆蓋率
-
-**洞察**:
-- 專業工程師水準
-- TDD 開發模式
-- 代碼品質極高
-
-### 案例 3: 識別 AI 協作
-
-**背景**: Mir01 (156k 行，2 個月開發)
-
-**分析結果**:
-- Stage 0: 發現 CLAUDE.md 配置
-- Stage 1: 驗證出規範與實際差異
-- Stage 2: 識別 Level 3 系統化 AI 協作
-
-**洞察**:
-- AI 輔助開發的成熟案例
-- 規範是"理想"而非"現狀"
-- 文檔/代碼比 3:1
+- **技術細節**: [CLAUDE.md](./CLAUDE.md)
+- **開發歷史**: [dev-notes/HISTORY.md](./dev-notes/HISTORY.md)
+- **功能提案**: [proposals/](./proposals/)
+- **回報問題**: [GitHub Issues](https://github.com/lis186/SourceAtlas2/issues)
 
 ---
 
-## 🔧 troubleshooting
-
-### 問題 1: Claude 超過 Token 限制
-
-**症狀**: Claude 回應被截斷
-
-**解決**:
-1. 減少掃描檔案數量
-2. 分階段執行（先 Stage 0，再 Stage 1）
-3. 聚焦特定領域
-
-### 問題 2: Git 命令失敗
-
-**症狀**: `fatal: not a git repository`
-
-**解決**:
-1. 確認在正確目錄
-2. 檢查是否有 .git 目錄
-3. 如果沒有 Git 歷史，跳過 Stage 2
-
-### 問題 3: 無法讀取某些檔案
-
-**症狀**: Permission denied
-
-**解決**:
-1. 檢查檔案權限
-2. 使用 sudo（如果適當）
-3. 跳過受保護的檔案
-
-### 問題 4: Stage 0 推論不準確
-
-**症狀**: Stage 1 驗證率 <60%
-
-**解決**:
-1. 檢查是否掃描了正確的檔案
-2. 是否遺漏了關鍵配置檔案
-3. 調整 Stage 0 prompt，增加特定領域檢查
-
----
-
-## 📚 延伸閱讀
-
-- `PROMPTS.md` - 完整 Prompt 模板
-- `EVALUATION_STANDARDS.md` - 評估標準體系
-- `THREE-WAY-DEVELOPER-COMPARISON.md` - 對比案例研究
-- `test_results/` - 實際分析案例
-
----
-
-## 💬 獲得幫助
-
-**常見問題**: 查看本文檔的 troubleshooting 部分
-
-**GitHub Issues**: [報告問題或建議](https://github.com/your-repo/issues)
-
-**社群討論**: [加入討論](https://github.com/your-repo/discussions)
-
----
-
-**文檔版本**: v1.0 完成，v2.5 開發中
-**最後更新**: 2025-11-22
-**維護者**: SourceAtlas Team
+**SourceAtlas** - Claude Code 的程式分析助手
+v2.5 | 更新時間: 2025-11-25
