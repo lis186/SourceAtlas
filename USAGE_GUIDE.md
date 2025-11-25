@@ -616,6 +616,101 @@ cat .gitignore | grep -E "node_modules|Pods|build|\.app"
 
 **仍然緩慢？** 請[回報問題](https://github.com/lis186/SourceAtlas2/issues)並附上診斷結果
 
+### 問題 4: 命令找不到
+
+**症狀**: 執行 `/atlas-overview` 時顯示「Command not found」
+
+**診斷步驟**:
+
+```bash
+# 1. 檢查命令檔案是否存在
+ls -la ~/.claude/commands/atlas-*.md
+
+# 2. 檢查檔案權限
+ls -l ~/.claude/commands/atlas-*.md
+
+# 3. 檢查 Claude Code 版本
+# 在 Claude Code 中執行：/help
+```
+
+**解決方式**：
+
+| 檢查結果 | 原因 | 修復方法 |
+|---------|------|---------|
+| 檔案不存在 | 未安裝或安裝失敗 | 重新執行 `./install-global.sh` |
+| 權限錯誤（---x------） | Symlink 指向不存在的位置 | `./install-global.sh --remove` 後重裝 |
+| Claude Code 版本過舊 | 不支援 Slash Commands | 更新 Claude Code 到最新版本 |
+
+### 問題 5: 輸出格式不正確
+
+**症狀**: `/atlas-overview` 輸出純文字而非 YAML 格式
+
+**診斷步驟**:
+
+```bash
+# 檢查 prompt 文件內容
+head -20 ~/.claude/commands/atlas-overview.md
+```
+
+**可能原因**：
+
+| 症狀 | 原因 | 修復方法 |
+|------|------|---------|
+| 缺少 frontmatter (---) | 檔案損壞 | `git restore .claude/commands/` 後重裝 |
+| 內容是舊版本 | 未更新到最新版 | `cd ~/dev/sourceatlas2 && git pull && ./install-global.sh` |
+| YAML 語法錯誤 | AI 解析問題 | 重新執行命令（Claude 隨機性） |
+
+### 問題 6: Pattern 搜尋結果不準確
+
+**症狀**: `/atlas-pattern "api"` 回傳不相關的檔案
+
+**常見原因與解決**：
+
+| 情況 | 原因 | 改善方法 |
+|------|------|---------|
+| 找到測試檔案而非實作 | Pattern 太通用 | 使用更具體的關鍵字：`/atlas-pattern "api endpoint"` |
+| 找到舊代碼 | 專案有歷史遺留 | 檢查檔案的最後修改日期，關注最新的 |
+| 語言混用 | 多語言專案 | 指定目錄：先 `cd ios/` 再執行命令 |
+| 零結果 | 關鍵字不符專案慣例 | 嘗試同義詞：`"controller"` → `"view model"` |
+
+**改善搜尋準確度的技巧**：
+
+1. **從通用到具體**：先用 `"api"` 看有什麼，再精煉為 `"api endpoint"`
+2. **查看 Pattern 列表**：參考 [支援的 Patterns](#支援的-patterns-71-個)
+3. **結合 overview**：先用 `/atlas-overview` 了解架構後再搜尋
+
+### 快速診斷檢查清單
+
+執行以下命令做完整健康檢查：
+
+```bash
+# === SourceAtlas 健康檢查 ===
+
+echo "1. 檢查安裝..."
+ls -la ~/.claude/commands/atlas-*.md
+
+echo -e "\n2. 檢查腳本..."
+ls -la ~/.claude/scripts/atlas/
+
+echo -e "\n3. 檢查專案根目錄..."
+pwd
+
+echo -e "\n4. 檢查 Git 狀態..."
+git status 2>&1 | head -5
+
+echo -e "\n5. 檢查程式碼規模..."
+find . -name "*.swift" -o -name "*.ts" -o -name "*.kt" 2>/dev/null | \
+  grep -v "node_modules\|Pods\|build" | wc -l
+
+echo -e "\n=== 檢查完成 ==="
+```
+
+**預期結果**：
+- ✅ 看到 3 個 .md 檔案（overview, pattern, impact）
+- ✅ 看到 scripts/atlas/ 目錄
+- ✅ 在專案根目錄（有 .git/）
+- ✅ 程式碼檔案數 < 1000（TINY/SMALL）或 < 5000（MEDIUM/LARGE）
+
 ---
 
 ## 更多資源
