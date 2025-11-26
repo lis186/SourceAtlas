@@ -169,7 +169,7 @@ AI 分析後回應（10-15 分鐘）：
 
 **使用 SourceAtlas**：
 ```
-Alice: /atlas-find "order list authorization"
+Alice: /atlas-impact "order list authorization"
 
 AI 回應：
 訂單列表的授權鏈路：
@@ -443,7 +443,7 @@ AI 回應：
 |---------|---------|---------|----------|
 | **即時探索** | 不需歷史資料、即時推理 | ✅ SourceAtlas Commands (v2.5) | |
 | 場景 0: 快速理解新專案 ⭐ | 10-15 分鐘獲得全局視角 | ✅ Commands | `/atlas-overview` ⭐⭐⭐⭐⭐ |
-| 場景 1: Bug 修復 | 快速定位問題 | ✅ Commands | `/atlas-find` |
+| 場景 1: Bug 修復 | 快速定位問題 | ✅ Commands | `/atlas-impact` |
 | 場景 2: 學習模式 | 識別設計模式 | ✅ Commands | `/atlas-pattern` ⭐⭐⭐⭐⭐ |
 | 場景 3B: API 影響分析 ⭐ | 追蹤 API 調用鏈 | ✅ Commands | `/atlas-impact` ⭐⭐⭐⭐ |
 | 場景 4: Code Review | 理解變更意圖 | ✅ Commands | `/atlas-overview` + `/atlas-pattern` |
@@ -464,9 +464,7 @@ AI 回應：
 │  SourceAtlas Commands (Slash Commands)     │
 │  ├─ /atlas-overview      - Project Fingerprint ⭐⭐⭐⭐⭐
 │  ├─ /atlas-pattern       - Learn Patterns ⭐⭐⭐⭐⭐
-│  ├─ /atlas-impact        - Impact Analysis ⭐⭐⭐⭐
-│  ├─ /atlas-find          - Quick Search
-│  └─ /atlas-explain       - Deep Dive
+│  └─ /atlas-impact        - Impact Analysis ⭐⭐⭐⭐
 ├─────────────────────────────────────────────┤
 │  Helper Scripts (Bash)                      │
 │  ├─ detect-project.sh                      │
@@ -493,11 +491,8 @@ AI 回應：
 sourceatlas2/
 ├── .claude/commands/                    # Claude Code Commands
 │   ├── atlas-overview.md                # ✅ /atlas-overview（已完成）
-│   └── atlas-pattern.md                 # ✅ /atlas-pattern（已完成）⭐
-│   # 計畫中：
-│   ├── atlas-impact.md                # ✅ /atlas-impact（已完成）
-│   # ├── atlas-find.md                  # ⏳ /atlas-find（Phase 3）
-│   # └── atlas-explain.md               # ⏳ /atlas-explain（Phase 3）
+│   ├── atlas-pattern.md                 # ✅ /atlas-pattern（已完成）⭐
+│   └── atlas-impact.md                  # ✅ /atlas-impact（已完成）
 │
 ├── dev-notes/                           # ⭐ v1.0 開發記錄（重要！）
 │   ├── HISTORY.md                       # ✅ 完整歷史與決策記錄
@@ -567,19 +562,7 @@ sourceatlas2/
 
 ### 4.2 即時探索能力（新增）
 
-#### Find（智慧搜尋）
-```
-/atlas-find "authentication flow"
-
-AI 自動：
-1. 理解搜尋意圖
-2. 規劃搜尋策略
-3. 執行多輪搜尋
-4. 整合結果
-5. 提供上下文
-```
-
-#### Pattern（模式識別）
+#### Pattern（模式識別）⭐⭐⭐⭐⭐
 ```
 /atlas-pattern "api endpoint"
 
@@ -590,16 +573,15 @@ AI 識別：
 4. 提供步驟指引
 ```
 
-#### Explain（深入解釋）
+#### Impact（影響分析）⭐⭐⭐⭐
 ```
-/atlas-explain app/services/payment_service.rb
+/atlas-impact api "/api/users/{id}"
 
 AI 分析：
-1. 檔案目的和職責
-2. 關鍵方法說明
-3. 依賴關係
-4. 使用範例
-5. 測試覆蓋
+1. 追蹤調用鏈路
+2. 識別受影響檔案
+3. 評估變更風險
+4. 提供遷移清單
 ```
 
 ### 4.3 AI 協作識別（保留 v2.0 發現）
@@ -696,12 +678,6 @@ hypotheses:
 # 優先級 ⭐⭐⭐⭐ - 影響範圍分析
 /atlas-impact "User authentication"   # 功能改動影響
 /atlas-impact api "/api/users/{id}"   # API 改動影響
-
-# 優先級 ⭐⭐ - 快速定位
-/atlas-find "user login"  # 快速找到功能實作
-
-# 優先級 ⭐ - 深入解釋
-/atlas-explain path/to/file.rb   # 深入解釋特定檔案
 
 # 未來功能（v3.0）
 /atlas-health             # 專案健康度分析
@@ -1049,11 +1025,14 @@ templates:
   - 測試影響評估
   - Swift/ObjC 語言深度分析（自動觸發）
 
-#### Phase 3: 輔助功能
-- [ ] 實作 `/atlas-find` - 快速搜尋
-- [ ] 實作 `/atlas-explain` - 深入解釋
+#### Phase 3: 完善與發布 (當前)
+- [ ] 擴展多語言支援（Kotlin, Go, Rust 等）
 - [ ] 完善 Git 分析 Scripts
 - [ ] 整體測試與文檔
+- [ ] 使用者回饋收集
+- [ ] 發布 v2.5.0
+
+**決策**: `/atlas-find` 已取消（功能由現有 3 個 commands 涵蓋）
 
 ---
 
@@ -1090,9 +1069,9 @@ templates:
 - [x] Stage 0 能在 15 分鐘內完成分析 ✅
 - [x] Stage 1 驗證率 >80% ✅
 - [x] Stage 2 識別 AI 協作模式 ✅
+- [x] `/atlas-overview` 能快速生成專案指紋 ✅ (2025-11-20)
 - [x] `/atlas-pattern` 能識別設計模式 ✅ (2025-11-22, 95%+ 準確率)
 - [x] `/atlas-impact` 靜態影響分析 ✅ (2025-11-25, 4.2/5 平均評分, 8 subagent 測試)
-- [ ] `/atlas-find` 能找到正確檔案 ⏳
 
 #### 質量標準
 - [x] 在 4+ 真實專案測試通過 ✅ (`/atlas-pattern` 在 3 個大型專案測試)
@@ -1117,13 +1096,13 @@ templates:
 - [ ] 實作 Stage 2 Skill
 - [ ] 基礎 Scripts（detect, scan）
 
-#### Week 2-3: 增強功能
-- [ ] /atlas-find 實作
-- [ ] /atlas-explain 實作
-- [ ] 完整 Scripts 集合
-- [ ] 模式定義庫
+#### Week 2-3: 完善與測試
+- [x] 核心 3 commands 完成 ✅ (overview, pattern, impact)
+- [ ] 完善 Scripts 集合 (git 分析、依賴分析)
+- [ ] 擴展 pattern 庫（更多語言支援）
+- [ ] 多專案測試與優化
 
-#### Week 3-4: 測試與優化
+#### Week 3-4: 發布準備
 - [ ] 在 5+ 真實專案測試
 - [ ] 收集使用回饋
 - [ ] 優化 Prompt 和 Scripts
@@ -1402,12 +1381,18 @@ When detecting user confusion, suggest:
 
 **開發狀態**：
 - v1.0 ✅ - 方法論驗證完成（5 專案測試）
-- v2.5 🔵 - Commands 架構開發中（預計 2-3 週）
+- v2.5 🔵 - Commands 架構 (核心功能完成，預計 1-2 週發布)
   - `/atlas-overview` ✅ - 專案概覽（已完成，2025-11-20）
   - `/atlas-pattern` ✅ - 模式學習（已完成，2025-11-22）⭐
-  - `/atlas-impact` ✅ - 靜態影響分析（已完成 2025-11-25）
-  - `/atlas-find`, `/atlas-explain` ⏳ - 輔助功能（Phase 3）
+  - `/atlas-impact` ✅ - 靜態影響分析（已完成，2025-11-25）
+  - **Phase 3**: 多語言擴展、測試、文檔
 - **完整三階段分析**：使用 `PROMPTS.md` 手動執行（深度盡職調查場景）
+
+**決策記錄** (2025-11-25):
+- ✅ 取消 `/atlas-find` - 功能已由現有 3 個 commands 涵蓋
+  - 模式學習 → `/atlas-pattern`
+  - 影響追蹤 → `/atlas-impact`
+  - 關鍵字搜尋 → Claude 內建 Grep/Glob
 
 > **完整版本歷史與決策記錄**：見 `dev-notes/HISTORY.md`
 

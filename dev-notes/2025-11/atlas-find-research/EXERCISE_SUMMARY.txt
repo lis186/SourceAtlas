@@ -1,0 +1,295 @@
+================================================================================
+SENIOR iOS DEVELOPER - `/ATLAS-FIND` QUERY EXERCISE
+Complete Report
+================================================================================
+
+EXERCISE COMPLETED: November 25, 2025
+
+OBJECTIVE:
+Understand how senior iOS engineers (7+ years) query large, unfamiliar 
+codebases, and what patterns the `/atlas-find` tool should support.
+
+================================================================================
+DELIVERABLES
+================================================================================
+
+Created 4 comprehensive reference documents:
+
+1. SENIOR_DEV_EXERCISE_INDEX.md (Index + Overview)
+   - Purpose and scope of exercise
+   - How to use the 3 reference documents
+   - Key takeaways for `/atlas-find` design
+   - Statistics and feedback
+
+2. QUICK_REFERENCE_SENIOR_DEV_QUERIES.md (Quick Lookup)
+   - 5 investigation scenarios with query sets
+   - Query pattern templates (6 types)
+   - Red flags to watch for
+   - Do's and Don'ts
+   - File categories to prioritize
+   - Perfect for: 3-5 minute quick lookup
+
+3. ios-senior-dev-atlas-find-queries.md (Full Analysis)
+   - 5 developer personas with detailed context
+   - 25 specific technical queries
+   - What they're looking for, why, expected files
+   - Time budgets and efficiency goals
+   - Perfect for: 20-30 minute deep understanding
+
+4. SENIOR_DEV_QUERY_PATTERNS.md (Pattern Analysis)
+   - 6 query pattern templates with examples
+   - File count expectations by pattern
+   - Time investment goals (2-4 hours)
+   - Red flags analysis
+   - Design implications for `/atlas-find`
+   - Perfect for: 15-20 minute pattern study
+
+================================================================================
+KEY FINDINGS
+================================================================================
+
+SENIOR DEVELOPERS QUERY FOR:
+
+1. PATTERNS, not implementations
+   ❌ "find InteractionStore.swift"
+   ✅ "encrypt message database store secure encapsulation"
+
+2. SYSTEM BOUNDARIES, not individual features
+   ❌ "show me call code"
+   ✅ "notification service extension decrypt NSE message key"
+
+3. INTEGRATION POINTS, not comprehensive understanding
+   ❌ "understand all of Flux"
+   ✅ "flux store state reducer action dispatch side effects"
+
+4. PRECEDENT EXAMPLES, not original solutions
+   ❌ "how do I handle conflicts"
+   ✅ "post revision draft autosave conflict resolution strategy"
+
+5. CONSISTENCY GUARANTEES, not business logic
+   ❌ "how does messaging work"
+   ✅ "transaction atomic write message attachment consistency"
+
+================================================================================
+TIME EFFICIENCY EXPECTATIONS
+================================================================================
+
+Senior devs set strict time budgets for codebase navigation:
+
+Investigation Goal            | Expected Time | Expected Files | Success Metrics
+---------------------------- | ------------- | -------------- | ---------------
+Security review               | 3-4 hours     | 10-15          | Understand E2EE, identify safe integration point
+API endpoint integration      | 2-3 hours     | 5-8            | Find pattern, understand API layer
+Real-time optimization        | 2-3 hours     | 15-20          | Identify bottleneck, understand signal path
+Extension development         | 2-3 hours     | 10-15          | Understand sandbox, data passing mechanism
+Module extraction             | 2-3 hours     | 8-12           | Understand boundaries, plan extraction
+Bug investigation             | 2 hours       | 8-12           | Identify root cause, understand data flow
+
+NOTE: > 4 hours = unacceptable; indicates missing architecture visibility
+
+================================================================================
+PROJECT ANALYSIS
+================================================================================
+
+SIGNAL-iOS (2,667 Swift/ObjC files)
+Domain: End-to-end encrypted messaging
+Key Challenges:
+  - Security-critical paths (encryption, persistence)
+  - NSE (NotificationServiceExtension) constraints
+  - Real-time communication (WebRTC, calls)
+  - Transactional consistency (GRDB)
+
+5 Senior Dev Investigation Scenarios:
+  1. E2EE Architecture Review → 25 queries → 10-15 files
+  2. Call Infrastructure Optimization → 25 queries → 15-20 files
+
+WORDPRESS-iOS (3,639 Swift/ObjC files)
+Domain: Content management and blog publishing
+Key Challenges:
+  - Custom Flux state management
+  - REST API integration patterns
+  - Module boundaries (30+ SPM packages)
+  - App extensions (Share, NSE)
+
+3 Senior Dev Investigation Scenarios:
+  1. REST API Integration → 25 queries → 5-8 files
+  2. Share Extension Development → 25 queries → 10-15 files
+  3. Module Extraction Planning → 25 queries → 8-12 files
+
+================================================================================
+6 QUERY PATTERNS IDENTIFIED
+================================================================================
+
+Pattern 1: ARCHITECTURE + FLOW
+Template: [component] [component] [operation] [goal]
+Example: "encrypt message database store secure encapsulation"
+Expected files: 3-8 (data transformation pipeline)
+
+Pattern 2: SYSTEM BOUNDARIES  
+Template: [extension/module] [communication] [other system]
+Example: "notification service extension decrypt NSE message key"
+Expected files: 4-6 (integration interface)
+
+Pattern 3: CONSISTENCY & SAFETY
+Template: [operation] [guarantee] [mechanism]
+Example: "transaction atomic write message attachment consistency"
+Expected files: 3-5 (atomic/transactional patterns)
+
+Pattern 4: IMPLEMENTATION PRECEDENT
+Template: [feature] [implementation style/pattern]
+Example: "post revision draft autosave conflict resolution strategy"
+Expected files: 5-10 (existing solution)
+
+Pattern 5: TECHNOLOGY INTEGRATION
+Template: [technology] [integration mechanism] [iOS API]
+Example: "WebRTC peer connection ICE candidate offer answer SDP"
+Expected files: 4-8 (wrapper/abstraction layer)
+
+Pattern 6: MODULE STRUCTURE
+Template: [module/package] [boundary/interface] [dependency]
+Example: "SPM module package swift dependency internal external targets"
+Expected files: 3-6 (structure overview)
+
+================================================================================
+RED FLAGS IN SENIOR DEV QUERIES
+================================================================================
+
+When senior devs query these terms, they're investigating risky areas:
+
+CONSISTENCY KEYWORDS:
+  "atomic", "transaction", "conflict", "reconciliation"
+  → Concurrency/consistency risks
+
+SECURITY KEYWORDS:
+  "encrypt", "secure", "key", "token", "invalidation"
+  → Vulnerability risks
+
+BOUNDARY KEYWORDS:
+  "extension", "process", "container", "entitlement", "handoff"
+  → Sandbox/privilege boundary risks
+
+LIFECYCLE KEYWORDS:
+  "rotation", "preservation", "retention", "invalidation"
+  → State machine/lifecycle risks
+
+================================================================================
+DESIGN IMPLICATIONS FOR `/ATLAS-FIND`
+================================================================================
+
+The tool should support these capabilities:
+
+1. PATTERN-AWARE SEARCH
+   → Index by architectural patterns (Store, Repository, Factory, Reducer)
+   → Prioritize files that define patterns over files that use them
+
+2. CONTEXT-SENSITIVE RESULTS
+   → Understand query intent from terms like "encrypt → database"
+   → Return data flow sequence, not scattered keyword matches
+
+3. BOUNDARY DETECTION
+   → Highlight module/system boundaries
+   → Surface integration points where code attaches
+
+4. PRECEDENT FINDING
+   → "This pattern also used in..." suggestions
+   → Cross-reference similar solutions
+
+5. RISK ANNOTATION
+   → Flag consistency/concurrency implications
+   → Highlight security-sensitive areas
+   → Note data corruption risks
+
+6. SCOPE LIMITING
+   → Return "top 10-15 most important files" not all 200 matches
+   → Respect developer time budgets (2-4 hours max)
+
+7. PATTERN TEMPLATES
+   → Help developers ask better questions
+   → Suggest improved queries based on goal
+
+================================================================================
+STATISTICS
+================================================================================
+
+Document Metrics:
+  - Total lines: 744
+  - Total size: 32 KB
+  - Documents: 4
+  - Personas: 5
+  - Queries: 25
+  - Projects: 2
+
+Query Coverage:
+  - Signal-iOS: 15 queries across 2 personas
+  - WordPress-iOS: 10 queries across 3 personas
+  - Pattern types: 6
+  - Expected file ranges: 3-20 per query
+
+Investigation Time:
+  - Range: 2-4 hours per investigation
+  - Most common: 2-3 hours
+  - Files to read: 8-20
+  - Senior dev efficiency: 5-10 minutes per file
+
+================================================================================
+SUCCESS CRITERIA FOR `/ATLAS-FIND`
+================================================================================
+
+The tool should successfully answer these queries:
+
+Signal-iOS Queries:
+  ✓ "encrypt message database store secure encapsulation"
+  ✓ "notification service extension decrypt NSE message key"
+  ✓ "transaction atomic write message attachment consistency"
+  ✓ "call record store history metadata encrypted"
+  ✓ "signal protocol double ratchet session key rotation"
+
+WordPress-iOS Queries:
+  ✓ "REST API endpoint response parsing model mapping repository"
+  ✓ "flux store state reducer action dispatch side effects"
+  ✓ "share extension content type activity detection URI provider"
+  ✓ "SPM module package swift dependency internal external targets"
+  ✓ [+ 15 more specific queries documented]
+
+Success metrics:
+  - Returns correct 10-15 files within 5 seconds
+  - Understands data flow intent from query terms
+  - Highlights integration points between systems
+  - Suggests precedent examples
+  - Surfaces risk areas (consistency, security, etc.)
+  - Respects developer time budgets
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+1. Review QUICK_REFERENCE_SENIOR_DEV_QUERIES.md (5 minutes)
+   → Get familiar with patterns and red flags
+
+2. Study ios-senior-dev-atlas-find-queries.md (30 minutes)
+   → Understand full scope and real scenarios
+
+3. Analyze SENIOR_DEV_QUERY_PATTERNS.md (20 minutes)
+   → Learn pattern templates and design implications
+
+4. Use findings to enhance `/atlas-find` implementation
+   → Prioritize pattern-aware indexing
+   → Implement scope limiting
+   → Add risk annotation
+   → Surface precedent examples
+
+5. Test against these 25 queries
+   → Verify correct files returned
+   → Measure response time
+   → Assess usefulness of results
+
+================================================================================
+DOCUMENT LOCATIONS
+================================================================================
+
+/Users/justinlee/dev/sourceatlas2/SENIOR_DEV_EXERCISE_INDEX.md
+/Users/justinlee/dev/sourceatlas2/QUICK_REFERENCE_SENIOR_DEV_QUERIES.md
+/Users/justinlee/dev/sourceatlas2/ios-senior-dev-atlas-find-queries.md
+/Users/justinlee/dev/sourceatlas2/SENIOR_DEV_QUERY_PATTERNS.md
+
+================================================================================
