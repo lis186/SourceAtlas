@@ -1,6 +1,6 @@
 # SourceAtlas
 
-**3 個斜線命令，快速理解任何 codebase**
+**4 個斜線命令，快速理解任何 codebase**
 
 適用於 Claude Code | 支援 iOS/TypeScript/Android
 
@@ -115,7 +115,8 @@ cd ~/dev/sourceatlas2 && ./install-global.sh
 
 ```bash
 cd ~/projects/any-project
-/atlas-overview
+/atlas-init      # 首次使用：注入自動觸發規則
+/atlas-overview  # 快速理解專案
 ```
 
 ### 驗證安裝
@@ -124,7 +125,8 @@ cd ~/projects/any-project
 # 檢查命令是否安裝成功
 ls ~/.claude/commands/atlas-*.md
 
-# 應該看到 3 個檔案：
+# 應該看到 4 個檔案：
+# atlas-init.md
 # atlas-overview.md
 # atlas-pattern.md
 # atlas-impact.md
@@ -140,6 +142,11 @@ ls ~/.claude/commands/atlas-*.md
 
 ```
 你想做什麼？
+│
+├─ ⚙️ 第一次在這個專案使用 SourceAtlas
+│   → 用 /atlas-init
+│   → 注入自動觸發規則到 CLAUDE.md
+│   → 之後 Claude 會自動建議適合的命令
 │
 ├─ 📚 剛接手專案，想快速理解
 │   → 用 /atlas-overview
@@ -162,7 +169,7 @@ ls ~/.claude/commands/atlas-*.md
 
 **常見工作流程**：
 
-1. **新專案入職**：`/atlas-overview` → `/atlas-pattern` 學習關鍵模式
+1. **新專案入職**：`/atlas-init` → `/atlas-overview` → `/atlas-pattern` 學習關鍵模式
 2. **準備重構**：`/atlas-impact` 分析影響 → 開始修改
 3. **學習架構**：`/atlas-overview` → 閱讀關鍵檔案 → `/atlas-pattern` 學習細節
 
@@ -274,15 +281,12 @@ Claude Code + 2 分鐘安裝
 
 ## 🗺️ 開發狀態
 
-**v2.5 (當前)**：3/3 核心命令完成 ✅
+**v2.5 (當前)**：4/4 核心命令完成 ✅
 
+- ✅ `/atlas-init` - 專案初始化（自動觸發規則）
 - ✅ `/atlas-overview` - 專案概覽
 - ✅ `/atlas-pattern` - 設計模式學習
 - ✅ `/atlas-impact` - 影響分析
-
-**v2.6 (規劃中)**：
-- 🔵 `/atlas-find` - 智慧搜尋
-- 🔵 `/atlas-explain` - 深入解釋
 
 **v3.0 (規劃中)**：Python/Ruby/Go Analyzer、更多 patterns、技術債務量化
 
