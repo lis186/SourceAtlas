@@ -6,7 +6,14 @@
 
 ## 2025-11（當前月份）
 
-### Week 5 (11/25-12/01): `/atlas-impact` 命令完成 + Swift Analyzer 整合 ⭐⭐
+### Week 5 (11/25-12/01): `/atlas-impact` 命令完成 + 路線圖決策 ⭐⭐
+
+**重大決策：取消 `/atlas-find` 命令** (11/25):
+- 執行 8 個開發者角色模擬（9 專案，80+ 查詢）
+- 發現 70%+ 需求已被現有命令涵蓋
+- 決策：聚焦完善 3 個核心命令，避免功能重疊
+- Phase 3 轉向多語言擴展 + 測試 + 發布準備
+→ [完整決策記錄](./2025-11/2025-11-25-atlas-find-cancellation-decision.md)
 
 **Swift Analyzer 整合** (11/25):
 - 開發 Swift/ObjC Deep Analyzer (7 sections, 482 lines)
