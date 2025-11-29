@@ -400,7 +400,7 @@ interface UserResponse {
 ### Critical Issues 🔴
 
 **Nullability Coverage**: [X]% ([N] files missing NS_ASSUME_NONNULL)
-- **Impact**: Runtime crashes due to `!` force unwrapping
+- **Impact**: Runtime crashes due to force unwrapping operator (!)
 - **Auto-fix**: Run provided sed script to add annotations
 - **Priority**: CRITICAL - Fix before making changes
 
