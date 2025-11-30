@@ -464,7 +464,7 @@ TOTAL_FILES=$(find . -name "*.py" \
 
 7. **`./toon-vs-yaml-analysis.md`** - Format decision rationale
 8. **`./planning-session-summary.md`** - v2.5 planning overview
-9. **PRD.md** - Product requirements v2.5.2
+9. **PRD.md** - Product requirements v2.5.3
 10. **PROMPTS.md** - Stage 0/1/2 methodology
 
 ### Quick Reference

@@ -29,13 +29,13 @@
 - [x] Comprehensive testing ✅ (2025-11-30) - 90% pass rate, 9/10 tests
 - [x] Documentation update ✅ (2025-11-30) - Plugin sync, PROMPTS.md, version unification
 - [x] Performance optimization ✅ (2025-11-30) - Current performance sufficient
-- [ ] v2.5.2 Release
+- [ ] v2.5.3 Release
 
 ---
 
 ## 📅 Timeline
 
-### v2.5.2 (Current)
+### v2.5.3 (Current)
 
 **Week 1-4** ✅ (11/20-11/23):
 - Pattern Detection System
@@ -55,7 +55,7 @@
 **Week 13-16**:
 - Final Testing
 - Bug Fixes
-- v2.5.2 Release
+- v2.5.3 Release
 
 ### v2.6 (Future Vision)
 
