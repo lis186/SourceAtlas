@@ -424,7 +424,7 @@ scripts/
 ### 方案 C：重新調整優先級
 1. 將 API 影響分析列為 v2.5 核心功能
 2. 優先實作 `/atlas impact api`
-3. 其他功能（health, review）留待 v3.0
+3. 其他功能（health, review）留待 v2.6
 4. 專注於最高價值場景
 
 ---

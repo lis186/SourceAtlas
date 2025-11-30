@@ -110,7 +110,7 @@
 
 - [ ] 實作其他語言 analyzers（Python, Ruby, Go, TypeScript）
 - [ ] 改進 Junior developer 體驗（3.5 → 4.0+）
-- [ ] 準備 v3.0 規劃（code-maat 整合）
+- [ ] 準備 v2.6 規劃（code-maat 整合）
 
 ---
 

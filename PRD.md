@@ -54,7 +54,7 @@ v2.5 (當前) - SourceAtlas Skill
   ├─ 輕量 Scripts 輔助
   └─ 即時探索能力
   ↓
-v3.0 (未來) - SourceAtlas Monitor
+v2.6 (未來) - SourceAtlas Monitor
   ├─ 持續追蹤系統
   ├─ 歷史趨勢分析
   └─ 健康度儀表板
@@ -447,7 +447,7 @@ AI 回應：
 | 場景 2: 學習模式 | 識別設計模式 | ✅ Commands | `/atlas.pattern` ⭐⭐⭐⭐⭐ |
 | 場景 3B: API 影響分析 ⭐ | 追蹤 API 調用鏈 | ✅ Commands | `/atlas.impact` ⭐⭐⭐⭐ |
 | 場景 4: Code Review | 理解變更意圖 | ✅ Commands | `/atlas.overview` + `/atlas.pattern` |
-| **持續追蹤** | 需要歷史資料、趨勢分析 | 🔮 SourceAtlas Monitor (v3.0) | |
+| **持續追蹤** | 需要歷史資料、趨勢分析 | 🔮 SourceAtlas Monitor (v2.6) | |
 | 場景 3A: Model 變更影響 | Git 歷史、關聯分析 | 🔮 Monitor | (未來功能) |
 | 場景 5: 技術債務 | 持續追蹤、量化指標 | 🔮 Monitor | `/atlas.health` (未來) |
 
@@ -682,7 +682,7 @@ hypotheses:
 # 優先級 ⭐⭐⭐ - 專案設定
 /atlas.init                           # 注入 SourceAtlas 觸發規則到 CLAUDE.md
 
-# 未來功能（v3.0）
+# 未來功能（v2.6）
 /atlas.health             # 專案健康度分析
 /atlas.review PR#123      # PR 變更分析
 ```
@@ -1163,7 +1163,7 @@ templates:
 
 ---
 
-### v3.0.0 - SourceAtlas Monitor + 時序分析 (未來)
+### v2.6.0 - SourceAtlas Monitor + 時序分析 (未來)
 
 **目標**：持續追蹤和時序分析
 
@@ -1195,7 +1195,7 @@ templates:
 
 **與 v2.5 的互補**：
 
-| v2.5 命令 | v3.0 命令 | 分析方法 | 適用場景 |
+| v2.5 命令 | v2.6 命令 | 分析方法 | 適用場景 |
 |----------|----------|----------|----------|
 | `/atlas.impact` | `/atlas.changes` | 靜態 vs 時序 | API 變更 vs 重構風險 |
 
@@ -1206,11 +1206,11 @@ templates:
 /atlas.impact api "/api/users/{id}"
 → 找出所有「調用」這個 API 的程式碼（靜態依賴）
 
-# v3.0 時序分析（重構風險）
+# v2.6 時序分析（重構風險）
 /atlas.changes src/payment_service.rb
 → 找出歷史上「常一起改」的檔案（時序耦合）
 
-# v3.0 完整分析（包含耦合度）
+# v2.6 完整分析（包含耦合度）
 /atlas.changes src/payment_service.rb --coupling
 → 完整的歷史分析 + 耦合關係 + 風險評估
 ```
@@ -1245,7 +1245,7 @@ templates:
 
 ---
 
-#### v3.0 決策點
+#### v2.6 決策點
 
 **v2.5 完成後評估**：
 1. `/atlas.impact`（靜態）使用情況如何？
@@ -1317,7 +1317,7 @@ detect_files() { find . -name "*.rb"; }
 
 **問題**：v2.5 是否需要建立和維護索引？
 
-**決策**：v2.5 不建立持續索引，留待 v3.0
+**決策**：v2.5 不建立持續索引，留待 v2.6
 
 **理由**：
 1. 即時探索場景（找 Bug、學模式）不需要索引
@@ -1327,7 +1327,7 @@ detect_files() { find . -name "*.rb"; }
 
 **影響**：
 - v2.5 專注於即時分析
-- v3.0 再評估是否需要 Monitor
+- v2.6 再評估是否需要 Monitor
 
 ---
 
