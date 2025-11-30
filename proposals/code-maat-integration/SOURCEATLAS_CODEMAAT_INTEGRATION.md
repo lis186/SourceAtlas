@@ -1,11 +1,11 @@
 # SourceAtlas + code-maat 整合開發文檔
 
-**文檔版本**: 2.1 (2025-11-24)
+**文檔版本**: 3.0 (2025-11-30)
 **目標產品版本**: SourceAtlas v2.6 ⭐
 
 ---
 
-## ⚠️ 重要說明（2025-11-24 更新）
+## ⚠️ 重要說明（2025-11-30 更新）
 
 ### 目標版本變更
 
@@ -13,31 +13,36 @@
 
 **原因**：v2.5 已規劃 `/atlas.impact` 命令用於靜態影響分析，與本提案功能互補但不重疊。
 
-### 命令簡化（2025-11-24 更新）
+### 命令簡化（2025-11-30 更新）⭐
 
-原提案有 3 個命令，現簡化為 **2 個命令**：
+經過多開發者角色模擬討論，最終決定採用 **單一命令設計**：
 
 | 原提案 | v2.6 最終設計 | 說明 |
 |--------|--------------|------|
-| `/changes` | `/atlas.changes` | ✅ 整合完整時序分析功能 |
-| `/impact` | **已移除** | ⚠️ 整合到 `/atlas.changes` |
-| `/expert` | `/atlas.expert` | ✅ 保持獨立 |
+| `/atlas.changes` | `/atlas.history` | ✅ 重新命名，整合完整時序分析 |
+| `/atlas.expert` | **已移除** | ⚠️ 功能整合到 `/atlas.history` |
 
-**簡化理由**：
-- `/atlas.changes` 已包含耦合度分析（`--coupling` 選項）
-- 避免功能重疊和用戶混淆
-- 保持命令職責清晰
+**設計原則**：
+- **零參數優先** - 適合跨 AI 工具移植（Cursor, Copilot, Windsurf 等）
+- **智慧輸出** - 根據輸入自動判斷分析類型
+- **政治敏感度** - 用「Recent Contributors」取代「Ownership %」
+
+**命名選擇**：
+經投票決定使用 `/atlas.history`（3 票），理由：
+- 比 `/atlas.changes` 更直覺
+- 暗示「歷史分析」而非「變更追蹤」
+- 避免與 git 術語混淆
 
 ### v2.5 vs v2.6 的分析區別
 
 | 命令 | 版本 | 分析方法 | 適用場景 | 狀態 |
 |------|------|---------|---------|------|
-| `/atlas.impact` | v2.5 | **靜態分析**（代碼結構） | API 變更、前後端影響 | Phase 2 |
-| `/atlas.changes` | v2.6 | **時序分析**（git 歷史） | 變更頻率、耦合度、風險評估 | 提案階段 |
+| `/atlas.impact` | v2.5 | **靜態分析**（代碼結構） | API 變更、前後端影響 | ✅ 已完成 |
+| `/atlas.history` | v2.6 | **時序分析**（git 歷史） | Hotspots、Coupling、Contributors | 規劃中 |
 
 **兩者互補使用**：
 - 改 API 前：用 `/atlas.impact` 找靜態依賴（誰調用了這個 API）
-- 改核心邏輯前：用 `/atlas.changes` 看時序耦合（歷史上常一起改的檔案）
+- 改核心邏輯前：用 `/atlas.history` 看時序耦合（歷史上常一起改的檔案）
 
 ---
 
@@ -59,21 +64,26 @@
 ## Executive Summary
 
 ### 目標
-為 SourceAtlas v2.6 增加 2 個新命令，提供程式碼的時序分析能力：
-- `/atlas.changes` - 歷史查詢（整合變更頻率、**耦合度分析**、熱點、風險評估）
-- `/atlas.expert` - 專家查詢
+為 SourceAtlas v2.6 增加 **1 個新命令**，提供程式碼的時序分析能力：
+- `/atlas.history` - 智慧時序分析（Hotspots、Coupling、Contributors）
 
-### 關鍵決策
+### 目標用戶
+**Legacy Codebase 接手者** - 最高價值場景
+- 接手陌生的大型專案
+- 需要快速找到風險熱點
+- 需要知道「這塊誰最熟」
+
+### 關鍵決策（2025-11-30）
+- **命令名稱**: `/atlas.history`（經投票選出）
+- **設計哲學**: 單一命令 + 零參數優先 + 智慧輸出
 - **工具選擇**: 使用 code-maat 進行 git 歷史分析
-- **架構**: Scripts 收集數據 → YAML 輸出 → Claude 解讀
-- **實作語言**: Shell Script（輕量、可維護）
-- **整合方式**: 透過 Claude Code Skills 機制
+- **安裝方式**: 下載 standalone JAR + install script
+- **政治敏感度**: 用「Recent Contributors」取代「Ownership %」
 
 ### 預期價值
-- 新任務上手更快
-- 改代碼出錯率降低
-- 快速找到對的人
-- Code Review 品質提升
+- 新任務上手更快（找到風險熱點和熟悉人員）
+- 改代碼出錯率降低（了解時序耦合）
+- Code Review 品質提升（知道找誰 review）
 
 ---
 
@@ -221,47 +231,48 @@ payment_controller.rb,Bob,890,1200,0.74
 SourceAtlas Commands:
 
   靜態分析 (v2.5):
+    /atlas.init      → 專案初始化 ✅
     /atlas.overview  → 專案指紋 ✅
     /atlas.pattern   → 模式識別 ✅
-    /atlas.impact    → 靜態影響分析（API、類型）⏳
+    /atlas.impact    → 靜態影響分析（API、類型）✅
 
-  時序分析 (v2.6 新增 - 簡化版):
-    /atlas.changes   → 歷史查詢 + 耦合度分析 + 熱點 + 風險評估
-    /atlas.expert    → 專家查詢
+  時序分析 (v2.6 新增):
+    /atlas.history   → 智慧時序分析（Hotspots + Coupling + Contributors）
 ```
 
 ---
 
-### 1. `/atlas.changes` - 歷史查詢 + 耦合度分析
+### `/atlas.history` - 智慧時序分析
 
 #### 用途
-查詢程式碼的變更歷史、**耦合度分析**、熱點、風險評估等完整時序資訊。
+透過 Git 歷史分析，提供三個核心洞察：
 
-**整合功能**（簡化版設計）：
-- ✅ 變更頻率分析（哪些檔案改最多）
-- ✅ **耦合度分析**（哪些檔案常一起改）← 整合原 `/atlas.coupling`
-- ✅ 熱點識別（高風險區域）
-- ✅ 風險評估（基於歷史 bug 和變更模式）
-- ✅ PR 影響分析（基於歷史耦合度）
-- ✅ 專家資訊（誰改了什麼）
+| 概念 | 用戶問題 | 政治敏感度 |
+|------|---------|-----------|
+| **Hotspots** | 「哪些檔案最危險？」 | ✅ 安全 |
+| **Coupling** | 「改這個會影響什麼？」 | ✅ 安全 |
+| **Recent Contributors** | 「這塊誰最熟？」 | ⚠️ 謹慎表達 |
 
-#### 語法
+#### 設計哲學：零參數優先
+
+為了跨 AI 工具移植（Cursor, Copilot, Windsurf 等），採用智慧輸出設計：
+
 ```bash
-/atlas.changes <target> [options]
+# 整個專案概覽（Top 10 hotspots）
+/atlas.history
 
-target: 檔案路徑 | 模組名稱 | . (整個專案)
-options:
-  --who        顯示專家資訊
-  --hotspots   顯示熱點排名
-  --since <期間>  限制時間範圍 (例: 30d, 3m, 1y)
-  --coupling   顯示耦合關係
+# 模組分析（自動偵測是目錄還是關鍵字）
+/atlas.history auth
+
+# 單一檔案詳細分析
+/atlas.history src/auth/login.ts
 ```
 
 #### 使用範例
 
 **基本用法 - 檔案歷史**
 ```bash
-/atlas.changes src/payment_service.rb
+/atlas.history src/payment_service.rb
 ```
 
 **輸出 YAML 格式**：
@@ -336,7 +347,7 @@ risk_assessment:
 
 **進階用法 - 找專家**
 ```bash
-/atlas.changes payment --who
+/atlas.history payment --who
 ```
 
 **輸出**：
@@ -377,7 +388,7 @@ knowledge_risk:
 
 **進階用法 - 熱點分析**
 ```bash
-/atlas.changes . --hotspots
+/atlas.history . --hotspots
 ```
 
 **輸出**：
@@ -422,14 +433,14 @@ project_health:
 
 ---
 
-### 2. `/atlas.expert` - 專家查詢
+### 2. `/atlas.history` - 專家查詢
 
 #### 用途
 找出模組或檔案的專家，以及反向查詢開發者的專長領域。
 
 #### 語法
 ```bash
-/atlas.expert <query>
+/atlas.history <query>
 
 query:
   - 模組名稱（例: payment）
@@ -441,7 +452,7 @@ query:
 
 **找模組專家**
 ```bash
-/atlas.expert payment
+/atlas.history payment
 ```
 
 **輸出**：
@@ -536,7 +547,7 @@ suggested_reviewers:
 
 **反向查詢 - 開發者的專長**
 ```bash
-/atlas.expert Alice
+/atlas.history Alice
 ```
 
 **輸出**：

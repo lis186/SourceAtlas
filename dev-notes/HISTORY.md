@@ -6,7 +6,16 @@
 
 ## 2025-11（當前月份）
 
-### Week 5 (11/25-12/01): v2.5.4 Multi-Language Patterns Complete ⭐⭐⭐
+### Week 5 (11/25-12/01): v2.6.0 Release - 時序分析完成 ⭐⭐⭐⭐⭐
+
+**`/atlas.history` 命令完成** (11/30):
+- 實作 Git 歷史時序分析命令（Hotspots, Coupling, Contributors）
+- 整合 code-maat（自動安裝 + 環境配置）
+- 智慧處理：Shallow Clone 偵測 + 一鍵修復
+- 6 personas 多語言測試（iOS, Python, React, Android, Vue, Signal-iOS）
+- 修復：SIGPIPE 導致的 "No data available" 誤報
+- 核心輸出：變動熱點、隱藏依賴、知識分佈、Bus Factor 風險
+→ 檔案：`scripts/atlas/history.sh`, `.claude/commands/atlas.history.md`
 
 **TypeScript/React/Vue Patterns 擴展完成** (11/30):
 - 完成 50 個 patterns（25 Tier 1 + 25 Tier 2），pattern 總數達 141

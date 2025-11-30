@@ -1,10 +1,10 @@
-# SourceAtlas PRD v2.5.4
+# SourceAtlas PRD v2.6.0
 
 **AI-Powered Codebase Understanding Assistant**
 
-- **版本**: 2.5.4
+- **版本**: 2.6.0
 - **更新日期**: 2025-11-30
-- **狀態**: Active Development (Architecture Finalized)
+- **狀態**: ✅ Released (v2.6.0 Complete)
 
 ---
 
@@ -49,12 +49,13 @@ SourceAtlas 是一個整合在 Claude Code 中的智慧型程式碼理解助手�
 ```
 v2.0 (已完成) - 手動 Prompts 方法論
   ↓
-v2.5 (當前) - SourceAtlas Skill
-  ├─ Claude Code Skill 整合
-  ├─ 輕量 Scripts 輔助
-  └─ 即時探索能力
+v2.6 (當前) - SourceAtlas Commands ✅
+  ├─ Claude Code Commands 整合
+  ├─ 5 個核心命令完成
+  ├─ Git 歷史時序分析
+  └─ 141 個 patterns 支援
   ↓
-v2.6 (未來) - SourceAtlas Monitor
+v2.7 (未來) - SourceAtlas Monitor
   ├─ 持續追蹤系統
   ├─ 歷史趨勢分析
   └─ 健康度儀表板
@@ -679,10 +680,15 @@ hypotheses:
 /atlas.impact "User authentication"   # 功能改動影響
 /atlas.impact api "/api/users/{id}"   # API 改動影響
 
+# 優先級 ⭐⭐⭐⭐ - Git 歷史分析（v2.6 新增）⭐
+/atlas.history                        # 整個專案 hotspots
+/atlas.history auth                   # 模組分析（自動偵測）
+/atlas.history src/auth/login.ts      # 單一檔案詳細分析
+
 # 優先級 ⭐⭐⭐ - 專案設定
 /atlas.init                           # 注入 SourceAtlas 觸發規則到 CLAUDE.md
 
-# 未來功能（v2.6）
+# 未來功能（v2.7+）
 /atlas.health             # 專案健康度分析
 /atlas.review PR#123      # PR 變更分析
 ```
@@ -1229,99 +1235,156 @@ templates:
 
 ---
 
-### v2.6.0 - SourceAtlas Monitor + 時序分析 (未來)
+### v2.6.0 - `/atlas.history` 時序分析 ✅ (已完成)
 
-**目標**：持續追蹤和時序分析
+**目標**：Git 歷史時序分析，專為 Legacy Codebase 接手者設計
 
-**時程**：v2.5 完成後評估（依使用者回饋決定）
+**狀態**：✅ 完成（2025-11-30）
 
----
-
-#### 候選功能 A：code-maat 時序分析整合 ⭐
-
-基於 [code-maat 提案](./proposals/code-maat-integration/)，新增 2 個時序分析命令：
-
-```bash
-/atlas.changes     # 歷史查詢（變更頻率、耦合度、熱點、風險評估）
-/atlas.expert      # 專家查詢（程式碼所有權、知識地圖）
-```
-
-**特色**：
-- 分析 git 歷史中的演化模式
-- 識別耦合熱點和風險區域
-- 快速找到領域專家
-- 基於 code-maat 工具（成熟穩定）
-
-**`/atlas.changes` 整合功能**：
-- ✅ 變更頻率分析（哪些檔案改最多）
-- ✅ 耦合度分析（哪些檔案常一起改）
-- ✅ 熱點識別（高風險區域）
-- ✅ 風險評估（基於歷史 bug 和變更模式）
-- ✅ PR 影響分析（基於歷史耦合度）
-
-**與 v2.5 的互補**：
-
-| v2.5 命令 | v2.6 命令 | 分析方法 | 適用場景 |
-|----------|----------|----------|----------|
-| `/atlas.impact` | `/atlas.changes` | 靜態 vs 時序 | API 變更 vs 重構風險 |
-
-**範例使用場景**：
-
-```bash
-# v2.5 靜態分析（API 變更）
-/atlas.impact api "/api/users/{id}"
-→ 找出所有「調用」這個 API 的程式碼（靜態依賴）
-
-# v2.6 時序分析（重構風險）
-/atlas.changes src/payment_service.rb
-→ 找出歷史上「常一起改」的檔案（時序耦合）
-
-# v2.6 完整分析（包含耦合度）
-/atlas.changes src/payment_service.rb --coupling
-→ 完整的歷史分析 + 耦合關係 + 風險評估
-```
-
-**提案狀態**：
-- 📋 設計完成（2,679 行完整文檔）
-- ✅ 簡化為 2 個命令（移除獨立的 coupling 命令，整合到 changes）
-- 🔮 待 v2.5 完成後排入 roadmap
+**實作成果**：
+- 核心腳本：`scripts/atlas/history.sh`
+- 命令定義：`.claude/commands/atlas.history.md`
+- 自動安裝：`scripts/install-codemaat.sh`
+- 測試：6 personas × 多語言專案驗證
 
 ---
 
-#### 候選功能 B：SourceAtlas Monitor（原規劃）
+#### 設計決策記錄 (2025-11-30)
 
-持續追蹤和健康度儀表板：
+**背景**：通過模擬 9 位不同背景開發者的回饋，確定了以下設計方向。
 
+**目標用戶**：**Legacy Codebase 接手者**（最高價值場景）
+- 原始專家可能已離職
+- 需要快速識別風險區域
+- 需要知道「可以問誰」
+
+**命名決策**：`/atlas.history`（3 票勝出）
+- ✅ 直覺、跨平台通用
+- ✅ 與現有命令風格一致（名詞）
+- ✅ 誠實描述資料來源（git history）
+- ❌ 避免 `/atlas.tempo`（太抽象）、`/atlas.risk`（過度承諾）
+
+**命令設計**：單一命令，智慧輸出（零參數優先）
+
+```bash
+/atlas.history                    # 整個專案概覽（Top 10 hotspots）
+/atlas.history auth               # 模組分析（自動偵測）
+/atlas.history src/auth/login.ts  # 單一檔案詳細分析
+```
+
+**輸出自動調整**：
+
+| 輸入 | 輸出內容 |
+|------|---------|
+| 無參數 | Top 10 hotspots + 專案健康度 |
+| 模組名 | 模組熱點 + 耦合 + 最近貢獻者 |
+| 檔案路徑 | 詳細歷史 + 耦合檔案 + 風險評估 |
+
+**核心輸出（三個重點）**：
+
+| 概念 | 用戶問題 | 政治敏感度 |
+|------|---------|-----------|
+| **Hotspots** | 「哪些檔案最危險？」 | ✅ 安全 |
+| **Coupling** | 「改這個會影響什麼？」 | ✅ 安全 |
+| **Recent Contributors** | 「這塊誰最熟？」 | ⚠️ 謹慎表達 |
+
+**「可以問誰」的政治友善設計**：
+
+```yaml
+# ✅ 正確表達（強調時效性）
+recent_contributors:
+  - name: Alice
+    last_active: 3 days ago
+    context: "最近在處理支付邏輯重構"
+suggestion: "建議先問 Alice，她最近有在改這塊"
+
+# ❌ 避免（像績效報告）
+ownership:
+  Alice: 78% (主要負責人)
+  風險: Alice 是瓶頸
+```
+
+**移除功能**：
+- ❌ `/atlas.expert` 反向查詢（「Alice 負責什麼」）- 對 Legacy 接手者價值低
+
+---
+
+#### 與現有命令的關係
+
+| 命令 | 資料來源 | 回答問題 | 使用時機 |
+|------|---------|---------|---------|
+| `/atlas.overview` | 檔案系統 | 「這是什麼專案？」 | Day 1 快速了解 |
+| `/atlas.pattern` | 程式碼 | 「怎麼實作 X？」 | 學習設計模式 |
+| `/atlas.impact` | AST 靜態分析 | 「改這個會壞什麼？」 | API 變更前 |
+| `/atlas.history` ⭐ | Git 歷史 | 「這個危不危險？問誰？」 | 重構/接手時 |
+
+**完整工作流程**：
+```
+overview → pattern → impact → history → 動手改
+（結構）   （模式）  （靜態）  （歷史）
+```
+
+---
+
+#### 日常工作流程驗證
+
+基於 5 個場景的模擬測試：
+
+| 場景 | `/atlas.history` 填補的缺口 |
+|------|---------------------------|
+| **Bug 修復** | 哪個檔案最常出 bug？誰能幫我？ |
+| **新功能** | 這區穩定嗎？跟什麼耦合？ |
+| **Code Review** | 這檔案風險多高？誰該 review？ |
+| **Onboarding** | 哪裡是地雷區？問誰？ |
+| **Refactoring** | **為什麼**變亂的？從哪開始？ |
+
+---
+
+#### 安裝方案
+
+```bash
+# 一鍵安裝 code-maat
+./scripts/setup/install-codemaat.sh
+
+# 或手動
+curl -sSL https://github.com/adamtornhill/code-maat/releases/download/v1.0.4/code-maat-1.0.4-standalone.jar \
+  -o ~/.sourceatlas/bin/code-maat.jar
+```
+
+---
+
+#### 實作路線圖
+
+**Phase 1: 核心功能（1-2 週）**
+- [ ] `install-codemaat.sh` 安裝腳本
+- [ ] `/atlas.history` 命令實作
+- [ ] Hotspots 分析
+- [ ] Coupling 分析
+- [ ] Recent Contributors 分析
+
+**Phase 2: 完善（1 週）**
+- [ ] iOS 專案自動排除（Pods/, .pbxproj）
+- [ ] 風險評估算法
+- [ ] 測試與文檔
+
+---
+
+#### 未來候選功能
+
+**SourceAtlas Monitor**（v2.7+）：
 ```yaml
 持續追蹤:
   - 自動偵測變更
-  - 建立歷史索引
   - 趨勢分析
+  - 健康度儀表板
 
-影響分析:
-  - 靜態依賴分析（v2.5 已有）
-  - Git 歷史關聯（code-maat 提供）
-  - 測試覆蓋追蹤
-
-健康度儀表板:
-  - 技術債務量化
-  - 複雜度追蹤
-  - 風險區域識別
+技術債務量化:
+  - 自動債務偵測
+  - 重構建議
+  - 優先級排序
 ```
 
----
-
-#### v2.6 決策點
-
-**v2.5 完成後評估**：
-1. `/atlas.impact`（靜態）使用情況如何？
-2. 使用者是否需要時序分析（git 歷史）？
-3. 選擇輕量整合（選項 A）或完整 Monitor（選項 B）？
-
-**可能的整合方式**：
-- **輕量級**：只整合 code-maat（3 個新命令，2-3 週開發）
-- **完整版**：code-maat + Monitor（持續追蹤系統，3-6 個月）
-- **混合式**：先整合 code-maat，根據回饋決定是否建立 Monitor
+**決策點**：根據 `/atlas.history` 的使用回饋決定是否建立完整 Monitor 系統
 
 ---
 
@@ -1495,24 +1558,31 @@ When detecting user confusion, suggest:
 
 ## 版本資訊
 
-**當前版本**: v2.5.4 (2025-11-30)
+**當前版本**: v2.6.0 (2025-11-30)
 
 **開發狀態**：
 - v1.0 ✅ - 方法論驗證完成（5 專案測試）
-- v2.5.4 🔵 - Commands 架構 (核心功能完成)
+- v2.5.4 ✅ - Commands 架構完成
   - `/atlas.overview` ✅ - 專案概覽（已完成，2025-11-20）
   - `/atlas.pattern` ✅ - 模式學習（已完成，2025-11-22）⭐
   - `/atlas.impact` ✅ - 靜態影響分析（已完成，2025-11-25）
   - `/atlas.init` ✅ - 專案初始化（已完成，2025-11-30）
-  - **多語言支援**: iOS (34), Kotlin (31), Python (26), TypeScript/React/Vue (50)
-  - **Phase 3**: 完善 Git 分析、測試、文檔
+  - **多語言支援**: iOS (34), Kotlin (31), Python (26), TypeScript/React/Vue (50) = 141 patterns
+- v2.6.0 🔵 - 時序分析 (設計完成，準備實作)
+  - `/atlas.history` 🔵 - Git 歷史分析（設計確定，2025-11-30）
+  - **目標用戶**: Legacy Codebase 接手者
+  - **核心輸出**: Hotspots + Coupling + Recent Contributors
 - **完整三階段分析**：使用 `PROMPTS.md` 手動執行（深度盡職調查場景）
+
+**決策記錄** (2025-11-30):
+- ✅ 命名決定：`/atlas.history`（3 票勝出，直覺、跨平台通用）
+- ✅ 設計決定：單一命令 + 智慧輸出（零參數優先，利於跨平台移植）
+- ✅ 移除 `/atlas.expert` - 對 Legacy 接手者價值低（原作者可能已離職）
+- ✅ 政治友善設計：顯示「Recent Contributors」而非「Ownership %」
+- ✅ 目標用戶確定：Legacy Codebase 接手者（最高價值場景）
 
 **決策記錄** (2025-11-25):
 - ✅ 取消 `/atlas.find` - 功能已由現有 3 個 commands 涵蓋
-  - 模式學習 → `/atlas.pattern`
-  - 影響追蹤 → `/atlas.impact`
-  - 關鍵字搜尋 → Claude 內建 Grep/Glob
 
 > **完整版本歷史與決策記錄**：見 `dev-notes/HISTORY.md`
 

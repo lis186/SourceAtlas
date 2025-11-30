@@ -4,7 +4,7 @@
 
 適用於 Claude Code | 支援 iOS/TypeScript/Android
 
-[![Version](https://img.shields.io/badge/version-v2.5-blue)](https://github.com/lis186/SourceAtlas2/releases)
+[![Version](https://img.shields.io/badge/version-v2.6.0-blue)](https://github.com/lis186/SourceAtlas2/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 ---
@@ -19,7 +19,7 @@
 
 ---
 
-## 🚀 三個命令
+## 🚀 四個命令
 
 ### 1. 快速理解專案
 
@@ -61,6 +61,25 @@
 **範例**：要重構 User API，1-2 分鐘內知道 23 個檔案在用，有 5 個 breaking changes
 
 **iOS 專案特別功能**：自動檢查 Swift/ObjC interop 風險（nullability、@objc 暴露、memory 問題）
+
+---
+
+### 4. 時序分析（Git 歷史）⭐ NEW
+
+```bash
+/atlas.history
+/atlas.history src/
+/atlas.history . 6    # 最近 6 個月
+```
+
+**5-10 分鐘得到**：Hotspots（高變動檔案）、Coupling（隱藏依賴）、Recent Contributors（知識分佈）
+
+**範例**：想重構核心模組，5-10 分鐘內知道哪些檔案最常變動、哪些檔案總是一起改、誰最熟悉這塊程式碼
+
+**自動處理**：
+- 偵測 Shallow Clone 並提供解決方案
+- 自動安裝 code-maat（首次使用）
+- 識別 Bus Factor 風險（單一貢獻者）
 
 ---
 
@@ -126,11 +145,12 @@ cd ~/projects/any-project
 # 檢查命令是否安裝成功
 ls ~/.claude/commands/atlas.*.md
 
-# 應該看到 4 個檔案：
+# 應該看到 5 個檔案：
 # atlas.init.md
 # atlas.overview.md
 # atlas.pattern.md
 # atlas.impact.md
+# atlas.history.md
 ```
 
 📚 **完整安裝指南**：[GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
@@ -163,6 +183,11 @@ ls ~/.claude/commands/atlas.*.md
 │   → 1-2 分鐘得到：依賴清單 + Breaking Changes
 │   → 例如：/atlas.impact "src/api/users.ts"
 │
+├─ 📊 想了解專案的變動熱點和知識分佈
+│   → 用 /atlas.history [scope]
+│   → 5-10 分鐘得到：Hotspots + Coupling + Contributors
+│   → 例如：/atlas.history src/
+│
 └─ ❓ 還是不確定
     → 先用 /atlas.overview 建立全貌
     → 再根據需要使用其他命令
@@ -171,8 +196,9 @@ ls ~/.claude/commands/atlas.*.md
 **常見工作流程**：
 
 1. **新專案入職**：`/atlas.init` → `/atlas.overview` → `/atlas.pattern` 學習關鍵模式
-2. **準備重構**：`/atlas.impact` 分析影響 → 開始修改
+2. **準備重構**：`/atlas.history` 找熱點 → `/atlas.impact` 分析影響 → 開始修改
 3. **學習架構**：`/atlas.overview` → 閱讀關鍵檔案 → `/atlas.pattern` 學習細節
+4. **接手 Legacy 專案**：`/atlas.history` 看熱點 + 知識分佈 → `/atlas.overview` 理解架構
 
 ---
 
@@ -188,7 +214,7 @@ ls ~/.claude/commands/atlas.*.md
 
 - **[CLAUDE.md](./CLAUDE.md)** - AI 協作指南、專案架構、開發規範
 - **[開發歷史](./dev-notes/HISTORY.md)** - 完整的演進時間線
-- **[PRD](./PRD.md)** - 產品需求文檔（v2.5.3）
+- **[PRD](./PRD.md)** - 產品需求文檔（v2.6.0）
 
 ---
 
@@ -238,6 +264,7 @@ Claude Code + 2 分鐘安裝
 | `/atlas.overview` | 5-15 分鐘 | 依專案大小 |
 | `/atlas.pattern` | 0.1-30 秒 | 通常 <5 秒 |
 | `/atlas.impact` | 1-2 分鐘 | 大型專案 2-3 分鐘 |
+| `/atlas.history` | 5-10 分鐘 | 依 Git 歷史大小 |
 
 </details>
 
@@ -282,14 +309,15 @@ Claude Code + 2 分鐘安裝
 
 ## 🗺️ 開發狀態
 
-**v2.5 (當前)**：4/4 核心命令完成 ✅
+**v2.6.0 (當前)**：5/5 核心命令完成 ✅
 
 - ✅ `/atlas.init` - 專案初始化（自動觸發規則）
 - ✅ `/atlas.overview` - 專案概覽
 - ✅ `/atlas.pattern` - 設計模式學習
-- ✅ `/atlas.impact` - 影響分析
+- ✅ `/atlas.impact` - 影響分析（靜態分析）
+- ✅ `/atlas.history` - 時序分析（Git 歷史）⭐ NEW
 
-**v2.6 (規劃中)**：Python/Ruby/Go Analyzer、更多 patterns、技術債務量化
+**v2.7 (規劃中)**：Go/Rust/Ruby patterns、SourceAtlas Monitor、技術債務量化
 
 ---
 
@@ -302,6 +330,6 @@ Claude Code + 2 分鐘安裝
 ---
 
 **SourceAtlas** - Claude Code 的程式分析助手
-v2.5.4 | 最新更新: 2025-11-30 | MIT License
+v2.6.0 | 最新更新: 2025-11-30 | MIT License
 
 Made with ❤️ and 🤖
