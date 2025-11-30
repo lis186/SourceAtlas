@@ -6,7 +6,22 @@
 
 ## 2025-11（當前月份）
 
-### Week 5 (11/25-12/01): `/atlas.impact` 命令完成 + 路線圖決策 ⭐⭐
+### Week 5 (11/25-12/01): `/atlas.impact` + `/atlas.init` 完成 ⭐⭐
+
+**`/atlas.init` 命令完成 + 隱性觸發驗證** (11/30):
+- 實作專案初始化命令，注入自動觸發規則到 CLAUDE.md
+- 參考 [spec-kit](https://github.com/github/spec-kit) 設計模式
+- 10 專案 × 3 開發者類型 並行測試，100% 準確率
+- 命令重命名：`atlas-*` → `atlas.*`（dot-separated format）
+- 核心命令數：3 → 4（init, overview, pattern, impact）
+→ [完整實作記錄](./2025-11/2025-11-30-atlas-init-implementation.md)
+
+**資深開發者查詢模式研究** (11/29):
+- Signal/Android 專案深度分析
+- 484 行 Android Architect 評估文檔
+- 資深開發者查詢索引建立（266 行）
+- 確認 `/atlas-find` 取消決策的正確性
+→ [研究文檔](./2025-11/atlas-find-research/)
 
 **重大決策：取消 `/atlas.find` 命令** (11/25):
 - 執行 8 個開發者角色模擬（9 專案，80+ 查詢）

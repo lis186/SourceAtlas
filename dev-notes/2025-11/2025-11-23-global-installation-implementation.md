@@ -8,7 +8,7 @@
 
 ## Summary
 
-Successfully implemented global installation feature for SourceAtlas, allowing `/atlas-overview` and `/atlas-pattern` commands to be used in ANY project without copying files.
+Successfully implemented global installation feature for SourceAtlas, allowing `/atlas.overview` and `/atlas.pattern` commands to be used in ANY project without copying files.
 
 ---
 
@@ -25,8 +25,8 @@ Successfully implemented global installation feature for SourceAtlas, allowing `
 - ✅ Error handling and validation
 
 **Installation targets**:
-- `~/.claude/commands/atlas-overview.md`
-- `~/.claude/commands/atlas-pattern.md`
+- `~/.claude/commands/atlas.overview.md`
+- `~/.claude/commands/atlas.pattern.md`
 - `~/.claude/scripts/atlas/` (symlink to all helper scripts)
 
 ### 2. Documentation
@@ -140,14 +140,14 @@ cd ~/dev/sourceatlas2
 # ✓ Installation complete!
 #
 # You can now use these commands in any project:
-#   /atlas-overview [directory]
-#   /atlas-pattern [pattern-type]
+#   /atlas.overview [directory]
+#   /atlas.pattern [pattern-type]
 
 # 3. Use anywhere!
 cd ~/projects/any-project
 # In Claude Code:
-# /atlas-overview
-# /atlas-pattern "api endpoint"
+# /atlas.overview
+# /atlas.pattern "api endpoint"
 ```
 
 ### Status Checking
@@ -235,9 +235,9 @@ cd ~/projects/any-project
 
 ### Challenge 3: Directory Naming
 
-**Problem**: Initially installed to `~/.claude/commands/atlas/`, causing commands to be `/atlas/atlas-overview`.
+**Problem**: Initially installed to `~/.claude/commands/atlas/`, causing commands to be `/atlas/atlas.overview`.
 
-**Solution**: Install directly to `~/.claude/commands/`, making commands `/atlas-overview` as intended.
+**Solution**: Install directly to `~/.claude/commands/`, making commands `/atlas.overview` as intended.
 
 ### Challenge 4: ANSI Color Code Display
 
@@ -246,10 +246,10 @@ cd ~/projects/any-project
 **Solution**: Added `-e` flag to `echo` commands that contain color variables:
 ```bash
 # Before (shows escape codes)
-echo "  ${BLUE}/atlas-overview${NC} [directory]"
+echo "  ${BLUE}/atlas.overview${NC} [directory]"
 
 # After (shows colors)
-echo -e "  ${BLUE}/atlas-overview${NC} [directory]"
+echo -e "  ${BLUE}/atlas.overview${NC} [directory]"
 ```
 
 ---
@@ -274,7 +274,7 @@ echo -e "  ${BLUE}/atlas-overview${NC} [directory]"
 
 **Usage**:
 1. Install once: `./install-global.sh`
-2. Use in any project: `/atlas-overview`, `/atlas-pattern`
+2. Use in any project: `/atlas.overview`, `/atlas.pattern`
 
 **Benefits**:
 - ✅ One-time setup
@@ -407,8 +407,8 @@ This feature transforms SourceAtlas from a project-specific tool to a **true dev
 - `../2025-11/2025-11-23-global-installation-implementation.md` (this file)
 
 ### Modified Files
-- `.claude/commands/atlas-overview.md` (updated script paths)
-- `.claude/commands/atlas-pattern.md` (updated script paths)
+- `.claude/commands/atlas.overview.md` (updated script paths)
+- `.claude/commands/atlas.pattern.md` (updated script paths)
 - `README.md` (added global installation section)
 - `CLAUDE.md` (added installation guide)
 
