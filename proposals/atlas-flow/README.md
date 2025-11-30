@@ -4,9 +4,9 @@
 
 ## 版本
 
-- **提案版本**: v1.0
+- **提案版本**: v2.0
 - **日期**: 2025-12-01
-- **狀態**: 草案
+- **狀態**: 實作中
 
 ---
 
@@ -46,11 +46,32 @@
 
 ---
 
+## 分析模式總覽
+
+### 11 個分析模式
+
+| 類別 | Mode | 觸發關鍵字 | 用途 |
+|------|------|-----------|------|
+| **核心** | Forward Tracing | (預設) | 向下追蹤執行順序 |
+| **核心** | Reverse Tracing | 被誰調用, who calls | 向上追蹤調用者 |
+| **核心** | Error Path | 失敗, 錯誤, error | 追蹤失敗路徑 |
+| **核心** | Data Flow | 怎麼計算, 資料流 | 追蹤資料變化 |
+| **變異** | State Machine | 狀態機, lifecycle | 狀態轉換視覺化 |
+| **變異** | Comparison | 比較, vs, 差異 | 比較兩個流程 |
+| **變異** | Feature Toggle | toggle, 開關, A/B | 開關影響分析 |
+| **變異** | Permission/Role | 角色, 權限, RBAC | 按角色分析流程 |
+| **系統** | Log Analysis | log, 從 log | 從 log 重建流程 |
+| **系統** | Event/Message | event, 事件, queue | 事件驅動追蹤 |
+| **系統** | Transaction | transaction, rollback | 交易邊界分析 |
+| **系統** | Cache Flow | cache, 快取, TTL | 快取影響分析 |
+
+---
+
 ## 入口點識別
 
 ### 設計原則：用戶確認 > AI 猜測
 
-避免 AI 猜錯入口點浪費時間，採用兩階段設計：
+避免 AI 猜錯入口點浪費時間，採用三種情況處理：
 
 ### 情況 1：用戶明確指定起點
 
@@ -183,92 +204,181 @@
 
 ---
 
-## 目標用戶
+## 進階模式詳解
 
-基於用戶研究，識別出四種主要角色：
+### Mode: Reverse Tracing（反向追蹤）
 
-| 角色 | 情境 | 時間壓力 | 最需要的 |
-|------|------|----------|---------|
-| **資深工程師** | 接手遺留系統 | 1 小時修 Bug | 執行順序 + 風險標記 |
-| **Tech Lead** | 帶團隊重構 | 3 天評估 | 向上溝通 + 量化複雜度 |
-| **技術顧問** | 盡職調查 | 1 週報告 | 商業語言 + 投資建議 |
-| **初級工程師** | 修不熟的 Bug | 當天解決 | 檔案位置 + 影響範圍 |
-
-### 共同需求
-
-1. **執行順序** - 先做什麼、再做什麼
-2. **檔案位置 + 行號** - 可以直接跳過去
-3. **業務語言解釋** - 不只是程式碼
-4. **影響範圍** - 改了會不會弄壞其他
-5. **分層輸出** - 5 分鐘摘要 → 需要時深入
-6. **信心等級** - 哪些推論可信
-
-### 共同厭惡
-
-- ❌ 只列檔案清單（grep 就能做到）
-- ❌ 純技術術語（CEO 看不懂）
-- ❌ 貼全部程式碼（不需要複製貼上機器人）
-- ❌ 沒有優先級（50 個問題沒時間全看）
-- ❌ 沒有檔案位置（看得到吃不到）
-
----
-
-## 輸出格式
-
-### 預設：ASCII + 顏色（終端友好）
-
+```bash
+/atlas.flow "OrderService.create() 被誰調用"
 ```
-用戶下單流程
-============
 
-1. CartService.validate()        → 驗證購物車
+輸出：
+```
+誰調用了 OrderService.create()？
+================================
+
+調用者（3 個入口）：
+├── CheckoutController.submit()     → 正常下單
+│   📍 src/controllers/checkout.ts:120
+│
+├── AdminController.manualOrder()   → 後台手動建單
+│   📍 src/controllers/admin.ts:45
+│
+└── CronJob.retryFailedOrders()     → 重試失敗訂單
+    📍 src/jobs/retry.ts:80
+
+💡 修改 OrderService.create() 會影響這 3 個入口
+```
+
+### Mode: Error Path（失敗路徑）
+
+```bash
+/atlas.flow "下單失敗會怎樣"
+```
+
+輸出：
+```
+下單流程（失敗路徑）
+==================
+
+1. CartService.validate()
    📍 src/services/cart.ts:45
+   ⚠️ 失敗 → CartEmptyError
+      └── 回傳 400 + 錯誤訊息
 
-2. InventoryService.check()      → 檢查庫存
+2. InventoryService.check()
    📍 src/services/inventory.ts:78
-   ⚠️  失敗 → throw OutOfStockError
+   ⚠️ 失敗 → OutOfStockError
+      ├── 記錄 log
+      ├── 發送通知給運營
+      └── 回傳 409 + 缺貨商品清單
 
-3. DiscountEngine.apply()        → 計算折扣
-   📍 src/services/discount.ts:120
-   🔀 if VIP → 額外 10%
-
-   ⚡ 異常：折扣在庫存扣減「之前」計算
-      （通常應該在確認庫存後才算價格）
-
-4. InventoryService.reserve()    → 預扣庫存
-   📍 src/services/inventory.ts:156
-
-   ⚡ 異常：這裡沒有 transaction
-      （扣庫存和建訂單不是原子操作，可能超賣）
-
-5. OrderService.create()         → 建立訂單
-   📍 src/services/order.ts:200
+📌 風險：step 4 沒有 rollback，可能有孤兒訂單
 ```
 
-### 顏色語義
+### Mode: Feature Toggle（開關分析）
 
-| 顏色 | 用途 |
-|------|------|
-| 🟢 綠色 | 檔案路徑 |
-| 🟡 黃色 | 警告/分支 |
-| 🔴 紅色 | 危險/錯誤處理 |
-| 🔵 藍色 | 函數名稱 |
-| 🟣 紫色 | 關鍵業務規則 |
-| ⚪ 灰色 | 次要資訊 |
-
-### 可選：Mermaid 格式（貼到文件）
-
-用 prompt 控制：
 ```bash
-/atlas.flow "用戶下單，輸出 mermaid 格式"
+/atlas.flow "下單流程有哪些 feature toggle"
 ```
 
-### 可選：分層輸出
+輸出：
+```
+下單流程 Feature Toggles
+========================
 
-用 prompt 控制：
+發現 4 個影響此流程的 feature toggle：
+
+┌─────────────────────────────────────────────────────────────┐
+│ Toggle                    │ 影響步驟        │ 目前狀態      │
+├───────────────────────────┼─────────────────┼───────────────┤
+│ NEW_PAYMENT_FLOW          │ Step 5 付款     │ 🟡 50% rollout│
+│ ENABLE_POINTS_REDEMPTION  │ Step 3 折扣     │ 🟢 ON         │
+│ USE_NEW_INVENTORY_API     │ Step 4 庫存     │ 🔴 OFF        │
+│ BETA_CHECKOUT_UI          │ Step 1 前端     │ 🟡 Beta users │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Mode: Event/Message（事件追蹤）
+
 ```bash
-/atlas.flow "用戶下單，只要高層概覽"
-/atlas.flow "用戶下單，要完整細節"
+/atlas.flow "ORDER_CREATED 事件觸發什麼"
+```
+
+輸出：
+```
+ORDER_CREATED 事件追蹤
+======================
+
+📤 事件發送：
+OrderService.create()
+   📍 src/services/order.ts:210
+   → emit("ORDER_CREATED", { orderId, userId, items })
+
+📥 事件監聽者（4 個）：
+
+1. InventoryListener.onOrderCreated()
+   📍 src/listeners/inventory.ts:30
+   → 扣減實際庫存
+
+2. NotificationListener.onOrderCreated()
+   📍 src/listeners/notification.ts:45
+   → 發送確認信給用戶
+
+📌 注意事項：
+• Listener 執行順序不保證
+• InventoryListener 失敗不會 rollback 訂單
+```
+
+### Mode: Transaction（交易邊界）
+
+```bash
+/atlas.flow "下單流程的 transaction"
+```
+
+輸出：
+```
+下單流程 Transaction 分析
+=========================
+
+┌─ Transaction 1 (@Transactional) ────────────┐
+│ 1. CartService.validate()                    │
+│ 2. InventoryService.reserve()                │
+│ 3. OrderService.create()                     │
+└──────────────────────────────────────────────┘
+
+[無 Transaction - 外部呼叫]
+4. PaymentService.process()
+   ⚠️ 無法 rollback
+
+⚠️ 風險：
+• Step 4 失敗時，Transaction 1 已 commit
+• 需要補償機制（Saga pattern）
+```
+
+### Mode: Permission/Role（權限分析）
+
+```bash
+/atlas.flow "刪除訂單，按角色"
+```
+
+輸出：
+```
+刪除訂單流程（按角色）
+=====================
+
+[ADMIN] → 直接刪除，不可恢復
+[SELLER] → 只能取消未發貨，需填原因
+[BUYER] → 只能申請取消，等待賣家同意
+
+📊 權限矩陣：
+| 操作 | ADMIN | SELLER | BUYER |
+|------|-------|--------|-------|
+| 硬刪除 | ✅ | ❌ | ❌ |
+| 直接取消 | ✅ | ✅ | ❌ |
+| 申請取消 | ✅ | ✅ | ✅ |
+```
+
+### Mode: Cache（快取分析）
+
+```bash
+/atlas.flow "獲取商品，包含 cache"
+```
+
+輸出：
+```
+獲取商品價格（Cache 分析）
+=========================
+
+1. 檢查 Cache
+   💾 Key: "product:${id}:price"
+   💾 TTL: 5 分鐘
+
+   [CACHE HIT] → 直接返回（~5ms）
+   [CACHE MISS] → 查 DB（~50-100ms）
+
+⚠️ Cache 一致性風險：
+❌ ProductService.bulkUpdate() 沒有清 cache！
 ```
 
 ---
@@ -292,6 +402,56 @@
 
 ---
 
+## 輸出選項（非獨立模式）
+
+這些不是獨立模式，而是可以加在任何模式上的選項：
+
+| 選項 | 語法 | 說明 |
+|------|------|------|
+| 時間標註 | `顯示時間` | ⏱️ sync/async, ⏳ 預估延遲 |
+| 作者資訊 | `顯示作者` | 👤 git blame 資訊 |
+| 測試覆蓋 | `顯示測試` | 🧪 是否有測試覆蓋 |
+| Mermaid | `輸出 mermaid` | 流程圖格式 |
+
+範例：
+```bash
+/atlas.flow "下單流程，顯示時間"
+/atlas.flow "下單流程，輸出 mermaid"
+```
+
+---
+
+## 目標用戶
+
+基於用戶研究，識別出六種主要角色：
+
+| 角色 | 情境 | 時間壓力 | 最需要的 |
+|------|------|----------|---------|
+| **資深工程師** | 接手遺留系統 | 1 小時修 Bug | 執行順序 + 風險標記 |
+| **Tech Lead** | 帶團隊重構 | 3 天評估 | 向上溝通 + 量化複雜度 |
+| **技術顧問** | 盡職調查 | 1 週報告 | 商業語言 + 投資建議 |
+| **初級工程師** | 修不熟的 Bug | 當天解決 | 檔案位置 + 影響範圍 |
+| **QA 工程師** | 寫測試案例 | 功能上線前 | 所有分支 + 錯誤碼 |
+| **DevOps/SRE** | 線上問題排查 | 立即 | Log 點 + 依賴服務 |
+
+### 共同需求
+
+1. **執行順序** - 先做什麼、再做什麼
+2. **檔案位置 + 行號** - 可以直接跳過去
+3. **業務語言解釋** - 不只是程式碼
+4. **影響範圍** - 改了會不會弄壞其他
+5. **分層輸出** - 5 分鐘摘要 → 需要時深入
+
+### 共同厭惡
+
+- ❌ 只列檔案清單（grep 就能做到）
+- ❌ 純技術術語（CEO 看不懂）
+- ❌ 貼全部程式碼（不需要複製貼上機器人）
+- ❌ 沒有優先級（50 個問題沒時間全看）
+- ❌ 沒有檔案位置（看得到吃不到）
+
+---
+
 ## 設計原則
 
 ### 1. 零參數設計
@@ -308,30 +468,27 @@
 - CLI 直接執行 → ASCII + 顏色
 - 複雜流程 → 自動簡化 + 標注異常
 
-### 3. Prompt 覆蓋
+### 3. 自然語言控制
 
-用自然語言調整輸出：
+用自然語言調整輸出和模式：
 
 ```bash
 /atlas.flow "用戶下單，詳細一點"
-/atlas.flow "用戶下單，給我 mermaid"
-/atlas.flow "用戶下單，用簡單的 ASCII 圖"
+/atlas.flow "用戶下單，看失敗路徑"
+/atlas.flow "用戶下單，有哪些 feature toggle"
 ```
 
-### 4. AI 工具友善
+### 4. 模式自動偵測
 
-考慮之後翻譯給其他 AI 工具使用，避免複雜參數。
+根據用戶輸入自動選擇模式：
 
----
-
-## 價值主張
-
-| 指標 | 現狀 | 有 /atlas.flow |
-|------|------|----------------|
-| 梳理時間 | 4-16 小時 | 5 分鐘 |
-| 知識分享 | 在個人腦中 | 可輸出分享 |
-| 文檔過時 | 常見 | 每次都最新 |
-| 不同人理解 | 不一致 | 一致輸出 |
+```
+if 用戶問「被誰調用」→ Reverse Tracing
+if 用戶問「失敗」「錯誤」→ Error Path
+if 用戶問「feature toggle」「開關」→ Feature Toggle
+if 用戶問「transaction」「交易」→ Transaction Boundary
+...
+```
 
 ---
 
@@ -346,65 +503,50 @@
 | history → flow | 熱點為什麼常改 | ⭐⭐⭐⭐ |
 | flow → flow | 分層探索子流程 | ⭐⭐⭐⭐⭐ |
 
-### 設計：「建議下一步」+ 上下文追問
+### 上下文感知追問
 
-**每個輸出後建議下一步**：
-```
-/atlas.flow "登入流程"
-
-登入流程
-========
-...（流程內容）...
-
-──────────────────────────────────
-💬 下一步可以：
-• 「展開 LINE 登入」      → 深入子流程
-• 「改 step 3 會影響什麼」 → 影響範圍分析
-• 「為什麼這裡常被改」    → 歷史分析
-──────────────────────────────────
-```
-
-**上下文感知追問**：
 ```
 用戶: /atlas.flow "登入流程"
-AI: （輸出流程，記住上下文）
+AI: （輸出流程）
 
 用戶: step 6 怎麼運作的
 AI: （自動展開 step 6 細節）
 
 用戶: 這裡改了會影響什麼
-AI: （自動調用 impact 分析）
-```
+AI: （自動調用 /atlas.impact）
 
-### 自動串接規則
-
-```
-if 用戶問「影響」「改了」「會壞嗎」:
-    → 調用 impact 分析
-
-if 用戶問「為什麼常改」「歷史」:
-    → 調用 history 分析
-
-if 用戶問「展開」「詳細」「怎麼運作」:
-    → 展開子流程
-
-if 用戶問「用了什麼 pattern」:
-    → 調用 pattern 分析
+用戶: 為什麼這裡常被改
+AI: （自動調用 /atlas.history）
 ```
 
 ---
 
-## 下一步
+## 價值主張
 
-1. [x] 完成 POC 測試 ✅
-2. [x] 測試「登入流程」分析 ✅
-3. [ ] 驗證輸出格式是否符合需求
-4. [ ] 實作命令串接機制
-5. [ ] 收集回饋，迭代設計
+| 指標 | 現狀 | 有 /atlas.flow |
+|------|------|----------------|
+| 梳理時間 | 4-16 小時 | 5 分鐘 |
+| 知識分享 | 在個人腦中 | 可輸出分享 |
+| 文檔過時 | 常見 | 每次都最新 |
+| 不同人理解 | 不一致 | 一致輸出 |
+
+---
+
+## 實作狀態
+
+- [x] 完成 POC 測試 ✅
+- [x] 測試「登入流程」分析 ✅
+- [x] 測試「export to PNG」分析（Excalidraw）✅
+- [x] 測試「第三方 SSO」分析（iOS Swift/ObjC）✅
+- [x] 設計 11 個分析模式 ✅
+- [x] 實作命令串接機制 ✅
+- [ ] 更多專案驗證
+- [ ] 收集回饋，迭代設計
 
 ---
 
 ## 相關文件
 
-- 用戶研究：本提案內含四種角色模擬
-- 建議測試專案：Cal.com（預約系統）、電商類 App
+- 實作：`.claude/commands/atlas.flow.md`
+- 用戶研究：本提案內含六種角色分析
+- 建議測試專案：Excalidraw、Cal.com、電商類 App
