@@ -2,10 +2,11 @@
 
 ## 本月重點
 
-本月完成三大關鍵里程碑：
+本月完成四大關鍵里程碑：
 1. **Patterns 系統全面優化** - TypeScript, iOS, Objective-C 三大語言的 pattern 支援
 2. **`/atlas.impact` 命令完成** - 影響範圍分析與測試驗證
 3. **Swift Analyzer 整合** - 語言深度分析從 70% 提升至 90%+
+4. **`/atlas.init` 命令完成** - 隱性觸發規則注入，100% 準確率驗證
 
 ## 主要成果
 
@@ -62,6 +63,19 @@
 - 關鍵功能：Nullability (6% 覆蓋), @objc exposure (1,135 classes), Memory (112 unowned)
 → [完整實作記錄](./2025-11-25-swift-analyzer-integration-implementation.md)
 
+### 9. `/atlas.init` 命令完成 ✅ (11/30)
+- 實作專案初始化命令，注入自動觸發規則到 CLAUDE.md
+- 參考 [spec-kit](https://github.com/github/spec-kit) 設計模式
+- 10 專案 × 3 開發者類型 並行測試，**100% 準確率**
+- 命令重命名：`atlas-*` → `atlas.*`（dot-separated format）
+→ [完整實作記錄](./2025-11-30-atlas-init-implementation.md)
+
+### 10. 資深開發者查詢模式研究 ✅ (11/29)
+- Signal/Android 專案深度分析
+- 建立資深開發者查詢索引（266 行）
+- 確認 `/atlas-find` 取消決策的正確性
+→ [研究文檔](./atlas-find-research/)
+
 ## 關鍵學習
 
 1. **混合專案的挑戰**: Swift/ObjC 混合專案需要特殊處理，單語言 patterns 會遺漏大量代碼
@@ -73,19 +87,21 @@
 
 ## 統計
 
-- **實作天數**: 5 天（11/20-11/25）
+- **實作天數**: 10 天（11/20-11/30）
 - **主要檔案**:
   - `scripts/atlas/find-patterns.sh`（~300 行）
   - `scripts/atlas/analyzers/swift-analyzer.sh`（482 行）
   - `.claude/commands/atlas.impact.md`（557 行）
-- **測試專案**: 8 個（wikipedia-ios, Signal-iOS, 大型商業 App, Swiftfin, Telegram, WordPress, CTFd, Spree）
-- **文檔產出**: 11 份完整報告
+  - `.claude/commands/atlas.init.md`（新增）
+- **測試專案**: 10+ 個（Signal-iOS, Wikipedia-iOS, Swiftfin, android-signal, android-antennapod, ruby-spree, python-ctfd, nineyiappshop, WordPress-iOS, aigc-weekly 等）
+- **文檔產出**: 13 份完整報告
 - **Patterns 總數**:
   - iOS: 29 (27 支援 ObjC)
   - TypeScript: 22
   - Android: 20
   - **總計**: 71 patterns
-- **Commands 完成度**:
+- **Commands 完成度**: 4/4 ✅
+  - `/atlas.init` ✅ (11/30)
   - `/atlas.overview` ✅
   - `/atlas.pattern` ✅
   - `/atlas.impact` ✅
@@ -107,6 +123,10 @@
 - [2025-11-23-typescript-patterns.md](./2025-11-23-typescript-patterns.md)
 - [2025-11-23-ios-patterns.md](./2025-11-23-ios-patterns.md)
 - [2025-11-23-objective-c-support.md](./2025-11-23-objective-c-support.md)
+- [2025-11-23-global-installation-implementation.md](./2025-11-23-global-installation-implementation.md)
 - [2025-11-24-atlas-command-simplification-decision.md](./2025-11-24-atlas-command-simplification-decision.md)
 - [2025-11-25-atlas-impact-testing.md](./2025-11-25-atlas-impact-testing.md) ⭐ 多使用者測試報告
 - [2025-11-25-swift-analyzer-integration-implementation.md](./2025-11-25-swift-analyzer-integration-implementation.md) ⭐ Swift Analyzer 完整記錄
+- [2025-11-25-atlas-find-cancellation-decision.md](./2025-11-25-atlas-find-cancellation-decision.md)
+- [2025-11-30-atlas-init-implementation.md](./2025-11-30-atlas-init-implementation.md) ⭐ 隱性觸發驗證
+- [atlas-find-research/](./atlas-find-research/) 資深開發者查詢模式研究
