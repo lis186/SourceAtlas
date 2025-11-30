@@ -679,6 +679,9 @@ hypotheses:
 /atlas-impact "User authentication"   # 功能改動影響
 /atlas-impact api "/api/users/{id}"   # API 改動影響
 
+# 優先級 ⭐⭐⭐ - 專案設定
+/atlas-init                           # 注入 SourceAtlas 觸發規則到 CLAUDE.md
+
 # 未來功能（v3.0）
 /atlas-health             # 專案健康度分析
 /atlas-review PR#123      # PR 變更分析
@@ -780,6 +783,52 @@ Output Format:
 - Testing patterns
 
 Remember: Scan <5% of files, focus on patterns not exhaustive details.
+```
+
+#### 範例 3: `/atlas-init` (專案設定) ⭐ NEW
+
+```markdown
+# .claude/commands/atlas-init.md
+
+---
+description: Initialize SourceAtlas in current project - inject auto-trigger rules into CLAUDE.md
+allowed-tools: Read, Write, Edit
+---
+
+# SourceAtlas: Project Initialization
+
+## Purpose
+
+Inject SourceAtlas auto-trigger rules into the project's CLAUDE.md so Claude Code
+knows when to automatically suggest using Atlas commands.
+
+## Behavior
+
+1. Check if CLAUDE.md exists in project root
+2. If exists: Append SourceAtlas section (avoid duplicates)
+3. If not exists: Create minimal CLAUDE.md with SourceAtlas section
+
+## Injected Content (English)
+
+The command injects the following section:
+
+## SourceAtlas Auto-Trigger Rules
+
+When encountering these situations, automatically execute the corresponding command:
+
+| User Intent | Command |
+|-------------|---------|
+| "What is this project", "Help me understand codebase" | `/atlas-overview` |
+| "How to implement X pattern", "Learn the approach" | `/atlas-pattern [pattern]` |
+| "What will this change affect" | `/atlas-impact [target]` |
+| Just entered project + unfamiliar | `/atlas-overview` |
+
+## Design Rationale
+
+- Similar to spec-kit's `specify init` approach
+- Enables Claude Code to auto-suggest Atlas commands contextually
+- Uses English by default (international standard)
+- Non-invasive: appends to existing CLAUDE.md
 ```
 
 ---
@@ -1026,6 +1075,9 @@ templates:
   - Swift/ObjC 語言深度分析（自動觸發）
 
 #### Phase 3: 完善與發布 (當前)
+- [x] 實作 `/atlas-init` - 專案設定 ⭐⭐⭐ ✅ (2025-11-30)
+  - 注入 SourceAtlas 觸發規則到 CLAUDE.md
+  - 讓 Claude Code 自動建議使用 Atlas commands
 - [ ] 擴展多語言支援（Kotlin, Go, Rust 等）
 - [ ] 完善 Git 分析 Scripts
 - [ ] 整體測試與文檔
