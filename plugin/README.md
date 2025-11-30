@@ -10,6 +10,7 @@ SourceAtlas helps developers quickly understand any codebase through pattern lea
 - **🔍 Project Overview** (`/atlas.overview`) - Quick project understanding (<5% file scan)
 - **🎯 Pattern Learning** (`/atlas.pattern`) - Learn design patterns from existing code
 - **📊 Impact Analysis** (`/atlas.impact`) - Analyze change impact with static dependency analysis
+- **📈 History Analysis** (`/atlas.history`) - Git history temporal analysis (Hotspots, Coupling, Contributors)
 
 ## 🚀 Installation
 
@@ -123,6 +124,33 @@ Analyze the impact scope of code changes using static dependency analysis.
 - 📋 Migration checklist
 - 🧪 Test coverage gaps
 - ⚠️ Language-specific risks (Swift/ObjC interop for iOS)
+
+### `/atlas.history` - History Analysis 🆕
+
+Analyze git history to identify hotspots, temporal coupling, and knowledge distribution.
+
+```bash
+# Analyze entire repository
+/atlas.history
+
+# Analyze specific directory
+/atlas.history src/
+
+# Analyze last 6 months
+/atlas.history . 6
+```
+
+**What you get:**
+- 🔥 Hotspots - Files with most changes (complexity indicators)
+- 🔗 Temporal Coupling - Files that change together (hidden dependencies)
+- 👥 Recent Contributors - Knowledge distribution by area
+- ⚠️ Bus Factor Risk - Single-contributor files
+- 📊 Risk Assessment - Priority actions for refactoring
+
+**Auto-features:**
+- Detects shallow clone and offers one-click fix
+- Auto-installs code-maat dependency if needed
+- Chinese/English bilingual prompts
 
 ## 🎓 How It Works
 
