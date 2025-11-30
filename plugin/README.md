@@ -6,10 +6,10 @@ SourceAtlas helps developers quickly understand any codebase through pattern lea
 
 ## ✨ Features
 
-- **🎯 Pattern Learning** (`/atlas-pattern`) - Learn design patterns from existing code
-- **📊 Impact Analysis** (`/atlas-impact`) - Analyze change impact (Coming Soon)
-- **🔍 Quick Search** (`/atlas-find`) - Rapidly locate functionality (Coming Soon)
-- **🔍 Project Overview** (`/atlas-overview`) - Quick project understanding
+- **🎯 Pattern Learning** (`/atlas.pattern`) - Learn design patterns from existing code
+- **📊 Impact Analysis** (`/atlas.impact`) - Analyze change impact (Coming Soon)
+- **🔍 Quick Search** (`/atlas.find`) - Rapidly locate functionality (Coming Soon)
+- **🔍 Project Overview** (`/atlas.overview`) - Quick project understanding
 
 ## 🚀 Installation
 
@@ -34,12 +34,12 @@ cp -r /path/to/sourceatlas-plugin ~/.claude/commands/sourceatlas
 /plugin install sourceatlas@sourceatlas-marketplace
 
 # Start using
-/atlas-pattern "api endpoint"
+/atlas.pattern "api endpoint"
 ```
 
 ## 📖 Usage
 
-### `/atlas-pattern` - Learn Design Patterns ⭐
+### `/atlas.pattern` - Learn Design Patterns ⭐
 
 Learn how the current codebase implements specific patterns.
 
@@ -47,19 +47,19 @@ Learn how the current codebase implements specific patterns.
 
 ```bash
 # Learn API endpoint patterns
-/atlas-pattern "api endpoint"
+/atlas.pattern "api endpoint"
 
 # Learn background job patterns
-/atlas-pattern "background job"
+/atlas.pattern "background job"
 
 # Learn file upload patterns
-/atlas-pattern "file upload"
+/atlas.pattern "file upload"
 
 # Learn authentication patterns
-/atlas-pattern "authentication"
+/atlas.pattern "authentication"
 
 # Learn database query patterns
-/atlas-pattern "database query"
+/atlas.pattern "database query"
 ```
 
 **What you get:**
@@ -72,8 +72,8 @@ Learn how the current codebase implements specific patterns.
 
 ### Coming Soon
 
-- `/atlas-impact` - Analyze the impact of code changes
-- `/atlas-find` - Quickly locate functionality
+- `/atlas.impact` - Analyze the impact of code changes
+- `/atlas.find` - Quickly locate functionality
 - `/atlas` - Complete three-stage codebase analysis
 
 ## 🎓 How It Works
@@ -92,7 +92,7 @@ SourceAtlas uses **information theory principles** to understand codebases effic
 
 ## 🧪 Example Output
 
-When you run `/atlas-pattern "api endpoint"` in a Next.js project:
+When you run `/atlas.pattern "api endpoint"` in a Next.js project:
 
 ```markdown
 # 📋 Pattern: REST API Endpoints (Next.js API Routes)
@@ -129,7 +129,7 @@ sourceatlas-plugin/
 ├── .claude-plugin/
 │   └── plugin.json          # Plugin metadata
 ├── commands/
-│   └── atlas-pattern.md     # Pattern learning command
+│   └── atlas.pattern.md     # Pattern learning command
 ├── README.md
 └── LICENSE
 ```
@@ -149,7 +149,7 @@ cp -r plugin ~/test-marketplace/sourceatlas-plugin
 
 # Test in any project
 cd ~/your-project
-/atlas-pattern "api endpoint"
+/atlas.pattern "api endpoint"
 
 # After making changes
 /plugin uninstall sourceatlas-plugin@test-marketplace

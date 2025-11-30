@@ -3,7 +3,7 @@
 # Date: 2025-11-22
 #
 # This file defines common iOS development patterns and their detection strategies.
-# Used by find-patterns.sh and /atlas-pattern command.
+# Used by find-patterns.sh and /atlas.pattern command.
 #
 # How to add a new pattern:
 # 1. Add a new entry under 'patterns' with a unique key (use snake_case)

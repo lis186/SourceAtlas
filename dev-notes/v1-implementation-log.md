@@ -9,7 +9,7 @@
 ## 📋 Implementation Checklist
 
 ### Phase 1: Setup & Infrastructure ✅
-- [x] ~~Update `/atlas-overview` command with metrics~~ (Deferred)
+- [x] ~~Update `/atlas.overview` command with metrics~~ (Deferred)
 - [x] Create benchmark scripts
 - [x] Create format comparison tools
 - [ ] Add quality gates to commands
@@ -463,7 +463,7 @@ All 5 projects successfully generated TOON format fingerprints:
 
 **Completed**:
 - ✅ Created `detect-project-enhanced.sh` with scale-aware logic
-- ✅ Updated `/atlas-overview` command with new guidance
+- ✅ Updated `/atlas.overview` command with new guidance
 - ✅ Tested optimizations on cursor-talk-to-figma-mcp
 - ✅ Verified improvements in all metrics
 
@@ -477,7 +477,7 @@ All 5 projects successfully generated TOON format fingerprints:
      - File scan limits (1-2 for TINY → 10-15 for VERY_LARGE)
      - Hypothesis targets (5-8 for TINY → 15-20 for VERY_LARGE)
 
-2. **Updated `/atlas-overview` Command**:
+2. **Updated `/atlas.overview` Command**:
    - Added Phase 1: Scale-Aware Planning section
    - Scale-aware scan limits table
    - Scale-aware hypothesis targets table
@@ -640,7 +640,7 @@ See full analysis: `./toon-vs-yaml-analysis.md`
 
 **Phase 3**: Optimizations ✅
 - Created detect-project-enhanced.sh with scale-aware logic
-- Updated /atlas-overview command with new guidance
+- Updated /atlas.overview command with new guidance
 - Tested optimizations (33% file reduction, 21% line reduction)
 - Proper .venv/node_modules exclusion implemented
 
@@ -663,7 +663,7 @@ User explicitly requested:
 - ✅ 5 benchmark JSON reports
 - ✅ Comprehensive data analysis
 - ✅ Enhanced detection script (scale-aware)
-- ✅ Updated /atlas-overview command
+- ✅ Updated /atlas.overview command
 - ✅ TOON vs YAML comparison analysis
 - ✅ Final recommendation: **Use YAML**
 

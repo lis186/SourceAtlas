@@ -8,7 +8,7 @@
 ## 🎯 Immediate Actions (This Week)
 
 ### Phase 1 - Pattern Detection (Week 1) ✅ COMPLETE
-- [x] `/atlas-pattern` command
+- [x] `/atlas.pattern` command
 - [x] `find-patterns.sh` script (ultra-fast version)
 - [x] Multi-project validation
 
@@ -19,11 +19,11 @@
 - [x] Patterns audit & cleanup
 
 ### Phase 3 - Core Commands (Week 5-8) 🔵 IN PROGRESS
-- [x] `/atlas-overview` command (Stage 0) ✅ (2025-11-20)
+- [x] `/atlas.overview` command (Stage 0) ✅ (2025-11-20)
 - [x] Command architecture simplification ✅ (2025-11-24)
-- [x] `/atlas-impact` command (change impact) ✅ (2025-11-25)
-- [ ] `/atlas-find` command (smart search) ⭐ NEXT
-- [ ] `/atlas-explain` command (deep dive)
+- [x] `/atlas.impact` command (change impact) ✅ (2025-11-25)
+- [ ] `/atlas.find` command (smart search) ⭐ NEXT
+- [ ] `/atlas.explain` command (deep dive)
 
 ### Phase 4 - Testing & Polish (Week 9-16)
 - [ ] Comprehensive testing
@@ -79,7 +79,7 @@
 ## 🔥 Current Sprint (Week 5)
 
 ### Priority P0 (Must Do) ⭐
-1. **`/atlas-impact` implementation** ✅ (Done 11/25)
+1. **`/atlas.impact` implementation** ✅ (Done 11/25)
    - Static dependency analysis
    - API change impact tracking
    - Tested on 5 real scenarios (100% success)
@@ -87,7 +87,7 @@
 
 ### Priority P1 (Should Do)
 2. Document command architecture decisions ✅ (Done 11/24)
-3. **Next**: Start `/atlas-find` command implementation ⭐
+3. **Next**: Start `/atlas.find` command implementation ⭐
 4. Collect user feedback
 
 ### Priority P2 (Nice to Have)

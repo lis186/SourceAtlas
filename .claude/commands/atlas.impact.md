@@ -426,7 +426,7 @@ interface UserResponse {
 - Largest imports: [N] headers
 - Circular dependencies: [None|Detected]
 
-💡 **Full Swift Analysis**: Run `/atlas-impact [target].m` to see complete 7-section analysis
+💡 **Full Swift Analysis**: Run `/atlas.impact [target].m` to see complete 7-section analysis
 
 ---
 
@@ -581,7 +581,7 @@ interface UserResponse {
 
 ## What's Next?
 
-After `/atlas-impact`, users can:
-- Use `/atlas-pattern` to learn how to implement changes consistently
-- Use `/atlas-overview` for broader context
+After `/atlas.impact`, users can:
+- Use `/atlas.pattern` to learn how to implement changes consistently
+- Use `/atlas.overview` for broader context
 - Create migration plan based on the checklist

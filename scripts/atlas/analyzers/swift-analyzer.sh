@@ -1,6 +1,6 @@
 #!/bin/bash
 # Swift/Objective-C Interop Deep Analyzer
-# 用於 /atlas-impact 命令，提供 Swift 特定的深度分析
+# 用於 /atlas.impact 命令，提供 Swift 特定的深度分析
 
 set -euo pipefail
 

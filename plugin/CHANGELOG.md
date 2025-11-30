@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Initial plugin release
-- `/atlas-pattern` command - Learn design patterns from existing codebase
+- `/atlas.pattern` command - Learn design patterns from existing codebase
 - Self-contained architecture (zero dependencies)
 - Support for multiple languages (JavaScript, TypeScript, Python, Ruby, PHP, Go, Rust)
 - Comprehensive pattern detection for:
@@ -38,10 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- `/atlas-impact` - Impact analysis for code changes
-- `/atlas-impact api` - API change impact analysis
-- `/atlas-find` - Quick functionality search
+- `/atlas.impact` - Impact analysis for code changes
+- `/atlas.impact api` - API change impact analysis
+- `/atlas.find` - Quick functionality search
 - `/atlas` - Complete three-stage codebase analysis
-- `/atlas-explain` - Deep dive file explanation
+- `/atlas.explain` - Deep dive file explanation
 - Usage examples document
 - Video tutorials
