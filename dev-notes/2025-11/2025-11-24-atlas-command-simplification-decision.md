@@ -183,7 +183,7 @@ PRD 核心定位：
 
 ---
 
-## 3️⃣ code-maat 提案簡化（3→2 命令）
+## 3️⃣ code-maat 提案簡化（3→2→1 命令）
 
 ### 背景
 
@@ -197,7 +197,7 @@ PRD 核心定位：
 1. **命名混淆**：用戶反饋 "atlas-coupling 太不容易懂了"
 2. **功能重疊**：發現 `/atlas.changes` 已有 `--coupling` 選項
 
-### 決策
+### 決策（2025-11-24）
 
 **簡化為 2 個命令**：
 
@@ -206,26 +206,39 @@ PRD 核心定位：
 /atlas.expert    # 專家查詢 + 知識地圖
 ```
 
-### 理由
+### 進一步簡化（2025-11-30 更新）⭐
 
-1. ✅ **避免功能重疊** - `/atlas.changes --coupling` 已提供耦合度分析
-2. ✅ **降低學習成本** - 2 個命令比 3 個更容易記憶
-3. ✅ **職責清晰** - changes = 時序分析，expert = 人員分析
+經過 9 個模擬開發者角色討論，進一步簡化為 **1 個命令**：
+
+```bash
+/atlas.history   # 智慧時序分析（Hotspots + Coupling + Contributors）
+```
+
+**關鍵決策**：
+1. **目標用戶**：Legacy Codebase 接手者（最高價值場景）
+2. **零參數優先**：適合跨 AI 工具移植（Cursor, Copilot, Windsurf）
+3. **政治敏感度**：用「Recent Contributors」取代「Ownership %」
+4. **命名投票**：`/atlas.history` 獲得 3 票勝出
+
+**v3.0 設計**：
+- `/atlas.expert` 反向查詢功能價值較低，已移除
+- 所有功能整合到 `/atlas.history` 的智慧輸出
 
 ### 實作
 
 **更新的文檔**：
 1. `SOURCEATLAS_CODEMAAT_INTEGRATION.md`
    - 移除整個 `/atlas.coupling` 章節（238 行）
-   - 擴充 `/atlas.changes` 功能說明
-   - 文檔版本更新為 v2.1
+   - `/atlas.changes` → `/atlas.history`
+   - `/atlas.expert` 移除
+   - 文檔版本更新為 v3.0
 
 2. `UPDATES_SUMMARY.md`
-   - 新增 v2.1 changelog
-   - 記錄簡化理由
+   - 新增 v3.0 changelog
+   - 記錄設計決策過程
 
 3. `proposals/README.md`
-   - 更新命令清單（3→2）
+   - 更新命令清單（3→2→1）
 
 4. `PRD.md`
    - 更新 v2.6 規劃章節
@@ -233,7 +246,7 @@ PRD 核心定位：
 ### 影響
 
 **提案狀態**：
-- 文檔版本：v2.0 → v2.1
+- 文檔版本：v2.0 → v2.1 → v3.0
 - 目標產品版本：v2.6（不變）
 - 狀態：🟢 已批准待實作
 

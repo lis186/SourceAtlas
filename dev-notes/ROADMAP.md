@@ -64,6 +64,12 @@
 
 ### v2.6 (Future Vision)
 
+**`/atlas.history` - 智慧時序分析** ⭐ (2025-11-30 設計完成)
+- 單一命令 + 零參數優先 + 智慧輸出
+- 核心功能：Hotspots、Coupling、Recent Contributors
+- 目標用戶：Legacy Codebase 接手者
+- 使用 code-maat 進行 Git 歷史分析
+
 **SourceAtlas Monitor**:
 - Continuous tracking
 - Trend analysis
@@ -84,18 +90,19 @@
 ## 🔥 v2.6 Planning
 
 ### Priority P0 (Must Do) ⭐
-1. **Go/Rust patterns** - 新增語言支援
-2. **Ruby/PHP patterns** - 擴展 web 框架支援
+1. **`/atlas.history`** - 智慧時序分析（設計完成 2025-11-30）
+2. **Go/Rust patterns** - 新增語言支援
+3. **Ruby/PHP patterns** - 擴展 web 框架支援
 
 ### Priority P1 (Should Do)
-3. SourceAtlas Monitor - 持續追蹤
-4. 技術債務量化
-5. Collect user feedback
+4. SourceAtlas Monitor - 持續追蹤
+5. 技術債務量化
+6. Collect user feedback
 
 ### Priority P2 (Nice to Have)
-6. Health dashboard
-7. Performance benchmarking
-8. Pattern statistics dashboard
+7. Health dashboard
+8. Performance benchmarking
+9. Pattern statistics dashboard
 
 ### Completed Technical Debt 🔧 ✅
 - [x] Plugin 同步：更新 `plugin/` 以匹配已實作的 4 個 commands (init, overview, pattern, impact) ✅ (2025-11-30)
@@ -126,6 +133,7 @@
 
 ### In Progress 🔵
 - [ ] v2.6 Planning
+- [x] `/atlas.history` design (2025-11-30) ✅
 - [ ] Go/Rust patterns research
 
 ### Blocked ❌
@@ -144,6 +152,8 @@
 5. **Pattern 一致性**: 跨語言命名慣例相似度高
 6. **使用場景驅動設計** (2025-11-24): 從真實場景倒推功能需求，發現 `/atlas` 無實際使用場景
 7. **命令命名重要性** (2025-11-24): 技術性命名（如 "coupling"）不易理解，發現重疊後果斷簡化
+8. **跨工具可移植性** (2025-11-30): 零參數設計適合移植到 Cursor, Copilot, Windsurf 等 AI 工具
+9. **政治敏感度考量** (2025-11-30): 用「Recent Contributors」取代「Ownership %」避免團隊爭議
 
 ---
 
