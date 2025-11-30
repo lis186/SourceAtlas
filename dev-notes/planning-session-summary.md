@@ -233,7 +233,7 @@ If time is limited:
 - [ ] Documentation updated
 - [ ] No critical bugs
 
-### v2.5.0 Release Ready When:
+### v2.5.2 Release Ready When:
 - [ ] 5/5 commands implemented
 - [ ] 7/7 scripts working cross-platform
 - [ ] 5+ real projects tested successfully
@@ -342,7 +342,7 @@ When implementing any new feature:
 **Ready For**:
 - Immediate implementation start
 - Phase 1 execution (Week 1)
-- 3-4 week rollout to v2.5.0
+- 3-4 week rollout to v2.5.2
 
 **Confidence Level**: HIGH
 - Built on validated v1.0 methodology
@@ -377,7 +377,7 @@ When implementing any new feature:
 
 **Session End**: 2025-11-22
 **Next Session**: Begin Phase 1 implementation
-**Estimated Completion**: v2.5.0 in 3-4 weeks
+**Estimated Completion**: v2.5.2 in 3-4 weeks
 
 ---
 

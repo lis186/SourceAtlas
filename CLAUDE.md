@@ -742,7 +742,7 @@ touch test-results.md
 - [ ] 完善 Git 分析 Scripts
 - [ ] 整體測試與文檔
 - [ ] 使用者回饋收集
-- [ ] 發布 v2.5.0
+- [ ] 發布 v2.5.2
 
 ### 🔮 未來（v3.0+）
 - SourceAtlas Monitor - 持續追蹤和趨勢分析
