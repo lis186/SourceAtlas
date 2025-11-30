@@ -2,7 +2,7 @@
 
 **Status**: v1.0 Complete → v2.5 Implementation Starting
 **Date**: 2025-11-22
-**Timeline**: 3-4 weeks to v2.5.2
+**Timeline**: 3-4 weeks to v2.5.3
 
 ---
 
@@ -126,7 +126,7 @@ cd /path/to/test/project
 
 ### Phase 4: Polish & Launch (Week 3-4)
 
-**Deliverables**: v2.5.2 Release
+**Deliverables**: v2.5.3 Release
 
 **Key Tasks**:
 - Real-world testing (5+ projects)
@@ -146,7 +146,7 @@ cd /path/to/test/project
 - [x] Documentation updated
 - [x] No critical bugs
 
-**v2.5.2 Release Ready When**:
+**v2.5.3 Release Ready When**:
 - [x] All 5 commands implemented and tested
 - [x] All 5 scripts working cross-platform
 - [x] 5+ real projects tested successfully
@@ -202,7 +202,7 @@ cd /path/to/test/project
 
 **Implementation Details**:
 - [Implementation Roadmap](./implementation-roadmap.md) - Complete plan
-- [PRD v2.5.2](PRD.md) - Product requirements
+- [PRD v2.5.3](PRD.md) - Product requirements
 - [PROMPTS.md](PROMPTS.md) - Stage 0/1/2 prompts (reference for `/atlas`)
 
 **v1.0 Learnings**:
@@ -295,7 +295,7 @@ cd /path/to/test/project
 - [ ] No critical bugs
 - [ ] Meets time/quality targets
 
-**For v2.5.2 Release**:
+**For v2.5.3 Release**:
 - [ ] 5 commands: atlas-overview ✅, atlas-pattern, atlas-impact, atlas, atlas-find, atlas-explain
 - [ ] 5 scripts: detect-project-enhanced ✅, scan-entropy ✅, find-patterns, collect-git, analyze-dependencies
 - [ ] Real-world validation on 5+ projects

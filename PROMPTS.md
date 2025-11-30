@@ -4,7 +4,7 @@
 - **v1.0** ✅ - 方法論已驗證（5 專案測試）
 - **v2.5** ✅ - 核心 Commands 已完成（4 個 commands）
 
-**版本**: v2.5.2
+**版本**: v2.5.3
 **更新時間**: 2025-11-30
 **作者**: SourceAtlas Team
 **驗證專案**: trySwiftTokyoApp, taiwan-calendar, Mir01, chiahsing1115 (5 projects)
@@ -1289,6 +1289,6 @@ refactor: [X] commits ([Y]%)
 
 ---
 
-**文檔版本**: v2.5.2
+**文檔版本**: v2.5.3
 **最後更新**: 2025-11-30
 **維護者**: SourceAtlas Team
