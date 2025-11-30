@@ -4,7 +4,7 @@
 
 適用於 Claude Code | 支援 iOS/TypeScript/Android
 
-[![Version](https://img.shields.io/badge/version-v2.5-blue)](https://github.com/lis186/SourceAtlas2/releases)
+[![Version](https://img.shields.io/badge/version-v2.6.0-blue)](https://github.com/lis186/SourceAtlas2/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 ---
@@ -188,7 +188,7 @@ ls ~/.claude/commands/atlas.*.md
 
 - **[CLAUDE.md](./CLAUDE.md)** - AI 協作指南、專案架構、開發規範
 - **[開發歷史](./dev-notes/HISTORY.md)** - 完整的演進時間線
-- **[PRD](./PRD.md)** - 產品需求文檔（v2.5.3）
+- **[PRD](./PRD.md)** - 產品需求文檔（v2.6.0）
 
 ---
 
@@ -282,14 +282,15 @@ Claude Code + 2 分鐘安裝
 
 ## 🗺️ 開發狀態
 
-**v2.5 (當前)**：4/4 核心命令完成 ✅
+**v2.6.0 (當前)**：5/5 核心命令完成 ✅
 
 - ✅ `/atlas.init` - 專案初始化（自動觸發規則）
 - ✅ `/atlas.overview` - 專案概覽
 - ✅ `/atlas.pattern` - 設計模式學習
-- ✅ `/atlas.impact` - 影響分析
+- ✅ `/atlas.impact` - 影響分析（靜態分析）
+- ✅ `/atlas.history` - 時序分析（Git 歷史）⭐ NEW
 
-**v2.6 (規劃中)**：Python/Ruby/Go Analyzer、更多 patterns、技術債務量化
+**v2.7 (規劃中)**：Go/Rust/Ruby patterns、SourceAtlas Monitor、技術債務量化
 
 ---
 
@@ -302,6 +303,6 @@ Claude Code + 2 分鐘安裝
 ---
 
 **SourceAtlas** - Claude Code 的程式分析助手
-v2.5.4 | 最新更新: 2025-11-30 | MIT License
+v2.6.0 | 最新更新: 2025-11-30 | MIT License
 
 Made with ❤️ and 🤖
