@@ -110,6 +110,69 @@
 
 ---
 
+## 漸進式展開（資訊理論應用）
+
+### 問題：長篇大論 = 認知過載
+
+一次輸出 50 個步驟，用戶根本看不完。
+
+### 解決：適時停下來，讓用戶選擇
+
+```
+下單流程（主要路徑）
+====================
+
+1. CheckoutController.submit()     → 接收請求
+   📍 src/controllers/checkout.ts:120
+
+2. CartService.validate()          → 驗證購物車
+   📍 src/services/cart.ts:45
+
+3. DiscountEngine.apply()          → 計算折扣
+   📍 src/services/discount.ts:120
+   ├── VIPDiscount.calculate()     → VIP 折扣
+   ├── CouponService.apply()       → 優惠券  ← 🔍 可展開
+   └── PointsService.redeem()      → 點數折抵 ← 🔍 可展開
+
+4. InventoryService.reserve()      → 預扣庫存
+   📍 src/services/inventory.ts:156
+
+5. PaymentService.process()        → 處理付款 ← 🔍 可展開
+   📍 src/services/payment.ts:200
+
+6. OrderService.create()           → 建立訂單
+   📍 src/services/order.ts:45
+
+──────────────────────────────────
+📊 流程概覽：6 個主要步驟，3 個可展開的子流程
+
+💬 下一步：
+• 「展開 CouponService」    → 看優惠券邏輯
+• 「展開 PaymentService」   → 看付款流程
+• 「展開全部」              → 完整細節
+• 「這裡改了會影響什麼」    → 影響範圍分析
+──────────────────────────────────
+```
+
+### 停止點原則
+
+| 情況 | 行為 |
+|------|------|
+| 主路徑 >7 步驟 | 停下來，詢問是否繼續 |
+| 遇到複雜子流程 | 標記 🔍，讓用戶選擇展開 |
+| 遇到外部邊界 | 自動停止（API、DB、第三方） |
+| 遇到遞迴/循環 | 標記並停止，避免無限展開 |
+
+### 資訊理論依據
+
+> **7±2 法則**：人類工作記憶一次處理 5-9 個項目
+>
+> **漸進揭露**：先給概覽，需要時再深入
+>
+> **用戶控制**：讓用戶決定何時深入，而非 AI 決定
+
+---
+
 ## 目標用戶
 
 基於用戶研究，識別出四種主要角色：
