@@ -3,6 +3,13 @@
 # Version: 2.5.4
 # Patterns: 34 (16 Tier 1 + 18 Tier 2)
 # Last Updated: 2025-11-30
+#
+# MIXED LANGUAGE SUPPORT:
+# This file demonstrates sub-language support for Swift/Objective-C mixed projects.
+# Patterns can be:
+# - Shared (default): Works for both Swift and ObjC
+# - language_specific: swift - Only for Swift files
+# - language_specific: objc - Only for ObjC files
 
 language:
   name: ios
@@ -18,9 +25,17 @@ detection:
     - Cartfile
   priority: 100
 
+# Sub-language definitions for mixed-language support
+sub_languages:
+  - name: swift
+    extensions: [.swift]
+  - name: objc
+    extensions: [.m, .h]
+
+# Legacy format (still supported for backward compatibility)
 file_extensions:
   primary: [.swift]
-  secondary: [.m, .h]  # Objective-C support
+  secondary: [.m, .h]
 
 # =============================================================================
 # TIER 1: Core Patterns (16)
@@ -35,16 +50,18 @@ patterns:
     category: architecture
     aliases: [mvvm, vm]
     description: "MVVM ViewModel for UI state and business logic"
+    # Per-language file patterns (new recommended format)
     files:
-      - "*ViewModel.swift"
-      - "*VM.swift"
+      swift:
+        - "*ViewModel.swift"
+        - "*VM.swift"
+      objc:
+        - "*ViewModel.m"
+        - "*ViewModel.h"
     directories:
       - ViewModels
       - ViewModel
       - Presentation
-    objc_files:
-      - "*ViewModel.m"
-      - "*ViewModel.h"
 
   - name: coordinator
     tier: 1
@@ -303,8 +320,9 @@ patterns:
   - name: observable
     tier: 2
     category: reactive
+    language_specific: swift  # Swift-only pattern
     aliases: [observation, observable-object]
-    description: "SwiftUI Observable/ObservableObject"
+    description: "SwiftUI Observable/ObservableObject (Swift only)"
     files:
       - "*Store.swift"
       - "*State.swift"
@@ -508,3 +526,46 @@ patterns:
     directories:
       - DeepLink
       - Routing
+
+  # ==========================================================================
+  # OBJECTIVE-C ONLY PATTERNS
+  # These patterns only exist in Objective-C codebases
+  # ==========================================================================
+
+  - name: category
+    tier: 2
+    category: utility
+    language_specific: objc  # ObjC-only pattern
+    aliases: [objc-category, extension-objc]
+    description: "Objective-C Categories (ObjC only)"
+    files:
+      - "*+*.m"
+      - "*+*.h"
+    directories:
+      - Categories
+      - Extensions
+
+  - name: objc protocol
+    tier: 2
+    category: architecture
+    language_specific: objc  # ObjC-only pattern
+    aliases: [objc-delegate, objc-interface]
+    description: "Objective-C Protocols with @protocol (ObjC only)"
+    files:
+      - "*Protocol.h"
+      - "*Delegate.h"
+    content_patterns:
+      - "@protocol"
+      - "@optional"
+      - "@required"
+
+  - name: objc singleton
+    tier: 2
+    category: architecture
+    language_specific: objc  # ObjC-only pattern
+    aliases: [shared-instance]
+    description: "Objective-C Singleton with sharedInstance (ObjC only)"
+    content_patterns:
+      - "sharedInstance"
+      - "dispatch_once"
+      - "+ (instancetype)"

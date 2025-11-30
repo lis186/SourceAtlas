@@ -66,6 +66,37 @@ detection:
     range: [0, 100]
 
 # =============================================================================
+# SUB-LANGUAGES (for mixed-language platforms)
+# =============================================================================
+
+sub_languages:
+  type: array[object]
+  required: false
+  description: "Define sub-languages within a platform (e.g., Swift/ObjC in iOS)"
+  structure:
+    name:
+      type: string
+      required: true
+      description: "Sub-language identifier"
+      example: "swift"
+    extensions:
+      type: array[string]
+      required: true
+      description: "File extensions for this sub-language"
+      example: [".swift"]
+  examples:
+    ios:
+      - name: swift
+        extensions: [.swift]
+      - name: objc
+        extensions: [.m, .h]
+    android:
+      - name: kotlin
+        extensions: [.kt, .kts]
+      - name: java
+        extensions: [.java]
+
+# =============================================================================
 # FILE EXTENSIONS
 # =============================================================================
 
@@ -81,6 +112,7 @@ file_extensions:
     required: false
     description: "Additional file extensions (e.g., Objective-C for iOS)"
     example: [".m", ".h"]
+    note: "Deprecated in favor of sub_languages for mixed-language platforms"
 
 # =============================================================================
 # PATTERN DEFINITION
@@ -183,6 +215,24 @@ pattern:
       - zustand
       - "@reduxjs/toolkit"
 
+  # Sub-language specific
+  language_specific:
+    type: string
+    required: false
+    enum: [swift, objc, kotlin, java, null]
+    default: null
+    description: "Restrict pattern to specific sub-language (null = applies to all)"
+    example: "objc"
+
+  # File patterns can be per-language
+  files_per_language:
+    type: object
+    required: false
+    description: "Define different file patterns per sub-language"
+    example:
+      swift: ["*ViewModel.swift"]
+      objc: ["*ViewModel.m", "*ViewModel.h"]
+
   # Special flags
   test_only:
     type: boolean
@@ -193,7 +243,7 @@ pattern:
   objc_files:
     type: array[string]
     required: false
-    description: "Objective-C file patterns (iOS only)"
+    description: "Objective-C file patterns (iOS only) - DEPRECATED: use files_per_language"
     example:
       - "*ViewModel.m"
       - "*ViewModel.h"
