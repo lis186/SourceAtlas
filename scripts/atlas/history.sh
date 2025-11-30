@@ -241,11 +241,18 @@ run_hotspot_analysis() {
 
     echo "# HOTSPOTS - Files with most revisions"
     echo "# Format: entity,n-revs"
-    java -jar "$CODEMAAT_JAR" -l "$GIT_LOG_FILE" -c git2 -a revisions 2>/dev/null \
+
+    local result
+    result=$(java -jar "$CODEMAAT_JAR" -l "$GIT_LOG_FILE" -c git2 -a revisions 2>/dev/null \
         | tail -n +2 \
         | sort -t, -k2 -nr \
-        | head -20 \
-        || echo "# No data available"
+        | head -20) || true
+
+    if [ -n "$result" ]; then
+        echo "$result"
+    else
+        echo "# No hotspot data available"
+    fi
 
     echo ""
 }
@@ -256,12 +263,20 @@ run_coupling_analysis() {
 
     echo "# COUPLING - Files that change together"
     echo "# Format: entity,coupled,degree,average-revs"
-    java -jar "$CODEMAAT_JAR" -l "$GIT_LOG_FILE" -c git2 -a coupling 2>/dev/null \
+    echo "# Threshold: degree >= 30% (files change together at least 30% of the time)"
+
+    local result
+    result=$(java -jar "$CODEMAAT_JAR" -l "$GIT_LOG_FILE" -c git2 -a coupling 2>/dev/null \
         | tail -n +2 \
         | awk -F, 'NR>0 && $3 >= 0.3' \
         | sort -t, -k3 -nr \
-        | head -20 \
-        || echo "# No significant coupling found"
+        | head -20) || true
+
+    if [ -n "$result" ]; then
+        echo "$result"
+    else
+        echo "# No significant coupling found (no file pairs change together >= 30%)"
+    fi
 
     echo ""
 }
@@ -272,10 +287,17 @@ run_author_analysis() {
 
     echo "# CONTRIBUTORS - Recent activity by author"
     echo "# Format: entity,author,added,deleted"
-    java -jar "$CODEMAAT_JAR" -l "$GIT_LOG_FILE" -c git2 -a entity-ownership 2>/dev/null \
+
+    local result
+    result=$(java -jar "$CODEMAAT_JAR" -l "$GIT_LOG_FILE" -c git2 -a entity-ownership 2>/dev/null \
         | tail -n +2 \
-        | head -30 \
-        || echo "# No data available"
+        | head -30) || true
+
+    if [ -n "$result" ]; then
+        echo "$result"
+    else
+        echo "# No contributor data available"
+    fi
 
     echo ""
 }
@@ -285,8 +307,15 @@ run_summary_analysis() {
     print_section "Summary Statistics"
 
     echo "# SUMMARY - Overview statistics"
-    java -jar "$CODEMAAT_JAR" -l "$GIT_LOG_FILE" -c git2 -a summary 2>/dev/null \
-        || echo "# No summary available"
+
+    local result
+    result=$(java -jar "$CODEMAAT_JAR" -l "$GIT_LOG_FILE" -c git2 -a summary 2>/dev/null) || true
+
+    if [ -n "$result" ]; then
+        echo "$result"
+    else
+        echo "# No summary available"
+    fi
 
     echo ""
 }
@@ -296,17 +325,23 @@ run_knowledge_concentration() {
     print_section "Knowledge Concentration (Bus Factor Risk)"
 
     echo "# KNOWLEDGE CONCENTRATION - Files with single contributor"
-    echo "# These files have bus factor risk"
+    echo "# These files have bus factor risk (only one person has touched them)"
 
     # Get files with only one author
-    java -jar "$CODEMAAT_JAR" -l "$GIT_LOG_FILE" -c git2 -a entity-ownership 2>/dev/null \
+    local result
+    result=$(java -jar "$CODEMAAT_JAR" -l "$GIT_LOG_FILE" -c git2 -a entity-ownership 2>/dev/null \
         | tail -n +2 \
         | cut -d, -f1 \
         | sort \
         | uniq -c \
         | awk '$1 == 1 {print $2}' \
-        | head -10 \
-        || echo "# No single-contributor files found"
+        | head -10) || true
+
+    if [ -n "$result" ]; then
+        echo "$result"
+    else
+        echo "# Good news: No single-contributor files found (knowledge is distributed)"
+    fi
 
     echo ""
 }
