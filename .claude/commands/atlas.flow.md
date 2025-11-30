@@ -717,38 +717,312 @@ grep -rn "BuildConfig\.\|isDebug\|isBeta" src/  # Android
 
 ---
 
-### Mode 8: Log Level Analysis
+### Mode 8: Event/Message Tracing
 
-Analyze logging strategy across the flow:
+When user wants to trace event-driven or message queue flows:
 
 ```
-/atlas.flow "下單流程的 log 策略"
+/atlas.flow "ORDER_CREATED 事件觸發什麼"
+/atlas.flow "下單後會發什麼 event"
+/atlas.flow "誰在監聽這個 event"
+```
+
+**Strategy**:
+1. Search for event emission patterns
+2. Find all listeners/subscribers
+3. Trace the async flow
+
+**Search Patterns**:
+```bash
+# Event patterns
+grep -rn "emit\|dispatch\|publish\|trigger" src/
+grep -rn "@EventListener\|@Subscribe\|@On" src/
+grep -rn "addEventListener\|on\(" src/
+
+# Message Queue patterns
+grep -rn "sendMessage\|publishMessage\|enqueue" src/
+grep -rn "@MessageListener\|@RabbitListener\|@SqsListener" src/
+grep -rn "@KafkaListener\|consume\|subscribe" src/
 ```
 
 **Output Format**:
 ```
-下單流程 Log 策略分析
-====================
+ORDER_CREATED 事件追蹤
+======================
 
-| 步驟 | Log Level | 說明 |
-|------|-----------|------|
-| 1. validate | DEBUG | 細節資訊 ✓ |
-| 2. discount | INFO | 業務事件 ✓ |
-| 3. reserve | DEBUG | 細節資訊 ✓ |
-| 4. payment | INFO | 業務事件 ✓ |
-| 5. create | INFO | 業務事件 ✓ |
+📤 事件發送：
+OrderService.create()
+   📍 src/services/order.ts:210
+   → emit("ORDER_CREATED", { orderId, userId, items })
 
-錯誤處理 Log：
-| 錯誤類型 | Log Level | 位置 |
-|----------|-----------|------|
-| CartEmptyError | WARN | cart.ts:52 |
-| OutOfStockError | ERROR | inventory.ts:165 |
-| PaymentFailedError | ERROR | payment.ts:220 |
+📥 事件監聽者（4 個）：
 
-📌 建議改進：
-• PaymentFailedError 應該 log 更多 context（不含卡號）
-• 缺少 correlation ID，難以追蹤完整 request
+1. InventoryListener.onOrderCreated()
+   📍 src/listeners/inventory.ts:30
+   → 扣減實際庫存
+   ⏱️ async, 優先級: HIGH
+
+2. NotificationListener.onOrderCreated()
+   📍 src/listeners/notification.ts:45
+   → 發送確認信給用戶
+   ⏱️ async, 優先級: MEDIUM
+
+3. AnalyticsListener.onOrderCreated()
+   📍 src/listeners/analytics.ts:20
+   → 記錄訂單統計
+   ⏱️ async, 優先級: LOW
+
+4. LoyaltyListener.onOrderCreated()
+   📍 src/listeners/loyalty.ts:35
+   → 計算積分
+   ⏱️ async, 優先級: MEDIUM
+
+──────────────────────────────────
+📌 注意事項：
+• Listener 執行順序不保證
+• InventoryListener 失敗不會 rollback 訂單
+• 缺少 dead letter queue 處理
+
+💬 下一步可以：
+• 「展開 InventoryListener」 → 追蹤監聽者內部
+• 「如果 Listener 失敗會怎樣」 → 錯誤處理分析
+──────────────────────────────────
 ```
+
+**Trigger Keywords**: `event`, `事件`, `message`, `queue`, `listener`, `subscriber`, `publish`, `emit`
+
+---
+
+### Mode 9: Transaction Boundary Analysis
+
+When user wants to understand transaction scopes:
+
+```
+/atlas.flow "下單流程的 transaction"
+/atlas.flow "這個操作在哪個 transaction 裡"
+```
+
+**Search Patterns**:
+```bash
+# Transaction patterns
+grep -rn "@Transactional\|BEGIN\|COMMIT\|ROLLBACK" src/
+grep -rn "transaction\|withTransaction\|startTransaction" src/
+grep -rn "prisma\.\$transaction\|sequelize\.transaction" src/
+grep -rn "NSManagedObjectContext\|performAndWait" Sources/  # iOS Core Data
+```
+
+**Output Format**:
+```
+下單流程 Transaction 分析
+=========================
+
+┌─ Transaction 1 (@Transactional) ────────────┐
+│                                              │
+│ 1. CartService.validate()                    │
+│    📍 src/services/cart.ts:45                │
+│                                              │
+│ 2. InventoryService.reserve()                │
+│    📍 src/services/inventory.ts:156          │
+│    💾 UPDATE inventory SET reserved = ...    │
+│                                              │
+│ 3. OrderService.create()                     │
+│    📍 src/services/order.ts:200              │
+│    💾 INSERT INTO orders ...                 │
+│                                              │
+└──────────────────────────────────────────────┘
+   📍 Transaction 開始：checkout.ts:120
+   📍 Transaction 結束：checkout.ts:180
+   🔒 Isolation: READ_COMMITTED
+
+[無 Transaction - 外部呼叫]
+4. PaymentService.process()
+   📍 src/services/payment.ts:200
+   🌐 外部 API 呼叫
+   ⚠️ 無法 rollback
+
+┌─ Transaction 2 ─────────────────────────────┐
+│                                              │
+│ 5. OrderService.confirm()                    │
+│    📍 src/services/order.ts:250              │
+│    💾 UPDATE orders SET status = 'PAID'      │
+│                                              │
+│ 6. InventoryService.deduct()                 │
+│    📍 src/services/inventory.ts:200          │
+│    💾 UPDATE inventory SET quantity = ...    │
+│                                              │
+└──────────────────────────────────────────────┘
+
+──────────────────────────────────
+⚠️ 風險分析：
+
+📌 Gap 風險：Transaction 1 和 2 之間
+   • Step 4 (付款) 失敗時，Transaction 1 已 commit
+   • 庫存已預扣但訂單未完成 → 需要補償機制
+
+📌 建議：
+   • 實作 Saga pattern 處理跨 transaction 一致性
+   • 加入 compensation 邏輯
+──────────────────────────────────
+```
+
+**Trigger Keywords**: `transaction`, `交易`, `rollback`, `commit`, `atomicity`, `一致性`
+
+---
+
+### Mode 10: Permission/Role Flow Analysis
+
+When user wants to understand flow variations by role:
+
+```
+/atlas.flow "刪除訂單，按角色"
+/atlas.flow "不同權限的操作差異"
+```
+
+**Search Patterns**:
+```bash
+# Permission patterns
+grep -rn "@Authorize\|@RequireRole\|@HasPermission" src/
+grep -rn "checkPermission\|hasRole\|canAccess" src/
+grep -rn "@PreAuthorize\|@Secured\|@RolesAllowed" src/
+grep -rn "guard\|middleware.*auth\|policy" src/
+```
+
+**Output Format**:
+```
+刪除訂單流程（按角色）
+=====================
+
+[ADMIN] ───────────────────────────────────────
+1. OrderController.delete()
+   📍 src/controllers/order.ts:150
+   🔐 @RequireRole("ADMIN")
+
+2. OrderService.hardDelete()
+   📍 src/services/order.ts:300
+   → 直接刪除，不可恢復
+   → 自動退款處理
+   → 發送通知給用戶
+
+[SELLER] ──────────────────────────────────────
+1. OrderController.cancel()
+   📍 src/controllers/order.ts:180
+   🔐 @RequireRole("SELLER")
+   🔐 @CheckOwnership("order.sellerId")
+
+2. 檢查訂單狀態
+   ⚠️ 只能取消 PENDING, CONFIRMED 狀態
+
+3. OrderService.sellerCancel()
+   📍 src/services/order.ts:350
+   → 需要填寫取消原因
+   → 軟刪除（可恢復）
+
+[BUYER] ───────────────────────────────────────
+1. OrderController.requestCancel()
+   📍 src/controllers/order.ts:200
+   🔐 @RequireRole("BUYER")
+   🔐 @CheckOwnership("order.buyerId")
+
+2. 檢查訂單狀態
+   ⚠️ 只能申請取消 PENDING 狀態
+   ⚠️ 已發貨不能取消
+
+3. CancelRequestService.create()
+   📍 src/services/cancel-request.ts:45
+   → 建立取消申請
+   → 等待賣家同意
+
+──────────────────────────────────
+📊 權限矩陣：
+
+| 操作 | ADMIN | SELLER | BUYER |
+|------|-------|--------|-------|
+| 硬刪除 | ✅ | ❌ | ❌ |
+| 直接取消 | ✅ | ✅ | ❌ |
+| 申請取消 | ✅ | ✅ | ✅ |
+| 查看歷史 | ✅ | ✅ | ✅ |
+
+📌 權限檢查點：
+• src/guards/role.guard.ts:20
+• src/guards/ownership.guard.ts:35
+──────────────────────────────────
+```
+
+**Trigger Keywords**: `角色`, `權限`, `role`, `permission`, `RBAC`, `授權`, `access control`
+
+---
+
+### Mode 11: Cache Flow Analysis
+
+When user wants to understand caching impact:
+
+```
+/atlas.flow "獲取商品，包含 cache"
+/atlas.flow "這個流程有用 cache 嗎"
+```
+
+**Search Patterns**:
+```bash
+# Cache patterns
+grep -rn "@Cacheable\|@CacheEvict\|@CachePut" src/
+grep -rn "cache\.get\|cache\.set\|redis\." src/
+grep -rn "memoize\|useMemo\|useCallback" src/
+grep -rn "NSCache\|URLCache" Sources/  # iOS
+```
+
+**Output Format**:
+```
+獲取商品價格（Cache 分析）
+=========================
+
+1. ProductController.getPrice()
+   📍 src/controllers/product.ts:45
+
+2. 檢查 Cache
+   📍 src/services/cache.ts:30
+   💾 Key: "product:${id}:price"
+   💾 Store: Redis
+   💾 TTL: 5 分鐘
+
+   ┌─ [CACHE HIT] ────────────────┐
+   │ → 直接返回 cached 價格       │
+   │ ⏱️ ~5ms                      │
+   └──────────────────────────────┘
+
+   ┌─ [CACHE MISS] ───────────────┐
+   │                              │
+   │ 3. ProductRepository.find()  │
+   │    📍 src/repos/product.ts:80│
+   │    💾 SELECT * FROM products │
+   │    ⏱️ ~50-100ms              │
+   │                              │
+   │ 4. CacheService.set()        │
+   │    📍 src/services/cache.ts:45│
+   │                              │
+   └──────────────────────────────┘
+
+──────────────────────────────────
+⚠️ Cache 一致性分析：
+
+📌 Invalidation 檢查：
+   ✅ ProductService.updatePrice()
+      → 有 @CacheEvict("product:${id}:price")
+
+   ❌ ProductService.bulkUpdate()
+      → 沒有清 cache！
+      📍 src/services/product.ts:180
+
+   ❌ 直接 SQL UPDATE
+      → 繞過 ORM，cache 不會更新
+
+📌 建議：
+   • 加入 cache invalidation 到 bulkUpdate()
+   • 考慮使用 cache-aside pattern
+   • 降低 TTL 或改用 write-through
+──────────────────────────────────
+```
+
+**Trigger Keywords**: `cache`, `快取`, `redis`, `memoize`, `TTL`, `invalidate`
 
 ---
 
@@ -789,6 +1063,7 @@ For each step, optionally include timing information:
 Automatically detect mode from user input:
 
 ```
+# 核心追蹤
 if 用戶問「被誰調用」「who calls」「反向」:
     → Reverse Tracing Mode
 
@@ -798,17 +1073,31 @@ if 用戶問「失敗」「錯誤」「error path」:
 if 用戶問「怎麼計算」「資料流」「追蹤變數」:
     → Data Flow Mode
 
+# 流程變異
 if 用戶問「狀態機」「狀態變化」「lifecycle」:
     → State Machine Mode
 
 if 用戶問「比較」「vs」「差異」:
     → Comparison Mode
 
-if 用戶問「log」「logging」「從 log」:
-    → Log-Based Discovery Mode
-
 if 用戶問「feature toggle」「flag」「開關」「rollout」「A/B」:
     → Feature Toggle Analysis Mode
+
+if 用戶問「角色」「權限」「role」「permission」「RBAC」:
+    → Permission/Role Flow Mode
+
+# 系統層面
+if 用戶問「log」「logging」「從 log」:
+    → Log Analysis Mode
+
+if 用戶問「event」「事件」「message」「queue」「listener」:
+    → Event/Message Tracing Mode
+
+if 用戶問「transaction」「交易」「rollback」「commit」:
+    → Transaction Boundary Mode
+
+if 用戶問「cache」「快取」「redis」「TTL」:
+    → Cache Flow Analysis Mode
 
 else:
     → Default Forward Tracing Mode
@@ -824,10 +1113,20 @@ After `/atlas.flow`, users can:
 - Use `/atlas.history` to see why certain parts change often
 - Use `/atlas.pattern` to learn implementation patterns
 - Switch modes:
-  - "反向追蹤" / "被誰調用" → Reverse Tracing
-  - "失敗路徑" / "錯誤處理" → Error Path
-  - "資料流" / "怎麼計算" → Data Flow
-  - "狀態機" / "lifecycle" → State Machine
-  - "比較" / "vs" → Flow Comparison
-  - "從 log" / "log 追蹤" → Log-Based Discovery
-  - "feature toggle" / "開關" → Feature Toggle Analysis
+
+**核心追蹤**:
+- "反向追蹤" / "被誰調用" → Reverse Tracing
+- "失敗路徑" / "錯誤處理" → Error Path
+- "資料流" / "怎麼計算" → Data Flow
+
+**流程變異**:
+- "狀態機" / "lifecycle" → State Machine
+- "比較" / "vs" → Flow Comparison
+- "feature toggle" / "開關" → Feature Toggle
+- "角色" / "權限" → Permission/Role Flow
+
+**系統層面**:
+- "從 log" / "log 追蹤" → Log Analysis
+- "event" / "事件" → Event/Message Tracing
+- "transaction" / "交易" → Transaction Boundary
+- "cache" / "快取" → Cache Flow Analysis
