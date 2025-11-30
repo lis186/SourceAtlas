@@ -8,12 +8,12 @@
 
 ## 執行摘要
 
-本次實作完成了 Swift/Objective-C Deep Analyzer 的完整開發、測試和整合，成功將 `/atlas-impact` 命令的語言深度分析覆蓋率從 **70% 提升到 90%+**。
+本次實作完成了 Swift/Objective-C Deep Analyzer 的完整開發、測試和整合，成功將 `/atlas.impact` 命令的語言深度分析覆蓋率從 **70% 提升到 90%+**。
 
 **核心成果**:
 - ✅ 7 個分析 sections 全部實作並驗證
 - ✅ 修復 SIGPIPE 穩定性問題
-- ✅ 整合到 `/atlas-impact` 命令
+- ✅ 整合到 `/atlas.impact` 命令
 - ✅ 8 個 subagent 多使用者測試完成
 - ✅ 執行時間: 86-101 秒 (255K LOC 專案)
 - ✅ 輸出: 302 行, 13KB
@@ -28,7 +28,7 @@
 
 ### 背景與動機
 
-從 8 個 subagent 測試中發現 `/atlas-impact` 的關鍵改進點：
+從 8 個 subagent 測試中發現 `/atlas.impact` 的關鍵改進點：
 - 平均評分: **4.2/5**
 - ✅ 依賴追蹤: 95%+ 準確率
 - ⚠️ **語言深度分析: 僅 70% 覆蓋率** ← 需要改進
@@ -465,7 +465,7 @@ fi
 
 ---
 
-## Phase 3: /atlas-impact 命令整合
+## Phase 3: /atlas.impact 命令整合
 
 ### 整合設計
 
@@ -546,14 +546,14 @@ fi
 - Largest imports: [N] headers
 - Circular dependencies: [None|Detected]
 
-💡 **Full Swift Analysis**: Run `/atlas-impact [target].m` to see complete 7-section analysis
+💡 **Full Swift Analysis**: Run `/atlas.impact [target].m` to see complete 7-section analysis
 ```
 
 ---
 
 ### 整合樣本輸出
 
-**命令**: `/atlas-impact [UIComponent].m`
+**命令**: `/atlas.impact [UIComponent].m`
 
 **完整輸出範例**:
 
@@ -751,7 +751,7 @@ Test 3: Generate sample... ✓
    - 輸出優化
 
 ### 命令整合
-2. `.claude/commands/atlas-impact.md` (更新)
+2. `.claude/commands/atlas.impact.md` (更新)
    - Step 2: iOS 檢測
    - Step 5: 語言深度分析
    - Section 7: 輸出格式
@@ -859,14 +859,14 @@ Test 3: Generate sample... ✓
 
 - ✅ 8 個 subagent 系統化測試完成
 - ✅ Swift Analyzer 完整實作並驗證
-- ✅ /atlas-impact 命令整合完成
+- ✅ /atlas.impact 命令整合完成
 - ✅ 整合效果測試通過
 - ✅ 所有文檔產出完整
 
 ### 狀態: PRODUCTION READY
 
 **可立即使用**:
-- `/atlas-impact` 在 iOS 專案中自動觸發 Swift analyzer
+- `/atlas.impact` 在 iOS 專案中自動觸發 Swift analyzer
 - 7 個分析 sections 全部穩定運作
 - 輸出格式優秀，可操作性強
 
@@ -893,7 +893,7 @@ Test 3: Generate sample... ✓
 - `test_targets/swift-analyzer-output.txt`
 
 多使用者測試原始報告：
-- `test_targets/atlas-impact-multi-user-testing-report.md`
+- `test_targets/atlas.impact-multi-user-testing-report.md`
 
 ---
 

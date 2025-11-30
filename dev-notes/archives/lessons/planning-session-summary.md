@@ -31,7 +31,7 @@
 - 理解深度：70-80%（Stage 0）、85-95%（Stage 1）
 
 **基礎設施**:
-- ✅ 1 個命令：`/atlas-overview`（Stage 0 指紋）
+- ✅ 1 個命令：`/atlas.overview`（Stage 0 指紋）
 - ✅ 4 個腳本：`detect-project-enhanced.sh`、`scan-entropy.sh`、`benchmark.sh`、`compare-formats.sh`
 - ✅ 規模感知算法（TINY → VERY_LARGE）
 - ✅ 格式決策：**選擇 YAML**（相較於 TOON，14% tokens vs 生態系統）
@@ -46,14 +46,14 @@
 ### 我們缺少的（PRD 期望）
 
 **命令**（1/5 完成）:
-- ❌ `/atlas-pattern` ⭐⭐⭐⭐⭐（最高優先級 - 學習設計模式）
-- ❌ `/atlas-impact` ⭐⭐⭐⭐（影響分析）
+- ❌ `/atlas.pattern` ⭐⭐⭐⭐⭐（最高優先級 - 學習設計模式）
+- ❌ `/atlas.impact` ⭐⭐⭐⭐（影響分析）
 - ❌ `/atlas` ⭐⭐⭐（完整 3 階段分析）
-- ❌ `/atlas-find` ⭐⭐（智慧搜尋）
-- ❌ `/atlas-explain` ⭐（深度解釋）
+- ❌ `/atlas.find` ⭐⭐（智慧搜尋）
+- ❌ `/atlas.explain` ⭐（深度解釋）
 
 **腳本**（4/7 完成）:
-- ❌ `find-patterns.sh`（P0 - 支援 `/atlas-pattern`）
+- ❌ `find-patterns.sh`（P0 - 支援 `/atlas.pattern`）
 - ❌ `collect-git.sh`（P1 - Stage 2 分析）
 - ❌ `analyze-dependencies.sh`（P1 - 影響分析）
 
@@ -76,8 +76,8 @@
 - 未來增強路線圖
 
 **關鍵章節**:
-- Phase 1: `/atlas-pattern` + `/atlas`（第 1 週）
-- Phase 2: `/atlas-impact`（第 2 週，第 1-4 天）
+- Phase 1: `/atlas.pattern` + `/atlas`（第 1 週）
+- Phase 2: `/atlas.impact`（第 2 週，第 1-4 天）
 - Phase 3: 快速工具（第 2 週，第 5-7 天）
 - Phase 4: 測試與打磨（第 3-4 週）
 
@@ -97,7 +97,7 @@
 **快速開始**:
 ```bash
 cd /Users/justinlee/dev/sourceatlas2
-touch .claude/commands/atlas-pattern.md
+touch .claude/commands/atlas.pattern.md
 touch scripts/atlas/find-patterns.sh
 # 然後根據路線圖中的規格實作
 ```
@@ -130,7 +130,7 @@ touch scripts/atlas/find-patterns.sh
 ### Phase 1（第 1 週）- 最高優先級
 
 **交付成果**:
-1. `/atlas-pattern` ⭐⭐⭐⭐⭐
+1. `/atlas.pattern` ⭐⭐⭐⭐⭐
    - 為什麼：PRD #1 優先級，預期每日使用
    - 腳本：`find-patterns.sh`
    - 測試於：3+ 種 pattern 類型
@@ -141,7 +141,7 @@ touch scripts/atlas/find-patterns.sh
    - 遷移：TOON → YAML 輸出
 
 **成功標準**:
-- [ ] `/atlas-pattern "api endpoint"` 返回可執行的指導
+- [ ] `/atlas.pattern "api endpoint"` 返回可執行的指導
 - [ ] 適用於 3+ 種不同 pattern 類型
 - [ ] <10 分鐘內完成
 - [ ] `/atlas` 完成全部 3 個階段
@@ -150,7 +150,7 @@ touch scripts/atlas/find-patterns.sh
 ### 快速通道選項
 
 如果時間有限：
-- 第 1 週：僅 `/atlas-pattern`（P0）
+- 第 1 週：僅 `/atlas.pattern`（P0）
 - 第 2 週：僅 `/atlas`（P1）
 - 之後：影響分析 + 快速工具
 
@@ -164,7 +164,7 @@ touch scripts/atlas/find-patterns.sh
 | **Commands vs Skills** | Commands ✅ | 使用者期望明確控制 |
 | **Pattern 庫範圍** | 最小啟動器 | 從實際使用中學習（5-10 個 patterns）|
 | **追蹤方法** | 手動（路線圖文檔）| SpecStory 增加複雜度 |
-| **優先級 #1** | `/atlas-pattern` | PRD 場景 #1，最高價值 |
+| **優先級 #1** | `/atlas.pattern` | PRD 場景 #1，最高價值 |
 
 ---
 
@@ -225,7 +225,7 @@ touch scripts/atlas/find-patterns.sh
 ## 📈 成功指標
 
 ### Phase 1 完成時：
-- [ ] `/atlas-pattern` 適用於 3+ 種 pattern 類型
+- [ ] `/atlas.pattern` 適用於 3+ 種 pattern 類型
 - [ ] <10 分鐘內返回結果
 - [ ] 提供可執行的實作指導
 - [ ] `/atlas` 完成全部 3 個階段
@@ -252,7 +252,7 @@ touch scripts/atlas/find-patterns.sh
 cd /Users/justinlee/dev/sourceatlas2
 
 # 2. 創建 Phase 1 檔案
-touch .claude/commands/atlas-pattern.md
+touch .claude/commands/atlas.pattern.md
 touch scripts/atlas/find-patterns.sh
 chmod +x scripts/atlas/find-patterns.sh
 
@@ -261,7 +261,7 @@ chmod +x scripts/atlas/find-patterns.sh
 
 # 4. 在樣本專案上測試
 cd /Users/justinlee/dev/cursor-talk-to-figma-mcp
-# 使用: /atlas-pattern "websocket integration"
+# 使用: /atlas.pattern "websocket integration"
 
 # 5. 記錄結果
 cd /Users/justinlee/dev/sourceatlas2
@@ -269,7 +269,7 @@ cd /Users/justinlee/dev/sourceatlas2
 ```
 
 **本週**（第 1 週）:
-- [ ] 完成 `/atlas-pattern`（第 1-2 天）
+- [ ] 完成 `/atlas.pattern`（第 1-2 天）
 - [ ] 完成 `/atlas`（第 3-5 天）
 - [ ] 文檔與審查（第 6-7 天）
 
@@ -292,7 +292,7 @@ cd /Users/justinlee/dev/sourceatlas2
 - [CLAUDE.md](CLAUDE.md) - **已更新** v1.0 學習
 
 ### 現有實作
-- `.claude/commands/atlas-overview.md` - 運作中的 Stage 0 命令
+- `.claude/commands/atlas.overview.md` - 運作中的 Stage 0 命令
 - `scripts/atlas/detect-project-enhanced.sh` - 規模感知檢測
 - `scripts/atlas/scan-entropy.sh` - 高熵檔案掃描器
 
@@ -316,7 +316,7 @@ cd /Users/justinlee/dev/sourceatlas2
 ## 🔄 審查與調整
 
 ### Phase 1 之後（第 1 週）
-- `/atlas-pattern` 在實際中有用嗎？
+- `/atlas.pattern` 在實際中有用嗎？
 - 開發者每天使用它嗎？
 - 最常請求哪些 patterns？
 - 基於回饋調整 Phase 2
