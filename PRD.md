@@ -78,7 +78,7 @@ v3.0 (未來) - SourceAtlas Monitor
 
 | 優勢 | 說明 |
 |------|------|
-| **原生整合** | 在 Claude Code 中直接使用 `/atlas-*` 命令 |
+| **原生整合** | 在 Claude Code 中直接使用 `/atlas.*` 命令 |
 | **即時分析** | 按需探索，不需預先索引 |
 | **零學習成本** | 自然語言互動 |
 | **快速開發** | 1-2 週完成核心功能 |
@@ -111,7 +111,7 @@ PM 期望她明天就能開始參與開發
 
 **使用 SourceAtlas**：
 ```
-Alice: /atlas-overview
+Alice: /atlas.overview
 
 AI 分析後回應（10-15 分鐘）：
 
@@ -147,8 +147,8 @@ AI 分析後回應（10-15 分鐘）：
 **時間節省**：從 2-3 天 → 10-15 分鐘獲得 70-80% 理解
 
 **後續行動**：
-- 需要學習特定模式時 → `/atlas-pattern`
-- 需要修改程式碼時 → `/atlas-impact` 評估影響
+- 需要學習特定模式時 → `/atlas.pattern`
+- 需要修改程式碼時 → `/atlas.impact` 評估影響
 
 ---
 
@@ -169,7 +169,7 @@ AI 分析後回應（10-15 分鐘）：
 
 **使用 SourceAtlas**：
 ```
-Alice: /atlas-impact "order list authorization"
+Alice: /atlas.impact "order list authorization"
 
 AI 回應：
 訂單列表的授權鏈路：
@@ -202,7 +202,7 @@ PM: "我們要加新功能：用戶可以匯出發票 PDF"
 
 **使用 SourceAtlas**：
 ```
-Bob: /atlas-pattern "file generation"
+Bob: /atlas.pattern "file generation"
 
 AI 回應：
 此專案的檔案生成模式（範例：訂單 PDF）：
@@ -244,7 +244,7 @@ AI 回應：
 
 **使用 SourceAtlas**：
 ```
-Developer: /atlas-impact "User model validation"
+Developer: /atlas.impact "User model validation"
 
 AI 回應：
 User model 驗證變更的影響範圍：
@@ -286,7 +286,7 @@ User model 驗證變更的影響範圍：
 
 **使用 SourceAtlas**：
 ```
-Developer: /atlas-impact api "/api/users/{id}"
+Developer: /atlas.impact api "/api/users/{id}"
 
 AI 回應：
 === API Impact Analysis ===
@@ -368,7 +368,7 @@ Reviewer 不熟悉支付模組，需要快速理解上下文
 
 **使用 SourceAtlas**：
 ```
-Reviewer: /atlas-review PR#123
+Reviewer: /atlas.review PR#123
 
 AI 回應：
 此 PR 在支付模組新增退款服務
@@ -407,7 +407,7 @@ Tech Lead 需要向 CTO 報告：
 
 **使用 SourceAtlas**：
 ```
-Tech Lead: /atlas-health
+Tech Lead: /atlas.health
 
 AI 回應：
 專案健康度報告
@@ -442,14 +442,14 @@ AI 回應：
 | 場景類型 | 需求特點 | 適用產品 | 使用命令 |
 |---------|---------|---------|----------|
 | **即時探索** | 不需歷史資料、即時推理 | ✅ SourceAtlas Commands (v2.5) | |
-| 場景 0: 快速理解新專案 ⭐ | 10-15 分鐘獲得全局視角 | ✅ Commands | `/atlas-overview` ⭐⭐⭐⭐⭐ |
-| 場景 1: Bug 修復 | 快速定位問題 | ✅ Commands | `/atlas-impact` |
-| 場景 2: 學習模式 | 識別設計模式 | ✅ Commands | `/atlas-pattern` ⭐⭐⭐⭐⭐ |
-| 場景 3B: API 影響分析 ⭐ | 追蹤 API 調用鏈 | ✅ Commands | `/atlas-impact` ⭐⭐⭐⭐ |
-| 場景 4: Code Review | 理解變更意圖 | ✅ Commands | `/atlas-overview` + `/atlas-pattern` |
+| 場景 0: 快速理解新專案 ⭐ | 10-15 分鐘獲得全局視角 | ✅ Commands | `/atlas.overview` ⭐⭐⭐⭐⭐ |
+| 場景 1: Bug 修復 | 快速定位問題 | ✅ Commands | `/atlas.impact` |
+| 場景 2: 學習模式 | 識別設計模式 | ✅ Commands | `/atlas.pattern` ⭐⭐⭐⭐⭐ |
+| 場景 3B: API 影響分析 ⭐ | 追蹤 API 調用鏈 | ✅ Commands | `/atlas.impact` ⭐⭐⭐⭐ |
+| 場景 4: Code Review | 理解變更意圖 | ✅ Commands | `/atlas.overview` + `/atlas.pattern` |
 | **持續追蹤** | 需要歷史資料、趨勢分析 | 🔮 SourceAtlas Monitor (v3.0) | |
 | 場景 3A: Model 變更影響 | Git 歷史、關聯分析 | 🔮 Monitor | (未來功能) |
-| 場景 5: 技術債務 | 持續追蹤、量化指標 | 🔮 Monitor | `/atlas-health` (未來) |
+| 場景 5: 技術債務 | 持續追蹤、量化指標 | 🔮 Monitor | `/atlas.health` (未來) |
 
 ---
 
@@ -462,9 +462,9 @@ AI 回應：
 │           Claude Code Environment           │
 ├─────────────────────────────────────────────┤
 │  SourceAtlas Commands (Slash Commands)     │
-│  ├─ /atlas-overview      - Project Fingerprint ⭐⭐⭐⭐⭐
-│  ├─ /atlas-pattern       - Learn Patterns ⭐⭐⭐⭐⭐
-│  └─ /atlas-impact        - Impact Analysis ⭐⭐⭐⭐
+│  ├─ /atlas.overview      - Project Fingerprint ⭐⭐⭐⭐⭐
+│  ├─ /atlas.pattern       - Learn Patterns ⭐⭐⭐⭐⭐
+│  └─ /atlas.impact        - Impact Analysis ⭐⭐⭐⭐
 ├─────────────────────────────────────────────┤
 │  Helper Scripts (Bash)                      │
 │  ├─ detect-project.sh                      │
@@ -490,9 +490,9 @@ AI 回應：
 ```
 sourceatlas2/
 ├── .claude/commands/                    # Claude Code Commands
-│   ├── atlas-overview.md                # ✅ /atlas-overview（已完成）
-│   ├── atlas-pattern.md                 # ✅ /atlas-pattern（已完成）⭐
-│   └── atlas-impact.md                  # ✅ /atlas-impact（已完成）
+│   ├── atlas.overview.md                # ✅ /atlas.overview（已完成）
+│   ├── atlas.pattern.md                 # ✅ /atlas.pattern（已完成）⭐
+│   └── atlas.impact.md                  # ✅ /atlas.impact（已完成）
 │
 ├── dev-notes/                           # ⭐ v1.0 開發記錄（重要！）
 │   ├── HISTORY.md                       # ✅ 完整歷史與決策記錄
@@ -564,7 +564,7 @@ sourceatlas2/
 
 #### Pattern（模式識別）⭐⭐⭐⭐⭐
 ```
-/atlas-pattern "api endpoint"
+/atlas.pattern "api endpoint"
 
 AI 識別：
 1. 找到最佳範例檔案
@@ -575,7 +575,7 @@ AI 識別：
 
 #### Impact（影響分析）⭐⭐⭐⭐
 ```
-/atlas-impact api "/api/users/{id}"
+/atlas.impact api "/api/users/{id}"
 
 AI 分析：
 1. 追蹤調用鏈路
@@ -669,22 +669,22 @@ hypotheses:
 
 ```bash
 # 優先級 ⭐⭐⭐⭐⭐ - 最常用功能
-/atlas-overview                    # 專案概覽（Stage 0 指紋）
-/atlas-overview src/api            # 分析特定目錄
-/atlas-pattern "api endpoint"      # 學習專案如何實作 API 端點
-/atlas-pattern "background job"    # 學習背景任務模式
-/atlas-pattern "file upload"       # 學習檔案上傳流程
+/atlas.overview                    # 專案概覽（Stage 0 指紋）
+/atlas.overview src/api            # 分析特定目錄
+/atlas.pattern "api endpoint"      # 學習專案如何實作 API 端點
+/atlas.pattern "background job"    # 學習背景任務模式
+/atlas.pattern "file upload"       # 學習檔案上傳流程
 
 # 優先級 ⭐⭐⭐⭐ - 影響範圍分析
-/atlas-impact "User authentication"   # 功能改動影響
-/atlas-impact api "/api/users/{id}"   # API 改動影響
+/atlas.impact "User authentication"   # 功能改動影響
+/atlas.impact api "/api/users/{id}"   # API 改動影響
 
 # 優先級 ⭐⭐⭐ - 專案設定
-/atlas-init                           # 注入 SourceAtlas 觸發規則到 CLAUDE.md
+/atlas.init                           # 注入 SourceAtlas 觸發規則到 CLAUDE.md
 
 # 未來功能（v3.0）
-/atlas-health             # 專案健康度分析
-/atlas-review PR#123      # PR 變更分析
+/atlas.health             # 專案健康度分析
+/atlas.review PR#123      # PR 變更分析
 ```
 
 **完整三階段分析**（罕見場景）：
@@ -703,10 +703,10 @@ hypotheses:
 
 ### 6.2 Command 定義結構
 
-#### 範例 1: `/atlas-overview` (專案概覽)
+#### 範例 1: `/atlas.overview` (專案概覽)
 
 ```markdown
-# .claude/commands/atlas-overview.md
+# .claude/commands/atlas.overview.md
 
 ---
 description: Get project overview - scan <5% of files to achieve 70-80% understanding
@@ -746,10 +746,10 @@ Understanding Target: 70-80%
 STOP after Stage 0 - do not proceed to validation or git analysis.
 ```
 
-#### 範例 2: `/atlas-pattern` (學習設計模式)
+#### 範例 2: `/atlas.pattern` (學習設計模式)
 
 ```markdown
-# .claude/commands/atlas-pattern.md
+# .claude/commands/atlas.pattern.md
 
 ---
 description: Learn design patterns from the current codebase
@@ -785,10 +785,10 @@ Output Format:
 Remember: Scan <5% of files, focus on patterns not exhaustive details.
 ```
 
-#### 範例 3: `/atlas-init` (專案設定) ⭐ NEW
+#### 範例 3: `/atlas.init` (專案設定) ⭐ NEW
 
 ```markdown
-# .claude/commands/atlas-init.md
+# .claude/commands/atlas.init.md
 
 ---
 description: Initialize SourceAtlas in current project - inject auto-trigger rules into CLAUDE.md
@@ -818,10 +818,10 @@ When encountering these situations, automatically execute the corresponding comm
 
 | User Intent | Command |
 |-------------|---------|
-| "What is this project", "Help me understand codebase" | `/atlas-overview` |
-| "How to implement X pattern", "Learn the approach" | `/atlas-pattern [pattern]` |
-| "What will this change affect" | `/atlas-impact [target]` |
-| Just entered project + unfamiliar | `/atlas-overview` |
+| "What is this project", "Help me understand codebase" | `/atlas.overview` |
+| "How to implement X pattern", "Learn the approach" | `/atlas.pattern [pattern]` |
+| "What will this change affect" | `/atlas.impact [target]` |
+| Just entered project + unfamiliar | `/atlas.overview` |
 
 ## Design Rationale
 
@@ -859,7 +859,7 @@ detect_project_type() {
 
 ### 7.2 核心 Scripts
 
-#### scripts/atlas-stage0.sh
+#### scripts/atlas.stage0.sh
 
 ```bash
 #!/bin/bash
@@ -912,7 +912,7 @@ show_structure() {
 main
 ```
 
-#### scripts/atlas-find.sh
+#### scripts/atlas.find.sh
 
 ```bash
 #!/bin/bash
@@ -1062,20 +1062,20 @@ templates:
 
 #### Phase 1: 核心 Commands 框架 (Week 1)
 - [x] 創建 `.claude/commands/` 目錄結構 ✅
-- [x] 實作 `/atlas-overview` - 專案指紋 ⭐⭐⭐⭐⭐ ✅ (2025-11-20)
-- [x] 實作 `/atlas-pattern` - 學習模式 ⭐⭐⭐⭐⭐ ✅ (2025-11-22)
+- [x] 實作 `/atlas.overview` - 專案指紋 ⭐⭐⭐⭐⭐ ✅ (2025-11-20)
+- [x] 實作 `/atlas.pattern` - 學習模式 ⭐⭐⭐⭐⭐ ✅ (2025-11-22)
 - [x] 實作 `find-patterns.sh` 腳本 ✅ (2025-11-22)
 - [x] YAML 格式輸出 ✅ (v1.0 決策)
 
 #### Phase 2: 影響分析功能
-- [x] 實作 `/atlas-impact` - 靜態影響分析 ⭐⭐⭐⭐ ✅ (2025-11-25)
+- [x] 實作 `/atlas.impact` - 靜態影響分析 ⭐⭐⭐⭐ ✅ (2025-11-25)
   - API 變更影響（場景 3B）
   - 前後端調用鏈分析
   - 測試影響評估
   - Swift/ObjC 語言深度分析（自動觸發）
 
 #### Phase 3: 完善與發布 (當前)
-- [x] 實作 `/atlas-init` - 專案設定 ⭐⭐⭐ ✅ (2025-11-30)
+- [x] 實作 `/atlas.init` - 專案設定 ⭐⭐⭐ ✅ (2025-11-30)
   - 注入 SourceAtlas 觸發規則到 CLAUDE.md
   - 讓 Claude Code 自動建議使用 Atlas commands
 - [ ] 擴展多語言支援（Kotlin, Go, Rust 等）
@@ -1084,7 +1084,7 @@ templates:
 - [ ] 使用者回饋收集
 - [ ] 發布 v2.5.0
 
-**決策**: `/atlas-find` 已取消（功能由現有 3 個 commands 涵蓋）
+**決策**: `/atlas.find` 已取消（功能由現有 3 個 commands 涵蓋）
 
 ---
 
@@ -1121,12 +1121,12 @@ templates:
 - [x] Stage 0 能在 15 分鐘內完成分析 ✅
 - [x] Stage 1 驗證率 >80% ✅
 - [x] Stage 2 識別 AI 協作模式 ✅
-- [x] `/atlas-overview` 能快速生成專案指紋 ✅ (2025-11-20)
-- [x] `/atlas-pattern` 能識別設計模式 ✅ (2025-11-22, 95%+ 準確率)
-- [x] `/atlas-impact` 靜態影響分析 ✅ (2025-11-25, 4.2/5 平均評分, 8 subagent 測試)
+- [x] `/atlas.overview` 能快速生成專案指紋 ✅ (2025-11-20)
+- [x] `/atlas.pattern` 能識別設計模式 ✅ (2025-11-22, 95%+ 準確率)
+- [x] `/atlas.impact` 靜態影響分析 ✅ (2025-11-25, 4.2/5 平均評分, 8 subagent 測試)
 
 #### 質量標準
-- [x] 在 4+ 真實專案測試通過 ✅ (`/atlas-pattern` 在 3 個大型專案測試)
+- [x] 在 4+ 真實專案測試通過 ✅ (`/atlas.pattern` 在 3 個大型專案測試)
 - [x] Scripts 在 macOS 運行 ✅ (Linux 待測試)
 - [x] 錯誤時提供清晰訊息 ✅
 - [ ] 使用者回饋 >4/5 分 (待收集)
@@ -1176,8 +1176,8 @@ templates:
 基於 [code-maat 提案](./proposals/code-maat-integration/)，新增 2 個時序分析命令：
 
 ```bash
-/atlas-changes     # 歷史查詢（變更頻率、耦合度、熱點、風險評估）
-/atlas-expert      # 專家查詢（程式碼所有權、知識地圖）
+/atlas.changes     # 歷史查詢（變更頻率、耦合度、熱點、風險評估）
+/atlas.expert      # 專家查詢（程式碼所有權、知識地圖）
 ```
 
 **特色**：
@@ -1186,7 +1186,7 @@ templates:
 - 快速找到領域專家
 - 基於 code-maat 工具（成熟穩定）
 
-**`/atlas-changes` 整合功能**：
+**`/atlas.changes` 整合功能**：
 - ✅ 變更頻率分析（哪些檔案改最多）
 - ✅ 耦合度分析（哪些檔案常一起改）
 - ✅ 熱點識別（高風險區域）
@@ -1197,21 +1197,21 @@ templates:
 
 | v2.5 命令 | v3.0 命令 | 分析方法 | 適用場景 |
 |----------|----------|----------|----------|
-| `/atlas-impact` | `/atlas-changes` | 靜態 vs 時序 | API 變更 vs 重構風險 |
+| `/atlas.impact` | `/atlas.changes` | 靜態 vs 時序 | API 變更 vs 重構風險 |
 
 **範例使用場景**：
 
 ```bash
 # v2.5 靜態分析（API 變更）
-/atlas-impact api "/api/users/{id}"
+/atlas.impact api "/api/users/{id}"
 → 找出所有「調用」這個 API 的程式碼（靜態依賴）
 
 # v3.0 時序分析（重構風險）
-/atlas-changes src/payment_service.rb
+/atlas.changes src/payment_service.rb
 → 找出歷史上「常一起改」的檔案（時序耦合）
 
 # v3.0 完整分析（包含耦合度）
-/atlas-changes src/payment_service.rb --coupling
+/atlas.changes src/payment_service.rb --coupling
 → 完整的歷史分析 + 耦合關係 + 風險評估
 ```
 
@@ -1248,7 +1248,7 @@ templates:
 #### v3.0 決策點
 
 **v2.5 完成後評估**：
-1. `/atlas-impact`（靜態）使用情況如何？
+1. `/atlas.impact`（靜態）使用情況如何？
 2. 使用者是否需要時序分析（git 歷史）？
 3. 選擇輕量整合（選項 A）或完整 Monitor（選項 B）？
 
@@ -1369,7 +1369,7 @@ detect_files() { find . -name "*.rb"; }
    - 不同場景需要不同入口點
 
 2. **使用場景需要明確觸發**
-   - `/atlas-overview` (專案指紋，10-15 分鐘) vs `/atlas-pattern` (快速學習，5 分鐘)
+   - `/atlas.overview` (專案指紋，10-15 分鐘) vs `/atlas.pattern` (快速學習，5 分鐘)
    - 用戶根據需求選擇合適的命令
    - Commands 提供清晰的功能邊界
 
@@ -1379,25 +1379,25 @@ detect_files() { find . -name "*.rb"; }
    - 用戶可輕鬆查看和修改
 
 4. **符合優先級排序**
-   - `/atlas-overview` ⭐⭐⭐⭐⭐ (專案指紋)
-   - `/atlas-pattern` ⭐⭐⭐⭐⭐ (最常用)
-   - `/atlas-impact` ⭐⭐⭐⭐ (影響分析)
+   - `/atlas.overview` ⭐⭐⭐⭐⭐ (專案指紋)
+   - `/atlas.pattern` ⭐⭐⭐⭐⭐ (最常用)
+   - `/atlas.impact` ⭐⭐⭐⭐ (影響分析)
    - 不同優先級需要不同命令入口
 
 **實作方案**：
 
 ```
 .claude/commands/
-├── atlas-overview.md     # /atlas-overview - 專案指紋 ✅
-├── atlas-pattern.md      # /atlas-pattern - 學習模式 ✅
-├── atlas-impact.md       # /atlas-impact - 影響分析
-├── atlas-find.md         # /atlas-find - 快速搜尋
-└── atlas-explain.md      # /atlas-explain - 深入解釋
+├── atlas.overview.md     # /atlas.overview - 專案指紋 ✅
+├── atlas.pattern.md      # /atlas.pattern - 學習模式 ✅
+├── atlas.impact.md       # /atlas.impact - 影響分析
+├── atlas.find.md         # /atlas.find - 快速搜尋
+└── atlas.explain.md      # /atlas.explain - 深入解釋
 
 scripts/atlas/
 ├── detect-project.sh
 ├── scan-entropy.sh
-├── find-patterns.sh      # 支援 /atlas-pattern
+├── find-patterns.sh      # 支援 /atlas.pattern
 └── collect-git.sh
 ```
 
@@ -1414,7 +1414,7 @@ description: |
 ---
 
 When detecting user confusion, suggest:
-"Would you like me to run `/atlas-pattern` to learn how this codebase handles [X]?"
+"Would you like me to run `/atlas.pattern` to learn how this codebase handles [X]?"
 ```
 
 但這是**可選的增強**，不影響核心功能。
@@ -1423,7 +1423,7 @@ When detecting user confusion, suggest:
 - PRD 第 3、6、9 章需要更新
 - 將 "Skill" 術語改為 "Commands"
 - 檔案結構從 `.claude/skills/` 改為 `.claude/commands/`
-- 保持斜線命令介面不變（`/atlas-overview`, `/atlas-pattern` 等）
+- 保持斜線命令介面不變（`/atlas.overview`, `/atlas.pattern` 等）
 
 ---
 
@@ -1434,16 +1434,16 @@ When detecting user confusion, suggest:
 **開發狀態**：
 - v1.0 ✅ - 方法論驗證完成（5 專案測試）
 - v2.5 🔵 - Commands 架構 (核心功能完成，預計 1-2 週發布)
-  - `/atlas-overview` ✅ - 專案概覽（已完成，2025-11-20）
-  - `/atlas-pattern` ✅ - 模式學習（已完成，2025-11-22）⭐
-  - `/atlas-impact` ✅ - 靜態影響分析（已完成，2025-11-25）
+  - `/atlas.overview` ✅ - 專案概覽（已完成，2025-11-20）
+  - `/atlas.pattern` ✅ - 模式學習（已完成，2025-11-22）⭐
+  - `/atlas.impact` ✅ - 靜態影響分析（已完成，2025-11-25）
   - **Phase 3**: 多語言擴展、測試、文檔
 - **完整三階段分析**：使用 `PROMPTS.md` 手動執行（深度盡職調查場景）
 
 **決策記錄** (2025-11-25):
-- ✅ 取消 `/atlas-find` - 功能已由現有 3 個 commands 涵蓋
-  - 模式學習 → `/atlas-pattern`
-  - 影響追蹤 → `/atlas-impact`
+- ✅ 取消 `/atlas.find` - 功能已由現有 3 個 commands 涵蓋
+  - 模式學習 → `/atlas.pattern`
+  - 影響追蹤 → `/atlas.impact`
   - 關鍵字搜尋 → Claude 內建 Grep/Glob
 
 > **完整版本歷史與決策記錄**：見 `dev-notes/HISTORY.md`
