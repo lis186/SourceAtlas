@@ -1,8 +1,8 @@
-# SourceAtlas PRD v2.5.2
+# SourceAtlas PRD v2.5.3
 
 **AI-Powered Codebase Understanding Assistant**
 
-- **版本**: 2.5.2
+- **版本**: 2.5.3
 - **更新日期**: 2025-11-22
 - **狀態**: Active Development (Architecture Finalized)
 
@@ -1082,7 +1082,7 @@ templates:
 - [ ] 完善 Git 分析 Scripts
 - [ ] 整體測試與文檔
 - [ ] 使用者回饋收集
-- [ ] 發布 v2.5.2
+- [ ] 發布 v2.5.3
 
 **決策**: `/atlas.find` 已取消（功能由現有 3 個 commands 涵蓋）
 
@@ -1135,7 +1135,7 @@ templates:
 
 ## 11. 實作路線圖
 
-### v2.5.2 - SourceAtlas Skill (當前)
+### v2.5.3 - SourceAtlas Skill (當前)
 
 **目標**：提供即時專案理解能力
 
@@ -1159,7 +1159,7 @@ templates:
 - [ ] 收集使用回饋
 - [ ] 優化 Prompt 和 Scripts
 - [ ] 撰寫使用文檔
-- [ ] 發布 v2.5.2
+- [ ] 發布 v2.5.3
 
 ---
 
@@ -1429,7 +1429,7 @@ When detecting user confusion, suggest:
 
 ## 版本資訊
 
-**當前版本**: v2.5.2 (2025-11-24)
+**當前版本**: v2.5.3 (2025-11-24)
 
 **開發狀態**：
 - v1.0 ✅ - 方法論驗證完成（5 專案測試）

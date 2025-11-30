@@ -12,7 +12,7 @@
 **使用者請求**: "Good, start planning. you may need to update PRD.md or something"
 
 **已完成**:
-1. ✅ 分析 PRD v2.5.2 vs 當前實作
+1. ✅ 分析 PRD v2.5.3 vs 當前實作
 2. ✅ 識別缺口（4 個命令、3 個腳本遺漏）
 3. ✅ 創建全面的實作路線圖
 4. ✅ 以 v1.0 學習更新 CLAUDE.md
@@ -287,7 +287,7 @@ cd /Users/justinlee/dev/sourceatlas2
 - [TOON vs YAML 分析](../../toon-vs-yaml-analysis.md) - 格式決策理由
 
 ### 產品文檔
-- [PRD v2.5.2](PRD.md) - 產品需求和架構
+- [PRD v2.5.3](PRD.md) - 產品需求和架構
 - [PROMPTS.md](PROMPTS.md) - Stage 0/1/2 參考 prompts
 - [CLAUDE.md](CLAUDE.md) - **已更新** v1.0 學習
 
