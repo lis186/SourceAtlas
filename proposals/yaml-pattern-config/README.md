@@ -413,6 +413,115 @@ scripts/atlas/
 
 ---
 
+## Mixed Language Support (Swift/Objective-C)
+
+### Challenge
+
+iOS projects often mix Swift and Objective-C:
+- Large commercial apps: 55% ObjC + 45% Swift
+- Legacy migration: Gradual Swift adoption
+- Some patterns are language-specific (e.g., ObjC Categories, Swift @Observable)
+
+### Solution: Extended Schema (Recommended)
+
+```yaml
+language:
+  name: ios
+  display_name: "iOS/Swift"
+  sub_languages:
+    - name: swift
+      extensions: [.swift]
+    - name: objc
+      extensions: [.m, .h]
+
+patterns:
+  # Shared pattern - works for both languages
+  - name: viewmodel
+    tier: 1
+    files:
+      swift: ["*ViewModel.swift"]
+      objc: ["*ViewModel.m", "*ViewModel.h"]
+
+  # ObjC-only pattern
+  - name: category
+    tier: 2
+    language_specific: objc
+    files:
+      - "*+*.m"
+      - "*+*.h"
+
+  # Swift-only pattern
+  - name: observable
+    tier: 2
+    language_specific: swift
+    content_patterns:
+      - "@Observable"
+      - "ObservableObject"
+```
+
+### Schema Extensions
+
+```yaml
+# New fields in pattern definition
+
+language_specific:
+  type: string
+  required: false
+  enum: [swift, objc, null]
+  description: "Restrict pattern to specific sub-language (null = both)"
+
+files:
+  type: object | array
+  description: "Can be array (both languages) or object (per-language)"
+  examples:
+    # Simple: applies to both
+    simple: ["*ViewModel.swift", "*ViewModel.m"]
+
+    # Per-language: different patterns
+    per_language:
+      swift: ["*ViewModel.swift"]
+      objc: ["*ViewModel.m", "*ViewModel.h"]
+
+sub_languages:
+  type: array[object]
+  description: "Define sub-languages within a platform"
+  structure:
+    name: string
+    extensions: array[string]
+```
+
+### Implementation Impact
+
+| Task | Effort | Notes |
+|------|--------|-------|
+| Schema extension | +1 day | Add `language_specific`, `sub_languages` |
+| Parser modification | +1 day | Select patterns based on file extension |
+| Testing | +0.5 day | Validate on mixed projects |
+| **Total** | **+2.5 days** | Low complexity |
+
+### Compatibility Matrix
+
+| Scenario | Pattern Selection |
+|----------|------------------|
+| Pure Swift project | Swift + shared patterns |
+| Pure ObjC project | ObjC + shared patterns |
+| Mixed project | All patterns |
+| Query `.swift` file | Swift + shared patterns |
+| Query `.m` file | ObjC + shared patterns |
+
+### Other Mixed Language Scenarios
+
+This design also supports:
+
+| Platform | Sub-languages | Example |
+|----------|--------------|---------|
+| iOS | Swift, Objective-C | Current focus |
+| Android | Kotlin, Java | `*ViewModel.kt` vs `*ViewModel.java` |
+| Web | TypeScript, JavaScript | `*.ts` vs `*.js` |
+| React Native | TypeScript, Native (Swift/Kotlin) | Cross-platform patterns |
+
+---
+
 ## Open Questions
 
 1. **yq version**: Use `yq` (Go version) or `yq` (Python version)?
@@ -423,6 +532,9 @@ scripts/atlas/
 
 3. **Hot reload**: Should patterns reload without restart?
    - Recommendation: No, keep simple for v1
+
+4. **Auto-detect language ratio**: Should we adjust behavior based on Swift/ObjC ratio?
+   - Recommendation: Not for v1, but consider for v2 if needed
 
 ---
 
