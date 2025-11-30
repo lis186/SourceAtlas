@@ -242,4 +242,4 @@ Based on SourceAtlas v2.5 methodology:
 
 ---
 
-**SourceAtlas v2.5.3** - Understanding codebases at the speed of thought 🚀
+**SourceAtlas v2.5.4** - Understanding codebases at the speed of thought 🚀
