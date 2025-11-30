@@ -46,6 +46,70 @@
 
 ---
 
+## 入口點識別
+
+### 設計原則：用戶確認 > AI 猜測
+
+避免 AI 猜錯入口點浪費時間，採用兩階段設計：
+
+### 情況 1：用戶明確指定起點
+
+```bash
+# 指定檔案
+/atlas.flow "從 src/services/order.ts 開始，追蹤下單流程"
+
+# 指定 function
+/atlas.flow "從 OrderService.create() 開始"
+
+# 指定行號
+/atlas.flow "從 src/checkout.ts:45 開始"
+```
+
+→ **直接開始追蹤**，不問問題
+
+### 情況 2：用戶沒有指定起點
+
+```bash
+/atlas.flow "下單流程"
+```
+
+→ **AI 搜尋並提供選項**：
+
+```
+找到 3 個可能的入口點：
+
+1. OrderService.create()
+   📍 src/services/order.ts:45
+
+2. CheckoutController.submit()
+   📍 src/controllers/checkout.ts:120
+
+3. useCheckout() hook
+   📍 src/hooks/useCheckout.ts:30
+
+請選擇要從哪個開始？（或直接說「1」「2」「3」）
+```
+
+### 情況 3：只有一個匹配
+
+→ **自動開始**，不問問題
+
+### 追蹤深度控制
+
+用自然語言控制：
+
+```bash
+/atlas.flow "從 OrderService.create() 開始，追 3 層"
+/atlas.flow "從 OrderService.create() 開始，只看這個檔案內"
+/atlas.flow "從 OrderService.create() 開始，完整追蹤"
+```
+
+預設行為：
+- 追蹤到「邊界」為止（外部 API、資料庫、第三方服務）
+- 自動簡化過深的分支
+
+---
+
 ## 目標用戶
 
 基於用戶研究，識別出四種主要角色：
