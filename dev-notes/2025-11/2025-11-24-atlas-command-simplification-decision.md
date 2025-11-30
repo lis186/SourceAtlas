@@ -38,7 +38,7 @@
 **產品版本**（SourceAtlas）:
 - v1.0 - 方法論驗證完成
 - v2.5 - Commands 架構（當前）
-- v3.0 - 時序分析 + Monitor（未來）
+- v2.6 - 時序分析 + Monitor（未來）
 
 **文檔版本**（proposals/）:
 - 追蹤個別提案的設計變更
@@ -51,7 +51,7 @@
 1. `SOURCEATLAS_CODEMAAT_INTEGRATION.md`
    ```markdown
    **文檔版本**: 2.1 (2025-11-24)
-   **目標產品版本**: SourceAtlas v3.0
+   **目標產品版本**: SourceAtlas v2.6
    ```
 
 2. `UPDATES_SUMMARY.md`
