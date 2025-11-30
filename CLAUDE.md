@@ -985,11 +985,14 @@ touch test-results.md
 - [ ] 發布 v2.5.4
 
 ### 🔮 未來（v2.6）
+- `/atlas.history` - 智慧時序分析（Hotspots、Coupling、Contributors）⭐
 - SourceAtlas Monitor - 持續追蹤和趨勢分析
 - 技術債務量化
 - 健康度儀表板
 
-**決策記錄** (2025-11-25): `/atlas.find` 已取消 - 功能由現有 3 個 commands 涵蓋
+**決策記錄**:
+- (2025-11-25): `/atlas.find` 已取消 - 功能由現有 commands 涵蓋
+- (2025-11-30): `/atlas.history` 設計完成 - 單一命令 + 零參數 + 智慧輸出
 
 **詳細路線圖**：見 [dev-notes/implementation-roadmap.md](./dev-notes/implementation-roadmap.md) 和 [PRD.md](./PRD.md)
 
