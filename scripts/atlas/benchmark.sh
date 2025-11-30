@@ -26,7 +26,7 @@ echo "📁 Total code files: $TOTAL_FILES"
 # Simulate Stage 0 analysis (will be replaced with actual command)
 echo "⏱️  Running Stage 0 analysis..."
 
-# TODO: Run actual /atlas-overview command here
+# TODO: Run actual /atlas.overview command here
 # For now, using existing output as baseline
 
 # End timing

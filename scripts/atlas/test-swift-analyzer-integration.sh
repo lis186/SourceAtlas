@@ -1,5 +1,5 @@
 #!/bin/bash
-# Test Swift Analyzer Integration with /atlas-impact
+# Test Swift Analyzer Integration with /atlas.impact
 # 驗證 Swift analyzer 能否在 iOS 專案中被正確觸發
 
 set -euo pipefail
@@ -71,7 +71,7 @@ else
 fi
 echo ""
 
-# Test 5: Execute Swift analyzer (simulating /atlas-impact integration)
+# Test 5: Execute Swift analyzer (simulating /atlas.impact integration)
 echo -e "${YELLOW}Test 5: Execute Swift Analyzer${NC}"
 echo "Running: ./$SWIFT_ANALYZER \"$TARGET_FILE\" \"$TEST_PROJECT\""
 echo ""
@@ -132,7 +132,7 @@ done
 echo -e "${GREEN}✓ Sections found: $SECTIONS_FOUND/7${NC}"
 echo ""
 
-# Test 7: Validate output format for /atlas-impact integration
+# Test 7: Validate output format for /atlas.impact integration
 echo -e "${YELLOW}Test 7: Validate Integration Format${NC}"
 
 # Check if output contains markdown formatting
@@ -157,11 +157,11 @@ else
 fi
 echo ""
 
-# Test 8: Generate sample /atlas-impact output
+# Test 8: Generate sample /atlas.impact output
 echo -e "${YELLOW}Test 8: Generate Sample Integration Output${NC}"
 
 cat > "$TEST_PROJECT/../swift-integration-test-output.md" <<EOF
-# /atlas-impact Integration Test Output
+# /atlas.impact Integration Test Output
 
 ## Context
 - **Target**: $TARGET_FILE
@@ -212,7 +212,7 @@ cat > "$TEST_PROJECT/../swift-integration-test-output.md" <<EOF
 ✅ **All integration tests passed**
 - Swift analyzer successfully triggered
 - Output parsed and integrated correctly
-- Ready for production use in /atlas-impact
+- Ready for production use in /atlas.impact
 
 EOF
 
@@ -226,7 +226,7 @@ echo ""
 echo "Integration Status: ${GREEN}READY FOR PRODUCTION${NC}"
 echo ""
 echo "Next steps:"
-echo "1. Run /atlas-impact on an iOS project to test live integration"
+echo "1. Run /atlas.impact on an iOS project to test live integration"
 echo "2. Verify the Language-Specific Deep Analysis section appears"
 echo "3. Check that Swift analyzer runs automatically for .swift/.m/.h files"
 echo ""
