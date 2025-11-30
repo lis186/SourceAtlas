@@ -1,4 +1,4 @@
-# /atlas-init 命令實作與隱性觸發驗證
+# /atlas.init 命令實作與隱性觸發驗證
 
 **日期**: 2025-11-30
 **狀態**: ✅ 完成
@@ -7,7 +7,7 @@
 
 ## 概述
 
-實作 `/atlas-init` 命令，讓 SourceAtlas 能夠在目標專案中注入自動觸發規則，使 Claude Code 能夠根據用戶意圖自動建議使用適當的 Atlas 命令。
+實作 `/atlas.init` 命令，讓 SourceAtlas 能夠在目標專案中注入自動觸發規則，使 Claude Code 能夠根據用戶意圖自動建議使用適當的 Atlas 命令。
 
 ---
 
@@ -25,7 +25,7 @@ SourceAtlas 的命令（`/atlas-overview`, `/atlas-pattern`, `/atlas-impact`）�
 
 ### 解決方案
 
-創建 `/atlas-init` 命令，將「自動觸發規則」注入目標專案的 CLAUDE.md。
+創建 `/atlas.init` 命令，將「自動觸發規則」注入目標專案的 CLAUDE.md。
 
 ---
 
@@ -33,7 +33,7 @@ SourceAtlas 的命令（`/atlas-overview`, `/atlas-pattern`, `/atlas-impact`）�
 
 ### 命令位置
 
-`.claude/commands/atlas-init.md`
+`.claude/commands/atlas.init.md`
 
 ### 功能
 
@@ -146,7 +146,7 @@ cd ~/dev/sourceatlas2
 
 # 在任何專案中
 cd ~/projects/any-project
-/atlas-init  # 首次使用：注入自動觸發規則
+/atlas.init  # 首次使用：注入自動觸發規則
 ```
 
 執行後，Claude Code 會根據對話內容自動建議使用適當的 Atlas 命令。
@@ -157,4 +157,4 @@ cd ~/projects/any-project
 
 - [spec-kit 參考](https://github.com/github/spec-kit)
 - [PRD.md 更新](../../PRD.md)
-- [命令檔案](../../.claude/commands/atlas-init.md)
+- [命令檔案](../../.claude/commands/atlas.init.md)
