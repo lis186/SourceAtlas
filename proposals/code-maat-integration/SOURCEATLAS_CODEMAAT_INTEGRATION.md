@@ -2469,7 +2469,7 @@ risk_assessment:
 - 書籍: "Software Design X-Rays" by Adam Tornhill
 
 **SourceAtlas 相關**:
-- PRD v2.5.2
+- PRD v2.5.3
 - SKILL.md
 
 **Shell Script 最佳實踐**:
