@@ -45,7 +45,7 @@
 
 **範例**：想知道這個專案怎麼處理 API，直接找到 `UserAPI.swift:45` 和測試範例
 
-**支援 71 個 patterns**：MVVM、Networking、Core Data、React Hook、Next.js API...
+**支援 82 個 patterns**：MVVM、Networking、Core Data、React Hook、Next.js API、Jetpack Compose...
 
 ---
 
@@ -96,7 +96,7 @@
 **專案語言支援**：
 - ✅ **iOS/Swift**: 完整支援（29 patterns）
 - ✅ **TypeScript/React**: 完整支援（22 patterns）
-- ✅ **Android/Kotlin**: 完整支援（20 patterns）
+- ✅ **Android/Kotlin**: 完整支援（31 patterns）
 - 🔵 **Python/Go/Rust**: 規劃中（v2.6）
 
 </details>
@@ -179,7 +179,7 @@ ls ~/.claude/commands/atlas.*.md
 
 ### 核心文檔
 
-- **[使用指南](./USAGE_GUIDE.md)** - 完整的命令說明、71 個 patterns、疑難排解
+- **[使用指南](./USAGE_GUIDE.md)** - 完整的命令說明、82 個 patterns、疑難排解
 - **[全局安裝](./GLOBAL_INSTALLATION.md)** - 安裝選項、管理命令、疑難排解
 - **[Benchmark](./BENCHMARK.md)** - 8 個真實專案的測試結果、準確率數據
 
@@ -205,9 +205,9 @@ Claude Code + 2 分鐘安裝
 
 - **iOS/Swift**: 29 patterns (MVVM, Coordinator, Core Data, SwiftUI...)
 - **TypeScript/React**: 22 patterns (Hooks, Next.js, Server Components...)
-- **Android/Kotlin**: 20 patterns (ViewModel, Room, Compose...)
+- **Android/Kotlin**: 31 patterns (ViewModel, Room, Compose, Hilt, MVI...)
 
-完整列表見 [USAGE_GUIDE.md](./USAGE_GUIDE.md#支援的-patterns-71-個)
+完整列表見 [USAGE_GUIDE.md](./USAGE_GUIDE.md#支援的-patterns-82-個)
 
 </details>
 
@@ -301,6 +301,6 @@ Claude Code + 2 分鐘安裝
 ---
 
 **SourceAtlas** - Claude Code 的程式分析助手
-v2.5 | 最新更新: 2025-11-25 | MIT License
+v2.5.2 | 最新更新: 2025-11-30 | MIT License
 
 Made with ❤️ and 🤖

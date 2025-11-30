@@ -73,14 +73,14 @@ get_file_patterns() {
     if [ "$proj_type" = "android" ]; then
         # Android/Kotlin patterns
         case "$pattern" in
-            "viewmodel"|"view model"|"mvvm")
-                echo "*ViewModel.kt *ViewModel.java *VM.kt *VM.java"
+            "viewmodel"|"view model"|"mvvm"|"presenter")
+                echo "*ViewModel.kt *ViewModel.java *VM.kt *VM.java *Presenter.kt *Presenter.java"
                 ;;
             "repository"|"repo")
                 echo "*Repository.kt *Repository.java *Repo.kt *Repo.java *DataSource.kt *DataSource.java"
                 ;;
-            "composable"|"compose"|"jetpack compose")
-                echo "*Screen.kt *Composable.kt Ui*.kt"
+            "composable"|"compose"|"jetpack compose"|"screen")
+                echo "*Screen.kt *Composable.kt Ui*.kt *Component.kt"
                 ;;
             "fragment")
                 echo "*Fragment.kt *Fragment.java *Frag.kt *Frag.java"
@@ -97,8 +97,8 @@ get_file_patterns() {
             "retrofit"|"api"|"networking"|"network")
                 echo "*ApiService.kt *ApiService.java *Api.kt *Api.java *Client.kt *Client.java *Interceptor.kt NetworkModule.kt"
                 ;;
-            "state"|"stateflow"|"livedata"|"state management")
-                echo "*State.kt *State.java *UiState.kt *Event.kt *Action.kt"
+            "state"|"stateflow"|"livedata"|"state management"|"uistate")
+                echo "*State.kt *State.java *UiState.kt *Event.kt *Action.kt *Intent.kt *Effect.kt"
                 ;;
             "navigation"|"nav"|"navigator")
                 echo "*Navigator.kt *Navigator.java *Coordinator.kt nav_graph.xml *Directions.kt"
@@ -132,6 +132,39 @@ get_file_patterns() {
                 ;;
             "singleton"|"object"|"manager")
                 echo "*Manager.kt *Manager.java *Provider.kt *Singleton.kt AppConfig.kt"
+                ;;
+            "test"|"testing"|"mock"|"fake"|"stub")
+                echo "*Test.kt *Test.java *Tests.kt *Tests.java Mock*.kt Mock*.java Fake*.kt Fake*.java *Mock.kt *Mock.java *Fake.kt *Fake.java *Stub.kt *Stub.java"
+                ;;
+            "store"|"redux"|"mvi store")
+                echo "*Store.kt *Store.java *Redux.kt *Redux.java"
+                ;;
+            "factory"|"builder"|"creator")
+                echo "*Factory.kt *Factory.java *Builder.kt *Builder.java *Creator.kt *Creator.java"
+                ;;
+            "provider"|"content provider")
+                echo "*Provider.kt *Provider.java *ContentProvider.kt *ContentProvider.java"
+                ;;
+            "contract"|"interface"|"abstraction")
+                echo "*Contract.kt *Contract.java"
+                ;;
+            "config"|"configuration"|"settings"|"preferences")
+                echo "*Config.kt *Config.java *Configuration.kt *Configuration.java *Settings.kt *Settings.java *Preferences.kt *Preferences.java"
+                ;;
+            "validator"|"validation")
+                echo "*Validator.kt *Validator.java *Validation.kt *Validation.java"
+                ;;
+            "parser"|"serializer"|"deserializer")
+                echo "*Parser.kt *Parser.java *Serializer.kt *Serializer.java *Deserializer.kt *Deserializer.java"
+                ;;
+            "formatter"|"format")
+                echo "*Formatter.kt *Formatter.java *Format.kt *Format.java"
+                ;;
+            "loader"|"fetcher")
+                echo "*Loader.kt *Loader.java *Fetcher.kt *Fetcher.java"
+                ;;
+            "listener"|"callback"|"handler")
+                echo "*Listener.kt *Listener.java *Callback.kt *Callback.java *Handler.kt *Handler.java"
                 ;;
             *)
                 echo ""
@@ -321,13 +354,13 @@ get_dir_patterns() {
     if [ "$proj_type" = "android" ]; then
         # Android/Kotlin directory patterns
         case "$pattern" in
-            "viewmodel"|"view model"|"mvvm")
-                echo "viewmodel viewmodels presentation ui/*/viewmodel"
+            "viewmodel"|"view model"|"mvvm"|"presenter")
+                echo "viewmodel viewmodels presentation ui/*/viewmodel presenter"
                 ;;
             "repository"|"repo")
                 echo "repository repositories data/repository data/source"
                 ;;
-            "composable"|"compose"|"jetpack compose")
+            "composable"|"compose"|"jetpack compose"|"screen")
                 echo "compose ui/compose ui/screen screens components ui/components"
                 ;;
             "fragment")
@@ -345,8 +378,8 @@ get_dir_patterns() {
             "retrofit"|"api"|"networking"|"network")
                 echo "network api remote data/remote service"
                 ;;
-            "state"|"stateflow"|"livedata"|"state management")
-                echo "state states ui/state event"
+            "state"|"stateflow"|"livedata"|"state management"|"uistate")
+                echo "state states ui/state event mvi"
                 ;;
             "navigation"|"nav"|"navigator")
                 echo "navigation nav coordinator"
@@ -380,6 +413,39 @@ get_dir_patterns() {
                 ;;
             "singleton"|"object"|"manager")
                 echo "manager singleton util"
+                ;;
+            "test"|"testing"|"mock"|"fake"|"stub")
+                echo "test tests testing mock mocks fake fakes stub stubs androidTest testFixtures"
+                ;;
+            "store"|"redux"|"mvi store")
+                echo "store stores state redux mvi"
+                ;;
+            "factory"|"builder"|"creator")
+                echo "factory factories builder builders di"
+                ;;
+            "provider"|"content provider")
+                echo "provider providers content"
+                ;;
+            "contract"|"interface"|"abstraction")
+                echo "contract contracts interface interfaces"
+                ;;
+            "config"|"configuration"|"settings"|"preferences")
+                echo "config configuration settings preferences"
+                ;;
+            "validator"|"validation")
+                echo "validator validators validation"
+                ;;
+            "parser"|"serializer"|"deserializer")
+                echo "parser parsers serializer serializers"
+                ;;
+            "formatter"|"format")
+                echo "formatter formatters format"
+                ;;
+            "loader"|"fetcher")
+                echo "loader loaders fetcher"
+                ;;
+            "listener"|"callback"|"handler")
+                echo "listener listeners callback callbacks handler handlers"
                 ;;
             *)
                 echo ""
@@ -572,15 +638,15 @@ main() {
             echo "Supported patterns (Android/Kotlin):" >&2
             echo "" >&2
             echo "Tier 1 patterns:" >&2
-            echo "  - viewmodel / view model / mvvm" >&2
+            echo "  - viewmodel / view model / mvvm / presenter" >&2
             echo "  - repository / repo" >&2
-            echo "  - composable / compose / jetpack compose" >&2
+            echo "  - composable / compose / jetpack compose / screen" >&2
             echo "  - fragment" >&2
             echo "  - hilt / dagger / di / dependency injection" >&2
             echo "  - usecase / use case / interactor" >&2
             echo "  - room / dao / database" >&2
             echo "  - retrofit / api / networking / network" >&2
-            echo "  - state / stateflow / livedata / state management" >&2
+            echo "  - state / stateflow / livedata / state management / uistate" >&2
             echo "  - navigation / nav / navigator" >&2
             echo "  - adapter / recyclerview / viewholder" >&2
             echo "  - workmanager / worker / background" >&2
@@ -594,6 +660,17 @@ main() {
             echo "  - extension / ext / extensions" >&2
             echo "  - viewbinding / databinding / binding" >&2
             echo "  - singleton / object / manager" >&2
+            echo "  - test / testing / mock / fake / stub" >&2
+            echo "  - store / redux / mvi store" >&2
+            echo "  - factory / builder / creator" >&2
+            echo "  - provider / content provider" >&2
+            echo "  - contract / interface / abstraction" >&2
+            echo "  - config / configuration / settings / preferences" >&2
+            echo "  - validator / validation" >&2
+            echo "  - parser / serializer / deserializer" >&2
+            echo "  - formatter / format" >&2
+            echo "  - loader / fetcher" >&2
+            echo "  - listener / callback / handler" >&2
         elif [ "$PROJECT_TYPE" = "typescript" ]; then
             echo "Supported patterns (TypeScript/React/Next.js):" >&2
             echo "" >&2
