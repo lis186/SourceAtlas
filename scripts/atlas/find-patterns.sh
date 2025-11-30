@@ -197,8 +197,8 @@ get_file_patterns() {
             "repository"|"repo"|"data access")
                 echo "*repository.py *repositories.py *repo.py *_repository.py *_repo.py"
                 ;;
-            "api"|"router"|"routers"|"fastapi"|"flask"|"routes"|"urls")
-                echo "*api.py *router.py *routers.py *routes.py urls.py *_api.py *_router.py *_routes.py"
+            "api"|"router"|"routers"|"fastapi"|"flask"|"routes"|"urls"|"routing")
+                echo "*api.py *router.py *routers.py *routes.py *routing.py urls.py *_api.py *_router.py *_routes.py"
                 ;;
             "form"|"forms"|"django form")
                 echo "forms.py *forms.py *form.py *_forms.py *_form.py"
@@ -255,6 +255,12 @@ get_file_patterns() {
                 ;;
             "client"|"clients"|"http client"|"api client")
                 echo "*client.py *clients.py *_client.py *_clients.py"
+                ;;
+            "pipeline"|"pipelines"|"scrapy pipeline")
+                echo "*pipeline.py *pipelines.py *_pipeline.py *_pipelines.py"
+                ;;
+            "spider"|"spiders"|"scrapy"|"crawler")
+                echo "*spider.py *spiders.py *_spider.py *_spiders.py"
                 ;;
             *)
                 echo ""
@@ -619,6 +625,12 @@ get_dir_patterns() {
             "client"|"clients"|"http client"|"api client")
                 echo "clients client"
                 ;;
+            "pipeline"|"pipelines"|"scrapy pipeline")
+                echo "pipelines"
+                ;;
+            "spider"|"spiders"|"scrapy"|"crawler")
+                echo "spiders crawlers"
+                ;;
             *)
                 echo ""
                 ;;
@@ -880,7 +892,7 @@ main() {
             echo "  - serializer / schema / pydantic / marshmallow" >&2
             echo "  - service / services / business logic" >&2
             echo "  - repository / repo / data access" >&2
-            echo "  - api / router / fastapi / flask / routes / urls" >&2
+            echo "  - api / router / routing / fastapi / flask / routes / urls" >&2
             echo "  - form / forms / django form" >&2
             echo "  - task / celery / background job / worker" >&2
             echo "  - test / tests / pytest / unittest" >&2
@@ -888,7 +900,7 @@ main() {
             echo "  - middleware / middlewares" >&2
             echo "  - config / settings / configuration" >&2
             echo "" >&2
-            echo "Tier 2 - Supplementary patterns (12):" >&2
+            echo "Tier 2 - Supplementary patterns (14):" >&2
             echo "  - migration / migrations / alembic" >&2
             echo "  - command / management command / cli" >&2
             echo "  - util / utils / helpers" >&2
@@ -901,6 +913,8 @@ main() {
             echo "  - mixin / mixins" >&2
             echo "  - decorator / decorators" >&2
             echo "  - client / http client / api client" >&2
+            echo "  - pipeline / pipelines / scrapy pipeline" >&2
+            echo "  - spider / spiders / scrapy / crawler" >&2
         else
             echo "Supported patterns (Swift/iOS):" >&2
             echo "" >&2
