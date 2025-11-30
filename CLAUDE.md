@@ -311,7 +311,7 @@ hypotheses:
 ## 版本控制
 
 **版本號說明**：
-- **SourceAtlas 產品版本**（如 v2.5.2）：追蹤整個產品的開發階段
+- **SourceAtlas 產品版本**（如 v2.5.3）：追蹤整個產品的開發階段
 - **提案文檔版本**（如 proposals/ 下的 v2.1）：追蹤個別提案的設計變更
 
 **當前產品版本**：
@@ -319,6 +319,7 @@ hypotheses:
 - **v2.5** 🔵 - Commands 實作中（預計 3-4 週）
 
 **版本歷程**：
+- v2.5.3 (2025-11-30): **Python Patterns 完成** - 26 patterns（12 Tier 1 + 14 Tier 2），10 專案驗證，支援 Django/FastAPI/Flask/Celery/Scrapy/Pydantic/SQLAlchemy/Starlette
 - v2.5.2 (2025-11-30): **Kotlin/Android Patterns 完成** - 31 patterns（12 Tier 1 + 19 Tier 2），8 專案驗證，95%+ 準確率，支援 MVVM/MVI/Clean/Circuit
 - v2.5.1 (2025-11-23): **iOS Patterns 擴展完成** - 新增 18 個 iOS patterns (16 → 34, +112.5%)
 - v1.0 (2025-11-22): 完成 5 專案驗證、YAML vs TOON 決策、規模感知算法
@@ -805,9 +806,80 @@ touch test-results.md
 
 ---
 
+## Python Patterns（v2.5.3）✅
+
+**2025-11-30 完成的 Python patterns 支援**：
+
+### 成果總結
+
+- ✅ **26 個 patterns**（12 Tier 1 + 14 Tier 2）
+- ✅ **測試專案**: 10 個 Python 專案（60 ~ 2884 files）
+- ✅ **框架覆蓋**: Django, FastAPI, Flask, Celery, Scrapy, Pydantic, SQLAlchemy, Starlette
+
+### 關鍵技術發現⭐
+
+1. **Python 專案常有 package.json** - Django 等專案有前端資源，需調整檢測順序（Python 優先於 TypeScript）
+2. **Django 使用特定檔案命名** - `models.py`, `views.py`, `admin.py`, `urls.py` 等
+3. **Starlette/FastAPI 使用 routing.py** - 需同時支援 `routes.py` 和 `routing.py`
+4. **Scrapy 有特殊模式** - `pipelines.py`, `spiders.py`
+5. **框架專案 vs 應用專案** - 框架專案較少使用 service/repository 模式
+
+### Tier 1 核心 Patterns（12 個）
+
+| Pattern | 別名 | 檔案模式 |
+|---------|------|----------|
+| Model | models, orm, django model | `models.py`, `*model.py` |
+| View | views, django view, endpoint | `views.py`, `*view.py` |
+| Serializer | schema, pydantic, marshmallow | `*serializers.py`, `*schema.py` |
+| Service | services, business logic | `*service.py`, `*services.py` |
+| Repository | repo, data access | `*repository.py`, `*repo.py` |
+| API | router, routing, fastapi, flask, routes, urls | `*router.py`, `*routing.py`, `urls.py` |
+| Form | forms, django form | `forms.py`, `*form.py` |
+| Task | celery, background job, worker | `tasks.py`, `*celery.py` |
+| Test | tests, pytest, unittest | `test_*.py`, `conftest.py` |
+| Admin | django admin | `admin.py` |
+| Middleware | middlewares | `*middleware.py` |
+| Config | settings, configuration | `settings.py`, `*config.py` |
+
+### Tier 2 補充 Patterns（14 個）
+
+| Pattern | 別名 | 用途 |
+|---------|------|------|
+| Migration | migrations, alembic | 資料庫遷移 |
+| Command | management command, cli | CLI 命令 |
+| Util | utils, helpers | 工具函數 |
+| Exception | exceptions, errors | 例外處理 |
+| Validator | validators, validation | 驗證邏輯 |
+| Factory | factories, factory boy | 測試工廠 |
+| Fixture | fixtures, test data | 測試資料 |
+| Signal | signals, django signal | Django 信號 |
+| Manager | managers, django manager | Django Manager |
+| Mixin | mixins | 混入類 |
+| Decorator | decorators | 裝飾器 |
+| Client | http client, api client | HTTP 客戶端 |
+| Pipeline | pipelines, scrapy pipeline | Scrapy 管線 |
+| Spider | spiders, scrapy, crawler | Scrapy 爬蟲 |
+
+### 測試專案
+
+| 專案 | Python 檔案數 | 類型 |
+|------|--------------|------|
+| Django | 2,884 | Web 框架 |
+| FastAPI | 1,190 | API 框架 |
+| SQLAlchemy | 656 | ORM |
+| Celery | 410 | 任務佇列 |
+| Scrapy | 410 | 爬蟲框架 |
+| Pydantic | 396 | 資料驗證 |
+| Flask | 83 | Web 框架 |
+| Cookiecutter-Django | 70 | 專案模板 |
+| Starlette | 67 | ASGI 框架 |
+| httpx | 60 | HTTP 客戶端 |
+
+---
+
 ## 當前狀態（v2.5）
 
-基於 PRD v2.5.2 和 v1.0 學習：
+基於 PRD v2.5.3 和 v1.0 學習：
 
 ### ✅ 已完成 - 核心 4 Commands
 - [x] `/atlas.init` - 專案初始化（自動觸發規則）✅ (2025-11-30)
@@ -816,11 +888,11 @@ touch test-results.md
 - [x] `/atlas.impact` - 影響範圍分析 ✅ (2025-11-25) ⭐⭐⭐⭐
 
 ### 🔵 Phase 3 (當前) - 完善與發布
-- [x] 擴展多語言支援（Kotlin ✅, Go/Rust 待定）
+- [x] 擴展多語言支援（Kotlin ✅, Python ✅, Go/Rust 待定）
 - [ ] 完善 Git 分析 Scripts
 - [ ] 整體測試與文檔
 - [ ] 使用者回饋收集
-- [ ] 發布 v2.5.2
+- [ ] 發布 v2.5.3
 
 ### 🔮 未來（v2.6）
 - SourceAtlas Monitor - 持續追蹤和趨勢分析

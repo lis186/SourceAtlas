@@ -1,6 +1,6 @@
 #!/bin/bash
 # SourceAtlas - Pattern Detection Script (Ultra-Fast Version)
-# Multi-Language Support: Swift/iOS, TypeScript/React, and Android/Kotlin
+# Multi-Language Support: Swift/iOS, TypeScript/React, Android/Kotlin, and Python
 #
 # Purpose: Identify files matching a given pattern type using filename/directory matching only
 # Philosophy: Scripts collect data quickly, AI does deep interpretation
@@ -29,7 +29,7 @@ set -euo pipefail
 PATTERN="${1:-}"
 PROJECT_PATH="${2:-.}"
 
-# Detect project type (swift vs typescript vs android)
+# Detect project type (swift vs typescript vs android vs python)
 detect_project_type() {
     local path="$1"
 
@@ -41,16 +41,24 @@ detect_project_type() {
         return
     fi
 
-    # Check for TypeScript/JavaScript indicators
-    if [ -f "$path/package.json" ] || [ -f "$path/tsconfig.json" ]; then
-        echo "typescript"
-        return
-    fi
-
     # Check for Swift/iOS indicators
     if [ -f "$path/Podfile" ] || [ -f "$path/Package.swift" ] || \
        find "$path" -maxdepth 3 -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null | grep -q .; then
         echo "swift"
+        return
+    fi
+
+    # Check for Python indicators (before TypeScript because Python projects often have package.json for frontend assets)
+    if [ -f "$path/requirements.txt" ] || [ -f "$path/setup.py" ] || \
+       [ -f "$path/pyproject.toml" ] || [ -f "$path/Pipfile" ] || \
+       [ -f "$path/manage.py" ] || [ -f "$path/setup.cfg" ]; then
+        echo "python"
+        return
+    fi
+
+    # Check for TypeScript/JavaScript indicators
+    if [ -f "$path/package.json" ] || [ -f "$path/tsconfig.json" ]; then
+        echo "typescript"
         return
     fi
 
@@ -165,6 +173,94 @@ get_file_patterns() {
                 ;;
             "listener"|"callback"|"handler")
                 echo "*Listener.kt *Listener.java *Callback.kt *Callback.java *Handler.kt *Handler.java"
+                ;;
+            *)
+                echo ""
+                ;;
+        esac
+    elif [ "$proj_type" = "python" ]; then
+        # Python patterns
+        case "$pattern" in
+            # Tier 1 - Core Patterns (12)
+            "model"|"models"|"orm"|"django model")
+                echo "models.py *models.py *model.py *_models.py *_model.py"
+                ;;
+            "view"|"views"|"django view"|"endpoint")
+                echo "views.py *views.py *view.py *_views.py *_view.py"
+                ;;
+            "serializer"|"serializers"|"schema"|"schemas"|"pydantic"|"marshmallow")
+                echo "serializers.py *serializers.py *serializer.py *schemas.py *schema.py *_serializer.py *_schema.py"
+                ;;
+            "service"|"services"|"business logic")
+                echo "*service.py *services.py *_service.py *_services.py"
+                ;;
+            "repository"|"repo"|"data access")
+                echo "*repository.py *repositories.py *repo.py *_repository.py *_repo.py"
+                ;;
+            "api"|"router"|"routers"|"fastapi"|"flask"|"routes"|"urls"|"routing")
+                echo "*api.py *router.py *routers.py *routes.py *routing.py urls.py *_api.py *_router.py *_routes.py"
+                ;;
+            "form"|"forms"|"django form")
+                echo "forms.py *forms.py *form.py *_forms.py *_form.py"
+                ;;
+            "task"|"tasks"|"celery"|"background job"|"worker"|"workers")
+                echo "tasks.py *tasks.py *task.py celery.py *celery.py *worker.py *workers.py *_task.py *_tasks.py"
+                ;;
+            "test"|"tests"|"pytest"|"unittest"|"testing")
+                echo "test_*.py *_test.py tests.py *tests.py conftest.py"
+                ;;
+            "admin"|"django admin")
+                echo "admin.py *admin.py *_admin.py"
+                ;;
+            "middleware"|"middlewares")
+                echo "middleware.py *middleware.py *middlewares.py *_middleware.py"
+                ;;
+            "config"|"settings"|"configuration"|"conf")
+                echo "config.py *config.py settings.py *settings.py *conf.py *_config.py *_settings.py"
+                ;;
+
+            # Tier 2 - Supplementary Patterns (12)
+            "migration"|"migrations"|"alembic")
+                echo "*migrations*.py versions/*.py"
+                ;;
+            "command"|"commands"|"management command"|"cli")
+                echo "*command.py *commands.py"
+                ;;
+            "util"|"utils"|"helpers"|"helper")
+                echo "utils.py *utils.py util.py *util.py helpers.py *helpers.py helper.py *helper.py *_utils.py *_helpers.py"
+                ;;
+            "exception"|"exceptions"|"errors"|"error handling")
+                echo "exceptions.py *exceptions.py *exception.py errors.py *errors.py *_exceptions.py *_errors.py"
+                ;;
+            "validator"|"validators"|"validation")
+                echo "validators.py *validators.py *validator.py validation.py *validation.py *_validators.py"
+                ;;
+            "factory"|"factories"|"factory boy")
+                echo "*factory.py *factories.py *_factory.py *_factories.py"
+                ;;
+            "fixture"|"fixtures"|"test data")
+                echo "*fixtures.py fixtures.py conftest.py"
+                ;;
+            "signal"|"signals"|"django signal")
+                echo "signals.py *signals.py *signal.py *_signals.py"
+                ;;
+            "manager"|"managers"|"django manager")
+                echo "*manager.py *managers.py *_manager.py *_managers.py"
+                ;;
+            "mixin"|"mixins")
+                echo "*mixin.py *mixins.py *_mixin.py *_mixins.py"
+                ;;
+            "decorator"|"decorators")
+                echo "*decorator.py *decorators.py *_decorator.py *_decorators.py"
+                ;;
+            "client"|"clients"|"http client"|"api client")
+                echo "*client.py *clients.py *_client.py *_clients.py"
+                ;;
+            "pipeline"|"pipelines"|"scrapy pipeline")
+                echo "*pipeline.py *pipelines.py *_pipeline.py *_pipelines.py"
+                ;;
+            "spider"|"spiders"|"scrapy"|"crawler")
+                echo "*spider.py *spiders.py *_spider.py *_spiders.py"
                 ;;
             *)
                 echo ""
@@ -451,6 +547,94 @@ get_dir_patterns() {
                 echo ""
                 ;;
         esac
+    elif [ "$proj_type" = "python" ]; then
+        # Python directory patterns
+        case "$pattern" in
+            # Tier 1 - Core Patterns (12)
+            "model"|"models"|"orm"|"django model")
+                echo "models domain entities"
+                ;;
+            "view"|"views"|"django view"|"endpoint")
+                echo "views api endpoints"
+                ;;
+            "serializer"|"serializers"|"schema"|"schemas"|"pydantic"|"marshmallow")
+                echo "serializers schemas"
+                ;;
+            "service"|"services"|"business logic")
+                echo "services service domain"
+                ;;
+            "repository"|"repo"|"data access")
+                echo "repositories repository repos"
+                ;;
+            "api"|"router"|"routers"|"fastapi"|"flask"|"routes"|"urls")
+                echo "api routers routes endpoints"
+                ;;
+            "form"|"forms"|"django form")
+                echo "forms"
+                ;;
+            "task"|"tasks"|"celery"|"background job"|"worker"|"workers")
+                echo "tasks workers jobs celery"
+                ;;
+            "test"|"tests"|"pytest"|"unittest"|"testing")
+                echo "tests test testing"
+                ;;
+            "admin"|"django admin")
+                echo "admin"
+                ;;
+            "middleware"|"middlewares")
+                echo "middleware middlewares"
+                ;;
+            "config"|"settings"|"configuration"|"conf")
+                echo "config settings conf configuration"
+                ;;
+
+            # Tier 2 - Supplementary Patterns (12)
+            "migration"|"migrations"|"alembic")
+                echo "migrations alembic versions"
+                ;;
+            "command"|"commands"|"management command"|"cli")
+                echo "commands management management/commands"
+                ;;
+            "util"|"utils"|"helpers"|"helper")
+                echo "utils util helpers common lib"
+                ;;
+            "exception"|"exceptions"|"errors"|"error handling")
+                echo "exceptions errors"
+                ;;
+            "validator"|"validators"|"validation")
+                echo "validators validation"
+                ;;
+            "factory"|"factories"|"factory boy")
+                echo "factories"
+                ;;
+            "fixture"|"fixtures"|"test data")
+                echo "fixtures"
+                ;;
+            "signal"|"signals"|"django signal")
+                echo "signals"
+                ;;
+            "manager"|"managers"|"django manager")
+                echo "managers"
+                ;;
+            "mixin"|"mixins")
+                echo "mixins"
+                ;;
+            "decorator"|"decorators")
+                echo "decorators"
+                ;;
+            "client"|"clients"|"http client"|"api client")
+                echo "clients client"
+                ;;
+            "pipeline"|"pipelines"|"scrapy pipeline")
+                echo "pipelines"
+                ;;
+            "spider"|"spiders"|"scrapy"|"crawler")
+                echo "spiders crawlers"
+                ;;
+            *)
+                echo ""
+                ;;
+        esac
     elif [ "$proj_type" = "typescript" ]; then
         # TypeScript/React directory patterns
         case "$pattern" in
@@ -699,6 +883,38 @@ main() {
             echo "  - context / context provider / provider" >&2
             echo "  - types / type / interface / interfaces" >&2
             echo "  - config / configuration / environment / env" >&2
+        elif [ "$PROJECT_TYPE" = "python" ]; then
+            echo "Supported patterns (Python/Django/FastAPI/Flask):" >&2
+            echo "" >&2
+            echo "Tier 1 - Core patterns (12):" >&2
+            echo "  - model / models / orm / django model" >&2
+            echo "  - view / views / django view / endpoint" >&2
+            echo "  - serializer / schema / pydantic / marshmallow" >&2
+            echo "  - service / services / business logic" >&2
+            echo "  - repository / repo / data access" >&2
+            echo "  - api / router / routing / fastapi / flask / routes / urls" >&2
+            echo "  - form / forms / django form" >&2
+            echo "  - task / celery / background job / worker" >&2
+            echo "  - test / tests / pytest / unittest" >&2
+            echo "  - admin / django admin" >&2
+            echo "  - middleware / middlewares" >&2
+            echo "  - config / settings / configuration" >&2
+            echo "" >&2
+            echo "Tier 2 - Supplementary patterns (14):" >&2
+            echo "  - migration / migrations / alembic" >&2
+            echo "  - command / management command / cli" >&2
+            echo "  - util / utils / helpers" >&2
+            echo "  - exception / exceptions / errors" >&2
+            echo "  - validator / validators / validation" >&2
+            echo "  - factory / factories / factory boy" >&2
+            echo "  - fixture / fixtures / test data" >&2
+            echo "  - signal / signals / django signal" >&2
+            echo "  - manager / managers / django manager" >&2
+            echo "  - mixin / mixins" >&2
+            echo "  - decorator / decorators" >&2
+            echo "  - client / http client / api client" >&2
+            echo "  - pipeline / pipelines / scrapy pipeline" >&2
+            echo "  - spider / spiders / scrapy / crawler" >&2
         else
             echo "Supported patterns (Swift/iOS):" >&2
             echo "" >&2
