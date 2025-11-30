@@ -27,6 +27,15 @@ elif [ -f "$PROJECT_PATH/Cargo.toml" ]; then
 elif [ -f "$PROJECT_PATH/composer.json" ]; then
     echo "   ✓ PHP (composer.json found)"
     PROJECT_TYPE="php"
+elif [ -f "$PROJECT_PATH/build.gradle" ] || [ -f "$PROJECT_PATH/build.gradle.kts" ] || [ -f "$PROJECT_PATH/settings.gradle" ] || [ -f "$PROJECT_PATH/settings.gradle.kts" ]; then
+    echo "   ✓ Android/Kotlin (Gradle project found)"
+    PROJECT_TYPE="android"
+elif ls "$PROJECT_PATH"/*.xcodeproj 1>/dev/null 2>&1 || ls "$PROJECT_PATH"/*.xcworkspace 1>/dev/null 2>&1; then
+    echo "   ✓ iOS/Swift (Xcode project found)"
+    PROJECT_TYPE="ios"
+elif [ -f "$PROJECT_PATH/Package.swift" ]; then
+    echo "   ✓ Swift Package (Package.swift found)"
+    PROJECT_TYPE="swift"
 else
     echo "   ? Unknown project type"
     PROJECT_TYPE="unknown"
@@ -62,6 +71,24 @@ case "$PROJECT_TYPE" in
         TOTAL_FILES=$(find "$PROJECT_PATH" -type f -name "*.php" \
             ! -path "*/vendor/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
         echo "   PHP files: $TOTAL_FILES"
+        ;;
+    android)
+        KOTLIN_FILES=$(find "$PROJECT_PATH" -type f -name "*.kt" \
+            ! -path "*/build/*" ! -path "*/.gradle/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
+        JAVA_FILES=$(find "$PROJECT_PATH" -type f -name "*.java" \
+            ! -path "*/build/*" ! -path "*/.gradle/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
+        TOTAL_FILES=$((KOTLIN_FILES + JAVA_FILES))
+        echo "   Kotlin files: $KOTLIN_FILES"
+        echo "   Java files: $JAVA_FILES"
+        ;;
+    ios|swift)
+        SWIFT_FILES=$(find "$PROJECT_PATH" -type f -name "*.swift" \
+            ! -path "*/Pods/*" ! -path "*/.build/*" ! -path "*/.git/*" ! -path "*/DerivedData/*" | wc -l | tr -d ' ')
+        OBJC_FILES=$(find "$PROJECT_PATH" -type f \( -name "*.m" -o -name "*.h" \) \
+            ! -path "*/Pods/*" ! -path "*/.git/*" ! -path "*/DerivedData/*" | wc -l | tr -d ' ')
+        TOTAL_FILES=$((SWIFT_FILES + OBJC_FILES))
+        echo "   Swift files: $SWIFT_FILES"
+        echo "   Objective-C files: $OBJC_FILES"
         ;;
     *)
         TOTAL_FILES=$(find "$PROJECT_PATH" -type f \

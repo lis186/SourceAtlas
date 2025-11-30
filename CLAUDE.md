@@ -72,7 +72,7 @@ sourceatlas2/
 │
 ├── proposals/              # ✅ 功能提案（未實作功能）⭐
 │   ├── README.md           # 提案索引
-│   └── code-maat-integration/  # code-maat 整合設計 (v3.0 候選)
+│   └── code-maat-integration/  # code-maat 整合設計 (v2.6 候選)
 │       ├── SOURCEATLAS_CODEMAAT_INTEGRATION.md
 │       ├── CODE_MAAT_FORMAT_CHEATSHEET.md
 │       ├── PERFORMANCE_CONSIDERATIONS.md
@@ -402,7 +402,7 @@ dev-notes/YYYY-MM/implementation.md
 - ✅ 文檔基本完整
 
 **當前提案**：
-- `code-maat-integration/` - 時序分析整合 (v3.0 候選)
+- `code-maat-integration/` - 時序分析整合 (v2.6 候選)
 
 📚 **詳細說明**：見 [proposals/README.md](./proposals/README.md)
 
@@ -742,9 +742,9 @@ touch test-results.md
 - [ ] 完善 Git 分析 Scripts
 - [ ] 整體測試與文檔
 - [ ] 使用者回饋收集
-- [ ] 發布 v2.5.0
+- [ ] 發布 v2.5.2
 
-### 🔮 未來（v3.0+）
+### 🔮 未來（v2.6）
 - SourceAtlas Monitor - 持續追蹤和趨勢分析
 - 技術債務量化
 - 健康度儀表板

@@ -26,16 +26,16 @@
 - [x] ~~`/atlas.find`~~ 已取消 - 功能由現有 commands 涵蓋 (2025-11-25)
 
 ### Phase 4 - Testing & Polish (Week 9-16)
-- [ ] Comprehensive testing
-- [ ] Documentation update
-- [ ] Performance optimization
-- [ ] v2.5.0 Release
+- [x] Comprehensive testing ✅ (2025-11-30) - 90% pass rate, 9/10 tests
+- [x] Documentation update ✅ (2025-11-30) - Plugin sync, PROMPTS.md, version unification
+- [x] Performance optimization ✅ (2025-11-30) - Current performance sufficient
+- [ ] v2.5.2 Release
 
 ---
 
 ## 📅 Timeline
 
-### v2.5 (Current - Target: 3-4 weeks from 2025-11-20)
+### v2.5.2 (Current)
 
 **Week 1-4** ✅ (11/20-11/23):
 - Pattern Detection System
@@ -55,9 +55,9 @@
 **Week 13-16**:
 - Final Testing
 - Bug Fixes
-- v2.5.0 Release
+- v2.5.2 Release
 
-### v3.0+ (Future Vision)
+### v2.6 (Future Vision)
 
 **SourceAtlas Monitor**:
 - Continuous tracking
@@ -95,8 +95,8 @@
 6. Pattern statistics dashboard
 
 ### Technical Debt 🔧
-- [ ] Plugin 同步：更新 `plugin/` 以匹配已實作的 4 個 commands (init, overview, pattern, impact)
-- [ ] PROMPTS.md 更新：內容已過時，需與 v2.5 commands 對齊（或考慮廢棄）
+- [x] Plugin 同步：更新 `plugin/` 以匹配已實作的 4 個 commands (init, overview, pattern, impact) ✅ (2025-11-30)
+- [x] PROMPTS.md 更新：新增 v2.5 Commands 區段，保留手動 Prompts 用於深度分析 ✅ (2025-11-30)
 
 ---
 

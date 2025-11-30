@@ -97,7 +97,7 @@
 - ✅ **iOS/Swift**: 完整支援（29 patterns）
 - ✅ **TypeScript/React**: 完整支援（22 patterns）
 - ✅ **Android/Kotlin**: 完整支援（20 patterns）
-- 🔵 **Python/Go/Rust**: 規劃中（v3.0）
+- 🔵 **Python/Go/Rust**: 規劃中（v2.6）
 
 </details>
 
@@ -288,7 +288,7 @@ Claude Code + 2 分鐘安裝
 - ✅ `/atlas.pattern` - 設計模式學習
 - ✅ `/atlas.impact` - 影響分析
 
-**v3.0 (規劃中)**：Python/Ruby/Go Analyzer、更多 patterns、技術債務量化
+**v2.6 (規劃中)**：Python/Ruby/Go Analyzer、更多 patterns、技術債務量化
 
 ---
 

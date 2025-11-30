@@ -6,10 +6,10 @@ SourceAtlas helps developers quickly understand any codebase through pattern lea
 
 ## ✨ Features
 
+- **🚀 Project Init** (`/atlas.init`) - Initialize SourceAtlas in any project
+- **🔍 Project Overview** (`/atlas.overview`) - Quick project understanding (<5% file scan)
 - **🎯 Pattern Learning** (`/atlas.pattern`) - Learn design patterns from existing code
-- **📊 Impact Analysis** (`/atlas.impact`) - Analyze change impact (Coming Soon)
-- **🔍 Quick Search** (`/atlas.find`) - Rapidly locate functionality (Coming Soon)
-- **🔍 Project Overview** (`/atlas.overview`) - Quick project understanding
+- **📊 Impact Analysis** (`/atlas.impact`) - Analyze change impact with static dependency analysis
 
 ## 🚀 Installation
 
@@ -34,10 +34,42 @@ cp -r /path/to/sourceatlas-plugin ~/.claude/commands/sourceatlas
 /plugin install sourceatlas@sourceatlas-marketplace
 
 # Start using
+/atlas.init
 /atlas.pattern "api endpoint"
 ```
 
 ## 📖 Usage
+
+### `/atlas.init` - Initialize Project 🆕
+
+Initialize SourceAtlas in your project by injecting auto-trigger rules into CLAUDE.md.
+
+```bash
+/atlas.init
+```
+
+**What it does:**
+- Creates or updates CLAUDE.md with SourceAtlas auto-trigger rules
+- Claude Code will automatically suggest Atlas commands when appropriate
+- Sets up command reference for quick access
+
+### `/atlas.overview` - Project Overview
+
+Get a quick understanding of any codebase by scanning <5% of files.
+
+```bash
+# Analyze entire project
+/atlas.overview
+
+# Analyze specific directory
+/atlas.overview src/api
+```
+
+**What you get:**
+- Project fingerprint (type, scale, tech stack)
+- Architecture hypotheses with confidence levels
+- AI collaboration level detection (Level 0-4)
+- Recommended next steps
 
 ### `/atlas.pattern` - Learn Design Patterns ⭐
 
@@ -70,11 +102,27 @@ Learn how the current codebase implements specific patterns.
 - 🧪 Testing patterns
 - 📚 Concrete implementation steps
 
-### Coming Soon
+### `/atlas.impact` - Impact Analysis 🆕
 
-- `/atlas.impact` - Analyze the impact of code changes
-- `/atlas.find` - Quickly locate functionality
-- `/atlas` - Complete three-stage codebase analysis
+Analyze the impact scope of code changes using static dependency analysis.
+
+```bash
+# Analyze API change impact
+/atlas.impact "api /api/users/{id}"
+
+# Analyze model change impact
+/atlas.impact "User model"
+
+# Analyze component change impact
+/atlas.impact "authentication"
+```
+
+**What you get:**
+- 📊 Impact summary (backend, frontend, test files)
+- 🔴🟡🟢 Risk level assessment
+- 📋 Migration checklist
+- 🧪 Test coverage gaps
+- ⚠️ Language-specific risks (Swift/ObjC interop for iOS)
 
 ## 🎓 How It Works
 
@@ -82,7 +130,8 @@ SourceAtlas uses **information theory principles** to understand codebases effic
 
 1. **High-Entropy File Prioritization** - Scans <5% of files to achieve 70-80% understanding
 2. **Pattern Recognition** - Extracts reusable design patterns from existing code
-3. **Actionable Guidance** - Provides concrete steps to follow existing conventions
+3. **Static Dependency Analysis** - Traces code dependencies without runtime execution
+4. **Actionable Guidance** - Provides concrete steps to follow existing conventions
 
 **Key Principles:**
 - ✅ Scan <5% of files (targeted, not exhaustive)
@@ -95,21 +144,21 @@ SourceAtlas uses **information theory principles** to understand codebases effic
 When you run `/atlas.pattern "api endpoint"` in a Next.js project:
 
 ```markdown
-# 📋 Pattern: REST API Endpoints (Next.js API Routes)
+# Pattern: REST API Endpoints (Next.js API Routes)
 
-## ✅ How This Codebase Handles It
+## Overview
 
 This project uses Next.js API routes with TypeScript, following a
 consistent controller pattern with centralized error handling and
 Zod validation.
 
-## 📁 Best Example Files
+## Best Examples
 
 - **`src/pages/api/users/[id].ts:15`** - Complete CRUD endpoint example
 - **`src/pages/api/auth/login.ts:8`** - POST endpoint with validation
 - **`src/lib/api/errorHandler.ts:5`** - Centralized error handling
 
-## 🎯 Standard Flow
+## Key Conventions
 
 1. **Define route** in `src/pages/api/[route].ts`
 2. **Validate request** using Zod schema
@@ -129,8 +178,13 @@ sourceatlas-plugin/
 ├── .claude-plugin/
 │   └── plugin.json          # Plugin metadata
 ├── commands/
-│   └── atlas.pattern.md     # Pattern learning command
+│   ├── atlas.init.md        # Project initialization
+│   ├── atlas.overview.md    # Project overview
+│   ├── atlas.pattern.md     # Pattern learning
+│   └── atlas.impact.md      # Impact analysis
 ├── README.md
+├── CHANGELOG.md
+├── TESTING.md
 └── LICENSE
 ```
 
@@ -149,7 +203,10 @@ cp -r plugin ~/test-marketplace/sourceatlas-plugin
 
 # Test in any project
 cd ~/your-project
+/atlas.init
+/atlas.overview
 /atlas.pattern "api endpoint"
+/atlas.impact "User model"
 
 # After making changes
 /plugin uninstall sourceatlas-plugin@test-marketplace
@@ -172,17 +229,17 @@ MIT License - see [LICENSE](LICENSE) for details
 
 ## 🙏 Acknowledgments
 
-Based on SourceAtlas v2.0 methodology:
+Based on SourceAtlas v2.5 methodology:
 - Three-stage analysis framework
 - Information theory principles
 - High-entropy file prioritization
+- Static dependency analysis
 
 ## 📚 Resources
 
 - [SourceAtlas Documentation](https://github.com/justinlee/sourceatlas2)
 - [Claude Code Plugin Docs](https://code.claude.com/docs/en/plugins)
-- [Usage Examples](./USAGE_EXAMPLES.md) (Coming Soon)
 
 ---
 
-**SourceAtlas v2.5.1** - Understanding codebases at the speed of thought 🚀
+**SourceAtlas v2.5.2** - Understanding codebases at the speed of thought 🚀
