@@ -133,6 +133,12 @@ get_file_patterns() {
             "singleton"|"object"|"manager")
                 echo "*Manager.kt *Manager.java *Provider.kt *Singleton.kt AppConfig.kt"
                 ;;
+            "test"|"testing"|"mock"|"fake"|"stub")
+                echo "*Test.kt *Test.java *Tests.kt *Tests.java Mock*.kt Mock*.java Fake*.kt Fake*.java *Mock.kt *Mock.java *Fake.kt *Fake.java *Stub.kt *Stub.java"
+                ;;
+            "store"|"redux"|"mvi store")
+                echo "*Store.kt *Store.java *Redux.kt *Redux.java"
+                ;;
             *)
                 echo ""
                 ;;
@@ -381,6 +387,12 @@ get_dir_patterns() {
             "singleton"|"object"|"manager")
                 echo "manager singleton util"
                 ;;
+            "test"|"testing"|"mock"|"fake"|"stub")
+                echo "test tests testing mock mocks fake fakes stub stubs androidTest testFixtures"
+                ;;
+            "store"|"redux"|"mvi store")
+                echo "store stores state redux mvi"
+                ;;
             *)
                 echo ""
                 ;;
@@ -594,6 +606,8 @@ main() {
             echo "  - extension / ext / extensions" >&2
             echo "  - viewbinding / databinding / binding" >&2
             echo "  - singleton / object / manager" >&2
+            echo "  - test / testing / mock / fake / stub" >&2
+            echo "  - store / redux / mvi store" >&2
         elif [ "$PROJECT_TYPE" = "typescript" ]; then
             echo "Supported patterns (TypeScript/React/Next.js):" >&2
             echo "" >&2

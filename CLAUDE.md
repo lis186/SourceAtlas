@@ -319,7 +319,7 @@ hypotheses:
 - **v2.5** 🔵 - Commands 實作中（預計 3-4 週）
 
 **版本歷程**：
-- v2.5.2 (2025-11-30): **Kotlin/Android Patterns 完成** - 20 patterns 測試，95%+ 準確率，支援 Circuit/MVI
+- v2.5.2 (2025-11-30): **Kotlin/Android Patterns 完成** - 22 patterns（+test, +store），95%+ 準確率，支援 Circuit/MVI
 - v2.5.1 (2025-11-23): **iOS Patterns 擴展完成** - 新增 18 個 iOS patterns (16 → 34, +112.5%)
 - v1.0 (2025-11-22): 完成 5 專案驗證、YAML vs TOON 決策、規模感知算法
 - v2.0 (2025-11-19): 手動 Prompts 方法論
@@ -734,7 +734,7 @@ touch test-results.md
 
 ### 成果總結
 
-- ✅ **20 個 patterns 測試**（12 Tier 1 + 8 Tier 2）
+- ✅ **22 個 patterns**（12 Tier 1 + 10 Tier 2）
 - ✅ **測試專案**: 5 個 Kotlin 專案（817 ~ 32K LOC）
 - ✅ **整體準確率**: 95%+
 - ✅ **架構覆蓋**: MVVM, MVI, Clean Architecture, Circuit
