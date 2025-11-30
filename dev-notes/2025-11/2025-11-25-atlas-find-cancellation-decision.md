@@ -1,4 +1,4 @@
-# Decision: Cancel `/atlas-find` Command
+# Decision: Cancel `/atlas.find` Command
 
 **Date**: 2025-11-25
 **Type**: Feature Cancellation
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-After user research with **8 developer personas** across **9 projects** (80+ queries), we decided to **cancel `/atlas-find`**. Analysis revealed **70%+ of use cases already covered** by existing commands or built-in tools.
+After user research with **8 developer personas** across **9 projects** (80+ queries), we decided to **cancel `/atlas.find`**. Analysis revealed **70%+ of use cases already covered** by existing commands or built-in tools.
 
 **Decision**: Focus on perfecting 3 core commands rather than adding a 4th with unclear value.
 
@@ -20,20 +20,20 @@ After user research with **8 developer personas** across **9 projects** (80+ que
 ### Original Plan
 
 ```bash
-/atlas-find "user login"  # Quickly locate feature implementation
+/atlas.find "user login"  # Quickly locate feature implementation
 ```
 
-**Intended**: Bridge between `/atlas-pattern` (learn patterns) and Grep (keyword search)
+**Intended**: Bridge between `/atlas.pattern` (learn patterns) and Grep (keyword search)
 
 ### Problem
 
 Every intended use case mapped to existing solutions:
-- Learn HOW → `/atlas-pattern` ✅
-- Find WHO uses it → `/atlas-impact` ✅
+- Learn HOW → `/atlas.pattern` ✅
+- Find WHO uses it → `/atlas.impact` ✅
 - Search keywords → Built-in Grep/Glob ✅
 - Debug issues → Ask Claude conversationally ✅
 
-**Question**: What unique value does `/atlas-find` provide? → **None found**
+**Question**: What unique value does `/atlas.find` provide? → **None found**
 
 ---
 
@@ -47,7 +47,7 @@ Simulated **8 developer roles** (Intern to Senior Architect) across 9 real-world
 
 **Total**: 80+ realistic queries collected
 
-→ Full research archived in `dev-notes/2025-11/atlas-find-research/`
+→ Full research archived in `dev-notes/2025-11/atlas.find-research/`
 
 ---
 
@@ -57,9 +57,9 @@ Simulated **8 developer roles** (Intern to Senior Architect) across 9 real-world
 
 | Query Type | % | Already Solved By |
 |-----------|---|-------------------|
-| Pattern Learning | 35% | `/atlas-pattern` ✅ |
-| Impact Analysis | 35% | `/atlas-impact` ✅ |
-| Architecture Navigation | 15% | `/atlas-overview` ✅ |
+| Pattern Learning | 35% | `/atlas.pattern` ✅ |
+| Impact Analysis | 35% | `/atlas.impact` ✅ |
+| Architecture Navigation | 15% | `/atlas.overview` ✅ |
 | Symptom Diagnosis | 10% | Conversational ✅ |
 | Keyword Search | 5% | Grep/Glob ✅ |
 
@@ -70,13 +70,13 @@ Simulated **8 developer roles** (Intern to Senior Architect) across 9 real-world
 Example mappings:
 ```
 "find checkout button"
-  → Learn pattern? /atlas-pattern "checkout button"
-  → See impact? /atlas-impact "checkout"
+  → Learn pattern? /atlas.pattern "checkout button"
+  → See impact? /atlas.impact "checkout"
   → Find file? Grep "checkout"
 
 "where is User authentication"
-  → Learn pattern? /atlas-pattern "authentication"
-  → See usage? /atlas-impact "User"
+  → Learn pattern? /atlas.pattern "authentication"
+  → See usage? /atlas.impact "User"
 ```
 
 Every query had a better existing solution.
@@ -84,7 +84,7 @@ Every query had a better existing solution.
 ### Finding 3: Risk of Confusion
 
 Having 4 similar commands creates decision paralysis:
-> "Should I use /atlas-find, /atlas-pattern, /atlas-impact, or Grep?"
+> "Should I use /atlas.find, /atlas.pattern, /atlas.impact, or Grep?"
 
 **Better UX**: 3 clear, non-overlapping commands with obvious purposes.
 
@@ -92,7 +92,7 @@ Having 4 similar commands creates decision paralysis:
 
 ## Decision
 
-### ✅ Cancel `/atlas-find`
+### ✅ Cancel `/atlas.find`
 
 **Rationale**:
 1. 70%+ use cases already covered
@@ -102,7 +102,7 @@ Having 4 similar commands creates decision paralysis:
 
 ### Phase 3 Redirect
 
-**Before**: Implement `/atlas-find` + `/atlas-explain`
+**Before**: Implement `/atlas.find` + `/atlas.explain`
 **After**: Multi-language expansion + Testing + v2.5.0 release
 
 ---
@@ -110,7 +110,7 @@ Having 4 similar commands creates decision paralysis:
 ## Impact
 
 ### Files Updated
-- ✅ PRD.md - Removed all `/atlas-find` references
+- ✅ PRD.md - Removed all `/atlas.find` references
 - ✅ CLAUDE.md - Updated roadmap
 - ✅ HISTORY.md - Added decision record
 
@@ -137,7 +137,7 @@ Having 4 similar commands creates decision paralysis:
 
 ## Conclusion
 
-Canceling `/atlas-find` was correct based on:
+Canceling `/atlas.find` was correct based on:
 - ✅ Evidence: 70%+ use cases already covered
 - ✅ UX: Avoiding confusion
 - ✅ Efficiency: Focus on core value

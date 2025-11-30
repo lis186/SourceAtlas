@@ -11,7 +11,7 @@
 
 本提案設計用於 **SourceAtlas v3.0**（非 v2.5）。
 
-**原因**：v2.5 已規劃 `/atlas-impact` 命令用於靜態影響分析，與本提案功能互補但不重疊。
+**原因**：v2.5 已規劃 `/atlas.impact` 命令用於靜態影響分析，與本提案功能互補但不重疊。
 
 ### 命令簡化（2025-11-24 更新）
 
@@ -19,12 +19,12 @@
 
 | 原提案 | v3.0 最終設計 | 說明 |
 |--------|--------------|------|
-| `/changes` | `/atlas-changes` | ✅ 整合完整時序分析功能 |
-| `/impact` | **已移除** | ⚠️ 整合到 `/atlas-changes` |
-| `/expert` | `/atlas-expert` | ✅ 保持獨立 |
+| `/changes` | `/atlas.changes` | ✅ 整合完整時序分析功能 |
+| `/impact` | **已移除** | ⚠️ 整合到 `/atlas.changes` |
+| `/expert` | `/atlas.expert` | ✅ 保持獨立 |
 
 **簡化理由**：
-- `/atlas-changes` 已包含耦合度分析（`--coupling` 選項）
+- `/atlas.changes` 已包含耦合度分析（`--coupling` 選項）
 - 避免功能重疊和用戶混淆
 - 保持命令職責清晰
 
@@ -32,12 +32,12 @@
 
 | 命令 | 版本 | 分析方法 | 適用場景 | 狀態 |
 |------|------|---------|---------|------|
-| `/atlas-impact` | v2.5 | **靜態分析**（代碼結構） | API 變更、前後端影響 | Phase 2 |
-| `/atlas-changes` | v3.0 | **時序分析**（git 歷史） | 變更頻率、耦合度、風險評估 | 提案階段 |
+| `/atlas.impact` | v2.5 | **靜態分析**（代碼結構） | API 變更、前後端影響 | Phase 2 |
+| `/atlas.changes` | v3.0 | **時序分析**（git 歷史） | 變更頻率、耦合度、風險評估 | 提案階段 |
 
 **兩者互補使用**：
-- 改 API 前：用 `/atlas-impact` 找靜態依賴（誰調用了這個 API）
-- 改核心邏輯前：用 `/atlas-changes` 看時序耦合（歷史上常一起改的檔案）
+- 改 API 前：用 `/atlas.impact` 找靜態依賴（誰調用了這個 API）
+- 改核心邏輯前：用 `/atlas.changes` 看時序耦合（歷史上常一起改的檔案）
 
 ---
 
@@ -60,8 +60,8 @@
 
 ### 目標
 為 SourceAtlas v3.0 增加 2 個新命令，提供程式碼的時序分析能力：
-- `/atlas-changes` - 歷史查詢（整合變更頻率、**耦合度分析**、熱點、風險評估）
-- `/atlas-expert` - 專家查詢
+- `/atlas.changes` - 歷史查詢（整合變更頻率、**耦合度分析**、熱點、風險評估）
+- `/atlas.expert` - 專家查詢
 
 ### 關鍵決策
 - **工具選擇**: 使用 code-maat 進行 git 歷史分析
@@ -221,25 +221,25 @@ payment_controller.rb,Bob,890,1200,0.74
 SourceAtlas Commands:
 
   靜態分析 (v2.5):
-    /atlas-overview  → 專案指紋 ✅
-    /atlas-pattern   → 模式識別 ✅
-    /atlas-impact    → 靜態影響分析（API、類型）⏳
+    /atlas.overview  → 專案指紋 ✅
+    /atlas.pattern   → 模式識別 ✅
+    /atlas.impact    → 靜態影響分析（API、類型）⏳
 
   時序分析 (v3.0 新增 - 簡化版):
-    /atlas-changes   → 歷史查詢 + 耦合度分析 + 熱點 + 風險評估
-    /atlas-expert    → 專家查詢
+    /atlas.changes   → 歷史查詢 + 耦合度分析 + 熱點 + 風險評估
+    /atlas.expert    → 專家查詢
 ```
 
 ---
 
-### 1. `/atlas-changes` - 歷史查詢 + 耦合度分析
+### 1. `/atlas.changes` - 歷史查詢 + 耦合度分析
 
 #### 用途
 查詢程式碼的變更歷史、**耦合度分析**、熱點、風險評估等完整時序資訊。
 
 **整合功能**（簡化版設計）：
 - ✅ 變更頻率分析（哪些檔案改最多）
-- ✅ **耦合度分析**（哪些檔案常一起改）← 整合原 `/atlas-coupling`
+- ✅ **耦合度分析**（哪些檔案常一起改）← 整合原 `/atlas.coupling`
 - ✅ 熱點識別（高風險區域）
 - ✅ 風險評估（基於歷史 bug 和變更模式）
 - ✅ PR 影響分析（基於歷史耦合度）
@@ -247,7 +247,7 @@ SourceAtlas Commands:
 
 #### 語法
 ```bash
-/atlas-changes <target> [options]
+/atlas.changes <target> [options]
 
 target: 檔案路徑 | 模組名稱 | . (整個專案)
 options:
@@ -261,7 +261,7 @@ options:
 
 **基本用法 - 檔案歷史**
 ```bash
-/atlas-changes src/payment_service.rb
+/atlas.changes src/payment_service.rb
 ```
 
 **輸出 YAML 格式**：
@@ -336,7 +336,7 @@ risk_assessment:
 
 **進階用法 - 找專家**
 ```bash
-/atlas-changes payment --who
+/atlas.changes payment --who
 ```
 
 **輸出**：
@@ -377,7 +377,7 @@ knowledge_risk:
 
 **進階用法 - 熱點分析**
 ```bash
-/atlas-changes . --hotspots
+/atlas.changes . --hotspots
 ```
 
 **輸出**：
@@ -422,14 +422,14 @@ project_health:
 
 ---
 
-### 2. `/atlas-expert` - 專家查詢
+### 2. `/atlas.expert` - 專家查詢
 
 #### 用途
 找出模組或檔案的專家，以及反向查詢開發者的專長領域。
 
 #### 語法
 ```bash
-/atlas-expert <query>
+/atlas.expert <query>
 
 query:
   - 模組名稱（例: payment）
@@ -441,7 +441,7 @@ query:
 
 **找模組專家**
 ```bash
-/atlas-expert payment
+/atlas.expert payment
 ```
 
 **輸出**：
@@ -536,7 +536,7 @@ suggested_reviewers:
 
 **反向查詢 - 開發者的專長**
 ```bash
-/atlas-expert Alice
+/atlas.expert Alice
 ```
 
 **輸出**：

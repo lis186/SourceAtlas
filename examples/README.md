@@ -87,7 +87,7 @@ git clone <repository-url>
 
 ```bash
 cd <project-name>
-/atlas-overview
+/atlas.overview
 ```
 
 ### 3. 研究輸出並學習

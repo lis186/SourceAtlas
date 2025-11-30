@@ -1,6 +1,6 @@
-# Senior iOS Developer - `/atlas-find` Query Exercise
+# Senior iOS Developer - `/atlas.find` Query Exercise
 
-**Purpose**: Understand how experienced iOS engineers query large unfamiliar codebases, and what `/atlas-find` should support.
+**Purpose**: Understand how experienced iOS engineers query large unfamiliar codebases, and what `/atlas.find` should support.
 
 **Created**: November 25, 2025
 **Scope**: 25 realistic technical queries across 2 large iOS projects (Signal-iOS, WordPress-iOS)
@@ -74,7 +74,7 @@ Query pattern analysis and design implications:
 **Time investment goals** (2-4 hours per investigation)
 **Red flags** indicating risky areas to investigate carefully
 
-**Design implications** for `/atlas-find` implementation
+**Design implications** for `/atlas.find` implementation
 
 **Perfect for**: Understanding the patterns behind effective queries
 
@@ -160,7 +160,7 @@ Corresponding file counts:
 
 ## For the SourceAtlas Team
 
-This exercise reveals what `/atlas-find` should optimize for:
+This exercise reveals what `/atlas.find` should optimize for:
 
 ### Core Capabilities Needed
 
@@ -210,7 +210,7 @@ This exercise reveals what `/atlas-find` should optimize for:
 
 ## How to Use These Documents
 
-### For `/atlas-find` Implementation
+### For `/atlas.find` Implementation
 1. Read `SENIOR_DEV_QUERY_PATTERNS.md` for design principles
 2. Review `QUICK_REFERENCE_SENIOR_DEV_QUERIES.md` for red flags and patterns
 3. Study `ios-senior-dev-atlas-find-queries.md` for real scenarios
@@ -220,7 +220,7 @@ This exercise reveals what `/atlas-find` should optimize for:
 2. Reference `ios-senior-dev-atlas-find-queries.md` for detailed scenarios
 3. Use `SENIOR_DEV_QUERY_PATTERNS.md` for pattern templates
 
-### For Evaluating `/atlas-find` Effectiveness
+### For Evaluating `/atlas.find` Effectiveness
 Test against these 25 queries:
 - Can it return the right 10-15 files in < 5 seconds?
 - Does it understand the data flow intent?
@@ -262,5 +262,5 @@ This exercise demonstrates that senior developers:
 4. Leverage domain knowledge (iOS patterns, security, state management)
 5. Seek precedent (learn from existing implementations)
 
-The `/atlas-find` tool should be designed to support these proven behaviors.
+The `/atlas.find` tool should be designed to support these proven behaviors.
 
