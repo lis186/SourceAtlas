@@ -1,10 +1,23 @@
 # Proposal: YAML-based Pattern Configuration
 
-**Status**: Draft
+**Status**: ⚪ 擱置 (On Hold)
 **Version**: 1.0
 **Author**: Claude & Justin
 **Created**: 2025-11-30
-**Target Version**: v2.6
+**Shelved**: 2025-11-30
+
+---
+
+> **⚠️ 擱置原因**
+>
+> 經多角色審查（Developer, PM, Architect, UX, QA）後決定暫不實作：
+>
+> 1. **無使用者需求** - 目前無人要求自訂 patterns
+> 2. **ROI 為負** - 6-8 週工作量，收益不明確
+> 3. **現有機制足夠** - `find-patterns.sh` 無參數已可列出所有 patterns
+> 4. **優先級較低** - 應優先完善現有 commands 和多語言支援
+>
+> 設計文檔保留供未來參考。待使用者明確需求時再評估。
 
 ---
 
