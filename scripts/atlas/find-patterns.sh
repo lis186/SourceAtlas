@@ -73,14 +73,14 @@ get_file_patterns() {
     if [ "$proj_type" = "android" ]; then
         # Android/Kotlin patterns
         case "$pattern" in
-            "viewmodel"|"view model"|"mvvm")
-                echo "*ViewModel.kt *ViewModel.java *VM.kt *VM.java"
+            "viewmodel"|"view model"|"mvvm"|"presenter")
+                echo "*ViewModel.kt *ViewModel.java *VM.kt *VM.java *Presenter.kt *Presenter.java"
                 ;;
             "repository"|"repo")
                 echo "*Repository.kt *Repository.java *Repo.kt *Repo.java *DataSource.kt *DataSource.java"
                 ;;
-            "composable"|"compose"|"jetpack compose")
-                echo "*Screen.kt *Composable.kt Ui*.kt"
+            "composable"|"compose"|"jetpack compose"|"screen")
+                echo "*Screen.kt *Composable.kt Ui*.kt *Component.kt"
                 ;;
             "fragment")
                 echo "*Fragment.kt *Fragment.java *Frag.kt *Frag.java"
@@ -97,8 +97,8 @@ get_file_patterns() {
             "retrofit"|"api"|"networking"|"network")
                 echo "*ApiService.kt *ApiService.java *Api.kt *Api.java *Client.kt *Client.java *Interceptor.kt NetworkModule.kt"
                 ;;
-            "state"|"stateflow"|"livedata"|"state management")
-                echo "*State.kt *State.java *UiState.kt *Event.kt *Action.kt"
+            "state"|"stateflow"|"livedata"|"state management"|"uistate")
+                echo "*State.kt *State.java *UiState.kt *Event.kt *Action.kt *Intent.kt *Effect.kt"
                 ;;
             "navigation"|"nav"|"navigator")
                 echo "*Navigator.kt *Navigator.java *Coordinator.kt nav_graph.xml *Directions.kt"
@@ -321,13 +321,13 @@ get_dir_patterns() {
     if [ "$proj_type" = "android" ]; then
         # Android/Kotlin directory patterns
         case "$pattern" in
-            "viewmodel"|"view model"|"mvvm")
-                echo "viewmodel viewmodels presentation ui/*/viewmodel"
+            "viewmodel"|"view model"|"mvvm"|"presenter")
+                echo "viewmodel viewmodels presentation ui/*/viewmodel presenter"
                 ;;
             "repository"|"repo")
                 echo "repository repositories data/repository data/source"
                 ;;
-            "composable"|"compose"|"jetpack compose")
+            "composable"|"compose"|"jetpack compose"|"screen")
                 echo "compose ui/compose ui/screen screens components ui/components"
                 ;;
             "fragment")
@@ -345,8 +345,8 @@ get_dir_patterns() {
             "retrofit"|"api"|"networking"|"network")
                 echo "network api remote data/remote service"
                 ;;
-            "state"|"stateflow"|"livedata"|"state management")
-                echo "state states ui/state event"
+            "state"|"stateflow"|"livedata"|"state management"|"uistate")
+                echo "state states ui/state event mvi"
                 ;;
             "navigation"|"nav"|"navigator")
                 echo "navigation nav coordinator"
@@ -572,15 +572,15 @@ main() {
             echo "Supported patterns (Android/Kotlin):" >&2
             echo "" >&2
             echo "Tier 1 patterns:" >&2
-            echo "  - viewmodel / view model / mvvm" >&2
+            echo "  - viewmodel / view model / mvvm / presenter" >&2
             echo "  - repository / repo" >&2
-            echo "  - composable / compose / jetpack compose" >&2
+            echo "  - composable / compose / jetpack compose / screen" >&2
             echo "  - fragment" >&2
             echo "  - hilt / dagger / di / dependency injection" >&2
             echo "  - usecase / use case / interactor" >&2
             echo "  - room / dao / database" >&2
             echo "  - retrofit / api / networking / network" >&2
-            echo "  - state / stateflow / livedata / state management" >&2
+            echo "  - state / stateflow / livedata / state management / uistate" >&2
             echo "  - navigation / nav / navigator" >&2
             echo "  - adapter / recyclerview / viewholder" >&2
             echo "  - workmanager / worker / background" >&2

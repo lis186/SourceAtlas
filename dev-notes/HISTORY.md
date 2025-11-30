@@ -8,6 +8,15 @@
 
 ### Week 5 (11/25-12/01): v2.5.2 Core Commands Complete ⭐⭐
 
+**Kotlin/Android Patterns 實作完成** (11/30):
+- 完成 6 階段方法論驗證（Phase 1-2）
+- 5 個測試專案：nowinandroid (18k⭐), tivi (6k⭐), Pokedex (7k⭐), Foodium, foodies
+- 20 個 patterns 測試（12 Tier 1 + 8 Tier 2），95%+ 準確率
+- 關鍵發現：Circuit library 使用 Presenter/Component 模式（非傳統 ViewModel）
+- 新增 patterns：`*Presenter.kt`, `*Component.kt`, `*UiState.kt`, `*Intent.kt`, `*Effect.kt`
+→ [研究報告](./2025-11/2025-11-30-kotlin-android-research-report.md)
+→ [實作報告](./2025-11/2025-11-30-kotlin-patterns-implementation-report.md)
+
 **v2.5.2 Release Preparation** (11/30):
 - Comprehensive testing of all 4 commands (90% pass rate)
 - Plugin sync: Updated plugin/ to match .claude/commands/ (4 commands)
