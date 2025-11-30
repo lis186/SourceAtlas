@@ -228,13 +228,13 @@ PRD 核心定位：
    - 更新命令清單（3→2）
 
 4. `PRD.md`
-   - 更新 v3.0 規劃章節
+   - 更新 v2.6 規劃章節
 
 ### 影響
 
 **提案狀態**：
 - 文檔版本：v2.0 → v2.1
-- 目標產品版本：v3.0（不變）
+- 目標產品版本：v2.6（不變）
 - 狀態：🟢 已批准待實作
 
 ---
@@ -304,7 +304,7 @@ PRD 核心定位：
 - [PRD.md](../../PRD.md) - 產品需求文檔
 - [CLAUDE.md](../../CLAUDE.md) - AI 協作指南
 - [PROMPTS.md](../../PROMPTS.md) - 完整三階段分析 prompts
-- [proposals/code-maat-integration/](../../proposals/code-maat-integration/) - v3.0 時序分析提案
+- [proposals/code-maat-integration/](../../proposals/code-maat-integration/) - v2.6 時序分析提案
 - [HISTORY.md](../HISTORY.md) - 完整開發歷史
 
 ---

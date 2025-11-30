@@ -4,10 +4,10 @@ SourceAtlas 未來功能的完整設計文檔。
 
 ## 📋 當前提案
 
-### 🟢 已批准待實作（v3.0）
+### 🟢 已批准待實作（v2.6）
 
-- **[code-maat Integration](./code-maat-integration/SOURCEATLAS_CODEMAAT_INTEGRATION.md)** (v3.0 候選)
-  - **目標**: 為 SourceAtlas v3.0 增加時序分析能力
+- **[code-maat Integration](./code-maat-integration/SOURCEATLAS_CODEMAAT_INTEGRATION.md)** (v2.6 候選)
+  - **目標**: 為 SourceAtlas v2.6 增加時序分析能力
   - **命令**: 2 個新命令（簡化版）
     - `/atlas.changes` - 歷史查詢（變更頻率、**耦合度**、熱點、風險評估）
     - `/atlas.expert` - 專家查詢（代碼所有權、知識地圖）

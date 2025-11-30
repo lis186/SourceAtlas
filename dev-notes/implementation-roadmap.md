@@ -513,11 +513,11 @@
 
 ---
 
-## 💡 Future Enhancements (v3.0+)
+## 💡 Future Enhancements (v2.6+)
 
 **Not in scope for v2.5, but worth tracking**:
 
-1. **SourceAtlas Monitor** (PRD v3.0)
+1. **SourceAtlas Monitor** (PRD v2.6)
    - Continuous tracking
    - Trend analysis
    - Health dashboard
