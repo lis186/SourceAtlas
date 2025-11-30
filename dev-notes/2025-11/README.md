@@ -94,7 +94,6 @@
 
 - [ ] 實作其他語言 analyzers（Python, Ruby, Go, TypeScript）
 - [ ] 改進 Junior developer 體驗（3.5 → 4.0+）
-- [ ] 完成 v2.5 剩餘 Commands (`/atlas.find`, `/atlas.explain`)
 - [ ] 準備 v3.0 規劃（code-maat 整合）
 
 ---
