@@ -139,6 +139,33 @@ get_file_patterns() {
             "store"|"redux"|"mvi store")
                 echo "*Store.kt *Store.java *Redux.kt *Redux.java"
                 ;;
+            "factory"|"builder"|"creator")
+                echo "*Factory.kt *Factory.java *Builder.kt *Builder.java *Creator.kt *Creator.java"
+                ;;
+            "provider"|"content provider")
+                echo "*Provider.kt *Provider.java *ContentProvider.kt *ContentProvider.java"
+                ;;
+            "contract"|"interface"|"abstraction")
+                echo "*Contract.kt *Contract.java"
+                ;;
+            "config"|"configuration"|"settings"|"preferences")
+                echo "*Config.kt *Config.java *Configuration.kt *Configuration.java *Settings.kt *Settings.java *Preferences.kt *Preferences.java"
+                ;;
+            "validator"|"validation")
+                echo "*Validator.kt *Validator.java *Validation.kt *Validation.java"
+                ;;
+            "parser"|"serializer"|"deserializer")
+                echo "*Parser.kt *Parser.java *Serializer.kt *Serializer.java *Deserializer.kt *Deserializer.java"
+                ;;
+            "formatter"|"format")
+                echo "*Formatter.kt *Formatter.java *Format.kt *Format.java"
+                ;;
+            "loader"|"fetcher")
+                echo "*Loader.kt *Loader.java *Fetcher.kt *Fetcher.java"
+                ;;
+            "listener"|"callback"|"handler")
+                echo "*Listener.kt *Listener.java *Callback.kt *Callback.java *Handler.kt *Handler.java"
+                ;;
             *)
                 echo ""
                 ;;
@@ -393,6 +420,33 @@ get_dir_patterns() {
             "store"|"redux"|"mvi store")
                 echo "store stores state redux mvi"
                 ;;
+            "factory"|"builder"|"creator")
+                echo "factory factories builder builders di"
+                ;;
+            "provider"|"content provider")
+                echo "provider providers content"
+                ;;
+            "contract"|"interface"|"abstraction")
+                echo "contract contracts interface interfaces"
+                ;;
+            "config"|"configuration"|"settings"|"preferences")
+                echo "config configuration settings preferences"
+                ;;
+            "validator"|"validation")
+                echo "validator validators validation"
+                ;;
+            "parser"|"serializer"|"deserializer")
+                echo "parser parsers serializer serializers"
+                ;;
+            "formatter"|"format")
+                echo "formatter formatters format"
+                ;;
+            "loader"|"fetcher")
+                echo "loader loaders fetcher"
+                ;;
+            "listener"|"callback"|"handler")
+                echo "listener listeners callback callbacks handler handlers"
+                ;;
             *)
                 echo ""
                 ;;
@@ -608,6 +662,15 @@ main() {
             echo "  - singleton / object / manager" >&2
             echo "  - test / testing / mock / fake / stub" >&2
             echo "  - store / redux / mvi store" >&2
+            echo "  - factory / builder / creator" >&2
+            echo "  - provider / content provider" >&2
+            echo "  - contract / interface / abstraction" >&2
+            echo "  - config / configuration / settings / preferences" >&2
+            echo "  - validator / validation" >&2
+            echo "  - parser / serializer / deserializer" >&2
+            echo "  - formatter / format" >&2
+            echo "  - loader / fetcher" >&2
+            echo "  - listener / callback / handler" >&2
         elif [ "$PROJECT_TYPE" = "typescript" ]; then
             echo "Supported patterns (TypeScript/React/Next.js):" >&2
             echo "" >&2
