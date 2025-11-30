@@ -437,7 +437,7 @@ The `/atlas.pattern` command has been successfully implemented, tested, and docu
 8. **Parallel processing** (use `xargs -P` for multi-core)
 9. **Smart sampling** (for VERY_LARGE projects >10k files)
 
-### Future v3.0+
+### Future v2.6+
 
 10. **Pattern auto-discovery** (learn patterns from codebase automatically)
 11. **Custom pattern definition** (user-defined patterns via YAML)

@@ -6,7 +6,16 @@
 
 ## 2025-11（當前月份）
 
-### Week 5 (11/25-12/01): `/atlas.impact` + `/atlas.init` 完成 ⭐⭐
+### Week 5 (11/25-12/01): v2.5.2 Core Commands Complete ⭐⭐
+
+**v2.5.2 Release Preparation** (11/30):
+- Comprehensive testing of all 4 commands (90% pass rate)
+- Plugin sync: Updated plugin/ to match .claude/commands/ (4 commands)
+- PROMPTS.md update: Added v2.5 Commands section
+- Version unification: All docs updated to v2.5.2
+- Version renaming: v3.0 → v2.6 for future planning
+- Script enhancement: detect-project-enhanced.sh now supports Android/iOS
+→ [完整測試報告](./2025-11/2025-11-30-v252-comprehensive-testing.md)
 
 **`/atlas.init` 命令完成 + 隱性觸發驗證** (11/30):
 - 實作專案初始化命令，注入自動觸發規則到 CLAUDE.md
