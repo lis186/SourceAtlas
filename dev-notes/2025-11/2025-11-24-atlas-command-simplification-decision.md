@@ -22,7 +22,7 @@
 ### 問題
 
 多個文檔使用不同版本號系統，造成混淆：
-- PRD.md: v2.5.2
+- PRD.md: v2.5.3
 - code-maat proposal: v2.0 / v2.1 不一致
 - 缺乏統一的版本號語意
 
@@ -32,7 +32,7 @@
 
 | 版本類型 | 格式 | 用途 | 範例 |
 |---------|------|------|------|
-| **產品版本** | v{major}.{minor}.{patch} | SourceAtlas 產品開發階段 | v2.5.2 |
+| **產品版本** | v{major}.{minor}.{patch} | SourceAtlas 產品開發階段 | v2.5.3 |
 | **文檔版本** | v{major}.{minor} | 個別提案的修訂版本 | v2.1 |
 
 **產品版本**（SourceAtlas）:

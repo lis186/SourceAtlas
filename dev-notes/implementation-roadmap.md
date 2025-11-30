@@ -38,7 +38,7 @@
 - ✅ `scan-entropy.sh` - High-entropy file scanner
 - ✅ Comprehensive documentation
 
-### What We're Missing (PRD v2.5.2 Expectations)
+### What We're Missing (PRD v2.5.3 Expectations)
 
 **Commands** (0/5 complete):
 - ❌ `/atlas.pattern` ⭐⭐⭐⭐⭐ (MOST IMPORTANT - learn design patterns)
@@ -420,7 +420,7 @@
 
 ### PRD.md
 
-- [ ] Update "当前版本" from v2.5.2 to reflect implementation status
+- [ ] Update "当前版本" from v2.5.3 to reflect implementation status
 - [ ] Mark Phase 1-4 tasks with actual completion status
 - [ ] Update "实作路线图" section with this roadmap
 - [ ] Change TOON references to YAML in examples
@@ -574,7 +574,7 @@
 - [ ] Complete all 5 scripts
 - [ ] Test on 5+ real projects
 - [ ] Update all documentation
-- [ ] Ship v2.5.2
+- [ ] Ship v2.5.3
 
 ---
 
@@ -595,7 +595,7 @@
 - [ ] Review conducted
 - [ ] Feedback incorporated
 
-**v2.5.2 Release**:
+**v2.5.3 Release**:
 - [ ] All 5 commands implemented
 - [ ] All 5 scripts implemented
 - [ ] 5+ projects tested successfully

@@ -1,7 +1,7 @@
 {
   "name": "sourceatlas",
   "description": "AI-powered codebase understanding assistant. Initialize projects, learn design patterns, analyze impact, and understand any codebase through information theory principles.",
-  "version": "2.5.2",
+  "version": "2.5.3",
   "author": {
     "name": "Justin Lee"
   },
