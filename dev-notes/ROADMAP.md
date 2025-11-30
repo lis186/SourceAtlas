@@ -1,7 +1,7 @@
 # SourceAtlas Roadmap
 
-**Current Status**: v1.0 Complete → v2.5 In Progress (Week 5/16)
-**Last Updated**: 2025-11-25
+**Current Status**: v2.5 Core Commands Complete ✅
+**Last Updated**: 2025-11-30
 
 ---
 
@@ -18,12 +18,12 @@
 - [x] Objective-C support (all 29 patterns)
 - [x] Patterns audit & cleanup
 
-### Phase 3 - Core Commands (Week 5-8) 🔵 IN PROGRESS
+### Phase 3 - Core Commands (Week 5-8) ✅ COMPLETE
 - [x] `/atlas.overview` command (Stage 0) ✅ (2025-11-20)
 - [x] Command architecture simplification ✅ (2025-11-24)
 - [x] `/atlas.impact` command (change impact) ✅ (2025-11-25)
-- [ ] `/atlas.find` command (smart search) ⭐ NEXT
-- [ ] `/atlas.explain` command (deep dive)
+- [x] `/atlas.init` command (auto-trigger rules) ✅ (2025-11-30)
+- [x] ~~`/atlas.find`~~ 已取消 - 功能由現有 commands 涵蓋 (2025-11-25)
 
 ### Phase 4 - Testing & Polish (Week 9-16)
 - [ ] Comprehensive testing
@@ -87,12 +87,16 @@
 
 ### Priority P1 (Should Do)
 2. Document command architecture decisions ✅ (Done 11/24)
-3. **Next**: Start `/atlas.find` command implementation ⭐
+3. `/atlas.init` implementation ✅ (Done 11/30)
 4. Collect user feedback
 
 ### Priority P2 (Nice to Have)
 5. Performance benchmarking
 6. Pattern statistics dashboard
+
+### Technical Debt 🔧
+- [ ] Plugin 同步：更新 `plugin/` 以匹配已實作的 4 個 commands (init, overview, pattern, impact)
+- [ ] PROMPTS.md 更新：內容已過時，需與 v2.5 commands 對齊（或考慮廢棄）
 
 ---
 
@@ -113,7 +117,7 @@
 
 ### In Progress 🔵
 - [x] dev-notes/ Restructuring (100% complete)
-- [ ] v2.5 Core Commands (60% complete - 3/5 done)
+- [x] v2.5 Core Commands ✅ (4/4 complete: init, overview, pattern, impact)
 
 ### Blocked ❌
 - None
