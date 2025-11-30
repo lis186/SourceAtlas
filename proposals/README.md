@@ -25,11 +25,22 @@ SourceAtlas 未來功能的完整設計文檔。
 
 ### 🔵 待評估
 
-*（暫無）*
+*（目前無待評估提案）*
 
 ### 🟡 研究中
 
 *（從 ideas/ 升級的提案會出現在這裡）*
+
+### ⚪ 擱置
+
+- **[YAML Pattern Configuration](./yaml-pattern-config/README.md)**
+  - **目標**: 將 patterns 從 shell script 硬編碼改為 YAML 配置檔
+  - **狀態**: 擱置（2025-11-30）
+  - **原因**: 經多角色審查後決定暫不實作
+    - PM 評估：無使用者需求，ROI 為負
+    - 現有發現機制（`find-patterns.sh` 無參數）已足夠
+    - 優先完善現有 4 個 commands 和多語言支援
+  - **未來**: 待使用者明確需求時再評估
 
 ---
 
@@ -100,6 +111,7 @@ dev-notes/YYYY-MM/implementation.md
 | 🔵 待評估 | 設計完成，等待 review | 團隊討論、決策 |
 | 🟢 已批准 | 已同意實作，待排程 | 排入 roadmap |
 | 🟡 研究中 | 從 ideas/ 升級，持續完善 | 補充設計細節 |
+| ⚪ 擱置 | 決定暫不實作，保留設計 | 待使用者需求再評估 |
 | ⚫ 已歸檔 | 已實作或已放棄 | 移到 dev-notes/ 或刪除 |
 
 ---
