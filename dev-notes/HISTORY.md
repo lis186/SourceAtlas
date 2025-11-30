@@ -6,7 +6,17 @@
 
 ## 2025-11（當前月份）
 
-### Week 5 (11/25-12/01): v2.5.3 Core Commands Complete ⭐⭐
+### Week 5 (11/25-12/01): v2.5.4 Multi-Language Patterns Complete ⭐⭐⭐
+
+**TypeScript/React/Vue Patterns 擴展完成** (11/30):
+- 完成 50 個 patterns（25 Tier 1 + 25 Tier 2），pattern 總數達 141
+- **React Tier 1 (18)**: component, hook, context, hoc, error boundary, suspense, portal, lazy, ref, zustand, tanstack query, redux, framer motion, form hook, jest test, storybook, i18n, theme
+- **Vue Tier 1 (7)**: sfc, composable, pinia, directive, plugin, provide inject, nuxt
+- **React Tier 2 (14)**: middleware, server component, client component, route, loader, action, api route, server action, layout, page, recoil, jotai, swr, msw mock
+- **Vue Tier 2 (11)**: router guard, transition, teleport, slot component, watcher, lifecycle, emit, prop, ref template, slot, test util
+- 測試專案：Excalidraw, Mantine, Shadcn UI, Bulletproof React, Element Plus, VueUse, Naive UI
+- 修復：Vue directive pattern（`v*.ts` 過於廣泛 → `*Directive.ts v-*.ts`）
+- 修復：移除路徑型 patterns（`find -name` 不支援 `composables/*.ts`）
 
 **Kotlin/Android Patterns 實作完成** (11/30):
 - 完成 6 階段方法論驗證，8 個測試專案（5,237+ 檔案）
@@ -134,6 +144,8 @@
 
 | 日期 | 事件 | 影響 | 連結 |
 |------|------|------|------|
+| 2025-11-30 | TypeScript/React/Vue Patterns | 50 patterns, 141 total | - |
+| 2025-11-30 | Kotlin/Android Patterns | 31 patterns, 8 專案驗證 | [詳細](./2025-11/2025-11-30-kotlin-patterns-implementation-report.md) |
 | 2025-11-24 | 命令架構簡化 | 版本號統一、移除 `/atlas` | [詳細](./2025-11/2025-11-24-atlas-command-simplification-decision.md) |
 | 2025-11-23 | Objective-C 支援 | 完整混合專案支援 | [詳細](./2025-11/2025-11-23-objective-c-support.md) |
 | 2025-11-23 | iOS Patterns 整合 | 消除重複，架構優化 | [詳細](./2025-11/2025-11-23-ios-patterns.md) |
@@ -145,17 +157,20 @@
 
 ## 統計總覽
 
-### Patterns 總數（截至 2025-11-30）
-- **iOS**: 29 patterns（27 支援 Objective-C）
-- **TypeScript/React**: 22 patterns
+### Patterns 總數（截至 2025-11-30, v2.5.4）
+- **iOS/Swift**: 34 patterns（27 支援 Objective-C）
+- **TypeScript/React/Vue**: 50 patterns（25 Tier 1 + 25 Tier 2）
 - **Android/Kotlin**: 31 patterns（12 Tier 1 + 19 Tier 2）
-- **總計**: 82 patterns
+- **Python**: 26 patterns（12 Tier 1 + 14 Tier 2）
+- **總計**: 141 patterns ⭐
 
 ### 測試專案
 - **iOS**: wikipedia-ios, Signal-iOS, 大型商業 App（混合專案）
-- **TypeScript**: Swiftfin, Telegram, WordPress（多語言驗證）
+- **TypeScript/React**: Excalidraw, Mantine, Shadcn UI, Bulletproof React（7 專案）
+- **Vue**: Element Plus, VueUse, Naive UI
 - **Android**: nowinandroid, tivi, thunderbird-android, NewPipe, AntennaPod（8 專案）
+- **Python**: Django, FastAPI, Flask 專案（10 專案）
 
 ---
 
-**最後更新**: 2025-11-30
+**最後更新**: 2025-11-30 (v2.5.4)

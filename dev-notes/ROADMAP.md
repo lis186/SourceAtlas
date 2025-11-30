@@ -1,7 +1,8 @@
 # SourceAtlas Roadmap
 
-**Current Status**: v2.5 Core Commands Complete ✅
+**Current Status**: v2.5.4 Multi-Language Patterns Complete ✅
 **Last Updated**: 2025-11-30
+**Pattern Count**: 141 patterns (iOS 34, TypeScript/React/Vue 50, Android/Kotlin 31, Python 26)
 
 ---
 
@@ -13,10 +14,13 @@
 - [x] Multi-project validation
 
 ### Phase 2 - Pattern System Optimization (Week 2-4) ✅ COMPLETE
-- [x] TypeScript patterns expansion (13→22)
-- [x] iOS patterns consolidation (34→29)
+- [x] TypeScript patterns expansion (13→22→50)
+- [x] iOS patterns consolidation (34→29→34)
 - [x] Objective-C support (all 29 patterns)
 - [x] Patterns audit & cleanup
+- [x] Kotlin/Android patterns (31 patterns) ✅ (2025-11-30)
+- [x] Python patterns (26 patterns) ✅ (2025-11-30)
+- [x] React/Vue patterns expansion (50 patterns) ✅ (2025-11-30)
 
 ### Phase 3 - Core Commands (Week 5-8) ✅ COMPLETE
 - [x] `/atlas.overview` command (Stage 0) ✅ (2025-11-20)
@@ -25,37 +29,38 @@
 - [x] `/atlas.init` command (auto-trigger rules) ✅ (2025-11-30)
 - [x] ~~`/atlas.find`~~ 已取消 - 功能由現有 commands 涵蓋 (2025-11-25)
 
-### Phase 4 - Testing & Polish (Week 9-16)
+### Phase 4 - Testing & Polish (Week 9-16) ✅ COMPLETE
 - [x] Comprehensive testing ✅ (2025-11-30) - 90% pass rate, 9/10 tests
 - [x] Documentation update ✅ (2025-11-30) - Plugin sync, PROMPTS.md, version unification
 - [x] Performance optimization ✅ (2025-11-30) - Current performance sufficient
-- [ ] v2.5.3 Release
+- [x] v2.5.4 Release ✅ (2025-11-30) - 141 patterns across 4 languages
 
 ---
 
 ## 📅 Timeline
 
-### v2.5.3 (Current)
+### v2.5.4 (Current) ✅ COMPLETE
 
 **Week 1-4** ✅ (11/20-11/23):
 - Pattern Detection System
 - Multi-language Support
 - Pattern Optimization
 
-**Week 5-8** 🔵 (Next 4 weeks):
-- Core Commands Implementation
-- Stage 0-2 Integration
-- Testing Framework
+**Week 5-8** ✅ (11/25-11/30):
+- Core Commands Implementation (4/4 complete)
+- Kotlin/Android patterns (31 patterns)
+- Python patterns (26 patterns)
+- TypeScript/React/Vue patterns (50 patterns)
 
-**Week 9-12**:
-- Advanced Commands
-- Performance Tuning
-- User Documentation
+**Week 9-12** ✅:
+- Advanced Commands (`/atlas.init`, `/atlas.impact`)
+- Performance Tuning (current performance sufficient)
+- User Documentation (complete)
 
-**Week 13-16**:
-- Final Testing
-- Bug Fixes
-- v2.5.3 Release
+**Week 13-16** ✅:
+- Final Testing (90% pass rate)
+- Bug Fixes (Vue directive pattern, path-based patterns)
+- v2.5.4 Release (141 patterns across 4 languages)
 
 ### v2.6 (Future Vision)
 
@@ -76,27 +81,26 @@
 
 ---
 
-## 🔥 Current Sprint (Week 5)
+## 🔥 v2.6 Planning
 
 ### Priority P0 (Must Do) ⭐
-1. **`/atlas.impact` implementation** ✅ (Done 11/25)
-   - Static dependency analysis
-   - API change impact tracking
-   - Tested on 5 real scenarios (100% success)
-   - **Key decision**: Remove automatic time estimation
+1. **Go/Rust patterns** - 新增語言支援
+2. **Ruby/PHP patterns** - 擴展 web 框架支援
 
 ### Priority P1 (Should Do)
-2. Document command architecture decisions ✅ (Done 11/24)
-3. `/atlas.init` implementation ✅ (Done 11/30)
-4. Collect user feedback
+3. SourceAtlas Monitor - 持續追蹤
+4. 技術債務量化
+5. Collect user feedback
 
 ### Priority P2 (Nice to Have)
-5. Performance benchmarking
-6. Pattern statistics dashboard
+6. Health dashboard
+7. Performance benchmarking
+8. Pattern statistics dashboard
 
-### Technical Debt 🔧
+### Completed Technical Debt 🔧 ✅
 - [x] Plugin 同步：更新 `plugin/` 以匹配已實作的 4 個 commands (init, overview, pattern, impact) ✅ (2025-11-30)
 - [x] PROMPTS.md 更新：新增 v2.5 Commands 區段，保留手動 Prompts 用於深度分析 ✅ (2025-11-30)
+- [x] TypeScript/React/Vue patterns (50 patterns) ✅ (2025-11-30)
 
 ---
 
@@ -114,10 +118,15 @@
 - [x] Version Number Unification (2025-11-24)
 - [x] Atlas Impact Command (2025-11-25)
 - [x] Time Estimation Decision (2025-11-25)
+- [x] Atlas Init Command (2025-11-30)
+- [x] Kotlin/Android Patterns - 31 patterns (2025-11-30)
+- [x] Python Patterns - 26 patterns (2025-11-30)
+- [x] TypeScript/React/Vue Patterns - 50 patterns (2025-11-30)
+- [x] v2.5.4 Release - 141 patterns across 4 languages (2025-11-30)
 
 ### In Progress 🔵
-- [x] dev-notes/ Restructuring (100% complete)
-- [x] v2.5 Core Commands ✅ (4/4 complete: init, overview, pattern, impact)
+- [ ] v2.6 Planning
+- [ ] Go/Rust patterns research
 
 ### Blocked ❌
 - None
