@@ -6,10 +6,10 @@ SourceAtlas helps developers quickly understand any codebase through pattern lea
 
 ## ✨ Features
 
-- **🎯 Pattern Learning** (`/atlas-pattern`) - Learn design patterns from existing code
-- **📊 Impact Analysis** (`/atlas-impact`) - Analyze change impact (Coming Soon)
-- **🔍 Quick Search** (`/atlas-find`) - Rapidly locate functionality (Coming Soon)
-- **🔍 Project Overview** (`/atlas-overview`) - Quick project understanding
+- **🎯 Pattern Learning** (`/atlas.pattern`) - Learn design patterns from existing code
+- **📊 Impact Analysis** (`/atlas.impact`) - Analyze change impact (Coming Soon)
+- **🔍 Quick Search** (`/atlas.find`) - Rapidly locate functionality (Coming Soon)
+- **🔍 Project Overview** (`/atlas.overview`) - Quick project understanding
 
 ## 🚀 Installation
 
@@ -72,8 +72,8 @@ Learn how the current codebase implements specific patterns.
 
 ### Coming Soon
 
-- `/atlas-impact` - Analyze the impact of code changes
-- `/atlas-find` - Quickly locate functionality
+- `/atlas.impact` - Analyze the impact of code changes
+- `/atlas.find` - Quickly locate functionality
 - `/atlas` - Complete three-stage codebase analysis
 
 ## 🎓 How It Works
@@ -129,7 +129,7 @@ sourceatlas-plugin/
 ├── .claude-plugin/
 │   └── plugin.json          # Plugin metadata
 ├── commands/
-│   └── atlas-pattern.md     # Pattern learning command
+│   └── atlas.pattern.md     # Pattern learning command
 ├── README.md
 └── LICENSE
 ```

@@ -14,7 +14,7 @@
 
 ```bash
 # 1. Create the most important command
-touch .claude/commands/atlas-pattern.md
+touch .claude/commands/atlas.pattern.md
 touch scripts/atlas/find-patterns.sh
 
 # 2. Implement pattern detection script
@@ -22,22 +22,22 @@ vim scripts/atlas/find-patterns.sh
 # (See implementation roadmap for spec)
 
 # 3. Create the command
-vim .claude/commands/atlas-pattern.md
+vim .claude/commands/atlas.pattern.md
 # (See templates in PRD.md or implementation roadmap)
 
 # 4. Test on real project
 cd /path/to/test/project
-# Use: /atlas-pattern "api endpoint"
-# Use: /atlas-pattern "background job"
+# Use: /atlas.pattern "api endpoint"
+# Use: /atlas.pattern "background job"
 ```
 
-**Goal**: Get `/atlas-pattern` working by end of week
+**Goal**: Get `/atlas.pattern` working by end of week
 
 ---
 
 ## 📋 Phase 1 Checklist (Week 1)
 
-### Day 1-2: `/atlas-pattern` Implementation
+### Day 1-2: `/atlas.pattern` Implementation
 
 - [ ] **Create `find-patterns.sh`**
   - [ ] Detect "api endpoint" pattern (routes, controllers)
@@ -107,7 +107,7 @@ cd /path/to/test/project
 
 ### Phase 2: Impact Analysis (Week 2, Days 1-4)
 
-**Deliverable**: `/atlas-impact`
+**Deliverable**: `/atlas.impact`
 
 **Key Tasks**:
 - Create `analyze-dependencies.sh`
@@ -117,7 +117,7 @@ cd /path/to/test/project
 
 ### Phase 3: Quick Tools (Week 2, Days 5-7)
 
-**Deliverables**: `/atlas-find`, `/atlas-explain`
+**Deliverables**: `/atlas.find`, `/atlas.explain`
 
 **Key Tasks**:
 - Create `atlas-find.md` (smart search)
@@ -140,7 +140,7 @@ cd /path/to/test/project
 ## 🎯 Success Criteria
 
 **Phase 1 Complete When**:
-- [x] `/atlas-pattern` returns actionable guidance in <10 min
+- [x] `/atlas.pattern` returns actionable guidance in <10 min
 - [x] Works on 3+ different pattern types
 - [x] `/atlas` completes all 3 stages successfully
 - [x] Documentation updated
@@ -159,12 +159,12 @@ cd /path/to/test/project
 
 **If time is limited**, prioritize in this order:
 
-1. **Week 1**: `/atlas-pattern` only (P0) ⭐⭐⭐⭐⭐
+1. **Week 1**: `/atlas.pattern` only (P0) ⭐⭐⭐⭐⭐
    - Most important command
    - Immediate value
    - Daily use expected
 
-2. **Week 2**: `/atlas-overview` refinement + `/atlas`
+2. **Week 2**: `/atlas.overview` refinement + `/atlas`
    - Complete analysis capability
    - Builds on v1.0 work
 
@@ -191,7 +191,7 @@ cd /path/to/test/project
 
 ### Metrics to Track
 
-- [ ] Commands implemented: 1/5 (`/atlas-overview` done)
+- [ ] Commands implemented: 1/5 (`/atlas.overview` done)
 - [ ] Scripts implemented: 2/5 (detect-project-enhanced, scan-entropy done)
 - [ ] Projects tested: 5/5 (v1 testing done)
 - [ ] Documentation pages updated: 0/4
@@ -210,7 +210,7 @@ cd /path/to/test/project
 - [TOON vs YAML Analysis](./toon-vs-yaml-analysis.md) - Format decision
 
 **Existing Work**:
-- `.claude/commands/atlas-overview.md` - Working Stage 0 command
+- `.claude/commands/atlas.overview.md` - Working Stage 0 command
 - `scripts/atlas/detect-project-enhanced.sh` - Scale-aware detection
 - `scripts/atlas/scan-entropy.sh` - High-entropy file scanner
 
@@ -313,18 +313,18 @@ Copy-paste this to start Phase 1:
 cd ***REMOVED***
 
 # Create Phase 1 files
-touch .claude/commands/atlas-pattern.md
+touch .claude/commands/atlas.pattern.md
 touch scripts/atlas/find-patterns.sh
 chmod +x scripts/atlas/find-patterns.sh
 
 # Open for editing
-code .claude/commands/atlas-pattern.md scripts/atlas/find-patterns.sh
+code .claude/commands/atlas.pattern.md scripts/atlas/find-patterns.sh
 
 # (Implement based on specs in implementation-roadmap.md)
 
 # Test on sample project
 cd ***REMOVED***/dev/cursor-talk-to-figma-mcp
-# Use: /atlas-pattern "websocket integration"
+# Use: /atlas.pattern "websocket integration"
 
 # Document results
 cd ***REMOVED***
@@ -341,6 +341,6 @@ cd ***REMOVED***
 - v1 Implementation Log for lessons learned
 
 **Need help? Review**:
-- Existing `/atlas-overview` command for reference
+- Existing `/atlas.overview` command for reference
 - PROMPTS.md for Stage 0/1/2 structure
 - Test results for validation approach

@@ -67,7 +67,7 @@ echo ""
 echo "Test 3: Generate integration sample output..."
 
 cat > test_targets/swift-integration-sample.md <<EOF
-# /atlas-impact + Swift Analyzer Integration
+# /atlas.impact + Swift Analyzer Integration
 
 **Test Date**: $(date +%Y-%m-%d)
 **Execution Time**: ${DURATION}s
@@ -124,7 +124,7 @@ cat > test_targets/swift-integration-sample.md <<EOF
 
 **Usage**:
 \`\`\`bash
-/atlas-impact NYProductCell.m
+/atlas.impact NYProductCell.m
 \`\`\`
 
 Swift analyzer will automatically run for .swift/.m/.h files in iOS projects.
@@ -146,7 +146,7 @@ echo ""
 echo "Status: READY FOR PRODUCTION ✅"
 echo ""
 echo "Next steps:"
-echo "  1. Test /atlas-impact live in Claude Code"
+echo "  1. Test /atlas.impact live in Claude Code"
 echo "  2. Verify Language-Specific section appears"
 echo "  3. Document in dev-notes/"
 echo ""

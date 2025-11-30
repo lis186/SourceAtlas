@@ -52,10 +52,10 @@ echo "OS: $(uname -s) $(uname -r)"
 你應該會看到：
 
 ```
-✓ atlas-init.md → [path] (symlink OK)
-✓ atlas-overview.md → [path] (symlink OK)
-✓ atlas-pattern.md → [path] (symlink OK)
-✓ atlas-impact.md → [path] (symlink OK)
+✓ atlas.init.md → [path] (symlink OK)
+✓ atlas.overview.md → [path] (symlink OK)
+✓ atlas.pattern.md → [path] (symlink OK)
+✓ atlas.impact.md → [path] (symlink OK)
 ✓ scripts/atlas → [path] (symlink OK)
 ✓ All commands installed and working
 ```
@@ -68,17 +68,17 @@ echo "OS: $(uname -s) $(uname -r)"
 cd ~/projects/any-project
 
 # 在 Claude Code 中執行
-/atlas-init                        # 首次使用：注入自動觸發規則
-/atlas-overview
-/atlas-pattern "api endpoint"
-/atlas-impact "src/api/users.ts"
+/atlas.init                        # 首次使用：注入自動觸發規則
+/atlas.overview
+/atlas.pattern "api endpoint"
+/atlas.impact "src/api/users.ts"
 ```
 
 ---
 
 ## 可用命令
 
-### `/atlas-init`
+### `/atlas.init`
 
 專案初始化（首次使用時執行）
 
@@ -86,14 +86,14 @@ cd ~/projects/any-project
 - **功能**: 注入 SourceAtlas 自動觸發規則到專案的 CLAUDE.md
 - **效果**: 之後 Claude 會自動建議適合的 Atlas 命令
 
-### `/atlas-overview`
+### `/atlas.overview`
 
 快速理解專案全貌
 
 - **時間**: 10-15 分鐘
 - **得到**: 技術棧、架構模式、程式碼品質、專案規模
 
-### `/atlas-pattern [pattern]`
+### `/atlas.pattern [pattern]`
 
 學習設計模式
 
@@ -101,7 +101,7 @@ cd ~/projects/any-project
 - **得到**: 最佳範例檔案 + 實作指南
 - **支援**: 71 個 patterns (iOS/TypeScript/Android)
 
-### `/atlas-impact [target]`
+### `/atlas.impact [target]`
 
 分析程式碼變更影響
 
@@ -172,10 +172,10 @@ git pull
 ```
 
 這會刪除：
-- `~/.claude/commands/atlas-init.md`
-- `~/.claude/commands/atlas-overview.md`
-- `~/.claude/commands/atlas-pattern.md`
-- `~/.claude/commands/atlas-impact.md`
+- `~/.claude/commands/atlas.init.md`
+- `~/.claude/commands/atlas.overview.md`
+- `~/.claude/commands/atlas.pattern.md`
+- `~/.claude/commands/atlas.impact.md`
 - `~/.claude/scripts/atlas/`
 
 ---
@@ -187,10 +187,10 @@ git pull
 ```
 ~/.claude/
 ├── commands/
-│   ├── atlas-init.md            # → sourceatlas2/.claude/commands/
-│   ├── atlas-overview.md        # → sourceatlas2/.claude/commands/
-│   ├── atlas-pattern.md         # → sourceatlas2/.claude/commands/
-│   ├── atlas-impact.md          # → sourceatlas2/.claude/commands/
+│   ├── atlas.init.md            # → sourceatlas2/.claude/commands/
+│   ├── atlas.overview.md        # → sourceatlas2/.claude/commands/
+│   ├── atlas.pattern.md         # → sourceatlas2/.claude/commands/
+│   ├── atlas.impact.md          # → sourceatlas2/.claude/commands/
 │   └── [你的其他全局命令]
 │
 └── scripts/
@@ -209,11 +209,11 @@ git pull
 │       └── test.md              # 專案特定命令
 
 # Claude Code 會同時看到：
-# - 全局: /atlas-init, /atlas-overview, /atlas-pattern, /atlas-impact
+# - 全局: /atlas.init, /atlas.overview, /atlas.pattern, /atlas.impact
 # - 專案: /deploy, /test
 ```
 
-**注意**: 確保專案命令不使用 `atlas-*` 名稱，避免衝突。
+**注意**: 確保專案命令不使用 `atlas.*` 名稱，避免衝突。
 
 ---
 
@@ -229,7 +229,7 @@ A: 可以！
 
 **Symlink 方式**: 修改 `sourceatlas2/.claude/commands/` 源文件（影響所有專案）
 
-**Copy 方式**: 修改 `~/.claude/commands/atlas-*.md`（只影響本地）
+**Copy 方式**: 修改 `~/.claude/commands/atlas.*.md`（只影響本地）
 
 ### Q: 如果我移動或刪除 SourceAtlas 專案會怎樣？
 
@@ -268,7 +268,7 @@ EOF
 
 ### 問題：命令不可用
 
-**症狀**: 執行 `/atlas-overview` 時 Claude Code 找不到命令
+**症狀**: 執行 `/atlas.overview` 時 Claude Code 找不到命令
 
 **解決方式**:
 ```bash

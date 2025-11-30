@@ -24,7 +24,7 @@
 ### 1. 快速理解專案
 
 ```bash
-/atlas-overview
+/atlas.overview
 ```
 
 **5-15 分鐘得到**：技術棧、架構模式、程式品質、專案規模
@@ -36,9 +36,9 @@
 ### 2. 學習設計模式
 
 ```bash
-/atlas-pattern "api endpoint"
-/atlas-pattern "file upload"
-/atlas-pattern "authentication"
+/atlas.pattern "api endpoint"
+/atlas.pattern "file upload"
+/atlas.pattern "authentication"
 ```
 
 **0.1-30 秒找到**：2-3 個最佳範例檔案 + file:line 引用 + 實作指南
@@ -52,8 +52,8 @@
 ### 3. 分析程式影響
 
 ```bash
-/atlas-impact "src/api/users.ts"
-/atlas-impact api "/api/users/{id}"
+/atlas.impact "src/api/users.ts"
+/atlas.impact api "/api/users/{id}"
 ```
 
 **1-2 分鐘得到**：依賴清單、Breaking Changes 風險、測試影響範圍、遷移步驟
@@ -115,21 +115,21 @@ cd ~/dev/sourceatlas2 && ./install-global.sh
 
 ```bash
 cd ~/projects/any-project
-/atlas-init      # 首次使用：注入自動觸發規則
-/atlas-overview  # 快速理解專案
+/atlas.init      # 首次使用：注入自動觸發規則
+/atlas.overview  # 快速理解專案
 ```
 
 ### 驗證安裝
 
 ```bash
 # 檢查命令是否安裝成功
-ls ~/.claude/commands/atlas-*.md
+ls ~/.claude/commands/atlas.*.md
 
 # 應該看到 4 個檔案：
-# atlas-init.md
-# atlas-overview.md
-# atlas-pattern.md
-# atlas-impact.md
+# atlas.init.md
+# atlas.overview.md
+# atlas.pattern.md
+# atlas.impact.md
 ```
 
 📚 **完整安裝指南**：[GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
@@ -144,34 +144,34 @@ ls ~/.claude/commands/atlas-*.md
 你想做什麼？
 │
 ├─ ⚙️ 第一次在這個專案使用 SourceAtlas
-│   → 用 /atlas-init
+│   → 用 /atlas.init
 │   → 注入自動觸發規則到 CLAUDE.md
 │   → 之後 Claude 會自動建議適合的命令
 │
 ├─ 📚 剛接手專案，想快速理解
-│   → 用 /atlas-overview
+│   → 用 /atlas.overview
 │   → 5-15 分鐘得到：技術棧、架構、品質
 │
 ├─ 🔍 想學習專案的某個實作方式
-│   → 用 /atlas-pattern "關鍵字"
+│   → 用 /atlas.pattern "關鍵字"
 │   → 0.1-30 秒找到：範例檔案 + 實作指南
-│   → 例如：/atlas-pattern "api endpoint"
+│   → 例如：/atlas.pattern "api endpoint"
 │
 ├─ ⚠️ 要改程式碼，擔心影響其他地方
-│   → 用 /atlas-impact "檔案或API"
+│   → 用 /atlas.impact "檔案或API"
 │   → 1-2 分鐘得到：依賴清單 + Breaking Changes
-│   → 例如：/atlas-impact "src/api/users.ts"
+│   → 例如：/atlas.impact "src/api/users.ts"
 │
 └─ ❓ 還是不確定
-    → 先用 /atlas-overview 建立全貌
+    → 先用 /atlas.overview 建立全貌
     → 再根據需要使用其他命令
 ```
 
 **常見工作流程**：
 
-1. **新專案入職**：`/atlas-init` → `/atlas-overview` → `/atlas-pattern` 學習關鍵模式
-2. **準備重構**：`/atlas-impact` 分析影響 → 開始修改
-3. **學習架構**：`/atlas-overview` → 閱讀關鍵檔案 → `/atlas-pattern` 學習細節
+1. **新專案入職**：`/atlas.init` → `/atlas.overview` → `/atlas.pattern` 學習關鍵模式
+2. **準備重構**：`/atlas.impact` 分析影響 → 開始修改
+3. **學習架構**：`/atlas.overview` → 閱讀關鍵檔案 → `/atlas.pattern` 學習細節
 
 ---
 
@@ -234,9 +234,9 @@ Claude Code + 2 分鐘安裝
 
 | 命令 | 時間 | 說明 |
 |------|------|------|
-| `/atlas-overview` | 5-15 分鐘 | 依專案大小 |
-| `/atlas-pattern` | 0.1-30 秒 | 通常 <5 秒 |
-| `/atlas-impact` | 1-2 分鐘 | 大型專案 2-3 分鐘 |
+| `/atlas.overview` | 5-15 分鐘 | 依專案大小 |
+| `/atlas.pattern` | 0.1-30 秒 | 通常 <5 秒 |
+| `/atlas.impact` | 1-2 分鐘 | 大型專案 2-3 分鐘 |
 
 </details>
 
@@ -283,10 +283,10 @@ Claude Code + 2 分鐘安裝
 
 **v2.5 (當前)**：4/4 核心命令完成 ✅
 
-- ✅ `/atlas-init` - 專案初始化（自動觸發規則）
-- ✅ `/atlas-overview` - 專案概覽
-- ✅ `/atlas-pattern` - 設計模式學習
-- ✅ `/atlas-impact` - 影響分析
+- ✅ `/atlas.init` - 專案初始化（自動觸發規則）
+- ✅ `/atlas.overview` - 專案概覽
+- ✅ `/atlas.pattern` - 設計模式學習
+- ✅ `/atlas.impact` - 影響分析
 
 **v3.0 (規劃中)**：Python/Ruby/Go Analyzer、更多 patterns、技術債務量化
 

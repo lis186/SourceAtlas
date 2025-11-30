@@ -1,8 +1,8 @@
-# iOS Senior Developer - `/atlas-find` Query Examples
+# iOS Senior Developer - `/atlas.find` Query Examples
 
 ## Executive Summary
 
-This document demonstrates how a **senior iOS engineer (7+ years)** with deep technical expertise would use `/atlas-find` to navigate **large, unfamiliar codebases** efficiently. Instead of reading thousands of files, they ask precise technical queries that leverage domain knowledge to jump directly to implementation details.
+This document demonstrates how a **senior iOS engineer (7+ years)** with deep technical expertise would use `/atlas.find` to navigate **large, unfamiliar codebases** efficiently. Instead of reading thousands of files, they ask precise technical queries that leverage domain knowledge to jump directly to implementation details.
 
 **Key insight**: Senior developers don't explore broadly—they target specific architectural patterns they already understand conceptually.
 
@@ -317,7 +317,7 @@ These queries show what **senior developers actually need**:
 4. **Cross-reference** - "How did this feature solve the same problem?"
 5. **Architectural context** - Understand layers without reading all code
 
-**For `/atlas-find` implementation**:
+**For `/atlas.find` implementation**:
 - Index files by architectural patterns, not just keywords
 - Surface integration points between modules
 - Flag risk areas (security, consistency, performance)
