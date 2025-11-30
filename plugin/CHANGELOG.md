@@ -5,6 +5,21 @@ All notable changes to SourceAtlas Plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.4] - 2025-11-30
+
+### Added
+- **TypeScript/React/Vue Patterns Support** - 50 patterns (25 Tier 1 + 25 Tier 2) for `/atlas.pattern`
+  - React Tier 1 (18): component, hook, context, hoc, error boundary, suspense, portal, lazy, ref, zustand, tanstack query, redux, framer motion, form hook, jest test, storybook, i18n, theme
+  - Vue Tier 1 (7): sfc, composable, pinia, directive, plugin, provide inject, nuxt
+  - React Tier 2 (14): middleware, server component, client component, route, loader, action, api route, server action, layout, page, recoil, jotai, swr, msw mock
+  - Vue Tier 2 (11): router guard, transition, teleport, slot component, watcher, lifecycle, emit, prop, ref template, slot, test util
+  - Tested on 7 projects: Excalidraw, Mantine, Shadcn UI, Bulletproof React, Element Plus, VueUse, Naive UI
+- **Total patterns now: 141** (iOS 34, TypeScript/React/Vue 50, Android/Kotlin 31, Python 26)
+
+### Fixed
+- Vue directive pattern was too broad (`v*.ts` matched vars.ts, version.ts) - changed to `*Directive.ts v-*.ts`
+- Removed path-based patterns that don't work with `find -name` (e.g., `composables/*.ts`)
+
 ## [2.5.3] - 2025-11-30
 
 ### Added

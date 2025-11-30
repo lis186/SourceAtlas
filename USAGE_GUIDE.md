@@ -2,7 +2,7 @@
 
 **3 個斜線命令的完整使用說明**
 
-適用於 Claude Code | v2.5
+適用於 Claude Code | v2.5.4
 
 ---
 
@@ -128,15 +128,16 @@ key_directories:
 3. **測試模式**：如何測試這個功能
 4. **實作指南**：逐步實作新功能
 
-### 支援的 Patterns (71 個)
+### 支援的 Patterns (141 個)
 
 #### 快速總覽
 
 | 語言 | Pattern 數量 | 主要類別 |
 |------|-------------|----------|
-| **iOS/Swift** | 29 | 架構、UI、資料處理、功能模組 |
-| **TypeScript/React** | 22 | React 基礎、Next.js、後端整合 |
-| **Android/Kotlin** | 20 | Architecture Components、UI、資料層 |
+| **iOS/Swift** | 34 | 架構、UI、資料處理、功能模組 |
+| **TypeScript/React/Vue** | 50 | React 核心、Vue 核心、後端整合 |
+| **Android/Kotlin** | 31 | Architecture Components、UI、資料層 |
+| **Python** | 26 | Django、FastAPI、Flask、Celery |
 
 #### 熱門 Patterns（跨語言）
 
@@ -147,7 +148,7 @@ key_directories:
 5. `state management` - 應用程式狀態管理
 
 <details>
-<summary><b>📱 iOS/Swift Patterns (29 個)</b></summary>
+<summary><b>📱 iOS/Swift Patterns (34 個)</b></summary>
 
 #### 核心架構 (4)
 - `mvvm` - MVVM 架構模式
@@ -189,7 +190,7 @@ key_directories:
 </details>
 
 <details>
-<summary><b>⚛️ TypeScript/React Patterns (22 個)</b></summary>
+<summary><b>⚛️ TypeScript/React/Vue Patterns (50 個)</b></summary>
 
 #### React 基礎 (6)
 - `react component` - React 組件
@@ -222,7 +223,7 @@ key_directories:
 </details>
 
 <details>
-<summary><b>🤖 Android/Kotlin Patterns (20 個)</b></summary>
+<summary><b>🤖 Android/Kotlin Patterns (31 個)</b></summary>
 
 #### Architecture Components (8)
 - `view controller` - Activity/Fragment
@@ -676,7 +677,7 @@ head -20 ~/.claude/commands/atlas.overview.md
 **改善搜尋準確度的技巧**：
 
 1. **從通用到具體**：先用 `"api"` 看有什麼，再精煉為 `"api endpoint"`
-2. **查看 Pattern 列表**：參考 [支援的 Patterns](#支援的-patterns-71-個)
+2. **查看 Pattern 列表**：參考 [支援的 Patterns](#支援的-patterns-141-個)
 3. **結合 overview**：先用 `/atlas.overview` 了解架構後再搜尋
 
 ### 快速診斷檢查清單
