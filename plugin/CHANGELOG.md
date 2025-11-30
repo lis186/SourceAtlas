@@ -5,9 +5,14 @@ All notable changes to SourceAtlas Plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.5.2] - 2025-11-30
+## [2.5.3] - 2025-11-30
 
 ### Added
+- **Python Patterns Support** - 26 patterns (12 Tier 1 + 14 Tier 2) for `/atlas.pattern`
+  - Tier 1: model, view, serializer, service, repository, api/router, form, task, test, admin, middleware, config
+  - Tier 2: migration, command, util, exception, validator, factory, fixture, signal, manager, mixin, decorator, client, pipeline, spider
+  - Framework support: Django, FastAPI, Flask, Celery, Scrapy, Pydantic, SQLAlchemy, Starlette
+  - Tested on 10 Python projects (60 ~ 2884 files each)
 - `/atlas.init` command - Initialize SourceAtlas in any project by injecting auto-trigger rules into CLAUDE.md
 - `/atlas.impact` command - Analyze change impact using static dependency analysis
   - API impact analysis (backend → frontend call chain)
@@ -23,9 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `/atlas.pattern` with improved workflow and global script fallback
 - Enhanced plugin description to reflect all 4 commands
 - Updated README with complete documentation for all commands
+- **Project detection order**: Python now checked before TypeScript (Python projects often have package.json for frontend assets)
 
 ### Fixed
 - Synced all commands with latest local implementations
+- Fixed routing pattern for Starlette/FastAPI (added `routing.py` support)
 
 ## [2.5.1] - 2025-11-20
 
