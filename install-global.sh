@@ -81,7 +81,7 @@ check_installation() {
     # Check each command
     local all_ok=true
 
-    for cmd in atlas.overview atlas.pattern atlas.impact atlas.init; do
+    for cmd in atlas.overview atlas.pattern atlas.impact atlas.init atlas.history; do
         local file="$GLOBAL_COMMANDS_DIR/$cmd.md"
 
         if [ ! -e "$file" ]; then
@@ -193,7 +193,7 @@ install_commands() {
     # Install each command
     echo ""
 
-    for cmd in atlas.overview atlas.pattern atlas.impact atlas.init; do
+    for cmd in atlas.overview atlas.pattern atlas.impact atlas.init atlas.history; do
         local source="$SOURCE_COMMANDS_DIR/$cmd.md"
         local target="$GLOBAL_COMMANDS_DIR/$cmd.md"
 
@@ -253,6 +253,11 @@ install_commands() {
     echo "    - Analyze impact scope of code changes"
     echo "    - Examples: \"User model\", \"api /users\", \"authentication\""
     echo "    - Static dependency analysis"
+    echo ""
+    echo -e "  ${BLUE}/atlas.history${NC} [scope]"
+    echo "    - Smart temporal analysis using git history"
+    echo "    - Hotspots, Coupling, Recent Contributors"
+    echo "    - Requires code-maat (auto-installs if needed)"
     echo ""
 
     if [ "$INSTALL_METHOD" = "symlink" ]; then
