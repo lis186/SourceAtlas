@@ -1,0 +1,752 @@
+# SourceAtlas Pattern Definition
+# Language: TypeScript/React/Vue
+# Version: 2.5.4
+# Patterns: 50 (25 Tier 1 + 25 Tier 2)
+# Last Updated: 2025-11-30
+
+language:
+  name: typescript
+  display_name: "TypeScript/React/Vue"
+  aliases: [ts, react, vue, nextjs, nuxt, javascript, js]
+
+detection:
+  marker_files:
+    - package.json
+    - tsconfig.json
+  marker_content:
+    package.json:
+      dependencies:
+        - react
+        - vue
+        - next
+        - nuxt
+        - "@angular/core"
+  priority: 50
+
+file_extensions:
+  primary: [.ts, .tsx]
+  secondary: [.js, .jsx, .vue]
+
+# =============================================================================
+# TIER 1: Core Patterns (25)
+# =============================================================================
+
+patterns:
+  # ---- React Core (18) ----
+
+  - name: react component
+    tier: 1
+    category: ui
+    framework: react
+    aliases: [component]
+    description: "React functional/class components"
+    files:
+      - "*.tsx"
+      - "*.jsx"
+    directories:
+      - components
+      - ui
+      - features
+      - modules
+      - views
+      - pages
+      - screens
+    exclude_files:
+      - "*.test.tsx"
+      - "*.spec.tsx"
+      - "*.stories.tsx"
+
+  - name: react hook
+    tier: 1
+    category: logic
+    framework: react
+    aliases: [hook, hooks, custom-hook]
+    description: "Custom React hooks"
+    files:
+      - "use*.ts"
+      - "use*.tsx"
+      - "*.hook.ts"
+    directories:
+      - hooks
+      - composables
+      - utils/hooks
+
+  - name: context
+    tier: 1
+    category: state
+    framework: react
+    aliases: [context-provider, react-context]
+    description: "React Context providers"
+    files:
+      - "*Context.tsx"
+      - "*Provider.tsx"
+      - "*context.ts"
+    directories:
+      - contexts
+      - providers
+      - context
+
+  - name: hoc
+    tier: 1
+    category: pattern
+    framework: react
+    aliases: [higher-order-component, with]
+    description: "Higher Order Components"
+    files:
+      - "with*.tsx"
+      - "*HOC.tsx"
+      - "*hoc.ts"
+    directories:
+      - hocs
+      - hoc
+      - enhancers
+
+  - name: error boundary
+    tier: 1
+    category: error-handling
+    framework: react
+    aliases: [error-handler, boundary]
+    description: "React Error Boundaries"
+    files:
+      - "*ErrorBoundary.tsx"
+      - "*Boundary.tsx"
+      - "ErrorFallback.tsx"
+    directories:
+      - boundaries
+      - errors
+
+  - name: suspense
+    tier: 1
+    category: async
+    framework: react
+    aliases: [loading, fallback]
+    description: "React Suspense and loading states"
+    files:
+      - "*Suspense.tsx"
+      - "*Loading.tsx"
+      - "*Skeleton.tsx"
+      - "*Fallback.tsx"
+    directories:
+      - loading
+      - suspense
+      - skeletons
+
+  - name: portal
+    tier: 1
+    category: ui
+    framework: react
+    aliases: [modal, overlay, dialog]
+    description: "React Portals for modals/overlays"
+    files:
+      - "*Portal.tsx"
+      - "*Modal.tsx"
+      - "*Dialog.tsx"
+      - "*Overlay.tsx"
+      - "*Drawer.tsx"
+    directories:
+      - portals
+      - modals
+      - dialogs
+      - overlays
+
+  - name: lazy
+    tier: 1
+    category: performance
+    framework: react
+    aliases: [code-splitting, dynamic-import]
+    description: "React.lazy and code splitting"
+    files:
+      - "*Lazy.tsx"
+      - "lazy*.ts"
+    content_patterns:
+      - "React.lazy"
+      - "dynamic()"
+
+  - name: ref
+    tier: 1
+    category: dom
+    framework: react
+    aliases: [useref, forwardref, imperative]
+    description: "React refs and imperative handles"
+    files:
+      - "*Ref.ts"
+      - "*ref.ts"
+    content_patterns:
+      - "useRef"
+      - "forwardRef"
+      - "useImperativeHandle"
+
+  - name: zustand store
+    tier: 1
+    category: state
+    framework: react
+    aliases: [zustand, store]
+    description: "Zustand state stores"
+    files:
+      - "*Store.ts"
+      - "*store.ts"
+      - "use*Store.ts"
+    directories:
+      - stores
+      - state
+      - store
+    dependencies:
+      - zustand
+
+  - name: tanstack query
+    tier: 1
+    category: data-fetching
+    framework: react
+    aliases: [react-query, query]
+    description: "TanStack/React Query hooks"
+    files:
+      - "use*Query.ts"
+      - "use*Mutation.ts"
+      - "*queries.ts"
+      - "*mutations.ts"
+    directories:
+      - queries
+      - api/hooks
+    dependencies:
+      - "@tanstack/react-query"
+
+  - name: redux
+    tier: 1
+    category: state
+    framework: react
+    aliases: [redux-toolkit, rtk, slice]
+    description: "Redux/RTK slices and actions"
+    files:
+      - "*Slice.ts"
+      - "*slice.ts"
+      - "*Actions.ts"
+      - "*Reducer.ts"
+    directories:
+      - slices
+      - redux
+      - store
+    dependencies:
+      - "@reduxjs/toolkit"
+
+  - name: framer motion
+    tier: 1
+    category: animation
+    framework: react
+    aliases: [animation, motion]
+    description: "Framer Motion animations"
+    files:
+      - "*Animation.tsx"
+      - "*motion.tsx"
+      - "*Animated.tsx"
+    directories:
+      - animations
+      - motion
+    dependencies:
+      - framer-motion
+
+  - name: form hook
+    tier: 1
+    category: forms
+    framework: react
+    aliases: [react-hook-form, form]
+    description: "React Hook Form patterns"
+    files:
+      - "*Form.tsx"
+      - "use*Form.ts"
+      - "*form.ts"
+    directories:
+      - forms
+      - form
+    dependencies:
+      - react-hook-form
+
+  - name: jest test
+    tier: 1
+    category: testing
+    framework: react
+    aliases: [test, spec, unit-test]
+    description: "Jest/Vitest test files"
+    files:
+      - "*.test.ts"
+      - "*.test.tsx"
+      - "*.spec.ts"
+      - "*.spec.tsx"
+    directories:
+      - __tests__
+      - tests
+      - test
+    test_only: true
+
+  - name: storybook
+    tier: 1
+    category: documentation
+    framework: react
+    aliases: [stories, story]
+    description: "Storybook stories"
+    files:
+      - "*.stories.tsx"
+      - "*.stories.ts"
+    directories:
+      - stories
+      - .storybook
+
+  - name: i18n
+    tier: 1
+    category: i18n
+    framework: react
+    aliases: [translation, localization, intl]
+    description: "Internationalization"
+    files:
+      - "*.json"  # in locales directory
+      - "*i18n*.ts"
+      - "*translation*.ts"
+    directories:
+      - locales
+      - i18n
+      - translations
+    dependencies:
+      - react-i18next
+      - next-intl
+
+  - name: theme
+    tier: 1
+    category: styling
+    framework: react
+    aliases: [styling, design-system]
+    description: "Theme and design tokens"
+    files:
+      - "*theme.ts"
+      - "*Theme.ts"
+      - "tokens.ts"
+      - "colors.ts"
+    directories:
+      - theme
+      - styles
+      - design-system
+
+  # ---- Vue Core (7) ----
+
+  - name: vue sfc
+    tier: 1
+    category: ui
+    framework: vue
+    aliases: [sfc, vue-component]
+    description: "Vue Single File Components"
+    files:
+      - "*.vue"
+    directories:
+      - components
+      - views
+      - pages
+
+  - name: vue composable
+    tier: 1
+    category: logic
+    framework: vue
+    aliases: [composable]
+    description: "Vue Composition API composables"
+    files:
+      - "use*.ts"
+      - "*.composable.ts"
+    directories:
+      - composables
+      - hooks
+
+  - name: pinia store
+    tier: 1
+    category: state
+    framework: vue
+    aliases: [pinia, vue-store]
+    description: "Pinia state stores"
+    files:
+      - "*Store.ts"
+      - "use*Store.ts"
+      - "*.store.ts"
+    directories:
+      - stores
+      - store
+    dependencies:
+      - pinia
+
+  - name: vue directive
+    tier: 1
+    category: dom
+    framework: vue
+    aliases: [directive, custom-directive]
+    description: "Vue custom directives"
+    files:
+      - "*Directive.ts"
+      - "*directive.ts"
+      - "v-*.ts"
+    directories:
+      - directives
+
+  - name: vue plugin
+    tier: 1
+    category: extension
+    framework: vue
+    aliases: [plugin]
+    description: "Vue plugins"
+    files:
+      - "*Plugin.ts"
+      - "*plugin.ts"
+      - "install.ts"
+    directories:
+      - plugins
+
+  - name: provide inject
+    tier: 1
+    category: di
+    framework: vue
+    aliases: [provide, inject, dependency]
+    description: "Vue provide/inject pattern"
+    files:
+      - "*Provider.vue"
+      - "*injection.ts"
+      - "*provide.ts"
+    content_patterns:
+      - "provide("
+      - "inject("
+
+  - name: nuxt
+    tier: 1
+    category: framework
+    framework: vue
+    aliases: [nuxt-page, nuxt-layout]
+    description: "Nuxt pages and layouts"
+    files:
+      - "*.vue"
+    directories:
+      - pages
+      - layouts
+      - middleware
+      - server/api
+    dependencies:
+      - nuxt
+
+# =============================================================================
+# TIER 2: Supplementary Patterns (25)
+# =============================================================================
+
+  # ---- React Tier 2 (14) ----
+
+  - name: middleware
+    tier: 2
+    category: middleware
+    framework: react
+    aliases: [next-middleware]
+    description: "Next.js middleware"
+    files:
+      - "middleware.ts"
+      - "middleware.tsx"
+    directories:
+      - middleware
+
+  - name: server component
+    tier: 2
+    category: rsc
+    framework: react
+    aliases: [rsc, server]
+    description: "React Server Components"
+    files:
+      - "*.server.tsx"
+      - "page.tsx"
+      - "layout.tsx"
+    directories:
+      - app
+    content_patterns:
+      - "'use server'"
+      - "async function"
+
+  - name: client component
+    tier: 2
+    category: rsc
+    framework: react
+    aliases: [use-client]
+    description: "React Client Components"
+    files:
+      - "*.client.tsx"
+    content_patterns:
+      - "'use client'"
+
+  - name: route
+    tier: 2
+    category: routing
+    framework: react
+    aliases: [router, page]
+    description: "Route definitions"
+    files:
+      - "*Route.tsx"
+      - "*Routes.tsx"
+      - "routes.ts"
+    directories:
+      - routes
+
+  - name: loader
+    tier: 2
+    category: data-fetching
+    framework: react
+    aliases: [data-loader]
+    description: "Route loaders (React Router/Remix)"
+    files:
+      - "*loader.ts"
+      - "*.loader.ts"
+    content_patterns:
+      - "loader:"
+      - "export const loader"
+
+  - name: action
+    tier: 2
+    category: forms
+    framework: react
+    aliases: [form-action, mutation]
+    description: "Form actions (Remix/React Router)"
+    files:
+      - "*action.ts"
+      - "*.action.ts"
+    content_patterns:
+      - "action:"
+      - "export const action"
+
+  - name: api route
+    tier: 2
+    category: backend
+    framework: react
+    aliases: [api-handler, route-handler]
+    description: "API route handlers"
+    files:
+      - "route.ts"
+      - "route.tsx"
+      - "[...slug].ts"
+    directories:
+      - api
+      - app/api
+
+  - name: server action
+    tier: 2
+    category: rsc
+    framework: react
+    aliases: [use-server, server-mutation]
+    description: "Next.js Server Actions"
+    files:
+      - "*actions.ts"
+      - "actions.ts"
+    directories:
+      - actions
+    content_patterns:
+      - "'use server'"
+
+  - name: layout
+    tier: 2
+    category: ui
+    framework: react
+    aliases: [app-layout]
+    description: "Layout components"
+    files:
+      - "*Layout.tsx"
+      - "layout.tsx"
+    directories:
+      - layouts
+
+  - name: page
+    tier: 2
+    category: routing
+    framework: react
+    aliases: [next-page, app-page]
+    description: "Page components"
+    files:
+      - "page.tsx"
+      - "*Page.tsx"
+    directories:
+      - pages
+      - app
+
+  - name: recoil
+    tier: 2
+    category: state
+    framework: react
+    aliases: [atom, selector]
+    description: "Recoil atoms and selectors"
+    files:
+      - "*Atom.ts"
+      - "*atom.ts"
+      - "*Selector.ts"
+    directories:
+      - atoms
+      - recoil
+    dependencies:
+      - recoil
+
+  - name: jotai
+    tier: 2
+    category: state
+    framework: react
+    aliases: [jotai-atom]
+    description: "Jotai atoms"
+    files:
+      - "*Atom.ts"
+      - "*atoms.ts"
+    directories:
+      - atoms
+    dependencies:
+      - jotai
+
+  - name: swr
+    tier: 2
+    category: data-fetching
+    framework: react
+    aliases: [swr-hook]
+    description: "SWR data fetching hooks"
+    files:
+      - "use*Data.ts"
+      - "*fetcher.ts"
+    dependencies:
+      - swr
+
+  - name: msw mock
+    tier: 2
+    category: testing
+    framework: react
+    aliases: [mock-service-worker, handler]
+    description: "MSW request handlers"
+    files:
+      - "*handlers.ts"
+      - "*handler.ts"
+      - "mocks.ts"
+    directories:
+      - mocks
+      - msw
+    dependencies:
+      - msw
+    test_only: true
+
+  # ---- Vue Tier 2 (11) ----
+
+  - name: router guard
+    tier: 2
+    category: routing
+    framework: vue
+    aliases: [navigation-guard, route-guard]
+    description: "Vue Router navigation guards"
+    files:
+      - "*guard.ts"
+      - "*Guard.ts"
+    directories:
+      - guards
+      - router
+    content_patterns:
+      - "beforeEach"
+      - "beforeRouteEnter"
+
+  - name: transition
+    tier: 2
+    category: animation
+    framework: vue
+    aliases: [vue-transition, animation]
+    description: "Vue Transition components"
+    files:
+      - "*Transition.vue"
+      - "*transition.ts"
+    content_patterns:
+      - "<Transition"
+      - "<TransitionGroup"
+
+  - name: teleport
+    tier: 2
+    category: ui
+    framework: vue
+    aliases: [vue-teleport, portal]
+    description: "Vue Teleport usage"
+    content_patterns:
+      - "<Teleport"
+
+  - name: slot component
+    tier: 2
+    category: ui
+    framework: vue
+    aliases: [renderless, headless]
+    description: "Slot-based components"
+    content_patterns:
+      - "<slot"
+      - "v-slot"
+      - "#default"
+
+  - name: watcher
+    tier: 2
+    category: reactive
+    framework: vue
+    aliases: [watch, watchEffect]
+    description: "Vue watchers"
+    content_patterns:
+      - "watch("
+      - "watchEffect("
+      - "watchPostEffect("
+
+  - name: lifecycle
+    tier: 2
+    category: lifecycle
+    framework: vue
+    aliases: [mounted, unmounted, hooks]
+    description: "Vue lifecycle hooks"
+    content_patterns:
+      - "onMounted"
+      - "onUnmounted"
+      - "onBeforeMount"
+
+  - name: emit
+    tier: 2
+    category: events
+    framework: vue
+    aliases: [defineEmits, events]
+    description: "Vue component events"
+    content_patterns:
+      - "defineEmits"
+      - "$emit"
+      - "emit("
+
+  - name: prop
+    tier: 2
+    category: component
+    framework: vue
+    aliases: [defineProps, props]
+    description: "Vue component props"
+    content_patterns:
+      - "defineProps"
+      - "props:"
+
+  - name: ref template
+    tier: 2
+    category: dom
+    framework: vue
+    aliases: [template-ref]
+    description: "Vue template refs"
+    content_patterns:
+      - "ref="
+      - "useTemplateRef"
+
+  - name: vue slot
+    tier: 2
+    category: composition
+    framework: vue
+    aliases: [named-slot, scoped-slot]
+    description: "Vue slots"
+    content_patterns:
+      - "<slot"
+      - "useSlots"
+      - "$slots"
+
+  - name: vue test util
+    tier: 2
+    category: testing
+    framework: vue
+    aliases: [vue-test, vitest]
+    description: "Vue Test Utils patterns"
+    files:
+      - "*.test.ts"
+      - "*.spec.ts"
+    directories:
+      - __tests__
+      - tests
+    dependencies:
+      - "@vue/test-utils"
+    test_only: true

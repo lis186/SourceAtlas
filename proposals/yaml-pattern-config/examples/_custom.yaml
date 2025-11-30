@@ -1,0 +1,193 @@
+# SourceAtlas Custom Patterns
+# ============================
+# This file is for user-defined patterns.
+# It is git-ignored and won't be overwritten on updates.
+#
+# HOW TO USE:
+# 1. Copy this file to your project root or ~/.sourceatlas/patterns/
+# 2. Add your custom patterns following the schema below
+# 3. Patterns defined here will merge with built-in patterns
+#
+# MERGING BEHAVIOR:
+# - Custom patterns with the same name as built-in patterns will override them
+# - New pattern names will be added to the available patterns
+# - Set "enabled: false" to disable a built-in pattern
+
+custom_patterns:
+  # ==========================================================================
+  # EXAMPLE 1: Add company-specific patterns
+  # ==========================================================================
+
+  - language: typescript
+    patterns:
+      - name: acme-component
+        tier: 1
+        category: ui
+        aliases: [acme]
+        description: "ACME Corp internal component pattern"
+        files:
+          - "Acme*.tsx"
+          - "*Acme.tsx"
+        directories:
+          - acme-components
+          - components/acme
+
+      - name: acme-api
+        tier: 1
+        category: data
+        aliases: [acme-service]
+        description: "ACME Corp API client pattern"
+        files:
+          - "*AcmeApi.ts"
+          - "acme-*.ts"
+        directories:
+          - api/acme
+          - services/acme
+
+  # ==========================================================================
+  # EXAMPLE 2: Add patterns for a new framework
+  # ==========================================================================
+
+  - language: typescript
+    patterns:
+      - name: solid-component
+        tier: 1
+        category: ui
+        framework: solid
+        aliases: [solid, solidjs]
+        description: "SolidJS components"
+        files:
+          - "*.tsx"
+        directories:
+          - components
+        dependencies:
+          - solid-js
+        content_patterns:
+          - "createSignal"
+          - "createEffect"
+
+      - name: solid-store
+        tier: 1
+        category: state
+        framework: solid
+        aliases: [solid-state]
+        description: "SolidJS stores"
+        files:
+          - "*Store.ts"
+          - "use*Store.ts"
+        dependencies:
+          - solid-js
+        content_patterns:
+          - "createStore"
+
+  # ==========================================================================
+  # EXAMPLE 3: Override built-in patterns
+  # ==========================================================================
+
+  - language: ios
+    patterns:
+      # Override the default viewmodel pattern with stricter matching
+      - name: viewmodel
+        tier: 1
+        category: architecture
+        aliases: [mvvm, vm]
+        description: "MVVM ViewModel (company standard)"
+        files:
+          - "*ViewModel.swift"  # Only match this, not *VM.swift
+        directories:
+          - Features/*/ViewModels
+          - Modules/*/ViewModels
+        exclude_files:
+          - "Base*ViewModel.swift"
+
+  # ==========================================================================
+  # EXAMPLE 4: Disable a built-in pattern
+  # ==========================================================================
+
+  - language: typescript
+    patterns:
+      - name: redux
+        enabled: false  # We don't use Redux, disable it
+
+  # ==========================================================================
+  # EXAMPLE 5: Add patterns for a niche language/framework
+  # ==========================================================================
+
+  - language: rust
+    # Define a new language if not built-in
+    definition:
+      name: rust
+      display_name: "Rust"
+      aliases: [rs, cargo]
+      detection:
+        marker_files:
+          - Cargo.toml
+        priority: 100
+      file_extensions:
+        primary: [.rs]
+
+    patterns:
+      - name: trait
+        tier: 1
+        category: architecture
+        aliases: [interface]
+        description: "Rust trait definitions"
+        files:
+          - "*.rs"
+        content_patterns:
+          - "pub trait "
+          - "impl.*for"
+
+      - name: mod
+        tier: 1
+        category: module
+        aliases: [module]
+        description: "Rust module organization"
+        files:
+          - "mod.rs"
+          - "lib.rs"
+        directories:
+          - src
+
+      - name: test
+        tier: 1
+        category: testing
+        aliases: [unittest]
+        description: "Rust tests"
+        files:
+          - "*_test.rs"
+          - "tests/*.rs"
+        content_patterns:
+          - "#[cfg(test)]"
+          - "#[test]"
+        test_only: true
+
+      - name: error
+        tier: 2
+        category: error-handling
+        aliases: [result, error-type]
+        description: "Custom error types"
+        files:
+          - "error.rs"
+          - "errors.rs"
+        content_patterns:
+          - "enum.*Error"
+          - "impl.*Error"
+
+# =============================================================================
+# PATTERN TIPS
+# =============================================================================
+#
+# 1. Start with file patterns - they're fastest to match
+# 2. Add directories for common organizational patterns
+# 3. Use content_patterns sparingly - they require reading files
+# 4. Set test_only: true for test-related patterns
+# 5. Use dependencies to auto-detect framework-specific patterns
+# 6. Keep descriptions short (< 100 chars) for clean output
+#
+# GLOB PATTERN REFERENCE:
+# - * matches any characters except /
+# - ** matches any characters including /
+# - ? matches a single character
+# - [abc] matches a, b, or c
+# - [!abc] matches anything except a, b, or c
