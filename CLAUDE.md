@@ -319,6 +319,7 @@ hypotheses:
 - **v2.5** 🔵 - Commands 實作中（預計 3-4 週）
 
 **版本歷程**：
+- v2.5.3 (2025-11-30): **Python Patterns 完成** - 24 patterns（12 Tier 1 + 12 Tier 2），Django/FastAPI 驗證，支援 Django/FastAPI/Flask/Celery
 - v2.5.2 (2025-11-30): **Kotlin/Android Patterns 完成** - 31 patterns（12 Tier 1 + 19 Tier 2），8 專案驗證，95%+ 準確率，支援 MVVM/MVI/Clean/Circuit
 - v2.5.1 (2025-11-23): **iOS Patterns 擴展完成** - 新增 18 個 iOS patterns (16 → 34, +112.5%)
 - v1.0 (2025-11-22): 完成 5 專案驗證、YAML vs TOON 決策、規模感知算法
@@ -805,6 +806,66 @@ touch test-results.md
 
 ---
 
+## Python Patterns（v2.5.3）✅
+
+**2025-11-30 完成的 Python patterns 支援**：
+
+### 成果總結
+
+- ✅ **24 個 patterns**（12 Tier 1 + 12 Tier 2）
+- ✅ **測試專案**: Django (6998 files), FastAPI
+- ✅ **框架覆蓋**: Django, FastAPI, Flask, Celery
+
+### 關鍵技術發現⭐
+
+1. **Python 專案常有 package.json** - Django 等專案有前端資源，需調整檢測順序
+2. **Django 使用特定檔案命名** - `models.py`, `views.py`, `admin.py`, `urls.py` 等
+3. **FastAPI 使用 router 模式** - `*router.py`, `*routes.py`
+4. **Celery 任務檔案** - `tasks.py`, `celery.py`
+
+### Tier 1 核心 Patterns（12 個）
+
+| Pattern | 別名 | 檔案模式 |
+|---------|------|----------|
+| Model | models, orm, django model | `models.py`, `*model.py` |
+| View | views, django view, endpoint | `views.py`, `*view.py` |
+| Serializer | schema, pydantic, marshmallow | `*serializers.py`, `*schema.py` |
+| Service | services, business logic | `*service.py`, `*services.py` |
+| Repository | repo, data access | `*repository.py`, `*repo.py` |
+| API | router, fastapi, flask, routes, urls | `*router.py`, `urls.py`, `*api.py` |
+| Form | forms, django form | `forms.py`, `*form.py` |
+| Task | celery, background job, worker | `tasks.py`, `*celery.py` |
+| Test | tests, pytest, unittest | `test_*.py`, `conftest.py` |
+| Admin | django admin | `admin.py` |
+| Middleware | middlewares | `*middleware.py` |
+| Config | settings, configuration | `settings.py`, `*config.py` |
+
+### Tier 2 補充 Patterns（12 個）
+
+| Pattern | 別名 | 用途 |
+|---------|------|------|
+| Migration | migrations, alembic | 資料庫遷移 |
+| Command | management command, cli | CLI 命令 |
+| Util | utils, helpers | 工具函數 |
+| Exception | exceptions, errors | 例外處理 |
+| Validator | validators, validation | 驗證邏輯 |
+| Factory | factories, factory boy | 測試工廠 |
+| Fixture | fixtures, test data | 測試資料 |
+| Signal | signals, django signal | Django 信號 |
+| Manager | managers, django manager | Django Manager |
+| Mixin | mixins | 混入類 |
+| Decorator | decorators | 裝飾器 |
+| Client | http client, api client | HTTP 客戶端 |
+
+### 測試專案
+
+| 專案 | 檔案數 | 框架 |
+|------|--------|------|
+| Django | 6,998 | Django 框架本身 |
+| FastAPI | - | FastAPI 框架本身 |
+
+---
+
 ## 當前狀態（v2.5）
 
 基於 PRD v2.5.2 和 v1.0 學習：
@@ -816,7 +877,7 @@ touch test-results.md
 - [x] `/atlas.impact` - 影響範圍分析 ✅ (2025-11-25) ⭐⭐⭐⭐
 
 ### 🔵 Phase 3 (當前) - 完善與發布
-- [x] 擴展多語言支援（Kotlin ✅, Go/Rust 待定）
+- [x] 擴展多語言支援（Kotlin ✅, Python ✅, Go/Rust 待定）
 - [ ] 完善 Git 分析 Scripts
 - [ ] 整體測試與文檔
 - [ ] 使用者回饋收集
