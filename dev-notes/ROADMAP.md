@@ -29,13 +29,13 @@
 - [ ] Comprehensive testing
 - [ ] Documentation update
 - [ ] Performance optimization
-- [ ] v2.5.0 Release
+- [ ] v2.5.2 Release
 
 ---
 
 ## 📅 Timeline
 
-### v2.5 (Current - Target: 3-4 weeks from 2025-11-20)
+### v2.5.2 (Current)
 
 **Week 1-4** ✅ (11/20-11/23):
 - Pattern Detection System
@@ -55,7 +55,7 @@
 **Week 13-16**:
 - Final Testing
 - Bug Fixes
-- v2.5.0 Release
+- v2.5.2 Release
 
 ### v3.0+ (Future Vision)
 

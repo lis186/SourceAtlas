@@ -574,7 +574,7 @@
 - [ ] Complete all 5 scripts
 - [ ] Test on 5+ real projects
 - [ ] Update all documentation
-- [ ] Ship v2.5.0
+- [ ] Ship v2.5.2
 
 ---
 
@@ -595,7 +595,7 @@
 - [ ] Review conducted
 - [ ] Feedback incorporated
 
-**v2.5.0 Release**:
+**v2.5.2 Release**:
 - [ ] All 5 commands implemented
 - [ ] All 5 scripts implemented
 - [ ] 5+ projects tested successfully

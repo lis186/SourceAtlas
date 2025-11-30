@@ -1082,7 +1082,7 @@ templates:
 - [ ] 完善 Git 分析 Scripts
 - [ ] 整體測試與文檔
 - [ ] 使用者回饋收集
-- [ ] 發布 v2.5.0
+- [ ] 發布 v2.5.2
 
 **決策**: `/atlas.find` 已取消（功能由現有 3 個 commands 涵蓋）
 
@@ -1135,7 +1135,7 @@ templates:
 
 ## 11. 實作路線圖
 
-### v2.5.0 - SourceAtlas Skill (當前)
+### v2.5.2 - SourceAtlas Skill (當前)
 
 **目標**：提供即時專案理解能力
 
@@ -1159,7 +1159,7 @@ templates:
 - [ ] 收集使用回饋
 - [ ] 優化 Prompt 和 Scripts
 - [ ] 撰寫使用文檔
-- [ ] 發布 v2.5.0
+- [ ] 發布 v2.5.2
 
 ---
 
