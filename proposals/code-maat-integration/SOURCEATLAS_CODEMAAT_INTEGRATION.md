@@ -347,7 +347,7 @@ risk_assessment:
 
 **進階用法 - 找專家**
 ```bash
-/atlas.changes payment --who
+/atlas.history payment --who
 ```
 
 **輸出**：
@@ -388,7 +388,7 @@ knowledge_risk:
 
 **進階用法 - 熱點分析**
 ```bash
-/atlas.changes . --hotspots
+/atlas.history . --hotspots
 ```
 
 **輸出**：
@@ -433,14 +433,14 @@ project_health:
 
 ---
 
-### 2. `/atlas.expert` - 專家查詢
+### 2. `/atlas.history` - 專家查詢
 
 #### 用途
 找出模組或檔案的專家，以及反向查詢開發者的專長領域。
 
 #### 語法
 ```bash
-/atlas.expert <query>
+/atlas.history <query>
 
 query:
   - 模組名稱（例: payment）
@@ -452,7 +452,7 @@ query:
 
 **找模組專家**
 ```bash
-/atlas.expert payment
+/atlas.history payment
 ```
 
 **輸出**：
@@ -547,7 +547,7 @@ suggested_reviewers:
 
 **反向查詢 - 開發者的專長**
 ```bash
-/atlas.expert Alice
+/atlas.history Alice
 ```
 
 **輸出**：
