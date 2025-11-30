@@ -95,7 +95,7 @@
 6. Pattern statistics dashboard
 
 ### Technical Debt 🔧
-- [ ] Plugin 同步：更新 `plugin/` 以匹配已實作的 4 個 commands (init, overview, pattern, impact)
+- [x] Plugin 同步：更新 `plugin/` 以匹配已實作的 4 個 commands (init, overview, pattern, impact) ✅ (2025-11-30)
 - [ ] PROMPTS.md 更新：內容已過時，需與 v2.5 commands 對齊（或考慮廢棄）
 
 ---

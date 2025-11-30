@@ -5,6 +5,28 @@ All notable changes to SourceAtlas Plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.2] - 2025-11-30
+
+### Added
+- `/atlas.init` command - Initialize SourceAtlas in any project by injecting auto-trigger rules into CLAUDE.md
+- `/atlas.impact` command - Analyze change impact using static dependency analysis
+  - API impact analysis (backend → frontend call chain)
+  - Model impact analysis (database layer → business logic → controllers)
+  - Component impact analysis (general dependency search)
+  - Risk level assessment (🔴 HIGH / 🟡 MEDIUM / 🟢 LOW)
+  - Migration checklist generation
+  - Test coverage gap detection
+  - Swift/Objective-C interop risk analysis for iOS projects
+
+### Changed
+- Updated `/atlas.overview` with global script fallback support
+- Updated `/atlas.pattern` with improved workflow and global script fallback
+- Enhanced plugin description to reflect all 4 commands
+- Updated README with complete documentation for all commands
+
+### Fixed
+- Synced all commands with latest local implementations
+
 ## [2.5.1] - 2025-11-20
 
 ### Added
@@ -38,10 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- `/atlas.impact` - Impact analysis for code changes
-- `/atlas.impact api` - API change impact analysis
-- `/atlas.find` - Quick functionality search
-- `/atlas` - Complete three-stage codebase analysis
+- `/atlas` - Complete three-stage codebase analysis (Stage 0 + 1 + 2)
 - `/atlas.explain` - Deep dive file explanation
 - Usage examples document
 - Video tutorials

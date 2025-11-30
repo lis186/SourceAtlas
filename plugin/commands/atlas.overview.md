@@ -24,6 +24,8 @@ Execute **Stage 0 Analysis Only** - generate a project overview using informatio
 
 ```bash
 # Run enhanced detection script (RECOMMENDED)
+# Will try global install first, then local
+bash ~/.claude/scripts/atlas/detect-project-enhanced.sh ${ARGUMENTS:-.} 2>/dev/null || \
 bash scripts/atlas/detect-project-enhanced.sh ${ARGUMENTS:-.}
 ```
 
@@ -77,7 +79,8 @@ Apply information theory - **high-entropy files contain disproportionate informa
 **Execute scans**:
 
 ```bash
-# Use helper script if available
+# Use helper script if available (try global first, then local)
+bash ~/.claude/scripts/atlas/scan-entropy.sh ${ARGUMENTS:-.} 2>/dev/null || \
 bash scripts/atlas/scan-entropy.sh ${ARGUMENTS:-.} 2>/dev/null
 ```
 
