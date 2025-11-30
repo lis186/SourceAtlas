@@ -6,9 +6,9 @@
 
 ## 2025-11（當前月份）
 
-### Week 5 (11/25-12/01): `/atlas-impact` 命令完成 + 路線圖決策 ⭐⭐
+### Week 5 (11/25-12/01): `/atlas.impact` 命令完成 + 路線圖決策 ⭐⭐
 
-**重大決策：取消 `/atlas-find` 命令** (11/25):
+**重大決策：取消 `/atlas.find` 命令** (11/25):
 - 執行 8 個開發者角色模擬（9 專案，80+ 查詢）
 - 發現 70%+ 需求已被現有命令涵蓋
 - 決策：聚焦完善 3 個核心命令，避免功能重疊
@@ -18,7 +18,7 @@
 **Swift Analyzer 整合** (11/25):
 - 開發 Swift/ObjC Deep Analyzer (7 sections, 482 lines)
 - 語言分析覆蓋率：70% → 90%+ (+20%)
-- 整合到 `/atlas-impact` 命令（自動觸發）
+- 整合到 `/atlas.impact` 命令（自動觸發）
 - 8 個 subagent 多使用者測試驗證
 - 關鍵功能：Nullability (6% 覆蓋), @objc exposure (1,135 classes), Memory (112 unowned)
 → [完整實作記錄](./2025-11/2025-11-25-swift-analyzer-integration-implementation.md)
@@ -31,17 +31,17 @@
 → [完整測試報告](./2025-11/2025-11-25-atlas-impact-testing.md)
 
 **命令實作** (11/25):
-- 創建 `.claude/commands/atlas-impact.md`（557 行）
+- 創建 `.claude/commands/atlas.impact.md`（557 行）
 - 自適應類型檢測：API/MODEL/COMPONENT
 - 完整 call chain 追蹤、breaking changes 識別
 - Migration checklist 生成
-→ [命令實作](../.claude/commands/atlas-impact.md)
+→ [命令實作](../.claude/commands/atlas.impact.md)
 
 ### Week 4 (11/20-11/24): Patterns 系統全面優化 + 架構簡化
 
 **命令架構簡化** (11/24):
 - 版本號統一：產品版本 vs 文檔版本（清晰語意）
-- 移除 `/atlas` 命令（避免與 `/atlas-overview` 混淆）
+- 移除 `/atlas` 命令（避免與 `/atlas.overview` 混淆）
 - code-maat 提案簡化：3→2 命令（移除 coupling 重複）
 → [完整決策](./2025-11/2025-11-24-atlas-command-simplification-decision.md)
 
@@ -72,7 +72,7 @@
 ### Week 3 (11/15-11/19): Atlas Pattern Command
 
 **實作完成** (11/22):
-- 完成 `/atlas-pattern` command
+- 完成 `/atlas.pattern` command
 - 實作 `find-patterns.sh` 腳本（ultra-fast 版本）
 - 多專案驗證：Swiftfin, Telegram, WordPress
 → [完整報告](./2025-11/2025-11-22-atlas-pattern.md)

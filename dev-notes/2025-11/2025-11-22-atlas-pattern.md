@@ -1,4 +1,4 @@
-# `/atlas-pattern` Implementation Summary
+# `/atlas.pattern` Implementation Summary
 
 **Status**: ✅ **COMPLETE**
 **Date**: 2025-11-22
@@ -9,7 +9,7 @@
 
 ## 📊 Implementation Overview
 
-The `/atlas-pattern` command has been successfully implemented, tested, and documented as the **highest priority feature** in SourceAtlas v2.5 (PRD #1 priority).
+The `/atlas.pattern` command has been successfully implemented, tested, and documented as the **highest priority feature** in SourceAtlas v2.5 (PRD #1 priority).
 
 ---
 
@@ -39,12 +39,12 @@ The `/atlas-pattern` command has been successfully implemented, tested, and docu
 
 ---
 
-### TASK 2: Create `.claude/commands/atlas-pattern.md` ✅
+### TASK 2: Create `.claude/commands/atlas.pattern.md` ✅
 
 **Deliverable**: Claude Code command definition
 
 **What Was Created**:
-- `.claude/commands/atlas-pattern.md` (213 lines)
+- `.claude/commands/atlas.pattern.md` (213 lines)
 
 **Features**:
 - Metadata: description, allowed-tools, argument-hint
@@ -134,7 +134,7 @@ The `/atlas-pattern` command has been successfully implemented, tested, and docu
 - Criteria met: **18/19 (97%)**
 - Mixed tech stack handling: ✅ Excellent
 
-**Test Document**: `../atlas-pattern-wordpress-test-results.md` (700 lines)
+**Test Document**: `../atlas.pattern-wordpress-test-results.md` (700 lines)
 
 **Status**: ✅ **PASSED**
 
@@ -165,7 +165,7 @@ The `/atlas-pattern` command has been successfully implemented, tested, and docu
 - Pure SwiftUI detection: ✅ Perfect
 - Zero false positives: ✅
 
-**Test Document**: `../atlas-pattern-swiftfin-test-results.md` (464 lines)
+**Test Document**: `../atlas.pattern-swiftfin-test-results.md` (464 lines)
 
 **Special Achievement**: ⭐ **Performs BETTER on modern pure SwiftUI projects than mixed codebases!**
 
@@ -198,7 +198,7 @@ The `/atlas-pattern` command has been successfully implemented, tested, and docu
 - Performance target: <15s → **Actual: 5.7s max (62% faster!)**
 - Files/second: 5,128 (networking pattern) ⚡
 
-**Test Document**: `../atlas-pattern-telegram-test-results.md` (544 lines)
+**Test Document**: `../atlas.pattern-telegram-test-results.md` (544 lines)
 
 **Special Achievement**: ⚡ **Fastest performance across all test projects!**
 
@@ -215,10 +215,10 @@ The `/atlas-pattern` command has been successfully implemented, tested, and docu
 #### 7a. USAGE_GUIDE.md ✅
 
 **What Was Added**:
-- New section: "🎨 使用 `/atlas-pattern` 學習設計模式" (181 lines)
+- New section: "🎨 使用 `/atlas.pattern` 學習設計模式" (181 lines)
 
 **Content Includes**:
-- What is `/atlas-pattern`? - Overview and core value
+- What is `/atlas.pattern`? - Overview and core value
 - Quick start - 3 example commands
 - Supported patterns - Core patterns + iOS/Swift patterns
 - Output format - 6 components of analysis
@@ -287,7 +287,7 @@ The `/atlas-pattern` command has been successfully implemented, tested, and docu
 
 ### Functional Requirements ✅
 
-- [x] `/atlas-pattern [type]` works on all 6 test projects (tested on 3, works on all)
+- [x] `/atlas.pattern [type]` works on all 6 test projects (tested on 3, works on all)
 - [x] Supports 5+ pattern types (supports 8 in script, 11 in patterns.yaml)
 - [x] Returns 2-3 best example files with file:line references
 - [x] Provides actionable implementation guidance
@@ -304,7 +304,7 @@ The `/atlas-pattern` command has been successfully implemented, tested, and docu
 ### Performance Requirements ✅
 
 - [x] `find-patterns.sh` completes in <15 seconds on Telegram-iOS (actual: 5.7s)
-- [x] Full `/atlas-pattern` command in <10 minutes
+- [x] Full `/atlas.pattern` command in <10 minutes
 - [x] No memory issues on large projects
 
 ### Documentation Requirements ✅
@@ -343,7 +343,7 @@ The `/atlas-pattern` command has been successfully implemented, tested, and docu
 
 ### Command
 
-**File**: `.claude/commands/atlas-pattern.md`
+**File**: `.claude/commands/atlas.pattern.md`
 - Input: Pattern type via `$ARGUMENTS`
 - Process: Execute script → Read top files → Extract pattern → Find tests
 - Output: Markdown report with 6 sections
@@ -448,21 +448,21 @@ The `/atlas-pattern` command has been successfully implemented, tested, and docu
 ## 📚 Artifacts Generated
 
 ### Implementation Files
-1. `.claude/commands/atlas-pattern.md` (213 lines) - Command definition
+1. `.claude/commands/atlas.pattern.md` (213 lines) - Command definition
 2. `scripts/atlas/find-patterns.sh` (187 lines) - Pattern detection script
 3. `templates/patterns.yaml` (678 lines) - Pattern library
 
 ### Test Reports
-4. `../atlas-pattern-wordpress-test-results.md` (700 lines) - WordPress-iOS testing
-5. `../atlas-pattern-swiftfin-test-results.md` (464 lines) - Swiftfin testing
-6. `../atlas-pattern-telegram-test-results.md` (544 lines) - Telegram-iOS testing
+4. `../atlas.pattern-wordpress-test-results.md` (700 lines) - WordPress-iOS testing
+5. `../atlas.pattern-swiftfin-test-results.md` (464 lines) - Swiftfin testing
+6. `../atlas.pattern-telegram-test-results.md` (544 lines) - Telegram-iOS testing
 
 ### Documentation
 7. `USAGE_GUIDE.md` (+181 lines) - User guide update
 8. `README.md` (+23 lines) - Quick start update
 
 ### Summary
-9. `../atlas-pattern-implementation-summary.md` (this file)
+9. `../atlas.pattern-implementation-summary.md` (this file)
 
 **Total Lines Written**: ~3,000 lines of code, documentation, and test reports
 
@@ -552,9 +552,9 @@ The `/atlas-pattern` command has been successfully implemented, tested, and docu
 
 ### Next Steps 🚀
 
-1. ✅ Mark `/atlas-pattern` as **COMPLETE** in project tracking
+1. ✅ Mark `/atlas.pattern` as **COMPLETE** in project tracking
 2. 🔵 Begin Phase 2: `/atlas` (full 3-stage analysis) - Next highest priority
-3. 🔵 Apply learnings to `/atlas-impact` and `/atlas-find` commands
+3. 🔵 Apply learnings to `/atlas.impact` and `/atlas.find` commands
 4. 🔧 Apply minor fixes (view model pattern, test exclusions) when convenient
 
 ---

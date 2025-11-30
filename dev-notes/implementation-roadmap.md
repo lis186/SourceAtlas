@@ -11,7 +11,7 @@
 **Current State**: v1.0 validation complete with proven methodology
 **Target State**: v2.5 Commands architecture with 5 slash commands
 **Timeline**: 3-4 weeks (phased rollout)
-**Success Criteria**: `/atlas-pattern` and `/atlas-overview` in production use
+**Success Criteria**: `/atlas.pattern` and `/atlas.overview` in production use
 
 ---
 
@@ -33,7 +33,7 @@
 - ✅ Understanding depth: 70-80% (Stage 0), 85-95% (Stage 1)
 
 **Infrastructure**:
-- ✅ `/atlas-overview` command (Stage 0 fingerprint)
+- ✅ `/atlas.overview` command (Stage 0 fingerprint)
 - ✅ `detect-project-enhanced.sh` - Scale-aware detection
 - ✅ `scan-entropy.sh` - High-entropy file scanner
 - ✅ Comprehensive documentation
@@ -41,16 +41,16 @@
 ### What We're Missing (PRD v2.5.2 Expectations)
 
 **Commands** (0/5 complete):
-- ❌ `/atlas-pattern` ⭐⭐⭐⭐⭐ (MOST IMPORTANT - learn design patterns)
-- ❌ `/atlas-impact` ⭐⭐⭐⭐ (impact analysis)
+- ❌ `/atlas.pattern` ⭐⭐⭐⭐⭐ (MOST IMPORTANT - learn design patterns)
+- ❌ `/atlas.impact` ⭐⭐⭐⭐ (impact analysis)
 - ❌ `/atlas` ⭐⭐⭐ (complete 3-stage analysis)
-- ❌ `/atlas-find` ⭐⭐ (smart search)
-- ❌ `/atlas-explain` ⭐ (deep dive)
+- ❌ `/atlas.find` ⭐⭐ (smart search)
+- ❌ `/atlas.explain` ⭐ (deep dive)
 
 **Scripts** (2/5 complete):
 - ✅ `detect-project-enhanced.sh`
 - ✅ `scan-entropy.sh`
-- ❌ `find-patterns.sh` (P0 - supports `/atlas-pattern`)
+- ❌ `find-patterns.sh` (P0 - supports `/atlas.pattern`)
 - ❌ `collect-git.sh` (P1 - Stage 2 analysis)
 - ❌ `analyze-dependencies.sh` (P1 - impact analysis)
 
@@ -65,7 +65,7 @@
 
 ### Phase 1: Most Valuable Command (Week 1, Days 1-3)
 
-**Goal**: Ship `/atlas-pattern` ⭐⭐⭐⭐⭐ - THE most important feature
+**Goal**: Ship `/atlas.pattern` ⭐⭐⭐⭐⭐ - THE most important feature
 
 **Why Priority #1?**
 - PRD user scenarios: "学习现有模式" is #1 use case
@@ -92,7 +92,7 @@
    # Return: List of best example files with relevance scores
    ```
 
-2. **Create `.claude/commands/atlas-pattern.md`**
+2. **Create `.claude/commands/atlas.pattern.md`**
    ```markdown
    ---
    description: Learn design patterns from the current codebase
@@ -131,7 +131,7 @@
    - Create pattern library starter (templates/patterns.yaml)
 
 **Success Criteria**:
-- [ ] `/atlas-pattern "api endpoint"` returns actionable guidance
+- [ ] `/atlas.pattern "api endpoint"` returns actionable guidance
 - [ ] Works on 3+ different pattern types
 - [ ] Complete in <10 minutes
 - [ ] Provides file:line references
@@ -190,7 +190,7 @@
 
 ### Phase 3: Impact Analysis (Week 2, Days 1-4)
 
-**Goal**: Ship `/atlas-impact` ⭐⭐⭐⭐ - high-value feature
+**Goal**: Ship `/atlas.impact` ⭐⭐⭐⭐ - high-value feature
 
 **Why Third Priority?**
 - Addresses critical pain point: "what breaks if I change X?"
@@ -216,7 +216,7 @@
    # - Identify model associations
    ```
 
-2. **Create `.claude/commands/atlas-impact.md`**
+2. **Create `.claude/commands/atlas.impact.md`**
    ```markdown
    ---
    description: Analyze impact of changes to code, models, or APIs
@@ -267,7 +267,7 @@
 
 ### Phase 4: Quick Tools (Week 2, Days 5-7)
 
-**Goal**: Ship `/atlas-find` and `/atlas-explain`
+**Goal**: Ship `/atlas.find` and `/atlas.explain`
 
 **Why Last?**
 - Lower priority (⭐⭐ and ⭐)
@@ -276,12 +276,12 @@
 
 **Tasks**:
 
-1. **Create `.claude/commands/atlas-find.md`**
+1. **Create `.claude/commands/atlas.find.md`**
    - Smart search combining file name + content
    - Semantic understanding of query
    - Quick results (<30 seconds)
 
-2. **Create `.claude/commands/atlas-explain.md`**
+2. **Create `.claude/commands/atlas.explain.md`**
    - Deep dive into specific file
    - Explain purpose, dependencies, usage
    - Show tests and examples
@@ -292,8 +292,8 @@
    - Relevance ranking
 
 **Success Criteria**:
-- [ ] `/atlas-find "user login"` returns relevant files
-- [ ] `/atlas-explain path/to/file.ts` provides comprehensive explanation
+- [ ] `/atlas.find "user login"` returns relevant files
+- [ ] `/atlas.explain path/to/file.ts` provides comprehensive explanation
 - [ ] Both complete in <5 minutes
 
 **Estimated Time**: 1-2 days
@@ -304,13 +304,13 @@
 
 | Week | Phase | Deliverables | Status |
 |------|-------|-------------|--------|
-| **Week 1** | Foundation | `/atlas-pattern`, `/atlas` | 🔵 Planned |
-| **Week 2** | Impact + Tools | `/atlas-impact`, `/atlas-find`, `/atlas-explain` | 🔵 Planned |
+| **Week 1** | Foundation | `/atlas.pattern`, `/atlas` | 🔵 Planned |
+| **Week 2** | Impact + Tools | `/atlas.impact`, `/atlas.find`, `/atlas.explain` | 🔵 Planned |
 | **Week 3** | Testing & Docs | Real-world testing, documentation, examples | 🔵 Planned |
 | **Week 4** | Polish & Launch | Bug fixes, optimization, launch prep | 🔵 Planned |
 
 **Fast Track Option** (if time constrained):
-- Week 1: `/atlas-pattern` only (P0)
+- Week 1: `/atlas.pattern` only (P0)
 - Week 2: `/atlas` only (P1)
 - Defer impact analysis and quick tools to later
 
@@ -326,11 +326,11 @@
 | Script coverage | 5/5 (100%) | Scripts implemented |
 | Real-world testing | 3+ projects | Test projects analyzed |
 | User satisfaction | >4/5 | Feedback score (when available) |
-| Time to value | <5 min | Time from `/atlas-pattern` to actionable result |
+| Time to value | <5 min | Time from `/atlas.pattern` to actionable result |
 
 ### Qualitative
 
-- [ ] Developers use `/atlas-pattern` daily
+- [ ] Developers use `/atlas.pattern` daily
 - [ ] `/atlas` provides complete understanding
 - [ ] Impact analysis prevents breaking changes
 - [ ] Documentation is clear and comprehensive
@@ -429,7 +429,7 @@
 
 - [ ] Add v2.5 features when shipped
 - [ ] Update "快速開始" with Commands usage
-- [ ] Add `/atlas-pattern` examples
+- [ ] Add `/atlas.pattern` examples
 - [ ] Update roadmap section
 
 ### USAGE_GUIDE.md
@@ -478,7 +478,7 @@
 ### After Phase 1 (Week 1)
 
 **Review**:
-- Is `/atlas-pattern` actually useful?
+- Is `/atlas.pattern` actually useful?
 - Do developers use it daily?
 - What patterns are requested most?
 
@@ -552,19 +552,19 @@
    - [ ] Implement basic pattern matching
    - [ ] Test on 2-3 projects
 
-2. **Create `.claude/commands/atlas-pattern.md`**
+2. **Create `.claude/commands/atlas.pattern.md`**
    - [ ] Write command prompt
    - [ ] Define output format
    - [ ] Add usage examples
 
-3. **Test `/atlas-pattern`**
+3. **Test `/atlas.pattern`**
    - [ ] Test on cursor-talk-to-figma-mcp
    - [ ] Test on sourceatlas2
    - [ ] Collect feedback
 
 **This Week** (Week 1):
 
-- [ ] Complete Phase 1: `/atlas-pattern`
+- [ ] Complete Phase 1: `/atlas.pattern`
 - [ ] Start Phase 2: `/atlas` command
 - [ ] Create `collect-git.sh` script
 

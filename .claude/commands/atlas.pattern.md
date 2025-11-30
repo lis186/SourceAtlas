@@ -238,4 +238,4 @@ To implement similar functionality following this codebase's pattern:
 
 ---
 
-Good luck! 🚀
+Good luck!

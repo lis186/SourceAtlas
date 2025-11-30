@@ -1,4 +1,4 @@
-# `/atlas-impact` 命令測試與驗證
+# `/atlas.impact` 命令測試與驗證
 
 **日期**: 2025-11-25
 **版本**: v2.5 (開發中)
@@ -8,7 +8,7 @@
 
 ## 背景與目標
 
-### 為什麼需要 `/atlas-impact`
+### 為什麼需要 `/atlas.impact`
 
 基於 PRD v2.5.2 的場景分析，開發者在以下情況需要影響範圍分析：
 
@@ -338,7 +338,7 @@ Backend: "2 週後上線 v2"
 iOS: "呃...應該可以吧？" [2 小時後發現很複雜，被動接受]
 ```
 
-**有 `/atlas-impact`**:
+**有 `/atlas.impact`**:
 ```
 Backend: "2 週後上線 v2"
 iOS: [執行命令，5 分鐘後]
@@ -494,9 +494,9 @@ WordPress-iOS 的 FIXME 註釋提供：
 ### 1. 自適應類型檢測
 
 ```bash
-/atlas-impact "User model"           → MODEL
-/atlas-impact "api /api/users/{id}"  → API
-/atlas-impact "authentication"       → COMPONENT
+/atlas.impact "User model"           → MODEL
+/atlas.impact "api /api/users/{id}"  → API
+/atlas.impact "authentication"       → COMPONENT
 ```
 
 ✅ 用戶無需指定類型，命令自動判斷
@@ -564,7 +564,7 @@ grep -r "UIColor\..*Color\|UIColor\(" --include="*.swift"
 A → B → C → D
 ```
 
-執行 `/atlas-impact A` 只看到 B，看不到 C 和 D
+執行 `/atlas.impact A` 只看到 B，看不到 C 和 D
 
 **解決方案** (v3.0):
 - 增加 `--recursive` flag
@@ -694,7 +694,7 @@ A → B → C → D
 
 **Step 1: 執行命令**（5 分鐘）
 ```bash
-/atlas-impact "api sites/{siteId}/wordads/dsp/api/v1/search/campaigns"
+/atlas.impact "api sites/{siteId}/wordads/dsp/api/v1/search/campaigns"
 ```
 
 **Step 2: 獲得客觀數據**
@@ -722,7 +722,7 @@ Tech Lead 看著 checklist:
 ### 更新內容
 
 **已更新檔案**:
-1. ✅ `.claude/commands/atlas-impact.md` - 移除「Estimated Effort」欄位
+1. ✅ `.claude/commands/atlas.impact.md` - 移除「Estimated Effort」欄位
 2. ✅ 加入說明：「Time estimation depends on team velocity」
 
 **輸出格式範例**:
@@ -742,8 +742,8 @@ Tech Lead 看著 checklist:
 
 ### 價值主張更新
 
-**之前**: `/atlas-impact` = 影響範圍 + 時間估算
-**現在**: `/atlas-impact` = 影響範圍 + Migration checklist + 風險評估
+**之前**: `/atlas.impact` = 影響範圍 + 時間估算
+**現在**: `/atlas.impact` = 影響範圍 + Migration checklist + 風險評估
 
 **實際價值**:
 - 5 分鐘 vs 2 小時（獲得完整影響清單）
@@ -757,7 +757,7 @@ Tech Lead 看著 checklist:
 
 1. **基於歷史數據的統計**:
    ```bash
-   /atlas-impact "UserModel" --estimate
+   /atlas.impact "UserModel" --estimate
    # 基於 git 歷史：過去 10 次類似變更平均 2.3 小時
    ```
 
@@ -790,7 +790,7 @@ Tech Lead 看著 checklist:
 
 **文檔版本**: 1.0
 **相關文檔**:
-- `.claude/commands/atlas-impact.md` - 命令實作
-- `test_targets/atlas-impact-testing-complete-report.md` - 完整測試數據
+- `.claude/commands/atlas.impact.md` - 命令實作
+- `test_targets/atlas.impact-testing-complete-report.md` - 完整測試數據
 - `PRD.md` - 產品需求
 

@@ -1,16 +1,16 @@
-# `/atlas-find` Command Research Archive
+# `/atlas.find` Command Research Archive
 
 **Date**: 2025-11-25
-**Purpose**: User research for `/atlas-find` command feasibility
+**Purpose**: User research for `/atlas.find` command feasibility
 **Outcome**: Command cancelled - see decision record
 
 ---
 
 ## Research Overview
 
-This directory contains comprehensive user research conducted to evaluate the necessity and design of the `/atlas-find` command. The research involved **8 developer personas** testing across **9 real-world projects**, collecting **80+ realistic queries**.
+This directory contains comprehensive user research conducted to evaluate the necessity and design of the `/atlas.find` command. The research involved **8 developer personas** testing across **9 real-world projects**, collecting **80+ realistic queries**.
 
-**Final Decision**: `/atlas-find` command was **cancelled** after research revealed 70%+ of use cases were already covered by existing commands.
+**Final Decision**: `/atlas.find` command was **cancelled** after research revealed 70%+ of use cases were already covered by existing commands.
 
 ---
 
@@ -73,9 +73,9 @@ This directory contains comprehensive user research conducted to evaluate the ne
 
 | Type | % | Already Solved By |
 |------|---|-------------------|
-| Pattern Learning | 35% | `/atlas-pattern` ✅ |
-| Impact Analysis | 35% | `/atlas-impact` ✅ |
-| Architecture Navigation | 15% | `/atlas-overview` ✅ |
+| Pattern Learning | 35% | `/atlas.pattern` ✅ |
+| Impact Analysis | 35% | `/atlas.impact` ✅ |
+| Architecture Navigation | 15% | `/atlas.overview` ✅ |
 | Symptom Diagnosis | 10% | Conversational ✅ |
 | Keyword Search | 5% | Grep/Glob ✅ |
 
@@ -83,16 +83,16 @@ This directory contains comprehensive user research conducted to evaluate the ne
 
 ### Finding 2: No Unique Value Proposition
 
-Every proposed `/atlas-find` query mapped to an existing solution:
-- Want to LEARN pattern? → `/atlas-pattern`
-- Want to see IMPACT? → `/atlas-impact`
+Every proposed `/atlas.find` query mapped to an existing solution:
+- Want to LEARN pattern? → `/atlas.pattern`
+- Want to see IMPACT? → `/atlas.impact`
 - Want exact FILE? → Grep/Glob
 - Want to DEBUG? → Ask Claude conversationally
 
 ### Finding 3: Risk of User Confusion
 
 Having 4 similar commands would create decision paralysis:
-> "Should I use /atlas-find, /atlas-pattern, /atlas-impact, or just Grep?"
+> "Should I use /atlas.find, /atlas.pattern, /atlas.impact, or just Grep?"
 
 **Better UX**: 3 clear, non-overlapping commands
 
@@ -100,7 +100,7 @@ Having 4 similar commands would create decision paralysis:
 
 ## Decision Outcome
 
-**✅ Cancel `/atlas-find` command**
+**✅ Cancel `/atlas.find` command**
 
 **Rationale**:
 1. 70%+ use cases already covered
@@ -109,7 +109,7 @@ Having 4 similar commands would create decision paralysis:
 4. Allows focus on perfecting core commands
 
 **Impact**:
-- PRD updated to remove Phase 3 `/atlas-find` implementation
+- PRD updated to remove Phase 3 `/atlas.find` implementation
 - Phase 3 redirected to multi-language expansion and testing
 - Development time saved: ~2-3 weeks
 
@@ -146,4 +146,4 @@ Clear boundaries between tools = Better user experience
 
 **Research Status**: ✅ **COMPLETED**
 **Archive Date**: 2025-11-25
-**Next Steps**: Focus on perfecting `/atlas-overview`, `/atlas-pattern`, `/atlas-impact`
+**Next Steps**: Focus on perfecting `/atlas.overview`, `/atlas.pattern`, `/atlas.impact`
