@@ -1,9 +1,9 @@
-# SourceAtlas PRD v2.5.3
+# SourceAtlas PRD v2.5.4
 
 **AI-Powered Codebase Understanding Assistant**
 
-- **版本**: 2.5.3
-- **更新日期**: 2025-11-22
+- **版本**: 2.5.4
+- **更新日期**: 2025-11-30
 - **狀態**: Active Development (Architecture Finalized)
 
 ---
@@ -1078,11 +1078,11 @@ templates:
 - [x] 實作 `/atlas.init` - 專案設定 ⭐⭐⭐ ✅ (2025-11-30)
   - 注入 SourceAtlas 觸發規則到 CLAUDE.md
   - 讓 Claude Code 自動建議使用 Atlas commands
-- [ ] 擴展多語言支援（Kotlin, Go, Rust 等）
+- [x] 擴展多語言支援（Kotlin ✅, Python ✅, TypeScript/React/Vue ✅, Go/Rust 待定）
 - [ ] 完善 Git 分析 Scripts
 - [ ] 整體測試與文檔
 - [ ] 使用者回饋收集
-- [ ] 發布 v2.5.3
+- [ ] 發布 v2.5.4
 
 **決策**: `/atlas.find` 已取消（功能由現有 3 個 commands 涵蓋）
 
@@ -1135,31 +1135,97 @@ templates:
 
 ## 11. 實作路線圖
 
-### v2.5.3 - SourceAtlas Skill (當前)
+### v2.5.3 - Python Patterns ✅
 
-**目標**：提供即時專案理解能力
+**目標**：Python 生態系統完整支援
 
-**時程**：3-4 週
+**狀態**：已完成 (2025-11-30)
 
-#### Week 1: 核心 Skill
-- [x] 設計 Skill 架構
-- [ ] 實作 Stage 0 Skill
-- [ ] 實作 Stage 1 Skill
-- [ ] 實作 Stage 2 Skill
-- [ ] 基礎 Scripts（detect, scan）
+**成果**：
+- ✅ 26 個 Python patterns（12 Tier 1 + 14 Tier 2）
+- ✅ 10 個專案測試（Django, FastAPI, Flask, Celery, Scrapy, Pydantic, SQLAlchemy, Starlette, httpx, cookiecutter-django）
+- ✅ 框架覆蓋：Django, FastAPI, Flask, Celery, Scrapy, Pydantic, SQLAlchemy, Starlette
 
-#### Week 2-3: 完善與測試
-- [x] 核心 3 commands 完成 ✅ (overview, pattern, impact)
-- [ ] 完善 Scripts 集合 (git 分析、依賴分析)
-- [ ] 擴展 pattern 庫（更多語言支援）
-- [ ] 多專案測試與優化
+---
 
-#### Week 3-4: 發布準備
-- [ ] 在 5+ 真實專案測試
-- [ ] 收集使用回饋
-- [ ] 優化 Prompt 和 Scripts
-- [ ] 撰寫使用文檔
-- [ ] 發布 v2.5.3
+### v2.5.4 - TypeScript/React/Vue Patterns ✅
+
+**目標**：前端生態系統完整支援（React、Vue、Next.js、Nuxt）
+
+**狀態**：已完成 (2025-11-30)
+
+**成果**：
+- ✅ 50 個 TypeScript/React/Vue patterns（25 Tier 1 + 25 Tier 2）
+- ✅ 7+ 個前端專案測試
+- ✅ 框架覆蓋：React, Vue, Next.js, Nuxt, Zustand, Pinia, TanStack Query, Framer Motion
+
+#### React Tier 1 Patterns（18 個）✅
+
+| Pattern | 別名 | 用途 |
+|---------|------|------|
+| React Component | component | 組件定義 |
+| React Hook | hook, hooks, custom hook | 自訂 Hook |
+| State Management | store, state, zustand, redux | 狀態管理 |
+| API Endpoint | api, endpoint, trpc | API 端點 |
+| Authentication | auth, login | 身份驗證 |
+| Form Handling | form, react hook form, zod | 表單處理 |
+| Database Query | database, query, prisma | 資料庫查詢 |
+| Networking | network, http client, fetch, axios | 網路請求 |
+| Next.js Page | page | 頁面路由 |
+| Next.js Layout | layout | 佈局組件 |
+| React Query | tanstack query, data fetching, swr | 資料獲取 |
+| React Context | context api | Context 狀態 |
+| HOC | higher order component | 高階組件 |
+| Error Boundary | boundary | 錯誤邊界 |
+| Suspense | fallback | Suspense 組件 |
+| Portal | modal, dialog | Portal/Modal |
+| Ref | forward ref, imperative handle | Ref 處理 |
+| Memo | memoization, performance | 效能優化 |
+
+#### Vue Tier 1 Patterns（7 個）✅
+
+| Pattern | 別名 | 用途 |
+|---------|------|------|
+| Vue Component | sfc, vue | SFC 組件 |
+| Composable | composition, vue hook | Composition API |
+| Pinia | pinia store, vue store | 狀態管理 |
+| Vue Router | vue routes, router | 路由管理 |
+| Directive | directives, vue directive | 指令 |
+| Vue Plugin | plugin, plugins | 插件 |
+| Provide/Inject | provide, inject | 依賴注入 |
+
+#### Tier 2 補充 Patterns（25 個）✅
+
+**React Tier 2（14 個）**：
+- Next.js Middleware, Loading, Error
+- Server Components, Server Actions
+- Background Job, File Upload
+- Test (Vitest/Jest), Theme/Styling
+- Animation (Framer Motion)
+- i18n, Validation (Zod/Yup), tRPC
+
+**Vue Tier 2（11 個）**：
+- Nuxt Page, Layout, Middleware, Plugin, Composable
+- Vue Transition, Mixin, Filter
+- Vue Test, i18n, Router Guard
+
+#### 測試專案 ✅
+
+| 專案 | 類型 | 特色 |
+|------|------|------|
+| Excalidraw | React | 畫布應用、豐富 Hooks |
+| Mantine | React | UI 組件庫、完整 Hooks |
+| Shadcn UI | React | 現代 UI 組件 |
+| Bulletproof React | React | 最佳實踐範例 |
+| Element Plus | Vue | 企業級 UI 組件 |
+| VueUse | Vue | Utility Composables |
+| Naive UI | Vue | 現代 UI 組件 |
+
+#### 成功指標 ✅
+- [x] React patterns 覆蓋率 >90%（常見專案）
+- [x] Vue patterns 覆蓋率 >85%（常見專案）
+- [x] 準確率 >90%（無大量誤報）
+- [x] 7+ 專案驗證
 
 ---
 
@@ -1429,15 +1495,17 @@ When detecting user confusion, suggest:
 
 ## 版本資訊
 
-**當前版本**: v2.5.3 (2025-11-24)
+**當前版本**: v2.5.4 (2025-11-30)
 
 **開發狀態**：
 - v1.0 ✅ - 方法論驗證完成（5 專案測試）
-- v2.5 🔵 - Commands 架構 (核心功能完成，預計 1-2 週發布)
+- v2.5.4 🔵 - Commands 架構 (核心功能完成)
   - `/atlas.overview` ✅ - 專案概覽（已完成，2025-11-20）
   - `/atlas.pattern` ✅ - 模式學習（已完成，2025-11-22）⭐
   - `/atlas.impact` ✅ - 靜態影響分析（已完成，2025-11-25）
-  - **Phase 3**: 多語言擴展、測試、文檔
+  - `/atlas.init` ✅ - 專案初始化（已完成，2025-11-30）
+  - **多語言支援**: iOS (34), Kotlin (31), Python (26), TypeScript/React/Vue (50)
+  - **Phase 3**: 完善 Git 分析、測試、文檔
 - **完整三階段分析**：使用 `PROMPTS.md` 手動執行（深度盡職調查場景）
 
 **決策記錄** (2025-11-25):
