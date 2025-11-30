@@ -53,6 +53,74 @@ print_section() {
     echo -e "${CYAN}=== $1 ===${NC}" >&2
 }
 
+# Check if running in interactive mode
+is_interactive() {
+    [[ -t 0 && -t 1 ]]
+}
+
+# Ask user for confirmation
+ask_user() {
+    local prompt="$1"
+    local default="${2:-n}"
+
+    if ! is_interactive; then
+        # Non-interactive mode, use default
+        [[ "$default" == "y" ]]
+        return $?
+    fi
+
+    local response
+    echo -e "${YELLOW}$prompt${NC}" >&2
+    read -r response
+    case "$response" in
+        [yY]|[yY][eE][sS]) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# Check and handle shallow clone
+check_shallow_clone() {
+    # Check if this is a shallow repository
+    if git rev-parse --is-shallow-repository 2>/dev/null | grep -q "true"; then
+        local commit_count
+        commit_count=$(git rev-list --count HEAD 2>/dev/null || echo "1")
+
+        echo "" >&2
+        print_warning "偵測到 Shallow Clone（淺層克隆）"
+        echo "" >&2
+        echo -e "${YELLOW}問題說明：${NC}" >&2
+        echo "  此倉庫只有 $commit_count 個 commit，無法進行完整的歷史分析。" >&2
+        echo "  Hotspot、Coupling、Contributors 分析需要完整的 Git 歷史。" >&2
+        echo "" >&2
+        echo -e "${CYAN}解決方案：${NC}" >&2
+        echo "  執行 'git fetch --unshallow' 下載完整歷史" >&2
+        echo "  （這可能需要幾分鐘，取決於倉庫大小）" >&2
+        echo "" >&2
+
+        if ask_user "是否要現在下載完整歷史？[y/N] " "n"; then
+            echo "" >&2
+            print_status "正在下載完整歷史..."
+            echo "（大型專案可能需要 2-5 分鐘，請耐心等待）" >&2
+            echo "" >&2
+
+            if git fetch --unshallow 2>&1 | while read line; do echo "  $line" >&2; done; then
+                print_status "完整歷史下載成功！"
+                echo "" >&2
+            else
+                print_error "下載失敗。請手動執行："
+                echo "  git fetch --unshallow" >&2
+                echo "" >&2
+                echo "然後重新執行此腳本。" >&2
+                exit 1
+            fi
+        else
+            echo "" >&2
+            print_warning "繼續使用有限的歷史資料（結果可能不完整）"
+            echo "" >&2
+        fi
+    fi
+}
+
 # Check prerequisites
 check_prerequisites() {
     print_section "Checking Prerequisites"
@@ -63,6 +131,9 @@ check_prerequisites() {
         exit 1
     fi
     print_status "Git repository detected"
+
+    # Check for shallow clone
+    check_shallow_clone
 
     # Check Java
     if ! command -v java &> /dev/null; then
