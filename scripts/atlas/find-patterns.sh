@@ -267,31 +267,31 @@ get_file_patterns() {
                 ;;
         esac
     elif [ "$proj_type" = "typescript" ]; then
-        # TypeScript/React patterns
+        # TypeScript/React/Vue patterns
         case "$pattern" in
-            # Tier 1 - Core Patterns (10)
+            # Tier 1 - Core Patterns (10 original + 8 new React + 7 Vue = 25)
             "react component"|"component")
                 echo "*.tsx *Component.tsx *component.tsx"
                 ;;
-            "react hook"|"hook"|"hooks")
+            "react hook"|"hook"|"hooks"|"custom hook")
                 echo "use*.ts use*.tsx *hook.ts *hooks.ts"
                 ;;
-            "state management"|"store"|"state")
-                echo "*store.ts *slice.ts *reducer.ts *context.tsx *provider.tsx *state.ts"
+            "state management"|"store"|"state"|"zustand"|"redux")
+                echo "*store.ts *slice.ts *reducer.ts *context.tsx *provider.tsx *state.ts *Store.ts"
                 ;;
-            "api endpoint"|"api"|"endpoint")
-                echo "*route.ts *route.tsx *api.ts *api.tsx *controller.ts *service.ts *endpoint.ts *handler.ts *.api.ts"
+            "api endpoint"|"api"|"endpoint"|"trpc")
+                echo "*route.ts *route.tsx *api.ts *api.tsx *controller.ts *service.ts *endpoint.ts *handler.ts *.api.ts *router.ts"
                 ;;
             "authentication"|"auth"|"login")
                 echo "*auth.ts *auth.tsx *session.ts *login.ts *credential.ts *jwt.ts"
                 ;;
-            "form handling"|"form"|"forms")
+            "form handling"|"form"|"forms"|"react hook form"|"zod")
                 echo "*form.tsx *form.ts *validation.ts *schema.ts"
                 ;;
-            "database query"|"database"|"query")
+            "database query"|"database"|"query"|"prisma")
                 echo "*repository.ts *model.ts *entity.ts *schema.ts *query.ts *dao.ts schema.prisma"
                 ;;
-            "networking"|"network"|"http client")
+            "networking"|"network"|"http client"|"fetch"|"axios")
                 echo "*client.ts *http.ts *fetch.ts *api.ts *request.ts *axios.ts"
                 ;;
             "nextjs page"|"page")
@@ -301,14 +301,63 @@ get_file_patterns() {
                 echo "layout.tsx layout.ts"
                 ;;
 
-            # Tier 2 - Supplementary Patterns (12)
+            # New React Tier 1 Patterns (8)
+            "react query"|"tanstack query"|"data fetching"|"swr")
+                echo "*Query.ts *Queries.ts *query.ts use*Query.ts use*Query.tsx *fetcher.ts"
+                ;;
+            "react context"|"context api")
+                echo "*Context.tsx *Context.ts *context.tsx *context.ts"
+                ;;
+            "hoc"|"higher order component")
+                echo "with*.tsx with*.ts *HOC.tsx *HOC.ts *hoc.tsx *hoc.ts"
+                ;;
+            "error boundary"|"boundary")
+                echo "*ErrorBoundary.tsx *Boundary.tsx *boundary.tsx error.tsx"
+                ;;
+            "suspense"|"fallback")
+                echo "*Suspense.tsx *suspense.tsx *Fallback.tsx *fallback.tsx loading.tsx"
+                ;;
+            "portal"|"modal"|"dialog")
+                echo "*Portal.tsx *portal.tsx *Modal.tsx *modal.tsx *Dialog.tsx *dialog.tsx"
+                ;;
+            "ref"|"forward ref"|"imperative handle")
+                echo "*Ref.ts *ref.ts use*Ref.ts"
+                ;;
+            "memo"|"memoization"|"performance")
+                echo "*memo.ts *Memo.tsx useMemo*.ts useCallback*.ts"
+                ;;
+
+            # Vue Tier 1 Patterns (7)
+            "vue component"|"sfc"|"vue")
+                echo "*.vue"
+                ;;
+            "composable"|"composition"|"vue hook")
+                echo "use*.ts"
+                ;;
+            "pinia"|"pinia store"|"vue store")
+                echo "*Store.ts *store.ts use*Store.ts"
+                ;;
+            "vue router"|"vue routes"|"router")
+                echo "router.ts *router.ts *Routes.ts routes.ts"
+                ;;
+            "directive"|"directives"|"vue directive")
+                echo "*Directive.ts *directive.ts v-*.ts"
+                ;;
+            "vue plugin"|"plugin"|"plugins")
+                echo "*Plugin.ts *plugin.ts"
+                ;;
+            "provide"|"inject"|"provide inject")
+                echo "*Provider.vue *Injection.ts *injection.ts provide*.ts inject*.ts"
+                ;;
+
+            # Tier 2 - Supplementary Patterns (12 original + 6 React + 5 Vue = 23)
             "nextjs middleware"|"middleware")
                 echo "middleware.ts middleware.tsx"
                 ;;
             "nextjs loading"|"loading")
                 echo "loading.tsx loading.ts"
                 ;;
-            "nextjs error"|"error boundary"|"error")
+            "nextjs error"|"error")
                 echo "error.tsx error.ts"
                 ;;
             "background job"|"job"|"queue"|"worker")
@@ -317,11 +366,11 @@ get_file_patterns() {
             "file upload"|"upload"|"file storage"|"storage")
                 echo "*upload.ts *upload.tsx *storage.ts *file.ts *media.ts"
                 ;;
-            "test"|"testing"|"mock"|"e2e"|"unit test")
-                echo "*.test.ts *.test.tsx *.spec.ts *.spec.tsx *mock.ts *Mock.ts mock*.ts"
+            "test"|"testing"|"mock"|"e2e"|"unit test"|"vitest"|"jest")
+                echo "*.test.ts *.test.tsx *.spec.ts *.spec.tsx *mock.ts *Mock.ts mock*.ts *.test.vue"
                 ;;
-            "theme"|"style"|"styling"|"design system")
-                echo "*theme.ts *theme.tsx *styles.ts *styled.ts *design.ts *tokens.ts"
+            "theme"|"style"|"styling"|"design system"|"tailwind")
+                echo "*theme.ts *theme.tsx *styles.ts *styled.ts *design.ts *tokens.ts tailwind.config.*"
                 ;;
             "server component"|"rsc"|"server")
                 echo "*.server.tsx *.server.ts"
@@ -332,11 +381,48 @@ get_file_patterns() {
             "context"|"context provider"|"provider")
                 echo "*Context.tsx *context.tsx *Provider.tsx *provider.tsx"
                 ;;
-            "types"|"type"|"interface"|"interfaces")
+            "types"|"type"|"interface"|"interfaces"|"typescript")
                 echo "*types.ts *type.ts *interface.ts *.d.ts"
                 ;;
             "config"|"configuration"|"environment"|"env")
-                echo "*config.ts *configuration.ts *env.ts *.config.ts"
+                echo "*config.ts *configuration.ts *env.ts *.config.ts *.config.js *.config.mjs"
+                ;;
+
+            # New React Tier 2 Patterns (6)
+            "storybook"|"stories"|"story")
+                echo "*.stories.tsx *.stories.ts *.stories.mdx"
+                ;;
+            "animation"|"framer"|"motion"|"transition")
+                echo "*Animation.tsx *animation.tsx *Motion.tsx *motion.tsx *transition.tsx *Transition.tsx"
+                ;;
+            "i18n"|"translation"|"locale"|"intl")
+                echo "*i18n.ts *locale.ts *translation.ts *intl.ts locales/*.json messages/*.json"
+                ;;
+            "graphql"|"apollo"|"urql"|"gql")
+                echo "*.graphql *.gql *Query.graphql *Mutation.graphql *Fragment.graphql"
+                ;;
+            "rtk query"|"redux toolkit"|"rtk"|"createapi")
+                echo "*Api.ts *api.ts *Slice.ts *slice.ts"
+                ;;
+            "react router"|"routing"|"routes")
+                echo "*Routes.tsx *Router.tsx *routes.tsx *router.tsx routes/*.tsx"
+                ;;
+
+            # Vue Tier 2 Patterns (5)
+            "nuxt page"|"nuxt pages")
+                echo "pages/*.vue pages/**/*.vue"
+                ;;
+            "nuxt layout"|"nuxt layouts")
+                echo "layouts/*.vue"
+                ;;
+            "nuxt middleware"|"nuxt middlewares")
+                echo "middleware/*.ts middleware/*.js"
+                ;;
+            "nuxt plugin"|"nuxt plugins")
+                echo "plugins/*.ts plugins/*.js"
+                ;;
+            "vueuse"|"vue composable library")
+                echo "use*.ts composables/use*.ts"
                 ;;
             *)
                 echo ""
@@ -636,49 +722,94 @@ get_dir_patterns() {
                 ;;
         esac
     elif [ "$proj_type" = "typescript" ]; then
-        # TypeScript/React directory patterns
+        # TypeScript/React/Vue directory patterns
         case "$pattern" in
-            # Tier 1
+            # ==== REACT TIER 1 - Core Patterns (18) ====
             "react component"|"component")
-                echo "components ui features modules views pages screens"
+                echo "components ui features modules views pages screens src/components src/ui"
                 ;;
             "react hook"|"hook"|"hooks")
-                echo "hooks composables utils lib"
+                echo "hooks composables utils lib src/hooks"
                 ;;
-            "state management"|"store"|"state")
-                echo "store state redux context providers slices"
+            "state management"|"store"|"state"|"zustand"|"redux"|"jotai"|"recoil")
+                echo "store stores state redux context providers slices atoms src/store src/stores"
                 ;;
             "api endpoint"|"api"|"endpoint")
-                echo "api routes controllers handlers services app/api pages/api"
+                echo "api routes controllers handlers services app/api pages/api src/api"
                 ;;
             "authentication"|"auth"|"login")
-                echo "auth authentication session security middleware"
+                echo "auth authentication session security middleware src/auth"
                 ;;
             "form handling"|"form"|"forms")
-                echo "forms components ui features"
+                echo "forms components ui features src/forms"
                 ;;
-            "database query"|"database"|"query")
-                echo "models entities repositories db database prisma schema"
+            "database query"|"database"|"query"|"prisma"|"drizzle")
+                echo "models entities repositories db database prisma schema drizzle src/db"
                 ;;
-            "networking"|"network"|"http client")
-                echo "api lib services utils http client"
+            "networking"|"network"|"http client"|"fetcher")
+                echo "api lib services utils http client fetchers src/lib"
                 ;;
-            "nextjs page"|"page")
-                echo "app src/app pages"
+            "nextjs page"|"page"|"pages")
+                echo "app src/app pages src/pages"
                 ;;
-            "nextjs layout"|"layout")
-                echo "app src/app layouts"
+            "nextjs layout"|"layout"|"layouts")
+                echo "app src/app layouts src/layouts"
+                ;;
+            # New React Tier 1
+            "react query"|"tanstack query"|"data fetching"|"swr")
+                echo "queries hooks api lib services src/queries"
+                ;;
+            "react context"|"context api"|"context")
+                echo "context contexts providers state src/context src/contexts"
+                ;;
+            "hoc"|"higher order component")
+                echo "hoc hocs components lib utils"
+                ;;
+            "error boundary"|"error")
+                echo "components errors boundaries app src/app src/components"
+                ;;
+            "suspense"|"lazy"|"loading")
+                echo "components app src/app loading"
+                ;;
+            "portal"|"modal"|"dialog")
+                echo "components portals modals dialogs ui src/components"
+                ;;
+            "ref"|"refs"|"forward ref"|"imperative handle")
+                echo "components hooks lib utils"
+                ;;
+            "render props"|"render prop")
+                echo "components lib utils features"
                 ;;
 
-            # Tier 2
+            # ==== VUE TIER 1 - Core Patterns (7) ====
+            "vue component"|"sfc"|"vue")
+                echo "components views pages ui features src/components src/views"
+                ;;
+            "composable"|"composition"|"vue hook")
+                echo "composables hooks utils lib src/composables use core shared"
+                ;;
+            "pinia"|"pinia store"|"vue store")
+                echo "stores store pinia state src/stores"
+                ;;
+            "vue directive"|"directive"|"directives")
+                echo "directives src/directives plugins"
+                ;;
+            "vue plugin"|"plugin"|"plugins")
+                echo "plugins modules src/plugins"
+                ;;
+            "provide inject"|"provide"|"inject")
+                echo "providers context injection composables"
+                ;;
+            "nuxt page"|"nuxt")
+                echo "pages app src/pages"
+                ;;
+
+            # ==== REACT TIER 2 - Supplementary (12) ====
             "nextjs middleware"|"middleware")
                 echo "middleware app src"
                 ;;
             "nextjs loading"|"loading")
-                echo "app src/app"
-                ;;
-            "nextjs error"|"error boundary"|"error")
-                echo "app src/app components"
+                echo "app src/app loading"
                 ;;
             "background job"|"job"|"queue"|"worker")
                 echo "jobs workers tasks queue background cron"
@@ -687,25 +818,69 @@ get_dir_patterns() {
                 echo "upload storage media files lib"
                 ;;
             "test"|"testing"|"mock"|"e2e"|"unit test")
-                echo "__tests__ tests test __mocks__ mocks e2e spec"
+                echo "__tests__ tests test __mocks__ mocks e2e spec cypress playwright vitest"
                 ;;
             "theme"|"style"|"styling"|"design system")
-                echo "theme themes styles design tokens constants"
+                echo "theme themes styles design tokens constants src/theme src/styles"
                 ;;
             "server component"|"rsc"|"server")
-                echo "app src/app components"
+                echo "app src/app components server"
                 ;;
             "server action"|"action"|"actions")
                 echo "actions app/actions lib/actions server"
                 ;;
-            "context"|"context provider"|"provider")
-                echo "context providers contexts state"
-                ;;
             "types"|"type"|"interface"|"interfaces")
-                echo "types @types interfaces models lib"
+                echo "types @types interfaces models lib src/types"
                 ;;
             "config"|"configuration"|"environment"|"env")
-                echo "config configuration env lib constants"
+                echo "config configuration env lib constants src/config"
+                ;;
+            "animation"|"motion"|"framer"|"spring")
+                echo "animations motion framer components ui"
+                ;;
+            "i18n"|"internationalization"|"localization"|"locale")
+                echo "i18n locales translations messages lang src/i18n"
+                ;;
+            "validation"|"schema"|"zod"|"yup")
+                echo "schemas validations validators lib utils"
+                ;;
+            "trpc"|"rpc"|"type safe api")
+                echo "trpc server routers procedures api"
+                ;;
+
+            # ==== VUE TIER 2 - Supplementary (11) ====
+            "nuxt layout"|"nuxt layouts")
+                echo "layouts src/layouts"
+                ;;
+            "nuxt middleware"|"nuxt route middleware")
+                echo "middleware src/middleware"
+                ;;
+            "nuxt plugin"|"nuxt plugins")
+                echo "plugins src/plugins"
+                ;;
+            "nuxt composable"|"nuxt composables")
+                echo "composables src/composables"
+                ;;
+            "vue transition"|"transition"|"transitions")
+                echo "components transitions animations"
+                ;;
+            "vue mixin"|"mixin"|"mixins")
+                echo "mixins src/mixins lib"
+                ;;
+            "vue filter"|"filter"|"filters")
+                echo "filters src/filters lib"
+                ;;
+            "vue test"|"vue testing"|"vue unit test")
+                echo "__tests__ tests test spec vitest cypress"
+                ;;
+            "vue i18n"|"vue-i18n")
+                echo "i18n locales lang translations messages"
+                ;;
+            "vue router"|"router guard"|"navigation guard")
+                echo "router guards routes navigation src/router"
+                ;;
+            "vue module"|"modules")
+                echo "modules src/modules features"
                 ;;
             *)
                 echo ""
@@ -856,33 +1031,65 @@ main() {
             echo "  - loader / fetcher" >&2
             echo "  - listener / callback / handler" >&2
         elif [ "$PROJECT_TYPE" = "typescript" ]; then
-            echo "Supported patterns (TypeScript/React/Next.js):" >&2
+            echo "Supported patterns (TypeScript/React/Vue/Next.js/Nuxt):" >&2
             echo "" >&2
-            echo "Tier 1 - Core patterns (10):" >&2
+            echo "=== React Tier 1 (18 patterns) ===" >&2
             echo "  - react component / component" >&2
-            echo "  - react hook / hook / hooks" >&2
-            echo "  - state management / store / state" >&2
-            echo "  - api endpoint / api / endpoint" >&2
+            echo "  - react hook / hook / hooks / custom hook" >&2
+            echo "  - state management / store / state / zustand / redux" >&2
+            echo "  - api endpoint / api / endpoint / trpc" >&2
             echo "  - authentication / auth / login" >&2
-            echo "  - form handling / form / forms" >&2
-            echo "  - database query / database / query (includes Prisma)" >&2
-            echo "  - networking / network / http client" >&2
+            echo "  - form handling / form / forms / react hook form / zod" >&2
+            echo "  - database query / database / query / prisma" >&2
+            echo "  - networking / network / http client / fetch / axios" >&2
             echo "  - nextjs page / page" >&2
             echo "  - nextjs layout / layout" >&2
+            echo "  - react query / tanstack query / data fetching / swr" >&2
+            echo "  - react context / context api" >&2
+            echo "  - hoc / higher order component" >&2
+            echo "  - error boundary / boundary" >&2
+            echo "  - suspense / fallback" >&2
+            echo "  - portal / modal / dialog" >&2
+            echo "  - ref / forward ref / imperative handle" >&2
+            echo "  - memo / memoization / performance" >&2
             echo "" >&2
-            echo "Tier 2 - Supplementary patterns (12):" >&2
+            echo "=== Vue Tier 1 (7 patterns) ===" >&2
+            echo "  - vue component / sfc / vue" >&2
+            echo "  - composable / composition / vue hook" >&2
+            echo "  - pinia / pinia store / vue store" >&2
+            echo "  - vue router / vue routes / router" >&2
+            echo "  - directive / directives / vue directive" >&2
+            echo "  - vue plugin / plugin / plugins" >&2
+            echo "  - provide / inject / provide inject" >&2
+            echo "" >&2
+            echo "=== React Tier 2 (14 patterns) ===" >&2
             echo "  - nextjs middleware / middleware" >&2
             echo "  - nextjs loading / loading" >&2
-            echo "  - nextjs error / error boundary / error" >&2
+            echo "  - nextjs error / error" >&2
             echo "  - background job / job / queue / worker" >&2
             echo "  - file upload / upload / file storage / storage" >&2
-            echo "  - test / testing / mock / e2e / unit test" >&2
-            echo "  - theme / style / styling / design system" >&2
+            echo "  - test / testing / mock / e2e / vitest / jest" >&2
+            echo "  - theme / style / styling / design system / tailwind" >&2
             echo "  - server component / rsc / server" >&2
             echo "  - server action / action / actions" >&2
             echo "  - context / context provider / provider" >&2
-            echo "  - types / type / interface / interfaces" >&2
+            echo "  - types / type / interface / interfaces / typescript" >&2
             echo "  - config / configuration / environment / env" >&2
+            echo "  - animation / motion / framer / spring" >&2
+            echo "  - i18n / internationalization / localization / locale" >&2
+            echo "" >&2
+            echo "=== Vue Tier 2 (11 patterns) ===" >&2
+            echo "  - nuxt page / nuxt" >&2
+            echo "  - nuxt layout / nuxt layouts" >&2
+            echo "  - nuxt middleware / nuxt route middleware" >&2
+            echo "  - nuxt plugin / nuxt plugins" >&2
+            echo "  - nuxt composable / nuxt composables" >&2
+            echo "  - vue transition / transition / transitions" >&2
+            echo "  - vue mixin / mixin / mixins" >&2
+            echo "  - vue filter / filter / filters" >&2
+            echo "  - vue test / vue testing / vue unit test" >&2
+            echo "  - vue i18n / vue-i18n" >&2
+            echo "  - vue router / router guard / navigation guard" >&2
         elif [ "$PROJECT_TYPE" = "python" ]; then
             echo "Supported patterns (Python/Django/FastAPI/Flask):" >&2
             echo "" >&2

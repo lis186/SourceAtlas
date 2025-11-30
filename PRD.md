@@ -1135,31 +1135,102 @@ templates:
 
 ## 11. 實作路線圖
 
-### v2.5.3 - SourceAtlas Skill (當前)
+### v2.5.3 - Python Patterns ✅
 
-**目標**：提供即時專案理解能力
+**目標**：Python 生態系統完整支援
 
-**時程**：3-4 週
+**狀態**：已完成 (2025-11-30)
 
-#### Week 1: 核心 Skill
-- [x] 設計 Skill 架構
-- [ ] 實作 Stage 0 Skill
-- [ ] 實作 Stage 1 Skill
-- [ ] 實作 Stage 2 Skill
-- [ ] 基礎 Scripts（detect, scan）
+**成果**：
+- ✅ 26 個 Python patterns（12 Tier 1 + 14 Tier 2）
+- ✅ 10 個專案測試（Django, FastAPI, Flask, Celery, Scrapy, Pydantic, SQLAlchemy, Starlette, httpx, cookiecutter-django）
+- ✅ 框架覆蓋：Django, FastAPI, Flask, Celery, Scrapy, Pydantic, SQLAlchemy, Starlette
 
-#### Week 2-3: 完善與測試
-- [x] 核心 3 commands 完成 ✅ (overview, pattern, impact)
-- [ ] 完善 Scripts 集合 (git 分析、依賴分析)
-- [ ] 擴展 pattern 庫（更多語言支援）
-- [ ] 多專案測試與優化
+---
 
-#### Week 3-4: 發布準備
-- [ ] 在 5+ 真實專案測試
-- [ ] 收集使用回饋
-- [ ] 優化 Prompt 和 Scripts
-- [ ] 撰寫使用文檔
-- [ ] 發布 v2.5.3
+### v2.5.4 - TypeScript/React/Vue Patterns (當前) 🔵
+
+**目標**：前端生態系統完整支援（React、Vue、Next.js、Nuxt）
+
+**時程**：1-2 週
+
+#### 現有 TypeScript Patterns（22 個）
+- Tier 1（10）：react component, react hook, state management, api endpoint, authentication, form handling, database query, networking, nextjs page, nextjs layout
+- Tier 2（12）：nextjs middleware, nextjs loading, nextjs error, background job, file upload, test, theme, server component, server action, context, types, config
+
+#### 計劃新增 - React 生態系統
+
+**Tier 1 新增（預計 8-10 個）**：
+| Pattern | 別名 | 用途 | 檔案模式 |
+|---------|------|------|----------|
+| React Query | tanstack query, data fetching | 資料獲取 | `*Query.ts`, `*Queries.ts`, `use*Query.ts` |
+| Zustand Store | zustand, state | 輕量狀態管理 | `*Store.ts`, `*store.ts`, `use*Store.ts` |
+| React Context | context, provider | Context API | `*Context.tsx`, `*Provider.tsx` |
+| Custom Hook | hook, composable | 自訂 Hook | `use*.ts`, `use*.tsx` |
+| HOC | higher order component | 高階組件 | `with*.tsx`, `*HOC.tsx` |
+| Error Boundary | error, boundary | 錯誤邊界 | `*ErrorBoundary.tsx`, `*Boundary.tsx` |
+| Suspense | loading, fallback | 懸念邊界 | `*Suspense.tsx`, `*Loading.tsx` |
+| Portal | modal, dialog | Portal 組件 | `*Portal.tsx`, `*Modal.tsx` |
+
+**Tier 2 新增（預計 6-8 個）**：
+| Pattern | 別名 | 用途 | 檔案模式 |
+|---------|------|------|----------|
+| Storybook | stories | 組件文檔 | `*.stories.tsx`, `*.stories.ts` |
+| Animation | framer, motion | 動畫 | `*Animation.tsx`, `*Motion.tsx` |
+| i18n | translation, locale | 國際化 | `*i18n.ts`, `*locale.ts`, `*.json` |
+| GraphQL | apollo, urql | GraphQL 操作 | `*.graphql`, `*Query.graphql` |
+| RTK Query | redux toolkit query | Redux 資料獲取 | `*Api.ts`, `*Slice.ts` |
+| React Router | routing | 路由定義 | `*Routes.tsx`, `*Router.tsx` |
+
+#### 計劃新增 - Vue 生態系統
+
+**Tier 1 新增（預計 8-10 個）**：
+| Pattern | 別名 | 用途 | 檔案模式 |
+|---------|------|------|----------|
+| Vue Component | component, sfc | 單檔組件 | `*.vue` |
+| Composable | composition, hook | 組合式函數 | `use*.ts`, `composables/*.ts` |
+| Pinia Store | pinia, store | 狀態管理 | `*Store.ts`, `use*Store.ts` |
+| Vue Router | router, routes | 路由 | `router.ts`, `*Routes.ts` |
+| Directive | directives | 自訂指令 | `v*.ts`, `*Directive.ts` |
+| Plugin | plugins | Vue 外掛 | `*Plugin.ts`, `plugins/*.ts` |
+| Provide/Inject | inject, provide | 依賴注入 | `*Provider.vue`, `*Injection.ts` |
+
+**Tier 2 新增（預計 4-6 個）**：
+| Pattern | 別名 | 用途 | 檔案模式 |
+|---------|------|------|----------|
+| Nuxt Page | page | Nuxt 頁面 | `pages/*.vue` |
+| Nuxt Layout | layout | Nuxt 佈局 | `layouts/*.vue` |
+| Nuxt Middleware | middleware | Nuxt 中介層 | `middleware/*.ts` |
+| Nuxt Plugin | nuxt plugin | Nuxt 外掛 | `plugins/*.ts` |
+| VueUse | vueuse | 工具組合函數 | `use*.ts` |
+
+#### 測試計劃
+
+**React 專案（6-8 個）**：
+| 專案 | Stars | 類型 | 測試重點 |
+|------|-------|------|----------|
+| cal.com | 35k+ | Next.js + tRPC | 完整堆疊 |
+| excalidraw | 85k+ | React + Canvas | 複雜狀態 |
+| mantine | 27k+ | Component Library | 組件設計 |
+| bulletproof-react | 29k+ | Best Practices | 架構模式 |
+| refine | 30k+ | React Framework | 企業模式 |
+| shadcn/ui | 80k+ | Component Library | 現代 UI |
+
+**Vue 專案（4-6 個）**：
+| 專案 | Stars | 類型 | 測試重點 |
+|------|-------|------|----------|
+| element-plus | 25k+ | Component Library | 組件設計 |
+| naive-ui | 17k+ | Component Library | TypeScript |
+| vueuse | 20k+ | Composables | 組合式函數 |
+| nuxt | 55k+ | Framework | Nuxt 模式 |
+| slidev | 35k+ | Presentation | Nuxt 應用 |
+
+#### 成功指標
+- [ ] React patterns 覆蓋率 >90%（常見專案）
+- [ ] Vue patterns 覆蓋率 >85%（常見專案）
+- [ ] 準確率 >90%（無大量誤報）
+- [ ] 6+ React 專案驗證
+- [ ] 4+ Vue 專案驗證
 
 ---
 
