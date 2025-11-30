@@ -1,8 +1,8 @@
 # SourceAtlas 全局安裝指南
 
-**一次安裝，在任何專案使用 3 個 SourceAtlas 命令**
+**一次安裝，在任何專案使用 4 個 SourceAtlas 命令**
 
-v2.5 | 更新時間: 2025-11-25
+v2.5 | 更新時間: 2025-11-30
 
 ---
 
@@ -41,7 +41,7 @@ echo "OS: $(uname -s) $(uname -r)"
 ./install-global.sh
 ```
 
-這會將 3 個命令安裝到 `~/.claude/commands/`。
+這會將 4 個命令安裝到 `~/.claude/commands/`。
 
 ### 2. 驗證安裝
 
@@ -52,6 +52,7 @@ echo "OS: $(uname -s) $(uname -r)"
 你應該會看到：
 
 ```
+✓ atlas-init.md → [path] (symlink OK)
 ✓ atlas-overview.md → [path] (symlink OK)
 ✓ atlas-pattern.md → [path] (symlink OK)
 ✓ atlas-impact.md → [path] (symlink OK)
@@ -67,6 +68,7 @@ echo "OS: $(uname -s) $(uname -r)"
 cd ~/projects/any-project
 
 # 在 Claude Code 中執行
+/atlas-init                        # 首次使用：注入自動觸發規則
 /atlas-overview
 /atlas-pattern "api endpoint"
 /atlas-impact "src/api/users.ts"
@@ -75,6 +77,14 @@ cd ~/projects/any-project
 ---
 
 ## 可用命令
+
+### `/atlas-init`
+
+專案初始化（首次使用時執行）
+
+- **時間**: <1 分鐘
+- **功能**: 注入 SourceAtlas 自動觸發規則到專案的 CLAUDE.md
+- **效果**: 之後 Claude 會自動建議適合的 Atlas 命令
 
 ### `/atlas-overview`
 
@@ -162,6 +172,7 @@ git pull
 ```
 
 這會刪除：
+- `~/.claude/commands/atlas-init.md`
 - `~/.claude/commands/atlas-overview.md`
 - `~/.claude/commands/atlas-pattern.md`
 - `~/.claude/commands/atlas-impact.md`
@@ -176,6 +187,7 @@ git pull
 ```
 ~/.claude/
 ├── commands/
+│   ├── atlas-init.md            # → sourceatlas2/.claude/commands/
 │   ├── atlas-overview.md        # → sourceatlas2/.claude/commands/
 │   ├── atlas-pattern.md         # → sourceatlas2/.claude/commands/
 │   ├── atlas-impact.md          # → sourceatlas2/.claude/commands/
@@ -197,7 +209,7 @@ git pull
 │       └── test.md              # 專案特定命令
 
 # Claude Code 會同時看到：
-# - 全局: /atlas-overview, /atlas-pattern, /atlas-impact
+# - 全局: /atlas-init, /atlas-overview, /atlas-pattern, /atlas-impact
 # - 專案: /deploy, /test
 ```
 

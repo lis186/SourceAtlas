@@ -149,6 +149,7 @@ cd ~/projects/any-project
 3. 以指定格式生成輸出（Stage 0 用 .yaml，Stage 1-2 用 .md）
 
 **v2.5 方式**（Commands，核心功能完成）：
+- `/atlas-init` ✅ - 專案初始化，注入自動觸發規則（已實作，2025-11-30）
 - `/atlas-overview` ✅ - Stage 0 專案指紋（已實作，2025-11-20）
 - `/atlas-pattern` ✅ - 學習設計模式（已實作，2025-11-22）
 - `/atlas-impact` ✅ - 影響範圍分析（已實作，2025-11-25）
@@ -730,7 +731,8 @@ touch test-results.md
 
 基於 PRD v2.5.2 和 v1.0 學習：
 
-### ✅ 已完成 - 核心 3 Commands
+### ✅ 已完成 - 核心 4 Commands
+- [x] `/atlas-init` - 專案初始化（自動觸發規則）✅ (2025-11-30)
 - [x] `/atlas-overview` - Stage 0 專案指紋 ✅ (2025-11-20)
 - [x] `/atlas-pattern` - 學習設計模式 ✅ (2025-11-22) ⭐⭐⭐⭐⭐
 - [x] `/atlas-impact` - 影響範圍分析 ✅ (2025-11-25) ⭐⭐⭐⭐
