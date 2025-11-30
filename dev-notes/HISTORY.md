@@ -9,11 +9,12 @@
 ### Week 5 (11/25-12/01): v2.5.2 Core Commands Complete ⭐⭐
 
 **Kotlin/Android Patterns 實作完成** (11/30):
-- 完成 6 階段方法論驗證（Phase 1-2）
-- 5 個測試專案：nowinandroid (18k⭐), tivi (6k⭐), Pokedex (7k⭐), Foodium, foodies
-- 20 個 patterns 測試（12 Tier 1 + 8 Tier 2），95%+ 準確率
-- 關鍵發現：Circuit library 使用 Presenter/Component 模式（非傳統 ViewModel）
-- 新增 patterns：`*Presenter.kt`, `*Component.kt`, `*UiState.kt`, `*Intent.kt`, `*Effect.kt`
+- 完成 6 階段方法論驗證，8 個測試專案（5,237+ 檔案）
+- 測試專案：nowinandroid, tivi, Pokedex, Foodium, foodies, thunderbird-android, NewPipe, AntennaPod
+- **31 個 patterns** 實作完成（12 Tier 1 + 19 Tier 2），95%+ 準確率
+- 關鍵發現：Circuit library 使用 Presenter/Component 模式；生產級 App 需要 Factory/Provider/Contract 等更多 patterns
+- 新增核心 patterns：`*Presenter.kt`, `*Component.kt`, `*UiState.kt`, `*Intent.kt`, `*Effect.kt`
+- 新增生產級 patterns：`*Factory.kt`, `*Provider.kt`, `*Contract.kt`, `*Config.kt`, `*Validator.kt`, `*Parser.kt`, `*Formatter.kt`, `*Loader.kt`, `*Listener.kt`
 → [研究報告](./2025-11/2025-11-30-kotlin-android-research-report.md)
 → [實作報告](./2025-11/2025-11-30-kotlin-patterns-implementation-report.md)
 
@@ -144,16 +145,17 @@
 
 ## 統計總覽
 
-### Patterns 總數（截至 2025-11-23）
+### Patterns 總數（截至 2025-11-30）
 - **iOS**: 29 patterns（27 支援 Objective-C）
 - **TypeScript/React**: 22 patterns
-- **Android/Kotlin**: 20 patterns
-- **總計**: 71 patterns
+- **Android/Kotlin**: 31 patterns（12 Tier 1 + 19 Tier 2）
+- **總計**: 82 patterns
 
 ### 測試專案
-- wikipedia-ios, Signal-iOS, 大型商業 App（iOS 混合專案）
-- Swiftfin, Telegram, WordPress（多語言驗證）
+- **iOS**: wikipedia-ios, Signal-iOS, 大型商業 App（混合專案）
+- **TypeScript**: Swiftfin, Telegram, WordPress（多語言驗證）
+- **Android**: nowinandroid, tivi, thunderbird-android, NewPipe, AntennaPod（8 專案）
 
 ---
 
-**最後更新**: 2025-11-24
+**最後更新**: 2025-11-30

@@ -319,7 +319,7 @@ hypotheses:
 - **v2.5** 🔵 - Commands 實作中（預計 3-4 週）
 
 **版本歷程**：
-- v2.5.2 (2025-11-30): **Kotlin/Android Patterns 完成** - 22 patterns（+test, +store），95%+ 準確率，支援 Circuit/MVI
+- v2.5.2 (2025-11-30): **Kotlin/Android Patterns 完成** - 31 patterns（12 Tier 1 + 19 Tier 2），8 專案驗證，95%+ 準確率，支援 MVVM/MVI/Clean/Circuit
 - v2.5.1 (2025-11-23): **iOS Patterns 擴展完成** - 新增 18 個 iOS patterns (16 → 34, +112.5%)
 - v1.0 (2025-11-22): 完成 5 專案驗證、YAML vs TOON 決策、規模感知算法
 - v2.0 (2025-11-19): 手動 Prompts 方法論
@@ -734,8 +734,8 @@ touch test-results.md
 
 ### 成果總結
 
-- ✅ **22 個 patterns**（12 Tier 1 + 10 Tier 2）
-- ✅ **測試專案**: 5 個 Kotlin 專案（817 ~ 32K LOC）
+- ✅ **31 個 patterns**（12 Tier 1 + 19 Tier 2）
+- ✅ **測試專案**: 8 個 Kotlin 專案（817 ~ 32K LOC）
 - ✅ **整體準確率**: 95%+
 - ✅ **架構覆蓋**: MVVM, MVI, Clean Architecture, Circuit
 
@@ -745,6 +745,7 @@ touch test-results.md
 2. **Compose 使用 Component 模式** - `*Component.kt` 取代 `*Screen.kt`
 3. **MVI 需要額外 patterns** - `*UiState.kt`, `*Intent.kt`, `*Effect.kt`
 4. **SQLDelight 取代 Room** - Kotlin Multiplatform 專案使用 SQLDelight
+5. **大型專案使用更多 patterns** - Factory, Provider, Contract, Config 等在生產級 App 很常見
 
 ### Tier 1 核心 Patterns（12 個）
 
@@ -763,15 +764,42 @@ touch test-results.md
 | Activity | - | `*Activity.kt` |
 | Navigation | nav | `*Navigator.kt`, `*Directions.kt` |
 
+### Tier 2 補充 Patterns（19 個）
+
+| Pattern | 別名 | 用途 |
+|---------|------|------|
+| Service | - | 背景服務 |
+| Receiver | broadcast | 廣播接收 |
+| Mapper | converter | 資料轉換 |
+| Sealed | result, resource | 密封類狀態 |
+| Extension | ext | Kotlin 擴展函數 |
+| Binding | viewbinding, databinding | 視圖綁定 |
+| Singleton | object, manager | 單例管理 |
+| Worker | workmanager, background | 背景任務 |
+| Test | mock, fake, stub | 測試相關 |
+| Store | redux, mvi | 狀態管理 |
+| Factory | builder, creator | 物件創建 |
+| Provider | content provider | 內容提供 |
+| Contract | interface | 介面契約 |
+| Config | settings, preferences | 配置設定 |
+| Validator | validation | 驗證邏輯 |
+| Parser | serializer | 解析序列化 |
+| Formatter | format | 格式化 |
+| Loader | fetcher | 資料載入 |
+| Listener | callback, handler | 事件監聽 |
+
 ### 測試專案
 
-| 專案 | Stars | LOC | 架構 |
-|------|-------|-----|------|
-| nowinandroid | 18k+ | 29K | Clean + MVVM |
-| tivi | 6k+ | 32K | Circuit/MVI |
-| Pokedex | 7k+ | 3K | MVVM |
-| Foodium | 2k+ | 2K | MVVM |
-| foodies | 1k+ | 1K | MVVM + Compose |
+| 專案 | Stars | 檔案數 | 架構 |
+|------|-------|--------|------|
+| nowinandroid | 18k+ | 303 | Clean + MVVM |
+| tivi | 6k+ | 629 | Circuit/MVI (KMP) |
+| Pokedex | 7k+ | 56 | MVVM |
+| Foodium | 2k+ | 27 | MVVM |
+| foodies | 1k+ | 20 | MVVM + Compose |
+| thunderbird-android | 10k+ | 3,131 | 生產級郵件客戶端 |
+| NewPipe | 30k+ | 475 | 視頻串流 |
+| AntennaPod | 6k+ | 596 | Podcast App |
 
 > **詳細報告**：見 [dev-notes/2025-11/2025-11-30-kotlin-patterns-implementation-report.md](./dev-notes/2025-11/2025-11-30-kotlin-patterns-implementation-report.md)
 
