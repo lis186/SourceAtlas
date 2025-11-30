@@ -5,7 +5,7 @@
 # ============================================================================
 #
 # This script installs SourceAtlas commands globally to ~/.claude/commands/
-# allowing you to use /atlas-overview and /atlas-pattern in any project.
+# allowing you to use /atlas.overview and /atlas.pattern in any project.
 #
 # Usage:
 #   ./install-global.sh          # Install/update commands
@@ -81,7 +81,7 @@ check_installation() {
     # Check each command
     local all_ok=true
 
-    for cmd in atlas-overview atlas-pattern atlas-impact atlas-init; do
+    for cmd in atlas.overview atlas.pattern atlas.impact atlas.init; do
         local file="$GLOBAL_COMMANDS_DIR/$cmd.md"
 
         if [ ! -e "$file" ]; then
@@ -132,8 +132,8 @@ check_installation() {
         print_success "All commands installed and working"
         echo ""
         echo "You can now use these commands in any project:"
-        echo "  /atlas-overview [directory]"
-        echo "  /atlas-pattern [pattern-type]"
+        echo "  /atlas.overview [directory]"
+        echo "  /atlas.pattern [pattern-type]"
         return 0
     else
         print_error "Some commands have issues"
@@ -193,7 +193,7 @@ install_commands() {
     # Install each command
     echo ""
 
-    for cmd in atlas-overview atlas-pattern atlas-impact atlas-init; do
+    for cmd in atlas.overview atlas.pattern atlas.impact atlas.init; do
         local source="$SOURCE_COMMANDS_DIR/$cmd.md"
         local target="$GLOBAL_COMMANDS_DIR/$cmd.md"
 
@@ -234,22 +234,22 @@ install_commands() {
     echo ""
     echo -e "${GREEN}You can now use these commands in any project:${NC}"
     echo ""
-    echo -e "  ${BLUE}/atlas-init${NC}"
+    echo -e "  ${BLUE}/atlas.init${NC}"
     echo "    - Initialize SourceAtlas in current project"
     echo "    - Injects auto-trigger rules into CLAUDE.md"
     echo "    - Run this first in new projects!"
     echo ""
-    echo -e "  ${BLUE}/atlas-overview${NC} [directory]"
+    echo -e "  ${BLUE}/atlas.overview${NC} [directory]"
     echo "    - Rapid project fingerprint (Stage 0)"
     echo "    - Scans <5% of files for 70-80% understanding"
     echo "    - Completes in 10-15 minutes"
     echo ""
-    echo -e "  ${BLUE}/atlas-pattern${NC} [pattern-type]"
+    echo -e "  ${BLUE}/atlas.pattern${NC} [pattern-type]"
     echo "    - Learn design patterns from codebase"
     echo "    - Examples: \"api endpoint\", \"background job\", \"swiftui view\""
     echo "    - Completes in 5-10 minutes"
     echo ""
-    echo -e "  ${BLUE}/atlas-impact${NC} [target]"
+    echo -e "  ${BLUE}/atlas.impact${NC} [target]"
     echo "    - Analyze impact scope of code changes"
     echo "    - Examples: \"User model\", \"api /users\", \"authentication\""
     echo "    - Static dependency analysis"

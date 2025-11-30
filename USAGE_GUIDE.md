@@ -9,9 +9,9 @@
 ## 目錄
 
 1. [安裝](#安裝)
-2. [命令 1: /atlas-overview](#命令-1-atlas-overview)
-3. [命令 2: /atlas-pattern](#命令-2-atlas-pattern)
-4. [命令 3: /atlas-impact](#命令-3-atlas-impact)
+2. [命令 1: /atlas.overview](#命令-1-atlasoverview)
+3. [命令 2: /atlas.pattern](#命令-2-atlaspattern)
+4. [命令 3: /atlas.impact](#命令-3-atlasimpact)
 5. [常見問題](#常見問題)
 
 ---
@@ -31,14 +31,14 @@ cd ~/dev/sourceatlas2 && ./install-global.sh
 
 ---
 
-## 命令 1: /atlas-overview
+## 命令 1: /atlas.overview
 
 **快速理解專案全貌**
 
 ### 使用方式
 
 ```bash
-/atlas-overview
+/atlas.overview
 ```
 
 ### 你會得到什麼
@@ -70,7 +70,7 @@ cd ~/dev/sourceatlas2 && ./install-global.sh
 
 **命令**：
 ```bash
-/atlas-overview
+/atlas.overview
 ```
 
 **輸出**（摘要）：
@@ -95,20 +95,20 @@ key_directories:
 - 測試覆蓋率 85%（專業團隊）
 - 主要邏輯在 src/app/（App Router 架構）
 
-**下一步**：用 `/atlas-pattern "api endpoint"` 學習 API 實作方式
+**下一步**：用 `/atlas.pattern "api endpoint"` 學習 API 實作方式
 
 ---
 
-## 命令 2: /atlas-pattern
+## 命令 2: /atlas.pattern
 
 **學習專案的設計模式**
 
 ### 使用方式
 
 ```bash
-/atlas-pattern "api endpoint"
-/atlas-pattern "file upload"
-/atlas-pattern "authentication"
+/atlas.pattern "api endpoint"
+/atlas.pattern "file upload"
+/atlas.pattern "authentication"
 ```
 
 ### 什麼是 "Pattern"？
@@ -252,7 +252,7 @@ key_directories:
 
 </details>
 
-**試用範例**：`/atlas-pattern "api endpoint"`
+**試用範例**：`/atlas.pattern "api endpoint"`
 
 ### 執行時間
 
@@ -266,7 +266,7 @@ key_directories:
 
 **命令**：
 ```bash
-/atlas-pattern "api endpoint"
+/atlas.pattern "api endpoint"
 ```
 
 **輸出**（摘要）：
@@ -306,7 +306,7 @@ key_directories:
 
 **命令**：
 ```bash
-/atlas-pattern "swiftui view"
+/atlas.pattern "swiftui view"
 ```
 
 **輸出**（摘要）：
@@ -342,7 +342,7 @@ key_directories:
 
 ---
 
-## 命令 3: /atlas-impact
+## 命令 3: /atlas.impact
 
 **分析程式碼變更影響**
 
@@ -350,13 +350,13 @@ key_directories:
 
 ```bash
 # 分析檔案
-/atlas-impact "src/api/users.ts"
+/atlas.impact "src/api/users.ts"
 
 # 分析 API
-/atlas-impact api "/api/users/{id}"
+/atlas.impact api "/api/users/{id}"
 
 # 分析 Model
-/atlas-impact "User model"
+/atlas.impact "User model"
 ```
 
 ### 你會得到什麼
@@ -384,7 +384,7 @@ key_directories:
 
 **命令**：
 ```bash
-/atlas-impact api "/api/users/{id}"
+/atlas.impact api "/api/users/{id}"
 ```
 
 **輸出**（摘要）：
@@ -427,7 +427,7 @@ key_directories:
 
 **命令**：
 ```bash
-/atlas-impact "User.swift"
+/atlas.impact "User.swift"
 ```
 
 **輸出**（摘要）：
@@ -476,7 +476,7 @@ find . -name '*.h' -not -path '*/Pods/*' -exec \
 
 1. **確認安裝**:
    ```bash
-   ls ~/.claude/commands/atlas-*.md
+   ls ~/.claude/commands/atlas.*.md
    ```
 
 2. **確認在專案目錄**:
@@ -524,9 +524,9 @@ cp scripts/atlas/patterns/ios/networking.sh scripts/atlas/patterns/ios/custom-pa
 ### Q: 效能如何？會不會很慢？
 
 **A**:
-- `/atlas-overview`: 10-15 分鐘
-- `/atlas-pattern`: 0.1-30 秒
-- `/atlas-impact`: 1-2 分鐘
+- `/atlas.overview`: 10-15 分鐘
+- `/atlas.pattern`: 0.1-30 秒
+- `/atlas.impact`: 1-2 分鐘
 
 使用資訊理論原則，只掃描 <5% 檔案。
 
@@ -537,10 +537,10 @@ cp scripts/atlas/patterns/ios/networking.sh scripts/atlas/patterns/ios/custom-pa
 範例：
 ```bash
 cd packages/web
-/atlas-overview
+/atlas.overview
 
 cd ../api
-/atlas-overview
+/atlas.overview
 ```
 
 ---
@@ -553,14 +553,14 @@ cd ../api
 
 ```bash
 # Step 1: 理解專案 (10 分鐘)
-/atlas-overview
+/atlas.overview
 
 # Step 2: 學習現有實作 (0.1 秒)
-/atlas-pattern "api endpoint"
-/atlas-pattern "authentication"
+/atlas.pattern "api endpoint"
+/atlas.pattern "authentication"
 
 # Step 3: 分析影響 (1 分鐘)
-/atlas-impact "src/api/auth.ts"
+/atlas.impact "src/api/auth.ts"
 ```
 
 **總時間**: 15 分鐘內完整掌握專案
@@ -571,7 +571,7 @@ cd ../api
 
 ### 問題 1: 找不到 patterns
 
-**症狀**: `/atlas-pattern` 回報「No patterns found」
+**症狀**: `/atlas.pattern` 回報「No patterns found」
 
 **解決方式**:
 1. 確認專案類型是否支援（iOS/TypeScript/Android）
@@ -589,7 +589,7 @@ cd ../api
 
 ### 問題 3: 執行時間過長
 
-**症狀**: `/atlas-overview` 超過 20 分鐘還沒完成
+**症狀**: `/atlas.overview` 超過 20 分鐘還沒完成
 
 **診斷步驟**（執行這些命令找出原因）:
 
@@ -611,23 +611,23 @@ cat .gitignore | grep -E "node_modules|Pods|build|\.app"
 | 根本原因 | 修復方法 | 預期改善 |
 |---------|---------|---------|
 | 缺少 .gitignore | 加入 `node_modules/`, `Pods/`, `*.app` | 速度提升 80% |
-| 專案過大 (>100K LOC) | 在子目錄執行：`cd src && /atlas-overview` | 依子目錄數量分散時間 |
+| 專案過大 (>100K LOC) | 在子目錄執行：`cd src && /atlas.overview` | 依子目錄數量分散時間 |
 | 網路延遲 | 檢查 [Claude API 狀態](https://status.anthropic.com) | 等待或稍後重試 |
 
 **仍然緩慢？** 請[回報問題](https://github.com/lis186/SourceAtlas2/issues)並附上診斷結果
 
 ### 問題 4: 命令找不到
 
-**症狀**: 執行 `/atlas-overview` 時顯示「Command not found」
+**症狀**: 執行 `/atlas.overview` 時顯示「Command not found」
 
 **診斷步驟**:
 
 ```bash
 # 1. 檢查命令檔案是否存在
-ls -la ~/.claude/commands/atlas-*.md
+ls -la ~/.claude/commands/atlas.*.md
 
 # 2. 檢查檔案權限
-ls -l ~/.claude/commands/atlas-*.md
+ls -l ~/.claude/commands/atlas.*.md
 
 # 3. 檢查 Claude Code 版本
 # 在 Claude Code 中執行：/help
@@ -643,13 +643,13 @@ ls -l ~/.claude/commands/atlas-*.md
 
 ### 問題 5: 輸出格式不正確
 
-**症狀**: `/atlas-overview` 輸出純文字而非 YAML 格式
+**症狀**: `/atlas.overview` 輸出純文字而非 YAML 格式
 
 **診斷步驟**:
 
 ```bash
 # 檢查 prompt 文件內容
-head -20 ~/.claude/commands/atlas-overview.md
+head -20 ~/.claude/commands/atlas.overview.md
 ```
 
 **可能原因**：
@@ -662,13 +662,13 @@ head -20 ~/.claude/commands/atlas-overview.md
 
 ### 問題 6: Pattern 搜尋結果不準確
 
-**症狀**: `/atlas-pattern "api"` 回傳不相關的檔案
+**症狀**: `/atlas.pattern "api"` 回傳不相關的檔案
 
 **常見原因與解決**：
 
 | 情況 | 原因 | 改善方法 |
 |------|------|---------|
-| 找到測試檔案而非實作 | Pattern 太通用 | 使用更具體的關鍵字：`/atlas-pattern "api endpoint"` |
+| 找到測試檔案而非實作 | Pattern 太通用 | 使用更具體的關鍵字：`/atlas.pattern "api endpoint"` |
 | 找到舊程式碼 | 專案有歷史遺留 | 檢查檔案的最後修改日期，關注最新的 |
 | 語言混用 | 多語言專案 | 指定目錄：先 `cd ios/` 再執行命令 |
 | 零結果 | 關鍵字不符專案慣例 | 嘗試同義詞：`"controller"` → `"view model"` |
@@ -677,7 +677,7 @@ head -20 ~/.claude/commands/atlas-overview.md
 
 1. **從通用到具體**：先用 `"api"` 看有什麼，再精煉為 `"api endpoint"`
 2. **查看 Pattern 列表**：參考 [支援的 Patterns](#支援的-patterns-71-個)
-3. **結合 overview**：先用 `/atlas-overview` 了解架構後再搜尋
+3. **結合 overview**：先用 `/atlas.overview` 了解架構後再搜尋
 
 ### 快速診斷檢查清單
 
@@ -687,7 +687,7 @@ head -20 ~/.claude/commands/atlas-overview.md
 # === SourceAtlas 健康檢查 ===
 
 echo "1. 檢查安裝..."
-ls -la ~/.claude/commands/atlas-*.md
+ls -la ~/.claude/commands/atlas.*.md
 
 echo -e "\n2. 檢查腳本..."
 ls -la ~/.claude/scripts/atlas/

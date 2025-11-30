@@ -272,7 +272,7 @@ val unauthWebSocket: SignalWebSocket.UnauthenticatedWebSocket by lazy {
 
 ---
 
-# Technical Queries for `/atlas-find` Investigation
+# Technical Queries for `/atlas.find` Investigation
 
 Based on this analysis, here are 5 deep technical queries a senior architect would use to understand critical systems:
 
@@ -387,7 +387,7 @@ Based on this analysis, here are 5 deep technical queries a senior architect wou
 ### Use Case 1: Refactoring the Database Layer
 **Challenge:** "We need to migrate from SQLCipher to Room for easier maintenance."
 
-**Why `/atlas-find` Matters:**
+**Why `/atlas.find` Matters:**
 - Which modules depend on SQLiteOpenHelper directly?
 - Can we refactor table-by-table or must it be all-at-once?
 - Impact on migration history (280+ versions)?
@@ -403,7 +403,7 @@ Based on this analysis, here are 5 deep technical queries a senior architect wou
 ### Use Case 2: Evaluating Hilt Adoption (DI Modernization)
 **Challenge:** "Should we migrate from custom provider pattern to Hilt?"
 
-**Why `/atlas-find` Matters:**
+**Why `/atlas.find` Matters:**
 - Scope: 100+ DI points vs. 24 modules × 3 = manageable?
 - Risk: Does resettable lazy pattern break with Hilt scopes?
 - Timeline: What's the migration order for feature modules?
@@ -418,7 +418,7 @@ Based on this analysis, here are 5 deep technical queries a senior architect wou
 ### Use Case 3: Performance Diagnosis (Cold Start)
 **Challenge:** "App takes 8s to cold start. Where's the bottleneck?"
 
-**Why `/atlas-find` Matters:**
+**Why `/atlas.find` Matters:**
 - Is it database opening (SQLCipher decryption)?
 - Is it Job queue loading?
 - Is it module initialization order?
@@ -434,7 +434,7 @@ Based on this analysis, here are 5 deep technical queries a senior architect wou
 ### Use Case 4: Onboarding New Contributors
 **Challenge:** "New engineer: 'I need to add message delivery confirmation. Where do I start?'"
 
-**Why `/atlas-find` Matters:**
+**Why `/atlas.find` Matters:**
 - Learning path: Database schema → Job system → UI notification
 - Which Job class should be extended?
 - Which tables need modification?
@@ -481,4 +481,4 @@ Based on this analysis, here are 5 deep technical queries a senior architect wou
 - Encrypted database limits test/rollback options
 - Large surface area (24 modules) = broad impact
 
-**For Future AI Assistance:** Use `/atlas-find` to quickly answer "where is X called?" and "which modules depend on Y?" - perfect for refactoring scope assessment.
+**For Future AI Assistance:** Use `/atlas.find` to quickly answer "where is X called?" and "which modules depend on Y?" - perfect for refactoring scope assessment.

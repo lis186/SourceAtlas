@@ -4,7 +4,7 @@
 
 本月完成三大關鍵里程碑：
 1. **Patterns 系統全面優化** - TypeScript, iOS, Objective-C 三大語言的 pattern 支援
-2. **`/atlas-impact` 命令完成** - 影響範圍分析與測試驗證
+2. **`/atlas.impact` 命令完成** - 影響範圍分析與測試驗證
 3. **Swift Analyzer 整合** - 語言深度分析從 70% 提升至 90%+
 
 ## 主要成果
@@ -38,7 +38,7 @@
 → [完整報告](./2025-11-23-typescript-patterns.md)
 
 ### 5. Atlas Pattern Command 實作 ✅
-- 完成 `/atlas-pattern` command
+- 完成 `/atlas.pattern` command
 - 實作 `find-patterns.sh` 腳本
 - 多專案驗證（Swiftfin, Telegram, WordPress）
 → [完整報告](../2025-11/2025-11-22-atlas-pattern.md)
@@ -48,7 +48,7 @@
 - 發現並修復重複和不一致
 → [審計報告](./2025-11-23-patterns-audit.md)
 
-### 7. `/atlas-impact` 命令完成 ✅
+### 7. `/atlas.impact` 命令完成 ✅
 - 創建完整影響範圍分析命令（557 行）
 - 自適應類型檢測：API/MODEL/COMPONENT
 - 8 個 subagent 多使用者測試（平均評分 4.2/5）
@@ -58,7 +58,7 @@
 ### 8. Swift Analyzer 整合 ✅
 - 實作 Swift/ObjC Deep Analyzer (7 sections, 482 lines)
 - 語言分析覆蓋率：70% → 90%+ (+20%)
-- 整合到 `/atlas-impact` 命令（自動觸發）
+- 整合到 `/atlas.impact` 命令（自動觸發）
 - 關鍵功能：Nullability (6% 覆蓋), @objc exposure (1,135 classes), Memory (112 unowned)
 → [完整實作記錄](./2025-11-25-swift-analyzer-integration-implementation.md)
 
@@ -77,7 +77,7 @@
 - **主要檔案**:
   - `scripts/atlas/find-patterns.sh`（~300 行）
   - `scripts/atlas/analyzers/swift-analyzer.sh`（482 行）
-  - `.claude/commands/atlas-impact.md`（557 行）
+  - `.claude/commands/atlas.impact.md`（557 行）
 - **測試專案**: 8 個（wikipedia-ios, Signal-iOS, 大型商業 App, Swiftfin, Telegram, WordPress, CTFd, Spree）
 - **文檔產出**: 11 份完整報告
 - **Patterns 總數**:
@@ -86,15 +86,14 @@
   - Android: 20
   - **總計**: 71 patterns
 - **Commands 完成度**:
-  - `/atlas-overview` ✅
-  - `/atlas-pattern` ✅
-  - `/atlas-impact` ✅
+  - `/atlas.overview` ✅
+  - `/atlas.pattern` ✅
+  - `/atlas.impact` ✅
 
 ## 下一步
 
 - [ ] 實作其他語言 analyzers（Python, Ruby, Go, TypeScript）
 - [ ] 改進 Junior developer 體驗（3.5 → 4.0+）
-- [ ] 完成 v2.5 剩餘 Commands (`/atlas-find`, `/atlas-explain`)
 - [ ] 準備 v3.0 規劃（code-maat 整合）
 
 ---

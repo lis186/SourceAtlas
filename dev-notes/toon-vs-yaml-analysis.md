@@ -355,7 +355,7 @@ Since we haven't released v1.0 yet, no migration needed.
 **Action items**:
 1. ✅ Update PRD.md to reflect YAML as default format
 2. ✅ Update CLAUDE.md with format decision
-3. ✅ Update `/atlas-overview` command template to output YAML
+3. ✅ Update `/atlas.overview` command template to output YAML
 4. ✅ Create YAML examples in templates/
 5. ⏳ Update future commands to use YAML
 

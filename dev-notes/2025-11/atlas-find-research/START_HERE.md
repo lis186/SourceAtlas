@@ -1,4 +1,4 @@
-# Senior iOS Developer `/atlas-find` Query Exercise
+# Senior iOS Developer `/atlas.find` Query Exercise
 
 **Status**: Completed November 25, 2025
 **Scope**: 25 realistic technical queries across 2 large iOS projects
@@ -80,7 +80,7 @@
 
 ---
 
-## Key Insights for `/atlas-find`
+## Key Insights for `/atlas.find`
 
 The tool should support:
 
@@ -143,7 +143,7 @@ The tool should support:
 
 ## Success Criteria
 
-`/atlas-find` should successfully answer these types of queries:
+`/atlas.find` should successfully answer these types of queries:
 
 ✓ "encrypt message database store secure encapsulation"
 ✓ "notification service extension decrypt NSE message key"
@@ -169,7 +169,7 @@ With:
 2. (**Today**) Skim QUICK_REFERENCE_SENIOR_DEV_QUERIES.md (10 min)
 3. (**This week**) Study ios-senior-dev-atlas-find-queries.md (30 min)
 4. (**This week**) Analyze SENIOR_DEV_QUERY_PATTERNS.md (20 min)
-5. (**Next sprint**) Use findings to enhance `/atlas-find`:
+5. (**Next sprint**) Use findings to enhance `/atlas.find`:
    - Implement pattern-aware indexing
    - Add scope limiting
    - Include risk annotation

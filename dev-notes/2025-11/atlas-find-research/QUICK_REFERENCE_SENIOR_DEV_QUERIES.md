@@ -1,4 +1,4 @@
-# Quick Reference: Senior iOS Developer `/atlas-find` Queries
+# Quick Reference: Senior iOS Developer `/atlas.find` Queries
 
 ## One-Page Cheat Sheet
 
@@ -183,7 +183,7 @@ When a senior dev needs to understand unfamiliar code:
 
 ## Tools This Exercise Shows
 
-`/atlas-find` should support these features:
+`/atlas.find` should support these features:
 
 1. **Context-aware search**: Understand "encrypt → database" means full flow
 2. **Pattern indexing**: Index by architectural pattern, not just keywords

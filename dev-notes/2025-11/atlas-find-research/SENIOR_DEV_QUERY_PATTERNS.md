@@ -1,4 +1,4 @@
-# Senior iOS Developer Query Patterns for `/atlas-find`
+# Senior iOS Developer Query Patterns for `/atlas.find`
 
 Quick reference: How experienced iOS developers query large codebases.
 
@@ -148,9 +148,9 @@ These indicate areas that need careful investigation:
 
 ---
 
-## Integration with `/atlas-find` Expectations
+## Integration with `/atlas.find` Expectations
 
-### Senior devs expect `/atlas-find` to:
+### Senior devs expect `/atlas.find` to:
 
 1. **Understand intent from context**
    - Query: "metadata encryption strategy"
@@ -209,7 +209,7 @@ These indicate areas that need careful investigation:
 
 ---
 
-## For `/atlas-find` Implementation Guidance
+## For `/atlas.find` Implementation Guidance
 
 These query patterns reveal what the search algorithm should optimize for:
 

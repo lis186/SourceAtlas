@@ -52,9 +52,9 @@ Expected output: Plugin installed successfully
 /help
 ```
 
-Look for `/atlas-pattern` in the commands list. It should show:
+Look for `/atlas.pattern` in the commands list. It should show:
 ```
-/atlas-pattern - Learn design patterns from the current codebase (user)
+/atlas.pattern - Learn design patterns from the current codebase (user)
 ```
 
 ### 5. Test the Command
@@ -63,7 +63,7 @@ Navigate to any project and run:
 
 ```bash
 cd ~/any-project
-/atlas-pattern "api endpoint"
+/atlas.pattern "api endpoint"
 ```
 
 ## Test Cases
@@ -71,7 +71,7 @@ cd ~/any-project
 ### Test Case 1: Basic Pattern Detection
 
 **Project:** Next.js/React project
-**Command:** `/atlas-pattern "api endpoint"`
+**Command:** `/atlas.pattern "api endpoint"`
 
 **Expected behavior:**
 - Should detect Next.js API routes
@@ -82,7 +82,7 @@ cd ~/any-project
 ### Test Case 2: Background Jobs
 
 **Project:** Rails or Laravel project
-**Command:** `/atlas-pattern "background job"`
+**Command:** `/atlas.pattern "background job"`
 
 **Expected behavior:**
 - Should find job/worker files
@@ -92,7 +92,7 @@ cd ~/any-project
 ### Test Case 3: Generic Search
 
 **Project:** Any project
-**Command:** `/atlas-pattern "authentication"`
+**Command:** `/atlas.pattern "authentication"`
 
 **Expected behavior:**
 - Should find auth-related files
@@ -102,7 +102,7 @@ cd ~/any-project
 ### Test Case 4: No Results
 
 **Project:** Minimal project with no relevant files
-**Command:** `/atlas-pattern "payment processing"`
+**Command:** `/atlas.pattern "payment processing"`
 
 **Expected behavior:**
 - Should gracefully handle no results
@@ -117,7 +117,7 @@ When you make changes to the plugin:
 /plugin uninstall sourceatlas-plugin@sourceatlas-test-marketplace
 
 # 2. Update files
-# Edit plugin/commands/atlas-pattern.md or other files
+# Edit plugin/commands/atlas.pattern.md or other files
 
 # 3. Copy updated plugin to test marketplace
 cp -r /Users/justinlee/dev/sourceatlas2/plugin ~/sourceatlas-test-marketplace/sourceatlas-plugin
@@ -127,7 +127,7 @@ cp -r /Users/justinlee/dev/sourceatlas2/plugin ~/sourceatlas-test-marketplace/so
 
 # 5. Test again
 cd ~/test-project
-/atlas-pattern "your test query"
+/atlas.pattern "your test query"
 ```
 
 ## Testing Checklist
@@ -135,7 +135,7 @@ cd ~/test-project
 Before publishing, verify:
 
 - [ ] Plugin installs without errors
-- [ ] `/atlas-pattern` appears in `/help`
+- [ ] `/atlas.pattern` appears in `/help`
 - [ ] Command accepts arguments correctly
 - [ ] Works in JavaScript/TypeScript project
 - [ ] Works in Python project
@@ -200,7 +200,7 @@ ls -la ~/sourceatlas-test-marketplace/sourceatlas-plugin/.claude-plugin/plugin.j
 
 ```bash
 # Time the command execution
-time /atlas-pattern "api endpoint"
+time /atlas.pattern "api endpoint"
 ```
 
 Should complete in <10 seconds for most projects.

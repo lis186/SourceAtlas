@@ -7,7 +7,7 @@ EXERCISE COMPLETED: November 25, 2025
 
 OBJECTIVE:
 Understand how senior iOS engineers (7+ years) query large, unfamiliar 
-codebases, and what patterns the `/atlas-find` tool should support.
+codebases, and what patterns the `/atlas.find` tool should support.
 
 ================================================================================
 DELIVERABLES
@@ -18,7 +18,7 @@ Created 4 comprehensive reference documents:
 1. SENIOR_DEV_EXERCISE_INDEX.md (Index + Overview)
    - Purpose and scope of exercise
    - How to use the 3 reference documents
-   - Key takeaways for `/atlas-find` design
+   - Key takeaways for `/atlas.find` design
    - Statistics and feedback
 
 2. QUICK_REFERENCE_SENIOR_DEV_QUERIES.md (Quick Lookup)
@@ -41,7 +41,7 @@ Created 4 comprehensive reference documents:
    - File count expectations by pattern
    - Time investment goals (2-4 hours)
    - Red flags analysis
-   - Design implications for `/atlas-find`
+   - Design implications for `/atlas.find`
    - Perfect for: 15-20 minute pattern study
 
 ================================================================================
@@ -272,7 +272,7 @@ NEXT STEPS
 3. Analyze SENIOR_DEV_QUERY_PATTERNS.md (20 minutes)
    → Learn pattern templates and design implications
 
-4. Use findings to enhance `/atlas-find` implementation
+4. Use findings to enhance `/atlas.find` implementation
    → Prioritize pattern-aware indexing
    → Implement scope limiting
    → Add risk annotation

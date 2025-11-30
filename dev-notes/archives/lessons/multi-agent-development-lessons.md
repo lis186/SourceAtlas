@@ -1,7 +1,7 @@
 # 多 Agent 平行開發：失敗案例研究
 
 **日期**：2025-11-22
-**任務**：實作 `find-patterns.sh` (/atlas-pattern 的 Task 1)
+**任務**：實作 `find-patterns.sh` (/atlas.pattern 的 Task 1)
 **方法**：3 個平行 subagent，各自採用不同策略
 **結果**：❌ 完全失敗 - 所有 3 個實作都無法使用
 

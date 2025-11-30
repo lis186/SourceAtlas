@@ -3,7 +3,7 @@
 **版本**: v2.5
 **測試日期**: 2025-11-22 ~ 2025-11-25
 **測試範圍**: 8 個真實專案（iOS/TypeScript）
-**測試命令**: `/atlas-overview`, `/atlas-pattern`, `/atlas-impact`
+**測試命令**: `/atlas.overview`, `/atlas.pattern`, `/atlas.impact`
 
 ---
 
@@ -59,7 +59,7 @@
 
 ## 📈 命令別測試結果
 
-### 1. `/atlas-overview` - 專案概覽
+### 1. `/atlas.overview` - 專案概覽
 
 **測試專案**: trySwiftTokyoApp (10K LOC, TypeScript)
 
@@ -101,7 +101,7 @@ SourceAtlas:   9 檔案 (↓ 82%), ~6K tokens (↓ 80%), <1 分鐘 (↑ 5x)
 
 ---
 
-### 2. `/atlas-pattern` - 設計模式學習
+### 2. `/atlas.pattern` - 設計模式學習
 
 **測試範圍**: 71 個 patterns (iOS 29 + TypeScript 22 + Android 20)
 **測試專案**: 7 個 iOS 專案
@@ -165,7 +165,7 @@ SourceAtlas:   9 檔案 (↓ 82%), ~6K tokens (↓ 80%), <1 分鐘 (↑ 5x)
 
 ---
 
-### 3. `/atlas-impact` - 影響分析
+### 3. `/atlas.impact` - 影響分析
 
 **測試專案**: 4 個 iOS 專案
 **測試場景**: 4 個真實重構場景
@@ -386,19 +386,19 @@ SourceAtlas: <5% 檔案掃描 → 70-95% 理解
 
 1. **新專案入職**:
    ```bash
-   /atlas-overview  # 10-15 min 建立全貌
-   /atlas-pattern "常用功能"  # 快速學習
+   /atlas.overview  # 10-15 min 建立全貌
+   /atlas.pattern "常用功能"  # 快速學習
    ```
 
 2. **準備重構**:
    ```bash
-   /atlas-impact "target_file.swift"  # 分析影響
+   /atlas.impact "target_file.swift"  # 分析影響
    # 照著 Migration Checklist 執行
    ```
 
 3. **學習設計模式**:
    ```bash
-   /atlas-pattern "architecture_pattern"
+   /atlas.pattern "architecture_pattern"
    # 獲得 file:line 引用，直接跳轉閱讀
    ```
 
@@ -421,8 +421,8 @@ SourceAtlas: <5% 檔案掃描 → 70-95% 理解
 
 ### v2.6 (規劃中)
 
-- [ ] `/atlas-find` - 智慧搜尋命令
-- [ ] `/atlas-explain` - 深入解釋命令
+- [ ] `/atlas.find` - 智慧搜尋命令
+- [ ] `/atlas.explain` - 深入解釋命令
 
 ### v3.0 (願景)
 
@@ -439,7 +439,7 @@ SourceAtlas: <5% 檔案掃描 → 70-95% 理解
 詳細測試數據請參考：
 
 - **Pattern 測試**: `test_targets/ios-patterns-expansion-complete-report.md`
-- **Impact 測試**: `test_targets/atlas-impact-testing-complete-report.md`
+- **Impact 測試**: `test_targets/atlas.impact-testing-complete-report.md`
 - **Overview 測試**: `test_results/ANALYSIS_SUMMARY.md`
 
 ---
