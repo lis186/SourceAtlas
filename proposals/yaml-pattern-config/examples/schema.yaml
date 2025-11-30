@@ -1,0 +1,265 @@
+# SourceAtlas Pattern Schema Definition
+# Version: 1.0
+# This file defines the structure for language pattern files
+
+# =============================================================================
+# ROOT STRUCTURE
+# =============================================================================
+
+schema:
+  version: "1.0"
+  description: "SourceAtlas pattern definition schema"
+
+# =============================================================================
+# LANGUAGE DEFINITION
+# =============================================================================
+
+language:
+  # Required fields
+  name:
+    type: string
+    required: true
+    description: "Unique identifier for the language (e.g., 'ios', 'typescript')"
+    example: "ios"
+
+  display_name:
+    type: string
+    required: true
+    description: "Human-readable name shown in output"
+    example: "iOS/Swift"
+
+  # Optional fields
+  aliases:
+    type: array[string]
+    required: false
+    description: "Alternative names that trigger this language detection"
+    example: ["swift", "xcode", "apple"]
+
+# =============================================================================
+# PROJECT DETECTION
+# =============================================================================
+
+detection:
+  marker_files:
+    type: array[string]
+    required: true
+    description: "Files that indicate this project type (glob patterns supported)"
+    example:
+      - "*.xcodeproj"
+      - "Package.swift"
+
+  marker_content:
+    type: object
+    required: false
+    description: "Content-based detection (e.g., check package.json dependencies)"
+    example:
+      package.json:
+        dependencies:
+          - react
+          - vue
+
+  priority:
+    type: integer
+    required: false
+    default: 50
+    description: "Detection priority (higher = preferred when multiple match)"
+    range: [0, 100]
+
+# =============================================================================
+# FILE EXTENSIONS
+# =============================================================================
+
+file_extensions:
+  primary:
+    type: array[string]
+    required: true
+    description: "Main file extensions to search"
+    example: [".swift"]
+
+  secondary:
+    type: array[string]
+    required: false
+    description: "Additional file extensions (e.g., Objective-C for iOS)"
+    example: [".m", ".h"]
+
+# =============================================================================
+# PATTERN DEFINITION
+# =============================================================================
+
+pattern:
+  # Required fields
+  name:
+    type: string
+    required: true
+    description: "Pattern identifier (used in /atlas.pattern command)"
+    example: "viewmodel"
+
+  tier:
+    type: integer
+    required: true
+    enum: [1, 2]
+    description: "Pattern tier: 1 = core (common), 2 = supplementary"
+
+  # Recommended fields
+  category:
+    type: string
+    required: false
+    description: "Pattern category for grouping"
+    enum:
+      - architecture
+      - ui
+      - data
+      - state
+      - routing
+      - testing
+      - feature
+      - utility
+      - styling
+      - i18n
+      - animation
+      - security
+      - performance
+      - error-handling
+
+  aliases:
+    type: array[string]
+    required: false
+    description: "Alternative names for the pattern"
+    example: ["mvvm", "vm"]
+
+  description:
+    type: string
+    required: false
+    description: "Short description of the pattern"
+    max_length: 100
+
+  # File matching
+  files:
+    type: array[string]
+    required: false
+    description: "Glob patterns for file names"
+    example:
+      - "*ViewModel.swift"
+      - "*VM.swift"
+
+  directories:
+    type: array[string]
+    required: false
+    description: "Directory names where pattern files are typically found"
+    example:
+      - ViewModels
+      - Presentation
+
+  # Content matching (for patterns that require file inspection)
+  content_patterns:
+    type: array[string]
+    required: false
+    description: "Regex or literal strings to search in file content"
+    example:
+      - "@Observable"
+      - "ObservableObject"
+
+  # Exclusions
+  exclude_files:
+    type: array[string]
+    required: false
+    description: "Glob patterns to exclude from matches"
+    example:
+      - "*.test.swift"
+      - "*Mock.swift"
+
+  # Framework-specific
+  framework:
+    type: string
+    required: false
+    description: "Framework this pattern belongs to"
+    example: "react"
+
+  dependencies:
+    type: array[string]
+    required: false
+    description: "NPM/package dependencies that indicate this pattern"
+    example:
+      - zustand
+      - "@reduxjs/toolkit"
+
+  # Special flags
+  test_only:
+    type: boolean
+    required: false
+    default: false
+    description: "Pattern only appears in test directories"
+
+  objc_files:
+    type: array[string]
+    required: false
+    description: "Objective-C file patterns (iOS only)"
+    example:
+      - "*ViewModel.m"
+      - "*ViewModel.h"
+
+  # Metadata
+  examples:
+    type: array[string]
+    required: false
+    description: "Example file names for documentation"
+    example:
+      - "UserProfileViewModel.swift"
+      - "LoginVM.swift"
+
+  related_patterns:
+    type: array[string]
+    required: false
+    description: "Related pattern names for discovery"
+    example:
+      - view
+      - coordinator
+
+# =============================================================================
+# CUSTOM PATTERNS STRUCTURE
+# =============================================================================
+
+custom_patterns:
+  type: array[object]
+  description: "Structure for user-defined custom patterns"
+  structure:
+    language:
+      type: string
+      required: true
+      description: "Target language to extend"
+    patterns:
+      type: array[pattern]
+      required: true
+      description: "List of custom patterns following the pattern schema"
+
+# =============================================================================
+# VALIDATION RULES
+# =============================================================================
+
+validation:
+  rules:
+    - name: unique_pattern_names
+      description: "Pattern names must be unique within a language"
+
+    - name: at_least_one_matcher
+      description: "Pattern must have at least one of: files, directories, or content_patterns"
+
+    - name: valid_tier
+      description: "Tier must be 1 or 2"
+
+    - name: valid_glob_patterns
+      description: "File/directory patterns must be valid glob syntax"
+
+    - name: no_path_separators
+      description: "File patterns should not contain path separators (use directories instead)"
+
+  warnings:
+    - name: missing_description
+      description: "Patterns should have descriptions for discoverability"
+
+    - name: missing_examples
+      description: "Tier 1 patterns should have examples"
+
+    - name: many_content_patterns
+      description: "Many content_patterns may slow down searching"
+      threshold: 5

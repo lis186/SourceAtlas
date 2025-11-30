@@ -1,0 +1,510 @@
+# SourceAtlas Pattern Definition
+# Language: iOS/Swift
+# Version: 2.5.4
+# Patterns: 34 (16 Tier 1 + 18 Tier 2)
+# Last Updated: 2025-11-30
+
+language:
+  name: ios
+  display_name: "iOS/Swift"
+  aliases: [swift, xcode, apple, uikit, swiftui]
+
+detection:
+  marker_files:
+    - "*.xcodeproj"
+    - "*.xcworkspace"
+    - Package.swift
+    - Podfile
+    - Cartfile
+  priority: 100
+
+file_extensions:
+  primary: [.swift]
+  secondary: [.m, .h]  # Objective-C support
+
+# =============================================================================
+# TIER 1: Core Patterns (16)
+# High-frequency patterns that appear in most iOS projects
+# =============================================================================
+
+patterns:
+  # ---- Architecture ----
+
+  - name: viewmodel
+    tier: 1
+    category: architecture
+    aliases: [mvvm, vm]
+    description: "MVVM ViewModel for UI state and business logic"
+    files:
+      - "*ViewModel.swift"
+      - "*VM.swift"
+    directories:
+      - ViewModels
+      - ViewModel
+      - Presentation
+    objc_files:
+      - "*ViewModel.m"
+      - "*ViewModel.h"
+
+  - name: coordinator
+    tier: 1
+    category: architecture
+    aliases: [navigation, flow, router]
+    description: "Coordinator pattern for navigation flow management"
+    files:
+      - "*Coordinator.swift"
+      - "*Flow.swift"
+      - "*Router.swift"
+    directories:
+      - Coordinators
+      - Navigation
+      - Flows
+      - Routing
+
+  - name: repository
+    tier: 1
+    category: architecture
+    aliases: [repo, data-access]
+    description: "Repository pattern for data layer abstraction"
+    files:
+      - "*Repository.swift"
+      - "*Repo.swift"
+    directories:
+      - Repositories
+      - Repository
+      - Data
+
+  - name: use case
+    tier: 1
+    category: architecture
+    aliases: [interactor, usecase]
+    description: "Use Case/Interactor for domain operations"
+    files:
+      - "*UseCase.swift"
+      - "*Interactor.swift"
+    directories:
+      - UseCases
+      - Interactors
+      - Domain
+
+  # ---- UI Components ----
+
+  - name: swiftui view
+    tier: 1
+    category: ui
+    aliases: [view, swiftui]
+    description: "SwiftUI View components"
+    files:
+      - "*View.swift"
+      - "*Screen.swift"
+    directories:
+      - Views
+      - Screens
+      - UI
+    exclude_files:
+      - "*ViewModel.swift"  # Avoid matching ViewModels
+
+  - name: view controller
+    tier: 1
+    category: ui
+    aliases: [vc, uikit, controller]
+    description: "UIKit ViewController"
+    files:
+      - "*ViewController.swift"
+      - "*VC.swift"
+    directories:
+      - ViewControllers
+      - Controllers
+      - Screens
+    objc_files:
+      - "*ViewController.m"
+
+  - name: table cell
+    tier: 1
+    category: ui
+    aliases: [cell, tableview, collectionview]
+    description: "UITableViewCell/UICollectionViewCell"
+    files:
+      - "*Cell.swift"
+      - "*TableViewCell.swift"
+      - "*CollectionViewCell.swift"
+    directories:
+      - Cells
+      - Views/Cells
+
+  # ---- Data & Networking ----
+
+  - name: networking
+    tier: 1
+    category: data
+    aliases: [api, network, http]
+    description: "Network layer and API client"
+    files:
+      - "*API.swift"
+      - "*Service.swift"
+      - "*Client.swift"
+      - "*Networking.swift"
+      - "API*.swift"
+    directories:
+      - Networking
+      - Network
+      - API
+      - Services
+
+  - name: core data
+    tier: 1
+    category: data
+    aliases: [coredata, persistence, database]
+    description: "Core Data models and persistence"
+    files:
+      - "*.xcdatamodeld"
+      - "*+CoreData*.swift"
+      - "*Entity.swift"
+      - "*ManagedObject.swift"
+    directories:
+      - CoreData
+      - Persistence
+      - Database
+
+  - name: codable
+    tier: 1
+    category: data
+    aliases: [json, model, dto]
+    description: "Codable models for JSON encoding/decoding"
+    files:
+      - "*Model.swift"
+      - "*DTO.swift"
+      - "*Response.swift"
+      - "*Request.swift"
+    directories:
+      - Models
+      - DTOs
+      - Entities
+
+  # ---- Features ----
+
+  - name: authentication
+    tier: 1
+    category: feature
+    aliases: [auth, login, signin]
+    description: "Authentication and login flows"
+    files:
+      - "*Auth*.swift"
+      - "*Login*.swift"
+      - "*SignIn*.swift"
+      - "*Session*.swift"
+    directories:
+      - Auth
+      - Authentication
+      - Login
+
+  - name: extension
+    tier: 1
+    category: utility
+    aliases: [ext, extensions]
+    description: "Swift extensions"
+    files:
+      - "*+*.swift"
+      - "*Extension.swift"
+      - "*Extensions.swift"
+    directories:
+      - Extensions
+      - Utils
+
+  - name: protocol
+    tier: 1
+    category: architecture
+    aliases: [delegate, interface]
+    description: "Protocols and delegates"
+    files:
+      - "*Protocol.swift"
+      - "*Delegate.swift"
+      - "*Interface.swift"
+    directories:
+      - Protocols
+      - Interfaces
+
+  - name: dependency injection
+    tier: 1
+    category: architecture
+    aliases: [di, container, factory]
+    description: "Dependency injection containers and factories"
+    files:
+      - "*Container.swift"
+      - "*DIContainer.swift"
+      - "*Factory.swift"
+      - "*Assembly.swift"
+    directories:
+      - DI
+      - Container
+      - Injection
+
+  - name: test
+    tier: 1
+    category: testing
+    aliases: [unittest, xctest]
+    description: "Unit tests"
+    files:
+      - "*Tests.swift"
+      - "*Test.swift"
+      - "*Spec.swift"
+    directories:
+      - Tests
+      - UnitTests
+      - Specs
+    test_only: true
+
+  - name: uitest
+    tier: 1
+    category: testing
+    aliases: [ui-test, xcuitest]
+    description: "UI tests"
+    files:
+      - "*UITests.swift"
+      - "*UITest.swift"
+    directories:
+      - UITests
+    test_only: true
+
+# =============================================================================
+# TIER 2: Supplementary Patterns (18)
+# Less common but still important patterns
+# =============================================================================
+
+  - name: combine publisher
+    tier: 2
+    category: reactive
+    aliases: [combine, publisher, reactive]
+    description: "Combine publishers and reactive streams"
+    files:
+      - "*Publisher.swift"
+      - "*Stream.swift"
+    directories:
+      - Publishers
+      - Combine
+    content_patterns:
+      - "AnyPublisher"
+      - "CurrentValueSubject"
+      - "PassthroughSubject"
+
+  - name: async await
+    tier: 2
+    category: concurrency
+    aliases: [async, concurrency]
+    description: "Swift async/await concurrency patterns"
+    files:
+      - "*Actor.swift"
+      - "*Task.swift"
+    content_patterns:
+      - "async func"
+      - "async throws"
+      - "@MainActor"
+
+  - name: observable
+    tier: 2
+    category: reactive
+    aliases: [observation, observable-object]
+    description: "SwiftUI Observable/ObservableObject"
+    files:
+      - "*Store.swift"
+      - "*State.swift"
+    content_patterns:
+      - "@Observable"
+      - "ObservableObject"
+      - "@Published"
+
+  - name: reducer
+    tier: 2
+    category: architecture
+    aliases: [tca, composable]
+    description: "TCA Reducer pattern"
+    files:
+      - "*Domain.swift"
+      - "*Feature.swift"
+      - "*Reducer.swift"
+    content_patterns:
+      - "@Reducer"
+      - "Reduce<"
+
+  - name: environment
+    tier: 2
+    category: config
+    aliases: [config, configuration]
+    description: "Environment and configuration"
+    files:
+      - "*Environment.swift"
+      - "*Config.swift"
+      - "*Configuration.swift"
+    directories:
+      - Environment
+      - Config
+
+  - name: cache
+    tier: 2
+    category: data
+    aliases: [caching]
+    description: "Caching mechanisms"
+    files:
+      - "*Cache.swift"
+      - "*Caching.swift"
+    directories:
+      - Cache
+      - Caching
+
+  - name: theme
+    tier: 2
+    category: ui
+    aliases: [style, styling, appearance]
+    description: "Theme and styling"
+    files:
+      - "*Theme.swift"
+      - "*Style.swift"
+      - "*Appearance.swift"
+    directories:
+      - Theme
+      - Styling
+      - Appearance
+
+  - name: mock
+    tier: 2
+    category: testing
+    aliases: [stub, fake, test-double]
+    description: "Test mocks and stubs"
+    files:
+      - "Mock*.swift"
+      - "*Mock.swift"
+      - "Stub*.swift"
+      - "Fake*.swift"
+    directories:
+      - Mocks
+      - Stubs
+      - TestDoubles
+    test_only: true
+
+  - name: middleware
+    tier: 2
+    category: architecture
+    aliases: [interceptor]
+    description: "Redux-style middleware"
+    files:
+      - "*Middleware.swift"
+      - "*Interceptor.swift"
+    directories:
+      - Middleware
+
+  - name: localization
+    tier: 2
+    category: i18n
+    aliases: [i18n, l10n, strings]
+    description: "Localization and internationalization"
+    files:
+      - "*.strings"
+      - "*.stringsdict"
+      - "*Localization.swift"
+      - "*L10n.swift"
+    directories:
+      - Localization
+      - Resources
+
+  - name: animation
+    tier: 2
+    category: ui
+    aliases: [motion, transition]
+    description: "UI animations"
+    files:
+      - "*Animation.swift"
+      - "*Animator.swift"
+      - "*Transition.swift"
+    directories:
+      - Animations
+      - Motion
+
+  - name: view modifier
+    tier: 2
+    category: ui
+    aliases: [modifier, swiftui-modifier]
+    description: "SwiftUI ViewModifier"
+    files:
+      - "*Modifier.swift"
+      - "*ViewModifier.swift"
+    content_patterns:
+      - "ViewModifier"
+      - "func body(content:"
+
+  - name: collection layout
+    tier: 2
+    category: ui
+    aliases: [layout, compositional]
+    description: "UICollectionView custom layouts"
+    files:
+      - "*Layout.swift"
+      - "*FlowLayout.swift"
+    directories:
+      - Layouts
+    content_patterns:
+      - "UICollectionViewLayout"
+      - "UICollectionViewCompositionalLayout"
+
+  - name: service layer
+    tier: 2
+    category: architecture
+    aliases: [service, business-logic]
+    description: "Service layer for business logic"
+    files:
+      - "*Service.swift"
+      - "*Manager.swift"
+    directories:
+      - Services
+      - Managers
+    exclude_files:
+      - "*APIService.swift"  # Exclude networking services
+
+  - name: keychain
+    tier: 2
+    category: security
+    aliases: [secure-storage, credentials]
+    description: "Keychain secure storage"
+    files:
+      - "*Keychain*.swift"
+      - "*SecureStorage*.swift"
+    directories:
+      - Keychain
+      - Security
+
+  - name: user defaults
+    tier: 2
+    category: data
+    aliases: [preferences, settings]
+    description: "UserDefaults storage"
+    files:
+      - "*Defaults.swift"
+      - "*Preferences.swift"
+      - "*Settings.swift"
+    directories:
+      - Storage
+      - Preferences
+
+  - name: push notification
+    tier: 2
+    category: feature
+    aliases: [notification, apns]
+    description: "Push notification handling"
+    files:
+      - "*Notification*.swift"
+      - "*Push*.swift"
+    directories:
+      - Notifications
+      - Push
+
+  - name: deep link
+    tier: 2
+    category: feature
+    aliases: [deeplink, universal-link, url-scheme]
+    description: "Deep linking and URL handling"
+    files:
+      - "*DeepLink*.swift"
+      - "*URLHandler*.swift"
+      - "*Router*.swift"
+    directories:
+      - DeepLink
+      - Routing

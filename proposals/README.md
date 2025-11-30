@@ -25,7 +25,19 @@ SourceAtlas 未來功能的完整設計文檔。
 
 ### 🔵 待評估
 
-*（暫無）*
+- **[YAML Pattern Configuration](./yaml-pattern-config/README.md)** (v2.6 候選)
+  - **目標**: 將 patterns 從 shell script 硬編碼改為 YAML 配置檔
+  - **效益**:
+    - 使用者可自訂 patterns（無需修改 shell 腳本）
+    - 貢獻者可輕鬆新增語言支援（只需提交 YAML）
+    - Pattern 清單可查詢（`/atlas.pattern --list`）
+  - **狀態**: 設計完成，待評估
+  - **文檔**:
+    - [完整提案](./yaml-pattern-config/README.md)
+    - [Schema 定義](./yaml-pattern-config/examples/schema.yaml)
+    - [iOS 範例](./yaml-pattern-config/examples/ios.yaml)
+    - [TypeScript 範例](./yaml-pattern-config/examples/typescript.yaml)
+    - [自訂範例](./yaml-pattern-config/examples/_custom.yaml)
 
 ### 🟡 研究中
 
