@@ -309,6 +309,366 @@ User can control tracing depth via natural language:
 
 ---
 
+## Advanced Modes
+
+### Mode 1: Reverse Tracing (Who calls this?)
+
+When user asks "who calls this" or "被誰調用":
+
+```
+/atlas.flow "OrderService.create() 被誰調用"
+/atlas.flow "誰會觸發這個 function"
+```
+
+**Output Format**:
+```
+誰調用了 OrderService.create()？
+================================
+
+調用者（3 個入口）：
+├── CheckoutController.submit()     → 正常下單
+│   📍 src/controllers/checkout.ts:120
+│
+├── AdminController.manualOrder()   → 後台手動建單
+│   📍 src/controllers/admin.ts:45
+│
+└── CronJob.retryFailedOrders()     → 重試失敗訂單
+    📍 src/jobs/retry.ts:80
+
+💡 修改 OrderService.create() 會影響這 3 個入口
+```
+
+**Trigger Keywords**: `被誰調用`, `誰調用`, `who calls`, `callers`, `反向`
+
+---
+
+### Mode 2: Error Path Tracing
+
+When user asks about failure scenarios:
+
+```
+/atlas.flow "下單失敗會怎樣"
+/atlas.flow "OrderService.create() 失敗路徑"
+```
+
+**Output Format**:
+```
+下單流程（失敗路徑）
+==================
+
+1. CartService.validate()
+   📍 src/services/cart.ts:45
+   ⚠️ 失敗 → CartEmptyError
+      └── 回傳 400 + 錯誤訊息
+
+2. InventoryService.check()
+   📍 src/services/inventory.ts:78
+   ⚠️ 失敗 → OutOfStockError
+      ├── 記錄 log
+      ├── 發送通知給運營
+      └── 回傳 409 + 缺貨商品清單
+
+3. PaymentService.process()
+   📍 src/services/payment.ts:200
+   ⚠️ 失敗 → PaymentFailedError
+      ├── InventoryService.rollback()  ← 📌 有 rollback
+      ├── 記錄失敗原因
+      └── 回傳 402 + 付款失敗原因
+
+📌 風險：step 4 沒有 rollback，可能有孤兒訂單
+```
+
+**Trigger Keywords**: `失敗`, `錯誤`, `error`, `fail`, `exception`, `失敗路徑`
+
+---
+
+### Mode 3: Data Flow Tracing
+
+When user asks about how data transforms:
+
+```
+/atlas.flow "price 怎麼計算的"
+/atlas.flow "追蹤 userId 在登入流程"
+```
+
+**Output Format**:
+```
+價格計算流程（Data Flow: totalPrice）
+====================================
+
+[輸入] cart.items[].price × quantity
+   ↓
+1. CartService.calculateSubtotal()     → subtotal = Σ(price × qty)
+   📍 src/services/cart.ts:120
+   ↓
+2. DiscountEngine.apply()              → discountedPrice = subtotal - discount
+   📍 src/services/discount.ts:45
+   ├── VIPDiscount: -10%
+   ├── CouponService: -$50            🔍 [2a]
+   └── PointsService: -points × 0.01  🔍 [2b]
+   ↓
+3. TaxService.calculate()              → taxAmount = discountedPrice × taxRate
+   📍 src/services/tax.ts:30
+   📌 魔法值：taxRate = 0.05（硬編碼 5%）
+   ↓
+4. ShippingService.calculate()         → shippingFee = f(weight, distance)
+   📍 src/services/shipping.ts:80
+   ↓
+[輸出] totalPrice = discountedPrice + taxAmount + shippingFee
+```
+
+**Trigger Keywords**: `怎麼計算`, `追蹤`, `data flow`, `資料流`, `變數`, `計算`
+
+---
+
+### Mode 4: State Machine Visualization
+
+When user asks about state transitions:
+
+```
+/atlas.flow "訂單狀態機"
+/atlas.flow "訂單狀態怎麼變化"
+```
+
+**Output Format**:
+```
+訂單狀態機
+==========
+
+[PENDING] ──創建──→ [CONFIRMED] ──付款──→ [PAID]
+    │                    │                  │
+    │ 取消               │ 取消              │ 發貨
+    ↓                    ↓                  ↓
+[CANCELLED]          [CANCELLED]        [SHIPPED]
+                                            │
+                                            │ 簽收
+                                            ↓
+                                        [DELIVERED]
+                                            │
+                                            │ 退貨申請
+                                            ↓
+                                        [REFUNDING] ──批准──→ [REFUNDED]
+
+狀態定義：📍 src/models/order.ts:15
+
+轉換邏輯：
+• PENDING → CONFIRMED: OrderService.confirm()  📍 :45
+• CONFIRMED → PAID: PaymentService.complete()  📍 :120
+• PAID → SHIPPED: ShippingService.ship()       📍 :80
+```
+
+**Trigger Keywords**: `狀態機`, `state machine`, `狀態`, `status`, `狀態變化`, `lifecycle`
+
+---
+
+### Mode 5: Flow Comparison (Diff)
+
+When user asks to compare flows:
+
+```
+/atlas.flow "比較 VIP 下單 vs 一般下單"
+/atlas.flow "比較新舊登入流程"
+```
+
+**Output Format**:
+```
+VIP 下單 vs 一般下單（差異）
+===========================
+
+相同步驟：
+1. CartService.validate()
+2. InventoryService.check()
+6. OrderService.create()
+
+差異：
+┌─────────────────────────────────────────────────┐
+│ Step 3: 折扣計算                                │
+├────────────────────┬────────────────────────────┤
+│ 一般會員           │ VIP 會員                   │
+├────────────────────┼────────────────────────────┤
+│ CouponService 只   │ CouponService 優先         │
+│ PointsService 次   │ VIPDiscount.calculate()    │
+│                    │ PointsService（雙倍）      │
+└────────────────────┴────────────────────────────┘
+
+📌 注意：VIP 邏輯散落在 3 個不同 Service
+```
+
+**Trigger Keywords**: `比較`, `compare`, `diff`, `vs`, `差異`, `不同`
+
+---
+
+### Mode 6: Log-Based Flow Discovery
+
+When user wants to trace flow through log statements:
+
+```
+/atlas.flow "從 log 找下單流程"
+/atlas.flow "哪些地方有 log"
+```
+
+**Strategy**:
+1. Search for logging patterns in the codebase
+2. Extract log messages and their locations
+3. Reconstruct execution flow from log sequence
+
+**Search Patterns**:
+```bash
+# Common logging patterns
+grep -rn "console\.log\|console\.info\|console\.error" src/
+grep -rn "logger\.\|log\.\|logging\." src/
+grep -rn "print\|NSLog\|os_log" Sources/  # iOS/Swift
+grep -rn "Log\.\|Timber\.\|println" src/  # Android/Kotlin
+```
+
+**Output Format**:
+```
+下單流程（從 Log 重建）
+======================
+
+發現 8 個 log 點，重建流程：
+
+1. [INFO] "Starting checkout process"
+   📍 src/controllers/checkout.ts:125
+   → CheckoutController.submit()
+
+2. [DEBUG] "Validating cart items: ${count}"
+   📍 src/services/cart.ts:48
+   → CartService.validate()
+
+3. [INFO] "Applying discounts for user: ${userId}"
+   📍 src/services/discount.ts:122
+   → DiscountEngine.apply()
+   📌 注意：log 了 userId（PII 風險）
+
+4. [DEBUG] "Reserving inventory: ${items}"
+   📍 src/services/inventory.ts:160
+   → InventoryService.reserve()
+
+5. [INFO] "Processing payment: ${amount}"
+   📍 src/services/payment.ts:205
+   → PaymentService.process()
+   📌 風險：log 了金額（可能違反 PCI-DSS）
+
+6. [INFO] "Order created: ${orderId}"
+   📍 src/services/order.ts:210
+   → OrderService.create()
+
+──────────────────────────────────
+📊 Log 覆蓋率：6/8 步驟有 log
+⚠️ 缺少 log 的步驟：
+   • TaxService.calculate() - 無 log
+   • ShippingService.calculate() - 無 log
+
+💡 建議：
+• 補充關鍵步驟的 log
+• 檢查 PII/敏感資料 log 風險
+──────────────────────────────────
+```
+
+**Value**:
+1. **驗證追蹤正確性** - Log 順序 = 實際執行順序
+2. **發現缺少 log 的地方** - Debug 困難點
+3. **識別敏感資料洩漏** - PII/PCI-DSS 風險
+4. **Production debug 準備** - 知道哪些資訊可以從 log 取得
+
+**Trigger Keywords**: `log`, `logging`, `從 log`, `debug`, `追蹤 log`
+
+---
+
+### Mode 7: Log Level Analysis
+
+Analyze logging strategy across the flow:
+
+```
+/atlas.flow "下單流程的 log 策略"
+```
+
+**Output Format**:
+```
+下單流程 Log 策略分析
+====================
+
+| 步驟 | Log Level | 說明 |
+|------|-----------|------|
+| 1. validate | DEBUG | 細節資訊 ✓ |
+| 2. discount | INFO | 業務事件 ✓ |
+| 3. reserve | DEBUG | 細節資訊 ✓ |
+| 4. payment | INFO | 業務事件 ✓ |
+| 5. create | INFO | 業務事件 ✓ |
+
+錯誤處理 Log：
+| 錯誤類型 | Log Level | 位置 |
+|----------|-----------|------|
+| CartEmptyError | WARN | cart.ts:52 |
+| OutOfStockError | ERROR | inventory.ts:165 |
+| PaymentFailedError | ERROR | payment.ts:220 |
+
+📌 建議改進：
+• PaymentFailedError 應該 log 更多 context（不含卡號）
+• 缺少 correlation ID，難以追蹤完整 request
+```
+
+---
+
+## Timing Annotations
+
+For each step, optionally include timing information:
+
+```
+2. InventoryService.reserve()          → 預扣庫存
+   📍 src/services/inventory.ts:156
+   ⏱️ async (await)
+   ⏳ ~50-200ms（DB 操作）
+
+3. PaymentService.process()            → 處理付款
+   📍 src/services/payment.ts:200
+   ⏱️ async (await)
+   ⏳ ~500-3000ms（第三方 API）
+   📌 風險：無 timeout 設定
+
+4. NotificationService.send()          → 發送通知
+   📍 src/services/notification.ts:80
+   ⏱️ async (fire-and-forget)
+   📌 注意：不等待完成，失敗不影響流程
+```
+
+**Timing Markers**:
+| Marker | Meaning |
+|--------|---------|
+| ⏱️ sync | Synchronous execution |
+| ⏱️ async (await) | Awaited async call |
+| ⏱️ async (fire-and-forget) | Non-blocking async |
+| ⏳ ~Xms | Estimated duration |
+
+---
+
+## Mode Detection Rules
+
+Automatically detect mode from user input:
+
+```
+if 用戶問「被誰調用」「who calls」「反向」:
+    → Reverse Tracing Mode
+
+if 用戶問「失敗」「錯誤」「error path」:
+    → Error Path Mode
+
+if 用戶問「怎麼計算」「資料流」「追蹤變數」:
+    → Data Flow Mode
+
+if 用戶問「狀態機」「狀態變化」「lifecycle」:
+    → State Machine Mode
+
+if 用戶問「比較」「vs」「差異」:
+    → Comparison Mode
+
+else:
+    → Default Forward Tracing Mode
+```
+
+---
+
 ## What's Next?
 
 After `/atlas.flow`, users can:
