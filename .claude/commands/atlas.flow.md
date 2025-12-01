@@ -141,6 +141,159 @@ Present options:
 
 ---
 
+### Step 1.5: Language-Specific Entry Point Detection (P0 Enhancement)
+
+**Problem**: Generic grep patterns miss language-specific entry points.
+
+**Solution**: Use language-aware entry point detection with priority scoring.
+
+#### Detect Project Language First
+
+```bash
+# Auto-detect project type
+if [ -f "Package.swift" ] || [ -d "*.xcodeproj" ]; then
+    LANG="swift"
+elif [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
+    LANG="kotlin"
+elif [ -f "requirements.txt" ] || [ -f "pyproject.toml" ] || [ -f "setup.py" ]; then
+    LANG="python"
+elif [ -f "package.json" ]; then
+    LANG="typescript"  # or javascript
+fi
+```
+
+#### Entry Point Patterns by Language
+
+**Swift/iOS** (Priority Order):
+```swift
+// CRITICAL - App Lifecycle
+@main                           // App entry point
+@UIApplicationMain              // Legacy app entry
+class.*AppDelegate.*UIResponder // AppDelegate
+
+// HIGH - UI Entry Points
+func viewDidLoad()              // ViewController lifecycle
+func viewWillAppear(_:)         // View appearing
+.onAppear { }                   // SwiftUI lifecycle
+@StateObject var                // SwiftUI state init
+
+// HIGH - Event Entry Points
+@objc func.*(_:)                // Target-action methods
+@IBAction func                  // Interface Builder actions
+func.*gestureRecognizer.*       // Gesture handlers
+
+// MEDIUM - Async Entry Points
+func urlSession(_:.*didReceive  // Network delegate
+func userNotificationCenter     // Push notification
+```
+
+**TypeScript/React** (Priority Order):
+```typescript
+// CRITICAL - App Initialization
+createRoot(.*).render(          // React 18+ root
+ReactDOM.render(                // React 17 root
+createBrowserRouter(            // React Router
+
+// HIGH - Component Entry Points
+export (const|function) \w+.*=> // Function component
+export default function         // Default export component
+export const use[A-Z]\w+        // Custom hooks
+
+// HIGH - Event/Data Entry Points
+onClick={                       // Click handlers
+onSubmit={                      // Form submission
+useQuery(                       // TanStack Query
+useMutation(                    // Mutations
+api\.(get|post|put|delete)      // API calls
+```
+
+**Kotlin/Android** (Priority Order):
+```kotlin
+// CRITICAL - App Lifecycle
+class.*: Application()          // Application class
+class.*: .*Activity()           // Activity classes
+override fun onCreate(          // Lifecycle entry
+
+// HIGH - Modern Android
+@Composable fun                 // Jetpack Compose
+@HiltViewModel class            // ViewModel with DI
+class.*Presenter.*Presenter     // Circuit/MVI
+
+// HIGH - Background
+@HiltWorker class               // WorkManager
+class.*: CoroutineWorker        // Background worker
+class.*: Service()              // Android Service
+
+// MEDIUM - Data Layer
+suspend fun.*: Flow<            // Flow producers
+@Dao interface                  // Room DAO
+```
+
+**Python** (Priority Order):
+```python
+# CRITICAL - Web Framework Entry
+@app\.(get|post|put|delete)     # FastAPI/Flask routes
+@router\.(get|post|put|delete)  # FastAPI router
+def.*\(request.*\):             # Django views
+
+# HIGH - Task/Event Entry
+@(celery|app)\.task             # Celery tasks
+@receiver\(.*\)                 # Django signals
+class.*Spider                   # Scrapy spiders
+
+# HIGH - CLI Entry
+if __name__ == ['"]__main__['"]:
+@click\.(command|group)         # Click CLI
+
+# MEDIUM - Test Entry
+def test_.*\(                   # pytest functions
+@pytest\.fixture                # pytest fixtures
+```
+
+#### Entry Point Confidence Scoring
+
+When multiple entry points found, score by:
+
+```python
+def score_entry_point(match, lang):
+    base_score = PRIORITY_SCORES[match.pattern]  # CRITICAL=100, HIGH=80, MEDIUM=60
+
+    # Boost factors
+    if match.file in ["main", "app", "index", "Application"]:
+        base_score += 20
+    if match.has_export or match.is_public:
+        base_score += 10
+    if match.name_matches_query:
+        base_score += 30
+
+    # Penalty factors
+    if match.is_test_file:
+        base_score -= 40
+    if match.is_mock or match.is_stub:
+        base_score -= 50
+
+    return base_score
+```
+
+**Output with Confidence**:
+```
+找到 3 個可能的入口點：
+
+1. ⭐ CheckoutController.submit()     [信心: 95%]
+   📍 src/controllers/checkout.ts:120
+   💡 名稱匹配 + Controller 類型 + 公開方法
+
+2. OrderService.create()              [信心: 75%]
+   📍 src/services/order.ts:45
+   💡 Service 類型，但不是直接入口
+
+3. useCheckout() hook                 [信心: 60%]
+   📍 src/hooks/useCheckout.ts:30
+   💡 Hook 可能是 UI 入口，需要確認
+```
+
+---
+
 ### Step 2: Trace Execution Flow (2-3 minutes)
 
 From the entry point, trace the execution path:
@@ -167,95 +320,507 @@ From the entry point, trace the execution path:
 
 ---
 
-### Step 2.5: Boundary Detection Rules (P0)
+### Step 2.5: Boundary Detection Rules (P0 Enhancement)
 
-**Problem**: "External API, DB, third-party library" definitions are ambiguous.
+**Problem**: "External API, DB, third-party library" definitions are ambiguous and miss language-specific patterns.
 
-**Solution**: Define explicit boundary detection rules by language/framework.
+**Solution**: Use language-aware boundary detection with context analysis and confidence scoring.
 
-#### Boundary Types
+#### Boundary Types (Extended)
 
-| Type | Symbol | Description |
-|------|--------|-------------|
-| 🌐 External API | `[API]` | HTTP requests to external services |
-| 💾 Database | `[DB]` | Persistence layer operations |
-| 📦 Third-party Lib | `[LIB]` | External package calls (non-stdlib) |
-| 🔄 Recursion | `[LOOP]` | Self-referencing or circular calls |
-| 📡 Message Queue | `[MQ]` | Async messaging (Kafka, RabbitMQ) |
-| ☁️ Cloud Service | `[CLOUD]` | AWS, GCP, Azure SDK calls |
+| Type | Symbol | Description | Confidence Factor |
+|------|--------|-------------|-------------------|
+| 🌐 External API | `[API]` | HTTP requests to external services | HIGH if URL/domain present |
+| 💾 Database | `[DB]` | Persistence layer operations | HIGH if query string present |
+| 📦 Third-party Lib | `[LIB]` | External package calls (non-stdlib) | MEDIUM (check imports) |
+| 🔄 Recursion | `[LOOP]` | Self-referencing or circular calls | HIGH if same function |
+| 📡 Message Queue | `[MQ]` | Async messaging (Kafka, RabbitMQ) | HIGH if queue name present |
+| ☁️ Cloud Service | `[CLOUD]` | AWS, GCP, Azure SDK calls | HIGH if SDK pattern |
+| 🔐 Auth Provider | `[AUTH]` | External auth (OAuth, SSO) | HIGH if token exchange |
+| 💳 Payment | `[PAY]` | Payment gateway calls | HIGH if amount/currency |
+| 📁 File I/O | `[FILE]` | File system operations | MEDIUM |
+| 🔔 Push/Notification | `[PUSH]` | Push notification services | HIGH if device token |
 
-#### Detection Patterns by Language
+#### Swift/iOS Boundary Patterns (P0 Enhancement)
 
-**TypeScript/JavaScript**:
-```javascript
-// 🌐 External API
-fetch(), axios.*, got.*, request.*
-new URL().*, HttpClient.*
-
-// 💾 Database
-prisma.*, sequelize.*, mongoose.*
-*.query(), *.find(), *.save(), *.insert(), *.update(), *.delete()
-knex.*, typeorm.*, drizzle.*
-
-// 📦 Third-party (check package.json dependencies)
-import from 'package-name'  // if in dependencies, mark as [LIB]
-require('package-name')
-
-// 📡 Message Queue
-kafka.*, amqp.*, bull.*, rabbitmq.*
-*.publish(), *.subscribe(), *.send()
-```
-
-**Swift/iOS**:
 ```swift
-// 🌐 External API
-URLSession.*, Alamofire.*, Moya.*
-dataTask(with:), uploadTask(with:), downloadTask(with:)
+// ═══════════════════════════════════════════════════════
+// 🌐 External API (PRIORITY: CRITICAL)
+// ═══════════════════════════════════════════════════════
+// Native
+URLSession.shared.dataTask(         // 🌐 [API] URLSession
+URLSession.shared.data(for:         // 🌐 [API] async URLSession
+URLSession.shared.upload(           // 🌐 [API] Upload
+URLSession.shared.download(         // 🌐 [API] Download
 
-// 💾 Database
-CoreData: NSManagedObjectContext.*, NSFetchRequest.*
-Realm: realm.*, Results<*>
-SQLite: sqlite3_*, GRDB.*
+// Third-party HTTP
+Alamofire.request(                  // 🌐 [API] Alamofire
+AF.request(                         // 🌐 [API] Alamofire (modern)
+provider.request(                   // 🌐 [API] Moya
+session.request(                    // 🌐 [API] Generic session
 
-// 📦 Third-party (check Package.swift / Podfile)
-import ThirdPartyFramework
+// Async patterns (Context required)
+try await.*URL                      // 🌐 [API] if URL involved
+async let.*fetch                    // 🌐 [API] if fetch pattern
 
-// ☁️ Cloud Service
-AWSS3.*, FirebaseFirestore.*, CloudKit.*
+// ═══════════════════════════════════════════════════════
+// 💾 Database (PRIORITY: HIGH)
+// ═══════════════════════════════════════════════════════
+// Core Data
+NSManagedObjectContext.*save()      // 💾 [DB] Core Data save
+NSManagedObjectContext.*fetch(      // 💾 [DB] Core Data fetch
+NSFetchRequest<                     // 💾 [DB] Core Data query
+viewContext.perform                 // 💾 [DB] Core Data perform
+@FetchRequest                       // 💾 [DB] SwiftUI fetch
+
+// GRDB
+dbQueue.write                       // 💾 [DB] GRDB write
+dbQueue.read                        // 💾 [DB] GRDB read
+try.*fetchOne(                      // 💾 [DB] GRDB fetch
+try.*fetchAll(                      // 💾 [DB] GRDB fetch
+
+// Realm
+realm.write                         // 💾 [DB] Realm write
+realm.objects(                      // 💾 [DB] Realm query
+realm.add(                          // 💾 [DB] Realm insert
+
+// SQLite
+sqlite3_exec(                       // 💾 [DB] Raw SQLite
+sqlite3_prepare(                    // 💾 [DB] Raw SQLite
+
+// ═══════════════════════════════════════════════════════
+// 🔐 Secure Storage (PRIORITY: HIGH)
+// ═══════════════════════════════════════════════════════
+SecItemAdd(                         // 🔐 [AUTH] Keychain add
+SecItemCopyMatching(                // 🔐 [AUTH] Keychain read
+KeychainWrapper.*                   // 🔐 [AUTH] Keychain wrapper
+UserDefaults.standard               // 📁 [FILE] UserDefaults
+
+// ═══════════════════════════════════════════════════════
+// 📡 Events/Messaging (PRIORITY: MEDIUM)
+// ═══════════════════════════════════════════════════════
+NotificationCenter.default.post(    // 📡 [MQ] Local notification
+NotificationCenter.default.addObserver  // 📡 [MQ] Subscribe
+DistributedNotificationCenter       // 📡 [MQ] Cross-process
+
+// Combine
+.sink {                             // 📡 [MQ] Combine subscriber
+.assign(to:                         // 📡 [MQ] Combine assignment
+publisher.send(                     // 📡 [MQ] Combine publish
+PassthroughSubject<                 // 📡 [MQ] Combine subject
+CurrentValueSubject<                // 📡 [MQ] Combine subject
+
+// ═══════════════════════════════════════════════════════
+// ☁️ Cloud Services (PRIORITY: HIGH)
+// ═══════════════════════════════════════════════════════
+// Firebase
+Firestore.firestore()               // ☁️ [CLOUD] Firestore
+Auth.auth()                         // 🔐 [AUTH] Firebase Auth
+Storage.storage()                   // ☁️ [CLOUD] Firebase Storage
+Analytics.logEvent(                 // ☁️ [CLOUD] Firebase Analytics
+
+// CloudKit
+CKContainer.default()               // ☁️ [CLOUD] CloudKit
+CKDatabase.*                        // ☁️ [CLOUD] CloudKit
+CKQuery(                            // ☁️ [CLOUD] CloudKit query
+
+// AWS
+AWSS3TransferManager                // ☁️ [CLOUD] AWS S3
+AWSCognitoIdentityProvider          // 🔐 [AUTH] AWS Cognito
+
+// ═══════════════════════════════════════════════════════
+// 🔔 Push Notifications (PRIORITY: MEDIUM)
+// ═══════════════════════════════════════════════════════
+UNUserNotificationCenter            // 🔔 [PUSH] Local push
+application.*registerForRemote     // 🔔 [PUSH] Remote push
+userNotificationCenter.*delegate    // 🔔 [PUSH] Push delegate
 ```
 
-**Kotlin/Android**:
+#### TypeScript/React Boundary Patterns (P0 Enhancement)
+
+```typescript
+// ═══════════════════════════════════════════════════════
+// 🌐 External API (PRIORITY: CRITICAL)
+// ═══════════════════════════════════════════════════════
+// Native fetch
+fetch(                              // 🌐 [API] Native fetch
+await fetch(                        // 🌐 [API] Async fetch
+
+// HTTP Libraries
+axios.get(                          // 🌐 [API] Axios GET
+axios.post(                         // 🌐 [API] Axios POST
+axios.create(                       // 🌐 [API] Axios instance
+ky.get(                             // 🌐 [API] Ky
+got(                                // 🌐 [API] Got
+request(                            // 🌐 [API] Request (deprecated)
+
+// API Frameworks
+trpc.*query                         // 🌐 [API] tRPC query
+trpc.*mutation                      // 🌐 [API] tRPC mutation
+useSWR(                             // 🌐 [API] SWR (if fetch)
+useQuery(                           // 🌐 [API] TanStack Query
+useMutation(                        // 🌐 [API] TanStack Mutation
+
+// GraphQL
+gql`                                // 🌐 [API] GraphQL query
+useQuery(                           // 🌐 [API] Apollo useQuery
+useMutation(                        // 🌐 [API] Apollo useMutation
+client.query(                       // 🌐 [API] Apollo client
+
+// ═══════════════════════════════════════════════════════
+// 💾 Database/ORM (PRIORITY: HIGH)
+// ═══════════════════════════════════════════════════════
+// Prisma
+prisma.*.findUnique(                // 💾 [DB] Prisma query
+prisma.*.findMany(                  // 💾 [DB] Prisma query
+prisma.*.create(                    // 💾 [DB] Prisma insert
+prisma.*.update(                    // 💾 [DB] Prisma update
+prisma.*.delete(                    // 💾 [DB] Prisma delete
+prisma.$transaction(                // 💾 [DB] Prisma transaction
+
+// Drizzle
+db.select(                          // 💾 [DB] Drizzle query
+db.insert(                          // 💾 [DB] Drizzle insert
+db.update(                          // 💾 [DB] Drizzle update
+db.delete(                          // 💾 [DB] Drizzle delete
+
+// Mongoose
+Model.find(                         // 💾 [DB] Mongoose query
+Model.findById(                     // 💾 [DB] Mongoose query
+Model.save(                         // 💾 [DB] Mongoose save
+mongoose.connect(                   // 💾 [DB] Mongoose connection
+
+// TypeORM
+repository.find(                    // 💾 [DB] TypeORM query
+repository.save(                    // 💾 [DB] TypeORM save
+getRepository(                      // 💾 [DB] TypeORM repo
+
+// ═══════════════════════════════════════════════════════
+// 🗄️ Browser Storage (PRIORITY: MEDIUM)
+// ═══════════════════════════════════════════════════════
+localStorage.getItem(               // 📁 [FILE] Local storage
+localStorage.setItem(               // 📁 [FILE] Local storage
+sessionStorage.*                    // 📁 [FILE] Session storage
+indexedDB.*                         // 💾 [DB] IndexedDB
+cookies.get(                        // 📁 [FILE] Cookies
+cookies.set(                        // 📁 [FILE] Cookies
+
+// ═══════════════════════════════════════════════════════
+// 🔄 State Management (PRIORITY: MEDIUM)
+// ═══════════════════════════════════════════════════════
+// Zustand
+useStore(                           // 🔄 [STATE] Zustand store
+create(                             // 🔄 [STATE] Zustand create
+set(                                // 🔄 [STATE] Zustand setter
+
+// Redux
+dispatch(                           // 🔄 [STATE] Redux dispatch
+useSelector(                        // 🔄 [STATE] Redux selector
+store.getState()                    // 🔄 [STATE] Redux state
+
+// Recoil
+useRecoilState(                     // 🔄 [STATE] Recoil state
+useRecoilValue(                     // 🔄 [STATE] Recoil value
+atom(                               // 🔄 [STATE] Recoil atom
+
+// Jotai
+useAtom(                            // 🔄 [STATE] Jotai atom
+atom(                               // 🔄 [STATE] Jotai atom
+
+// ═══════════════════════════════════════════════════════
+// 🔐 Auth (PRIORITY: HIGH)
+// ═══════════════════════════════════════════════════════
+signIn(                             // 🔐 [AUTH] Generic signin
+signOut(                            // 🔐 [AUTH] Generic signout
+useSession(                         // 🔐 [AUTH] NextAuth session
+getServerSession(                   // 🔐 [AUTH] NextAuth server
+supabase.auth.*                     // 🔐 [AUTH] Supabase auth
+auth0.*                             // 🔐 [AUTH] Auth0
+
+// ═══════════════════════════════════════════════════════
+// 📡 Message Queue/Events (PRIORITY: MEDIUM)
+// ═══════════════════════════════════════════════════════
+// Event Emitter
+eventEmitter.emit(                  // 📡 [MQ] Event emit
+eventEmitter.on(                    // 📡 [MQ] Event subscribe
+pubsub.publish(                     // 📡 [MQ] PubSub
+pubsub.subscribe(                   // 📡 [MQ] PubSub
+
+// WebSocket
+new WebSocket(                      // 📡 [MQ] WebSocket
+socket.emit(                        // 📡 [MQ] Socket.io
+socket.on(                          // 📡 [MQ] Socket.io
+
+// Queue Libraries
+bull.add(                           // 📡 [MQ] Bull queue
+queue.process(                      // 📡 [MQ] Queue process
+```
+
+#### Kotlin/Android Boundary Patterns (P0 Enhancement)
+
 ```kotlin
-// 🌐 External API
-Retrofit.*, OkHttp.*, HttpClient.*
-*.execute(), *.enqueue()
+// ═══════════════════════════════════════════════════════
+// 🌐 External API (PRIORITY: CRITICAL)
+// ═══════════════════════════════════════════════════════
+// Retrofit
+@GET(                               // 🌐 [API] Retrofit GET
+@POST(                              // 🌐 [API] Retrofit POST
+@PUT(                               // 🌐 [API] Retrofit PUT
+@DELETE(                            // 🌐 [API] Retrofit DELETE
+@PATCH(                             // 🌐 [API] Retrofit PATCH
 
-// 💾 Database
-Room: *Dao.*, @Query, @Insert, @Update, @Delete
-SQLDelight: *Queries.*
+// OkHttp
+OkHttpClient.Builder()              // 🌐 [API] OkHttp client
+client.newCall(                     // 🌐 [API] OkHttp call
+Request.Builder()                   // 🌐 [API] OkHttp request
 
-// 📦 Third-party (check build.gradle dependencies)
-import com.thirdparty.*
+// Ktor
+HttpClient {                        // 🌐 [API] Ktor client
+client.get(                         // 🌐 [API] Ktor GET
+client.post(                        // 🌐 [API] Ktor POST
+client.submitForm(                  // 🌐 [API] Ktor form
 
-// ☁️ Cloud Service
-Firebase.*, AWS.*, Azure.*
+// ═══════════════════════════════════════════════════════
+// 💾 Database (PRIORITY: HIGH)
+// ═══════════════════════════════════════════════════════
+// Room
+@Dao                                // 💾 [DB] Room DAO
+@Query(                             // 💾 [DB] Room query
+@Insert                             // 💾 [DB] Room insert
+@Update                             // 💾 [DB] Room update
+@Delete                             // 💾 [DB] Room delete
+@Transaction                        // 💾 [DB] Room transaction
+
+// SQLDelight
+*.executeAsOne()                    // 💾 [DB] SQLDelight query
+*.executeAsList()                   // 💾 [DB] SQLDelight query
+*.awaitAsOne()                      // 💾 [DB] SQLDelight async
+
+// ═══════════════════════════════════════════════════════
+// 🗄️ Local Storage (PRIORITY: MEDIUM)
+// ═══════════════════════════════════════════════════════
+// DataStore
+dataStore.data                      // 📁 [FILE] DataStore read
+dataStore.edit                      // 📁 [FILE] DataStore write
+preferencesDataStore(               // 📁 [FILE] Preferences
+
+// SharedPreferences
+getSharedPreferences(               // 📁 [FILE] SharedPrefs
+sharedPreferences.edit()            // 📁 [FILE] SharedPrefs edit
+
+// ═══════════════════════════════════════════════════════
+// 🔄 Reactive/State (PRIORITY: MEDIUM)
+// ═══════════════════════════════════════════════════════
+// Flow
+.collect {                          // 🔄 [STATE] Flow collect
+.stateIn(                           // 🔄 [STATE] StateFlow
+MutableStateFlow(                   // 🔄 [STATE] Mutable state
+SharedFlow(                         // 🔄 [STATE] Shared flow
+
+// LiveData
+observe(                            // 🔄 [STATE] LiveData observe
+postValue(                          // 🔄 [STATE] LiveData post
+
+// ═══════════════════════════════════════════════════════
+// ⏰ Background Work (PRIORITY: HIGH)
+// ═══════════════════════════════════════════════════════
+// WorkManager
+WorkManager.getInstance(            // ⏰ [BG] WorkManager
+OneTimeWorkRequestBuilder           // ⏰ [BG] One-time work
+PeriodicWorkRequestBuilder          // ⏰ [BG] Periodic work
+
+// Coroutines
+launch(Dispatchers.IO)              // ⏰ [BG] IO dispatcher
+withContext(Dispatchers.Default)    // ⏰ [BG] Default dispatcher
+CoroutineScope(                     // ⏰ [BG] Coroutine scope
+
+// ═══════════════════════════════════════════════════════
+// ☁️ Cloud/Firebase (PRIORITY: HIGH)
+// ═══════════════════════════════════════════════════════
+FirebaseFirestore.getInstance()     // ☁️ [CLOUD] Firestore
+FirebaseAuth.getInstance()          // 🔐 [AUTH] Firebase Auth
+FirebaseMessaging.*                 // 🔔 [PUSH] FCM
+FirebaseAnalytics.*                 // ☁️ [CLOUD] Analytics
+
+// ═══════════════════════════════════════════════════════
+// 🔔 Notifications (PRIORITY: MEDIUM)
+// ═══════════════════════════════════════════════════════
+NotificationManager.*               // 🔔 [PUSH] Notification
+NotificationChannel(                // 🔔 [PUSH] Channel
+NotificationCompat.Builder(         // 🔔 [PUSH] Builder
 ```
 
-**Python**:
+#### Python Boundary Patterns (P0 Enhancement)
+
 ```python
-# 🌐 External API
-requests.*, httpx.*, aiohttp.*
-urllib.*, http.client.*
+# ═══════════════════════════════════════════════════════
+# 🌐 External API (PRIORITY: CRITICAL)
+# ═══════════════════════════════════════════════════════
+# Sync HTTP
+requests.get(                       # 🌐 [API] Requests GET
+requests.post(                      # 🌐 [API] Requests POST
+requests.put(                       # 🌐 [API] Requests PUT
+requests.delete(                    # 🌐 [API] Requests DELETE
+requests.Session()                  # 🌐 [API] Requests session
 
-# 💾 Database
-sqlalchemy.*, django.db.*, pymongo.*
-*.query(), *.filter(), *.save(), *.commit()
+# Async HTTP
+httpx.get(                          # 🌐 [API] HTTPX GET
+httpx.post(                         # 🌐 [API] HTTPX POST
+httpx.AsyncClient()                 # 🌐 [API] HTTPX async
+aiohttp.ClientSession()             # 🌐 [API] aiohttp session
+await session.get(                  # 🌐 [API] aiohttp async
 
-# 📦 Third-party (check requirements.txt / pyproject.toml)
-import third_party_package
+# urllib
+urllib.request.urlopen(             # 🌐 [API] urllib
+http.client.HTTPConnection(         # 🌐 [API] http.client
 
-# 📡 Message Queue
-celery.*, kafka.*, pika.*
+# ═══════════════════════════════════════════════════════
+# 💾 Database/ORM (PRIORITY: HIGH)
+# ═══════════════════════════════════════════════════════
+# SQLAlchemy
+session.query(                      # 💾 [DB] SQLAlchemy query
+session.add(                        # 💾 [DB] SQLAlchemy add
+session.commit()                    # 💾 [DB] SQLAlchemy commit
+session.execute(                    # 💾 [DB] SQLAlchemy execute
+engine.connect()                    # 💾 [DB] SQLAlchemy connect
+
+# Django ORM
+Model.objects.filter(               # 💾 [DB] Django filter
+Model.objects.get(                  # 💾 [DB] Django get
+Model.objects.create(               # 💾 [DB] Django create
+.save()                             # 💾 [DB] Django save
+.delete()                           # 💾 [DB] Django delete
+.bulk_create(                       # 💾 [DB] Django bulk
+
+# Tortoise ORM (async)
+await Model.filter(                 # 💾 [DB] Tortoise filter
+await Model.create(                 # 💾 [DB] Tortoise create
+await Model.get(                    # 💾 [DB] Tortoise get
+
+# PyMongo
+collection.find(                    # 💾 [DB] MongoDB find
+collection.insert_one(              # 💾 [DB] MongoDB insert
+collection.update_one(              # 💾 [DB] MongoDB update
+
+# ═══════════════════════════════════════════════════════
+# 📡 Task Queue (PRIORITY: HIGH)
+# ═══════════════════════════════════════════════════════
+# Celery
+@app.task                           # 📡 [MQ] Celery task
+@celery.task                        # 📡 [MQ] Celery task
+.delay(                             # 📡 [MQ] Celery delay
+.apply_async(                       # 📡 [MQ] Celery async
+.s(                                 # 📡 [MQ] Celery signature
+chain(                              # 📡 [MQ] Celery chain
+group(                              # 📡 [MQ] Celery group
+
+# Dramatiq
+@dramatiq.actor                     # 📡 [MQ] Dramatiq actor
+.send(                              # 📡 [MQ] Dramatiq send
+
+# RQ
+queue.enqueue(                      # 📡 [MQ] RQ enqueue
+
+# ═══════════════════════════════════════════════════════
+# 🗄️ Cache (PRIORITY: MEDIUM)
+# ═══════════════════════════════════════════════════════
+# Redis
+redis.get(                          # 🗄️ [CACHE] Redis get
+redis.set(                          # 🗄️ [CACHE] Redis set
+redis.hget(                         # 🗄️ [CACHE] Redis hash
+redis.lpush(                        # 🗄️ [CACHE] Redis list
+redis.publish(                      # 📡 [MQ] Redis pubsub
+
+# Django Cache
+cache.get(                          # 🗄️ [CACHE] Django cache
+cache.set(                          # 🗄️ [CACHE] Django cache
+@cache_page(                        # 🗄️ [CACHE] View cache
+
+# ═══════════════════════════════════════════════════════
+# 📁 File I/O (PRIORITY: MEDIUM)
+# ═══════════════════════════════════════════════════════
+open(                               # 📁 [FILE] File open
+Path.read_text(                     # 📁 [FILE] Pathlib read
+Path.write_text(                    # 📁 [FILE] Pathlib write
+shutil.copy(                        # 📁 [FILE] File copy
+os.rename(                          # 📁 [FILE] File rename
+
+# Cloud Storage
+boto3.client('s3')                  # ☁️ [CLOUD] AWS S3
+s3.upload_file(                     # ☁️ [CLOUD] S3 upload
+s3.download_file(                   # ☁️ [CLOUD] S3 download
+storage_client.bucket(              # ☁️ [CLOUD] GCS bucket
+
+# ═══════════════════════════════════════════════════════
+# 🔐 Auth (PRIORITY: HIGH)
+# ═══════════════════════════════════════════════════════
+authenticate(                       # 🔐 [AUTH] Django auth
+login(                              # 🔐 [AUTH] Django login
+logout(                             # 🔐 [AUTH] Django logout
+create_access_token(                # 🔐 [AUTH] JWT token
+decode_token(                       # 🔐 [AUTH] JWT decode
+
+# ═══════════════════════════════════════════════════════
+# 🔔 Signals/Events (PRIORITY: MEDIUM)
+# ═══════════════════════════════════════════════════════
+# Django Signals
+@receiver(                          # 🔔 [PUSH] Django signal
+post_save.connect(                  # 🔔 [PUSH] Signal connect
+signal.send(                        # 🔔 [PUSH] Signal send
+
+# FastAPI Events
+@app.on_event("startup")            # 🔔 [PUSH] Startup event
+@app.on_event("shutdown")           # 🔔 [PUSH] Shutdown event
+```
+
+#### Boundary Confidence Scoring (P0 Enhancement)
+
+```python
+def calculate_boundary_confidence(match, context):
+    """Score boundary detection confidence."""
+    base_confidence = PATTERN_CONFIDENCE[match.pattern_type]
+
+    # Boost factors (increase confidence)
+    if context.has_url_or_domain:
+        base_confidence += 20  # Clearly external
+    if context.has_query_string:
+        base_confidence += 15  # Clearly database
+    if context.is_async_await:
+        base_confidence += 10  # Likely I/O operation
+    if context.has_try_catch:
+        base_confidence += 5   # Error handling suggests boundary
+
+    # Penalty factors (decrease confidence)
+    if context.is_mock_or_test:
+        base_confidence -= 30  # Not real boundary
+    if context.is_in_comment:
+        base_confidence = 0    # Not actual code
+    if context.is_type_definition:
+        base_confidence -= 20  # Just type, not call
+
+    return min(100, max(0, base_confidence))
+```
+
+**Boundary Output with Confidence**:
+```
+5. PaymentService.process()               → 處理付款
+   📍 src/services/payment.ts:200
+
+   🌐 [API] 外部邊界：Stripe API             [信心: 95%]
+   ├── 模式：stripe.charges.create()
+   ├── 證據：URL domain + amount parameter
+   ├── 預期延遲：~500-2000ms
+   ├── 可能失敗：網路超時、API 限流、無效卡號
+   └── ⛔ 追蹤停止（外部服務）
+
+6. CacheService.get()                     → 讀取快取
+   📍 src/services/cache.ts:45
+
+   🗄️ [CACHE] Redis 快取                    [信心: 85%]
+   ├── 模式：redis.get(key)
+   ├── TTL：5 分鐘
+   ├── 預期延遲：~1-5ms
+   └── 繼續追蹤（內部快取）
 ```
 
 #### Boundary Output Format
