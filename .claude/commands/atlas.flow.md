@@ -214,6 +214,349 @@ Mark items that are **worth attention** - unusual, risky, or important:
 
 ---
 
+## Call Graph Visualization (P0)
+
+**Always include a call graph** after the step-by-step flow to provide visual overview.
+
+### ASCII Call Graph (Default)
+
+```
+呼叫圖：
+─────────────────────────────────────────────
+                  [Entry Point]
+                        │
+         ┌──────────────┼──────────────┐
+         ▼              ▼              ▼
+    [Step 1]       [Step 2]       [Step 3]
+         │              │              │
+         ▼              │              ▼
+    [Step 1a]           │         [Step 3a]
+                        ▼
+                   [Step 2a]
+                        │
+         ┌──────────────┼──────────────┐
+         ▼              ▼              ▼
+    [DB Save]      [API Call]     [Event Emit]
+─────────────────────────────────────────────
+```
+
+**Example Output**:
+```
+呼叫圖：
+─────────────────────────────────────────────
+              CheckoutController.submit()
+                        │
+         ┌──────────────┼──────────────┐
+         ▼              ▼              ▼
+  CartService      DiscountEngine   InventoryService
+   .validate()       .apply()         .reserve()
+         │              │                  │
+         │         ┌────┴────┐             │
+         │         ▼         ▼             │
+         │    VIPDiscount  Coupon          │
+         │                Service          │
+         │                                 │
+         └──────────────┬──────────────────┘
+                        ▼
+              PaymentService.process()
+                        │
+                        ▼
+               OrderService.create()
+                        │
+              ┌─────────┼─────────┐
+              ▼         ▼         ▼
+           [DB]    [Event]   [Notification]
+─────────────────────────────────────────────
+圖例：→ 同步呼叫  ⇢ 非同步  ▼ 主要路徑
+```
+
+### Mermaid Format (Optional)
+
+When user requests `輸出 mermaid` or `--mermaid`:
+
+```
+/atlas.flow "下單流程 --mermaid"
+```
+
+Output:
+````markdown
+```mermaid
+flowchart TD
+    subgraph Entry["入口"]
+        A[CheckoutController.submit]
+    end
+
+    subgraph Validation["驗證階段"]
+        B[CartService.validate]
+        C[InventoryService.check]
+    end
+
+    subgraph Pricing["計價階段"]
+        D[DiscountEngine.apply]
+        D1[VIPDiscount]
+        D2[CouponService]
+        D3[PointsService]
+    end
+
+    subgraph Payment["付款階段"]
+        E[PaymentService.process]
+    end
+
+    subgraph Completion["完成階段"]
+        F[OrderService.create]
+        G[(Database)]
+        H{{EVENT: ORDER_CREATED}}
+    end
+
+    A --> B --> C --> D
+    D --> D1 & D2 & D3
+    D1 & D2 & D3 --> E --> F
+    F --> G
+    F -.-> H
+
+    style A fill:#e1f5fe
+    style F fill:#c8e6c9
+    style G fill:#fff3e0
+    style H fill:#f3e5f5
+```
+````
+
+### Call Graph Rules
+
+1. **Always show** - Include call graph in every flow analysis
+2. **Simplify deep trees** - Collapse branches > 3 levels with `[...]`
+3. **Mark boundaries** - Use special shapes for DB, API, Events
+4. **Show parallelism** - Side-by-side for concurrent calls
+5. **Highlight risks** - Use `⚠️` or red for problematic nodes
+
+---
+
+## Newbie Mode (P0)
+
+For users new to the codebase or programming concepts.
+
+### Trigger Keywords
+
+```
+新手模式, newbie, 初學者, 解釋, explain, beginner, 看不懂
+```
+
+**Example Usage**:
+```
+/atlas.flow "下單流程 新手模式"
+/atlas.flow "explain OrderService.create()"
+/atlas.flow "解釋這個流程"
+```
+
+### Newbie Mode Behavior
+
+1. **Add terminology explanations** - Explain technical terms inline
+2. **Simplify output** - Focus on "what" not "how"
+3. **Use analogies** - Connect to real-world concepts
+4. **Include glossary** - Add terminology section at end
+
+### Output Format (Newbie Mode)
+
+```
+下單流程（新手模式 🎓）
+=======================
+
+💡 這個流程做什麼？
+   當用戶按下「結帳」按鈕後，系統會執行這個流程來完成訂單。
+
+📖 你需要知道的術語：
+   • Service = 處理業務邏輯的程式
+   • Controller = 接收用戶請求的入口
+   • Repository = 與資料庫溝通的程式
+   • async/await = 等待某件事完成再繼續（像等外送）
+
+────────────────────────────────────────────
+
+1. 💻 CheckoutController.submit()
+   📍 src/controllers/checkout.ts:120
+
+   🎓 這是什麼？
+      這是「入口」，當用戶按下結帳按鈕時，
+      瀏覽器會發送請求到這裡。
+
+   🔍 它做什麼？
+      接收用戶的購物車資料，然後開始處理訂單。
+
+2. 💻 CartService.validate()
+   📍 src/services/cart.ts:45
+
+   🎓 這是什麼？
+      這是「驗證器」，檢查購物車是否有問題。
+
+   🔍 它做什麼？
+      • 檢查商品是否還有庫存
+      • 檢查價格是否正確
+      • 檢查是否有無效的商品
+
+   ⚠️ 如果失敗？
+      回傳錯誤訊息給用戶，流程結束。
+
+3. 💻 DiscountEngine.apply()
+   📍 src/services/discount.ts:80
+
+   🎓 這是什麼？
+      這是「折扣計算器」。
+
+   🔍 它做什麼？
+      計算用戶可以享受的所有折扣：
+      • VIP 折扣（如果是 VIP 會員）
+      • 優惠券折扣（如果有使用優惠券）
+      • 積分抵扣（如果有使用積分）
+
+   💡 想像成...
+      像是超市結帳時，收銀員幫你掃描會員卡、
+      優惠券，計算最終價格。
+
+[... 後續步驟 ...]
+
+────────────────────────────────────────────
+📚 術語表（Glossary）
+────────────────────────────────────────────
+
+| 術語 | 解釋 | 類比 |
+|------|------|------|
+| Controller | 接收請求的入口 | 餐廳服務生 |
+| Service | 處理業務邏輯 | 廚師 |
+| Repository | 存取資料庫 | 倉庫管理員 |
+| Model | 資料結構定義 | 食譜 |
+| async/await | 等待操作完成 | 等外送送達 |
+| Transaction | 確保操作全部成功或全部失敗 | 銀行轉帳 |
+| Event | 通知其他程式有事發生 | 發公告 |
+| Cache | 暫存資料加快速度 | 把常用東西放手邊 |
+
+────────────────────────────────────────────
+💬 看不懂？可以問：
+• 「解釋 step 3」 → 更詳細解釋那一步
+• 「什麼是 async」 → 解釋特定術語
+• 「用更簡單的話說」 → 更白話的解釋
+────────────────────────────────────────────
+```
+
+### Newbie Mode Activation
+
+**Default: OFF** - Newbie mode is disabled by default.
+
+**Explicit Activation**:
+```
+/atlas.flow "下單流程 新手模式"
+/atlas.flow "explain checkout flow"
+```
+
+**Offer Newbie Mode** (not auto-enable) when:
+```
+# 偵測到困惑時，提供選項而非自動切換
+if 用戶問「這是什麼」「看不懂」「不理解」:
+    → 詢問：「需要切換到新手模式嗎？輸入『新手模式』可以看到術語解釋。」
+
+# 不主動詢問是否需要新手模式（避免打擾資深使用者）
+```
+
+---
+
+## Summary + Detailed Mode (P0)
+
+Control output verbosity based on user needs.
+
+### Default: Summary Mode
+
+Show concise output first, let user expand if needed.
+
+**Summary Output**:
+```
+下單流程（摘要）
+===============
+
+1. CheckoutController.submit() → 接收請求
+2. CartService.validate() → 驗證購物車
+3. DiscountEngine.apply() → 計算折扣     🔍 [3]
+4. InventoryService.reserve() → 預扣庫存
+5. PaymentService.process() → 處理付款   🔍 [5]
+6. OrderService.create() → 建立訂單
+
+────────────────────────────────────────────
+📊 6 步驟 | 2 個可展開 | ⏱️ ~2-5 秒
+💬 輸入「詳細」看完整分析，或「展開 3」看特定步驟
+────────────────────────────────────────────
+```
+
+### Detailed Mode
+
+When user requests `詳細`, `detailed`, `完整`:
+
+```
+/atlas.flow "下單流程 詳細"
+/atlas.flow "detailed checkout flow"
+```
+
+**Detailed Output**:
+```
+下單流程（詳細）
+===============
+
+1. CheckoutController.submit()            → 接收結帳請求
+   📍 src/controllers/checkout.ts:120
+   ⏱️ sync
+
+   輸入：{ cartId, userId, paymentMethod }
+   輸出：{ orderId } | Error
+
+   內部邏輯：
+   ├── 驗證 session
+   ├── 取得購物車資料
+   └── 呼叫 CartService
+
+2. CartService.validate()                 → 驗證購物車
+   📍 src/services/cart.ts:45
+   ⏱️ async, ⏳ ~50-100ms
+
+   驗證項目：
+   ├── 商品是否存在
+   ├── 商品是否有庫存
+   ├── 價格是否正確（防止前端竄改）
+   └── 商品是否可購買（未下架）
+
+   失敗處理：
+   ├── CartEmptyError → 400 "購物車是空的"
+   ├── ItemNotFoundError → 404 "商品不存在"
+   └── OutOfStockError → 409 "商品已售完"
+
+[... 更多詳細步驟 ...]
+
+────────────────────────────────────────────
+📊 6 步驟 | 預估總時間 2-5 秒
+📍 涉及檔案：6 個
+📌 風險點：2 個（已標記）
+💬 輸入「摘要」返回簡潔模式
+────────────────────────────────────────────
+```
+
+### Mode Switching
+
+| Keyword | Effect |
+|---------|--------|
+| `摘要`, `summary`, `簡潔` | Switch to summary mode |
+| `詳細`, `detailed`, `完整`, `full` | Switch to detailed mode |
+| `新手`, `newbie`, `explain` | Switch to newbie mode |
+
+### Combined Modes
+
+Modes can be combined:
+
+```
+/atlas.flow "下單流程 詳細 新手模式"
+→ Detailed output with terminology explanations
+
+/atlas.flow "下單流程 摘要"
+→ Concise summary (default)
+```
+
+---
+
 ## Interactive Follow-up
 
 ### Context-Aware Responses
@@ -1063,44 +1406,95 @@ For each step, optionally include timing information:
 Automatically detect mode from user input:
 
 ```
-# 核心追蹤
-if 用戶問「被誰調用」「who calls」「反向」:
+# ═══════════════════════════════════════════════════════
+# 輸出控制（P0 - 優先檢測）
+# ═══════════════════════════════════════════════════════
+
+if 用戶說「新手」「newbie」「初學者」「解釋」「explain」「beginner」「看不懂」:
+    → Enable Newbie Mode (add terminology explanations + glossary)
+
+if 用戶說「詳細」「detailed」「完整」「full」:
+    → Enable Detailed Mode (show all details)
+
+if 用戶說「摘要」「summary」「簡潔」:
+    → Enable Summary Mode (concise output, default)
+
+if 用戶說「mermaid」「--mermaid」:
+    → Include Mermaid diagram in output
+
+# ═══════════════════════════════════════════════════════
+# 核心追蹤模式
+# ═══════════════════════════════════════════════════════
+
+if 用戶問「被誰調用」「who calls」「反向」「callers」:
     → Reverse Tracing Mode
 
-if 用戶問「失敗」「錯誤」「error path」:
+if 用戶問「失敗」「錯誤」「error」「fail」「exception」「失敗路徑」:
     → Error Path Mode
 
-if 用戶問「怎麼計算」「資料流」「追蹤變數」:
+if 用戶問「怎麼計算」「資料流」「追蹤變數」「data flow」「計算」:
     → Data Flow Mode
 
-# 流程變異
-if 用戶問「狀態機」「狀態變化」「lifecycle」:
+# ═══════════════════════════════════════════════════════
+# 流程變異模式
+# ═══════════════════════════════════════════════════════
+
+if 用戶問「狀態機」「狀態變化」「lifecycle」「state machine」「status」:
     → State Machine Mode
 
-if 用戶問「比較」「vs」「差異」:
+if 用戶問「比較」「vs」「差異」「compare」「diff」:
     → Comparison Mode
 
-if 用戶問「feature toggle」「flag」「開關」「rollout」「A/B」:
+if 用戶問「feature toggle」「feature flag」「開關」「toggle」「flag」「rollout」「A/B」:
     → Feature Toggle Analysis Mode
 
-if 用戶問「角色」「權限」「role」「permission」「RBAC」:
+if 用戶問「角色」「權限」「role」「permission」「RBAC」「授權」「access control」:
     → Permission/Role Flow Mode
 
-# 系統層面
-if 用戶問「log」「logging」「從 log」:
+# ═══════════════════════════════════════════════════════
+# 系統層面模式
+# ═══════════════════════════════════════════════════════
+
+if 用戶問「log」「logging」「從 log」「debug」「追蹤 log」:
     → Log Analysis Mode
 
-if 用戶問「event」「事件」「message」「queue」「listener」:
+if 用戶問「event」「事件」「message」「queue」「listener」「subscriber」「publish」「emit」:
     → Event/Message Tracing Mode
 
-if 用戶問「transaction」「交易」「rollback」「commit」:
+if 用戶問「transaction」「交易」「rollback」「commit」「atomicity」「一致性」:
     → Transaction Boundary Mode
 
-if 用戶問「cache」「快取」「redis」「TTL」:
+if 用戶問「cache」「快取」「redis」「memoize」「TTL」「invalidate」:
     → Cache Flow Analysis Mode
 
+# ═══════════════════════════════════════════════════════
+# 預設模式
+# ═══════════════════════════════════════════════════════
+
 else:
-    → Default Forward Tracing Mode
+    → Default Forward Tracing Mode + Summary Output + Call Graph
+```
+
+### Mode Combination Examples
+
+```
+/atlas.flow "下單流程"
+→ Forward Tracing + Summary + Call Graph (default)
+
+/atlas.flow "下單流程 詳細"
+→ Forward Tracing + Detailed + Call Graph
+
+/atlas.flow "下單流程 新手模式"
+→ Forward Tracing + Newbie Mode + Call Graph + Glossary
+
+/atlas.flow "下單流程 詳細 新手模式"
+→ Forward Tracing + Detailed + Newbie Mode + Call Graph + Glossary
+
+/atlas.flow "下單失敗會怎樣 新手模式"
+→ Error Path + Newbie Mode + Call Graph + Glossary
+
+/atlas.flow "訂單狀態機 --mermaid"
+→ State Machine + Mermaid Diagram
 ```
 
 ---
@@ -1112,7 +1506,24 @@ After `/atlas.flow`, users can:
 - Use `/atlas.impact` to understand change impact
 - Use `/atlas.history` to see why certain parts change often
 - Use `/atlas.pattern` to learn implementation patterns
-- Switch modes:
+- Switch output modes or analysis modes:
+
+### Output Control (P0)
+
+| 指令 | 效果 |
+|------|------|
+| `詳細` / `detailed` | 顯示完整細節 |
+| `摘要` / `summary` | 顯示精簡摘要（預設） |
+| `新手模式` / `newbie` | 加入術語解釋和類比 |
+| `--mermaid` | 輸出 Mermaid 圖表 |
+
+**組合使用**：
+```
+"下單流程 詳細 新手模式"  → 詳細 + 術語解釋
+"下單流程 --mermaid"      → 摘要 + Mermaid 圖
+```
+
+### Analysis Modes
 
 **核心追蹤**:
 - "反向追蹤" / "被誰調用" → Reverse Tracing
