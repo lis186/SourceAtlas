@@ -4,7 +4,20 @@
 
 ---
 
-## 2025-11（當前月份）
+## 2025-12（當前月份）
+
+### Week 1 (12/01): v2.7.0 Release - Flow 分析完成 ⭐⭐⭐⭐⭐
+
+**`/atlas.flow` P0-A 準確性改善** (12/01):
+- 語言專屬入口點偵測：Swift/iOS, TypeScript/React, Kotlin/Android, Python
+- 增強邊界識別：6 → 10 類型（新增 AUTH, PAY, FILE, PUSH）
+- 信心評分算法：區分高/低可信度識別結果
+- 多 Agent 並行研究：5 個研究 Agent 同時進行
+→ [實作記錄](./2025-12/2025-12-01-atlas-flow-p0a-implementation.md)
+
+---
+
+## 2025-11
 
 ### Week 5 (11/25-12/01): v2.6.0 Release - 時序分析完成 ⭐⭐⭐⭐⭐
 
