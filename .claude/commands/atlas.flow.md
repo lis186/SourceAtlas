@@ -110,6 +110,228 @@ From the entry point, trace the execution path:
 
 ---
 
+### Step 2.5: Boundary Detection Rules (P0)
+
+**Problem**: "External API, DB, third-party library" definitions are ambiguous.
+
+**Solution**: Define explicit boundary detection rules by language/framework.
+
+#### Boundary Types
+
+| Type | Symbol | Description |
+|------|--------|-------------|
+| 🌐 External API | `[API]` | HTTP requests to external services |
+| 💾 Database | `[DB]` | Persistence layer operations |
+| 📦 Third-party Lib | `[LIB]` | External package calls (non-stdlib) |
+| 🔄 Recursion | `[LOOP]` | Self-referencing or circular calls |
+| 📡 Message Queue | `[MQ]` | Async messaging (Kafka, RabbitMQ) |
+| ☁️ Cloud Service | `[CLOUD]` | AWS, GCP, Azure SDK calls |
+
+#### Detection Patterns by Language
+
+**TypeScript/JavaScript**:
+```javascript
+// 🌐 External API
+fetch(), axios.*, got.*, request.*
+new URL().*, HttpClient.*
+
+// 💾 Database
+prisma.*, sequelize.*, mongoose.*
+*.query(), *.find(), *.save(), *.insert(), *.update(), *.delete()
+knex.*, typeorm.*, drizzle.*
+
+// 📦 Third-party (check package.json dependencies)
+import from 'package-name'  // if in dependencies, mark as [LIB]
+require('package-name')
+
+// 📡 Message Queue
+kafka.*, amqp.*, bull.*, rabbitmq.*
+*.publish(), *.subscribe(), *.send()
+```
+
+**Swift/iOS**:
+```swift
+// 🌐 External API
+URLSession.*, Alamofire.*, Moya.*
+dataTask(with:), uploadTask(with:), downloadTask(with:)
+
+// 💾 Database
+CoreData: NSManagedObjectContext.*, NSFetchRequest.*
+Realm: realm.*, Results<*>
+SQLite: sqlite3_*, GRDB.*
+
+// 📦 Third-party (check Package.swift / Podfile)
+import ThirdPartyFramework
+
+// ☁️ Cloud Service
+AWSS3.*, FirebaseFirestore.*, CloudKit.*
+```
+
+**Kotlin/Android**:
+```kotlin
+// 🌐 External API
+Retrofit.*, OkHttp.*, HttpClient.*
+*.execute(), *.enqueue()
+
+// 💾 Database
+Room: *Dao.*, @Query, @Insert, @Update, @Delete
+SQLDelight: *Queries.*
+
+// 📦 Third-party (check build.gradle dependencies)
+import com.thirdparty.*
+
+// ☁️ Cloud Service
+Firebase.*, AWS.*, Azure.*
+```
+
+**Python**:
+```python
+# 🌐 External API
+requests.*, httpx.*, aiohttp.*
+urllib.*, http.client.*
+
+# 💾 Database
+sqlalchemy.*, django.db.*, pymongo.*
+*.query(), *.filter(), *.save(), *.commit()
+
+# 📦 Third-party (check requirements.txt / pyproject.toml)
+import third_party_package
+
+# 📡 Message Queue
+celery.*, kafka.*, pika.*
+```
+
+#### Boundary Output Format
+
+When a boundary is reached:
+
+```
+5. PaymentService.process()               → 處理付款
+   📍 src/services/payment.ts:200
+
+   🌐 [API] 外部邊界：Stripe API
+   ├── 呼叫：stripe.charges.create()
+   ├── 預期延遲：~500-2000ms
+   ├── 可能失敗：網路超時、API 限流、無效卡號
+   └── ⛔ 追蹤停止（外部服務）
+
+6. OrderRepository.save()                 → 儲存訂單
+   📍 src/repos/order.ts:80
+
+   💾 [DB] 資料庫邊界：PostgreSQL
+   ├── 操作：INSERT INTO orders
+   ├── 預期延遲：~10-50ms
+   └── ⛔ 追蹤停止（持久層）
+```
+
+#### Configurable Boundary Behavior
+
+User can control boundary behavior:
+
+```
+/atlas.flow "下單流程"                    → 預設：停在邊界
+/atlas.flow "下單流程 --cross-boundary"   → 跨越邊界繼續追蹤
+/atlas.flow "下單流程 --only-internal"    → 只追蹤內部程式碼
+/atlas.flow "下單流程 --include-lib"      → 包含第三方庫內部
+```
+
+---
+
+### Step 2.6: Depth Limit and Recursion Detection (P0)
+
+**Problem**: How to detect and handle recursion/loops? When to stop deep tracing?
+
+**Solution**: Explicit depth control and cycle detection.
+
+#### Default Depth Limits
+
+| 場景 | 預設深度 | 原因 |
+|------|---------|------|
+| 主流程 | 無限制 | 追到邊界為止 |
+| 子流程展開 | 3 層 | 避免過深 |
+| 遞迴函數 | 2 次 | 展示模式後停止 |
+| 循環內容 | 1 次 | 展示一次迭代 |
+
+#### User-Controlled Depth
+
+```
+/atlas.flow "從 OrderService.create() 開始"           → 預設深度
+/atlas.flow "從 OrderService.create() 開始，追 3 層"   → 限制 3 層
+/atlas.flow "從 OrderService.create() 開始，追 5 層"   → 限制 5 層
+/atlas.flow "從 OrderService.create() 開始，完整追蹤"  → 無限制（警告）
+```
+
+**Depth Keywords**:
+- `追 N 層`, `depth N`, `--depth=N` → 限制深度為 N
+- `完整追蹤`, `full`, `--no-limit` → 無限制（會警告可能很長）
+- `只看這個檔案內`, `--same-file` → 只追蹤同檔案內的呼叫
+
+#### Recursion Detection Algorithm
+
+```python
+# 追蹤時維護呼叫堆疊
+call_stack = []
+
+def trace(function):
+    # 檢查是否已在堆疊中（循環）
+    if function in call_stack:
+        mark_as_recursion(function)
+        return  # 停止追蹤
+
+    call_stack.append(function)
+    # ... 繼續追蹤 ...
+    call_stack.pop()
+```
+
+#### Recursion Output Format
+
+```
+3. TreeNode.traverse()                    → 遍歷節點
+   📍 src/utils/tree.ts:45
+
+   🔄 [LOOP] 遞迴檢測
+   ├── 類型：直接遞迴（self.traverse()）
+   ├── 終止條件：node.children.length === 0
+   ├── 已展示：2 次迭代
+   └── ⛔ 追蹤停止（遞迴，輸入「展開遞迴」看更多）
+
+4. EventLoop.process()                    → 處理事件
+   📍 src/core/loop.ts:120
+
+   🔄 [LOOP] 循環檢測
+   ├── 類型：無限循環（while true）
+   ├── 跳出條件：this.shouldStop === true
+   ├── 已展示：1 次迭代
+   └── ⛔ 追蹤停止（無限循環）
+```
+
+#### Cycle Detection for Indirect Recursion
+
+```
+檢測到間接遞迴：
+A() → B() → C() → A()
+
+輸出：
+1. ServiceA.process()
+   📍 src/services/a.ts:10
+   └─ 呼叫 ServiceB.handle()
+
+2. ServiceB.handle()
+   📍 src/services/b.ts:20
+   └─ 呼叫 ServiceC.execute()
+
+3. ServiceC.execute()
+   📍 src/services/c.ts:30
+   └─ 呼叫 ServiceA.process()  ← 🔄 循環回到 Step 1
+
+   🔄 [CYCLE] 間接遞迴檢測
+   ├── 循環路徑：A → B → C → A
+   ├── 長度：3 個函數
+   └── ⛔ 追蹤停止（循環）
+```
+
+---
+
 ### Step 3: Apply Progressive Disclosure (Critical)
 
 **The 7±2 Rule**: Human working memory handles 5-9 items at once.
@@ -1421,6 +1643,28 @@ if 用戶說「摘要」「summary」「簡潔」:
 
 if 用戶說「mermaid」「--mermaid」:
     → Include Mermaid diagram in output
+
+# ═══════════════════════════════════════════════════════
+# 深度和邊界控制（P0）
+# ═══════════════════════════════════════════════════════
+
+if 用戶說「追 N 層」「depth N」「--depth=N」:
+    → Set max depth to N levels
+
+if 用戶說「完整追蹤」「full trace」「--no-limit」:
+    → No depth limit (warn: may be long)
+
+if 用戶說「只看這個檔案內」「--same-file」:
+    → Only trace within same file
+
+if 用戶說「--cross-boundary」「跨越邊界」:
+    → Continue tracing across external boundaries
+
+if 用戶說「--only-internal」「只追蹤內部」:
+    → Only trace internal code (skip all boundaries)
+
+if 用戶說「--include-lib」「包含第三方」:
+    → Include third-party library internals
 
 # ═══════════════════════════════════════════════════════
 # 核心追蹤模式
