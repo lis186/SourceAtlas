@@ -11,6 +11,7 @@ SourceAtlas helps developers quickly understand any codebase through pattern lea
 - **🎯 Pattern Learning** (`/atlas.pattern`) - Learn design patterns from existing code
 - **📊 Impact Analysis** (`/atlas.impact`) - Analyze change impact with static dependency analysis
 - **📈 History Analysis** (`/atlas.history`) - Git history temporal analysis (Hotspots, Coupling, Contributors)
+- **🔄 Flow Analysis** (`/atlas.flow`) - Trace code execution and data flow (11 analysis modes) ⭐ NEW
 
 ## 🚀 Installation
 
@@ -152,6 +153,51 @@ Analyze git history to identify hotspots, temporal coupling, and knowledge distr
 - Auto-installs code-maat dependency if needed
 - Chinese/English bilingual prompts
 
+### `/atlas.flow` - Flow Analysis ⭐ NEW
+
+Trace code execution flow and data flow with natural language queries.
+
+```bash
+# Trace user flow
+/atlas.flow "用戶登入流程"
+/atlas.flow "What happens when user clicks submit"
+
+# Trace specific function
+/atlas.flow "handleSubmit"
+/atlas.flow "trace processOrder function"
+
+# Error path analysis
+/atlas.flow "API 錯誤處理流程"
+
+# Data flow tracing
+/atlas.flow "資料從哪裡來 userProfile"
+
+# Reverse tracing
+/atlas.flow "誰調用 validateToken"
+```
+
+**What you get:**
+- 📊 Call Graph visualization (ASCII tree format)
+- 🌐 Boundary detection (API, DB, LIB, CLOUD markers)
+- 🔄 Recursion and cycle detection
+- 📈 Depth-controlled tracing
+- 🎯 11 analysis modes:
+  - Forward/Reverse tracing
+  - Error path analysis
+  - Data flow tracing
+  - State machine visualization
+  - Feature toggle detection
+  - Event/Message flow
+  - Transaction boundary
+  - Permission/Role check
+  - Cache flow analysis
+  - Comparison mode
+
+**For beginners (Newbie Mode auto-enabled):**
+- Terms explained with tooltips
+- Progressive disclosure (7±2 items per level)
+- Step-by-step expansion
+
 ## 🎓 How It Works
 
 SourceAtlas uses **information theory principles** to understand codebases efficiently:
@@ -209,7 +255,9 @@ sourceatlas-plugin/
 │   ├── atlas.init.md        # Project initialization
 │   ├── atlas.overview.md    # Project overview
 │   ├── atlas.pattern.md     # Pattern learning
-│   └── atlas.impact.md      # Impact analysis
+│   ├── atlas.impact.md      # Impact analysis
+│   ├── atlas.history.md     # History analysis
+│   └── atlas.flow.md        # Flow analysis ⭐ NEW
 ├── README.md
 ├── CHANGELOG.md
 ├── TESTING.md
@@ -270,4 +318,4 @@ Based on SourceAtlas v2.5 methodology:
 
 ---
 
-**SourceAtlas v2.5.4** - Understanding codebases at the speed of thought 🚀
+**SourceAtlas v2.7.0** - Understanding codebases at the speed of thought 🚀
