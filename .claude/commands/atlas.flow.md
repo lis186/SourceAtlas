@@ -12,7 +12,57 @@ argument-hint: [flow description or entry point, e.g., "user checkout", "from Or
 
 **Goal:** Extract and visualize business logic flow, tracing execution path step by step.
 
-**Time Limit:** Initial analysis in 3-5 minutes, then interactive exploration.
+---
+
+## Analysis Modes (速度 vs 準確度)
+
+Parse `$ARGUMENTS` for mode flags:
+
+| Mode | Flag | Time | Accuracy | Use Case |
+|------|------|------|----------|----------|
+| **Quick** | `--quick` | 3-5 min | ~75% | 快速了解、會議前準備 |
+| **Standard** | (default) | 10-15 min | ~85% | 日常開發、code review |
+| **Thorough** | `--thorough` | 20-30 min | ~92% | 深入理解、重構規劃 |
+| **Verify** | `--verify` | 25-35 min | ~95% | 關鍵功能、安全審計 |
+
+### Mode Detection
+
+```python
+if "--quick" in ARGUMENTS:
+    mode = "quick"
+    max_depth = 3
+    skip_alternatives = True
+    output = "summary_only"
+elif "--thorough" in ARGUMENTS:
+    mode = "thorough"
+    max_depth = 7
+    include_alternatives = True
+    output = "detailed"
+elif "--verify" in ARGUMENTS:
+    mode = "verify"
+    max_depth = 5
+    run_cross_validation = True  # Use 3-agent verification
+    output = "detailed_with_confidence"
+else:
+    mode = "standard"  # Default
+    max_depth = 5
+    output = "detailed"
+```
+
+### Output Confidence Footer
+
+Always include at end of analysis:
+
+```
+───────────────────────────────────
+📊 Analysis Metadata
+├── Mode: [Quick|Standard|Thorough|Verify]
+├── Confidence: ~XX%
+├── Depth: N levels traced
+├── Files: N core files covered
+└── 💡 Use --thorough for deeper analysis
+───────────────────────────────────
+```
 
 ---
 
@@ -29,6 +79,13 @@ Help the user understand:
 ---
 
 ## Workflow
+
+### Step 0: Detect Mode
+
+Check `$ARGUMENTS` for mode flags (`--quick`, `--thorough`, `--verify`).
+If none specified, use **Standard** mode (default).
+
+Remove mode flags from arguments before processing the flow query.
 
 ### Step 1: Parse Input and Determine Entry Point (1 minute)
 
@@ -1628,6 +1685,21 @@ For each step, optionally include timing information:
 Automatically detect mode from user input:
 
 ```
+# ═══════════════════════════════════════════════════════
+# 速度/準確度模式（最高優先）
+# ═══════════════════════════════════════════════════════
+
+if 用戶說「--quick」「快速」「quick」「fast」:
+    → Quick Mode: 3-5 min, ~75% accuracy, summary only, depth 3
+
+if 用戶說「--thorough」「深入」「thorough」「complete」「完整分析」:
+    → Thorough Mode: 20-30 min, ~92% accuracy, include alternatives, depth 7
+
+if 用戶說「--verify」「驗證」「verify」「審計」「audit」:
+    → Verify Mode: 25-35 min, ~95% accuracy, cross-validation with 3 agents
+
+# (Default: Standard Mode: 10-15 min, ~85% accuracy, depth 5)
+
 # ═══════════════════════════════════════════════════════
 # 輸出控制（P0 - 優先檢測）
 # ═══════════════════════════════════════════════════════
