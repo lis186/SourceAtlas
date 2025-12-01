@@ -11,13 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`/atlas.flow` command** - Trace code execution and data flow ⭐ Major Feature
   - 11 Analysis Modes: Forward, Reverse, Error Path, Data Flow, State Machine, Feature Toggle, Comparison, Event/Message, Transaction, Permission/Role, Cache Flow
   - Call Graph visualization (ASCII tree format)
-  - Boundary Detection: 🌐 [API], 💾 [DB], 📦 [LIB], 🔄 [LOOP], 📡 [MQ], ☁️ [CLOUD]
+  - Boundary Detection: 🌐 [API], 💾 [DB], 📦 [LIB], 🔄 [LOOP], 📡 [MQ], ☁️ [CLOUD], 🔐 [AUTH], 💳 [PAY], 📁 [FILE], 📲 [PUSH]
   - Depth Limit Control: `--depth=N`, `--cross-boundary`, `--only-internal`
   - Recursion and Cycle Detection (direct and indirect)
   - Newbie Mode: auto-enabled for beginners with tooltips and progressive disclosure (7±2 rule)
   - Summary/Detailed output modes
   - Multi-language support: TypeScript/JavaScript, Swift/iOS, Kotlin/Android, Python
   - Natural language queries in Chinese and English
+  - **Language-Specific Entry Point Detection** (P0-A Enhancement):
+    - Swift/iOS: `@main`, `AppDelegate`, `SceneDelegate`, `UIViewController`, `SwiftUI.App`
+    - TypeScript/React: `main.tsx`, `App.tsx`, `page.tsx`, `layout.tsx`, API routes
+    - Kotlin/Android: `MainActivity`, `Application`, `@Composable`, `Fragment`
+    - Python: `main.py`, `app.py`, `manage.py`, `wsgi.py`, FastAPI/Flask routes
+  - **Enhanced Boundary Detection** with confidence scoring
 - Updated `/atlas.init` with auto-trigger rules for `/atlas.history` and `/atlas.flow`
 - **Total commands now: 6** (init, overview, pattern, impact, history, flow)
 
@@ -25,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced plugin description to include flow analysis
 - Updated README with complete `/atlas.flow` documentation
 - Bumped version to 2.7.0 for major feature release
+- Improved entry point detection accuracy across 4 language ecosystems
 
 ## [2.5.4] - 2025-11-30
 
