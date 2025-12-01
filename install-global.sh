@@ -81,7 +81,7 @@ check_installation() {
     # Check each command
     local all_ok=true
 
-    for cmd in atlas.overview atlas.pattern atlas.impact atlas.init atlas.history; do
+    for cmd in atlas.overview atlas.pattern atlas.impact atlas.init atlas.history atlas.flow; do
         local file="$GLOBAL_COMMANDS_DIR/$cmd.md"
 
         if [ ! -e "$file" ]; then
@@ -193,7 +193,7 @@ install_commands() {
     # Install each command
     echo ""
 
-    for cmd in atlas.overview atlas.pattern atlas.impact atlas.init atlas.history; do
+    for cmd in atlas.overview atlas.pattern atlas.impact atlas.init atlas.history atlas.flow; do
         local source="$SOURCE_COMMANDS_DIR/$cmd.md"
         local target="$GLOBAL_COMMANDS_DIR/$cmd.md"
 
@@ -258,6 +258,11 @@ install_commands() {
     echo "    - Smart temporal analysis using git history"
     echo "    - Hotspots, Coupling, Recent Contributors"
     echo "    - Requires code-maat (auto-installs if needed)"
+    echo ""
+    echo -e "  ${BLUE}/atlas.flow${NC} [entry point or query]"
+    echo "    - Trace code execution flow and data flow"
+    echo "    - Examples: \"用戶登入流程\", \"handleSubmit\", \"API 錯誤處理\""
+    echo "    - Supports 11 analysis modes (forward, reverse, error, data...)"
     echo ""
 
     if [ "$INSTALL_METHOD" = "symlink" ]; then
