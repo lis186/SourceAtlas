@@ -1344,7 +1344,7 @@ overview → pattern → impact → history → 動手改
 
 ```bash
 # 一鍵安裝 code-maat
-./scripts/setup/install-codemaat.sh
+./scripts/install-codemaat.sh
 
 # 或手動
 curl -sSL https://github.com/adamtornhill/code-maat/releases/download/v1.0.4/code-maat-1.0.4-standalone.jar \
@@ -1355,17 +1355,18 @@ curl -sSL https://github.com/adamtornhill/code-maat/releases/download/v1.0.4/cod
 
 #### 實作路線圖
 
-**Phase 1: 核心功能（1-2 週）**
-- [ ] `install-codemaat.sh` 安裝腳本
-- [ ] `/atlas.history` 命令實作
-- [ ] Hotspots 分析
-- [ ] Coupling 分析
-- [ ] Recent Contributors 分析
+**Phase 1: 核心功能** ✅ 已完成 (2025-11-30)
+- [x] `install-codemaat.sh` 安裝腳本（自動安裝 + 環境配置）
+- [x] `/atlas.history` 命令實作
+- [x] Hotspots 分析
+- [x] Coupling 分析
+- [x] Recent Contributors 分析
+- [x] Shallow Clone 偵測 + 一鍵修復
 
-**Phase 2: 完善（1 週）**
-- [ ] iOS 專案自動排除（Pods/, .pbxproj）
-- [ ] 風險評估算法
-- [ ] 測試與文檔
+**Phase 2: 完善** ✅ 已完成 (2025-11-30)
+- [x] iOS 專案自動排除（Pods/, .pbxproj）
+- [x] 風險評估算法
+- [x] 測試與文檔（6 personas 多語言測試）
 
 ---
 
