@@ -17,10 +17,7 @@ argument-hint: (optional) [path or scope, e.g., "src/", "frontend", "last 6 mont
 
 **Time Limit:** Complete in 5-10 minutes.
 
-**Prerequisite:** code-maat must be installed. If not found, guide user to run:
-```bash
-./scripts/install-codemaat.sh
-```
+**Prerequisite:** code-maat must be installed. If not found, **ask user permission** before installing.
 
 ---
 
@@ -48,13 +45,38 @@ if [ -z "$CODEMAAT_JAR" ]; then
     # Check default location
     if [ -f "$HOME/.sourceatlas/bin/code-maat-1.0.4-standalone.jar" ]; then
         export CODEMAAT_JAR="$HOME/.sourceatlas/bin/code-maat-1.0.4-standalone.jar"
+        echo "code-maat found at $CODEMAAT_JAR"
     else
-        echo "code-maat not found. Please run: ./scripts/install-codemaat.sh"
-        exit 1
+        echo "code-maat not found."
     fi
 fi
+```
 
-# Verify it works
+**If code-maat not found:**
+
+Use **AskUserQuestion** tool to ask user:
+- Question: "code-maat is required for git history analysis. Install now? (requires Java 8+)"
+- Options:
+  1. "Yes, install" - Run `./scripts/install-codemaat.sh` then continue
+  2. "No, skip" - Stop and explain manual installation steps
+
+**If user agrees to install:**
+```bash
+# Run installation script
+./scripts/install-codemaat.sh
+
+# Verify installation
+if [ -f "$HOME/.sourceatlas/bin/code-maat-1.0.4-standalone.jar" ]; then
+    export CODEMAAT_JAR="$HOME/.sourceatlas/bin/code-maat-1.0.4-standalone.jar"
+    echo "code-maat installed successfully!"
+else
+    echo "Installation failed. Please check Java installation and try again."
+    exit 1
+fi
+```
+
+**Verify it works**:
+```bash
 java -jar "$CODEMAAT_JAR" -h > /dev/null 2>&1
 if [ $? -ne 0 ]; then
     echo "code-maat installation is broken. Please reinstall."
@@ -67,7 +89,7 @@ fi
 java -version 2>&1 | head -1
 ```
 
-If prerequisites fail, provide clear installation instructions and stop.
+If Java not found, inform user to install Java 8+ first (brew install openjdk@11).
 
 ---
 
@@ -335,16 +357,14 @@ Based on temporal analysis:
 ## Error Handling
 
 **If code-maat not installed**:
-```
-code-maat is required for temporal analysis.
-
-Install with:
-  ./scripts/install-codemaat.sh
-
-Or manually:
+- Use AskUserQuestion to ask permission before installing
+- If user agrees: run `./scripts/install-codemaat.sh` automatically
+- If user declines: provide manual installation steps:
+  ```
   1. Download from https://github.com/adamtornhill/code-maat/releases
-  2. Set CODEMAAT_JAR environment variable
-```
+  2. Place JAR in ~/.sourceatlas/bin/
+  3. Or set CODEMAAT_JAR environment variable
+  ```
 
 **If git history too short**:
 ```

@@ -1,10 +1,10 @@
 # SourceAtlas
 
-**4 個斜線命令，快速理解任何 codebase**
+**6 個斜線命令，快速理解任何 codebase**
 
-適用於 Claude Code | 支援 iOS/TypeScript/Android
+適用於 Claude Code | 支援 iOS/TypeScript/Android/Python
 
-[![Version](https://img.shields.io/badge/version-v2.6.0-blue)](https://github.com/lis186/SourceAtlas2/releases)
+[![Version](https://img.shields.io/badge/version-v2.7.0-blue)](https://github.com/lis186/SourceAtlas2/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 ---
@@ -19,7 +19,7 @@
 
 ---
 
-## 🚀 四個命令
+## 🚀 六個命令
 
 ### 1. 快速理解專案
 
@@ -64,7 +64,7 @@
 
 ---
 
-### 4. 時序分析（Git 歷史）⭐ NEW
+### 4. 時序分析（Git 歷史）
 
 ```bash
 /atlas.history
@@ -80,6 +80,35 @@
 - 偵測 Shallow Clone 並提供解決方案
 - 自動安裝 code-maat（首次使用）
 - 識別 Bus Factor 風險（單一貢獻者）
+
+---
+
+### 5. 流程追蹤（資料流分析）⭐ NEW
+
+```bash
+/atlas.flow "user login"
+/atlas.flow "from LoginViewController"
+/atlas.flow "checkout process"
+```
+
+**3-5 分鐘得到**：入口點、執行路徑、邊界識別（API/DB/Auth/Payment）、資料流向
+
+**範例**：想理解登入流程，3-5 分鐘內從 `LoginViewController` 追蹤到 `AuthService` → `APIClient` → `UserRepository`
+
+**11 種分析模式**：
+- 語言專屬入口點偵測（Swift, TypeScript, Kotlin, Python）
+- 10 種邊界類型：API 🌐, DB 💾, Auth 🔐, Payment 💳, File 📁, Push 📲...
+- 信心評分：區分高/低可信度識別結果
+
+---
+
+### 6. 專案初始化
+
+```bash
+/atlas.init
+```
+
+**一次設定**：注入自動觸發規則到 CLAUDE.md，之後 Claude 會自動建議適合的命令
 
 ---
 
@@ -145,12 +174,13 @@ cd ~/projects/any-project
 # 檢查命令是否安裝成功
 ls ~/.claude/commands/atlas.*.md
 
-# 應該看到 5 個檔案：
+# 應該看到 6 個檔案：
 # atlas.init.md
 # atlas.overview.md
 # atlas.pattern.md
 # atlas.impact.md
 # atlas.history.md
+# atlas.flow.md
 ```
 
 📚 **完整安裝指南**：[GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
@@ -188,6 +218,11 @@ ls ~/.claude/commands/atlas.*.md
 │   → 5-10 分鐘得到：Hotspots + Coupling + Contributors
 │   → 例如：/atlas.history src/
 │
+├─ 🔀 想追蹤某個功能的執行流程
+│   → 用 /atlas.flow "描述或入口點"
+│   → 3-5 分鐘得到：入口點 + 執行路徑 + 邊界
+│   → 例如：/atlas.flow "user login"
+│
 └─ ❓ 還是不確定
     → 先用 /atlas.overview 建立全貌
     → 再根據需要使用其他命令
@@ -214,7 +249,7 @@ ls ~/.claude/commands/atlas.*.md
 
 - **[CLAUDE.md](./CLAUDE.md)** - AI 協作指南、專案架構、開發規範
 - **[開發歷史](./dev-notes/HISTORY.md)** - 完整的演進時間線
-- **[PRD](./PRD.md)** - 產品需求文檔（v2.6.0）
+- **[PRD](./PRD.md)** - 產品需求文檔（v2.7.0）
 
 ---
 
@@ -230,11 +265,12 @@ Claude Code + 2 分鐘安裝
 <details>
 <summary><b>Q: 支援什麼語言？</b></summary>
 
-- **iOS/Swift**: 29 patterns (MVVM, Coordinator, Core Data, SwiftUI...)
-- **TypeScript/React**: 22 patterns (Hooks, Next.js, Server Components...)
+- **iOS/Swift**: 34 patterns (MVVM, Coordinator, Core Data, SwiftUI...)
+- **TypeScript/React/Vue**: 50 patterns (Hooks, Next.js, Zustand, Pinia...)
 - **Android/Kotlin**: 31 patterns (ViewModel, Room, Compose, Hilt, MVI...)
+- **Python**: 26 patterns (Django, FastAPI, Flask, Celery...)
 
-完整列表見 [USAGE_GUIDE.md](./USAGE_GUIDE.md#支援的-patterns-82-個)
+完整列表見 [USAGE_GUIDE.md](./USAGE_GUIDE.md#支援的-patterns-141-個)
 
 </details>
 
@@ -309,15 +345,16 @@ Claude Code + 2 分鐘安裝
 
 ## 🗺️ 開發狀態
 
-**v2.6.0 (當前)**：5/5 核心命令完成 ✅
+**v2.7.0 (當前)**：6/6 核心命令完成 ✅
 
 - ✅ `/atlas.init` - 專案初始化（自動觸發規則）
 - ✅ `/atlas.overview` - 專案概覽
 - ✅ `/atlas.pattern` - 設計模式學習
 - ✅ `/atlas.impact` - 影響分析（靜態分析）
-- ✅ `/atlas.history` - 時序分析（Git 歷史）⭐ NEW
+- ✅ `/atlas.history` - 時序分析（Git 歷史）
+- ✅ `/atlas.flow` - 流程追蹤（資料流分析）⭐ NEW
 
-**v2.7 (規劃中)**：Go/Rust/Ruby patterns、SourceAtlas Monitor、技術債務量化
+**v2.8 (規劃中)**：Go/Rust/Ruby patterns、AST 分析整合、SourceAtlas Monitor
 
 ---
 
@@ -330,6 +367,6 @@ Claude Code + 2 分鐘安裝
 ---
 
 **SourceAtlas** - Claude Code 的程式分析助手
-v2.6.0 | 最新更新: 2025-11-30 | MIT License
+v2.7.0 | 最新更新: 2025-12-03 | MIT License
 
 Made with ❤️ and 🤖

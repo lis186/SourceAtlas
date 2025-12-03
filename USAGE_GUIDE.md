@@ -1,8 +1,8 @@
 # SourceAtlas - 使用指南
 
-**3 個斜線命令的完整使用說明**
+**6 個斜線命令的完整使用說明**
 
-適用於 Claude Code | v2.5.4
+適用於 Claude Code | v2.7.0
 
 ---
 
@@ -12,7 +12,10 @@
 2. [命令 1: /atlas.overview](#命令-1-atlasoverview)
 3. [命令 2: /atlas.pattern](#命令-2-atlaspattern)
 4. [命令 3: /atlas.impact](#命令-3-atlasimpact)
-5. [常見問題](#常見問題)
+5. [命令 4: /atlas.history](#命令-4-atlashistory)
+6. [命令 5: /atlas.flow](#命令-5-atlasflow)
+7. [命令 6: /atlas.init](#命令-6-atlasinit)
+8. [常見問題](#常見問題)
 
 ---
 
@@ -707,7 +710,7 @@ echo -e "\n=== 檢查完成 ==="
 ```
 
 **預期結果**：
-- ✅ 看到 3 個 .md 檔案（overview, pattern, impact）
+- ✅ 看到 6 個 .md 檔案（init, overview, pattern, impact, history, flow）
 - ✅ 看到 scripts/atlas/ 目錄
 - ✅ 在專案根目錄（有 .git/）
 - ✅ 程式碼檔案數 < 1000（TINY/SMALL）或 < 5000（MEDIUM/LARGE）
@@ -724,4 +727,4 @@ echo -e "\n=== 檢查完成 ==="
 ---
 
 **SourceAtlas** - Claude Code 的程式分析助手
-v2.5 | 更新時間: 2025-11-25
+v2.7.0 | 更新時間: 2025-12-03
