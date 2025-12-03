@@ -179,12 +179,21 @@
 
 ## 統計總覽
 
-### Patterns 總數（截至 2025-11-30, v2.5.4）
+### Patterns 總數（截至 2025-12-03, v2.7.0）
 - **iOS/Swift**: 34 patterns（27 支援 Objective-C）
 - **TypeScript/React/Vue**: 50 patterns（25 Tier 1 + 25 Tier 2）
 - **Android/Kotlin**: 31 patterns（12 Tier 1 + 19 Tier 2）
 - **Python**: 26 patterns（12 Tier 1 + 14 Tier 2）
 - **總計**: 141 patterns ⭐
+
+### Commands 總數（v2.7.0）
+- `/atlas.init` - 專案初始化
+- `/atlas.overview` - 專案指紋
+- `/atlas.pattern` - 模式學習
+- `/atlas.impact` - 影響分析
+- `/atlas.history` - 時序分析
+- `/atlas.flow` - 流程追蹤
+- **總計**: 6 commands ⭐
 
 ### 測試專案
 - **iOS**: wikipedia-ios, Signal-iOS, 大型商業 App（混合專案）
@@ -195,4 +204,4 @@
 
 ---
 
-**最後更新**: 2025-11-30 (v2.5.4)
+**最後更新**: 2025-12-03 (v2.7.0)

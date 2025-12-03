@@ -257,7 +257,7 @@ install_commands() {
     echo -e "  ${BLUE}/atlas.history${NC} [scope]"
     echo "    - Smart temporal analysis using git history"
     echo "    - Hotspots, Coupling, Recent Contributors"
-    echo "    - Requires code-maat (auto-installs if needed)"
+    echo "    - Requires code-maat (prompts to install on first use)"
     echo ""
     echo -e "  ${BLUE}/atlas.flow${NC} [entry point or query]"
     echo "    - Trace code execution flow and data flow"

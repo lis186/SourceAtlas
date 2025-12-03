@@ -1,10 +1,10 @@
-# SourceAtlas PRD v2.6.0
+# SourceAtlas PRD v2.7.0
 
 **AI-Powered Codebase Understanding Assistant**
 
-- **版本**: 2.6.0
-- **更新日期**: 2025-11-30
-- **狀態**: ✅ Released (v2.6.0 Complete)
+- **版本**: 2.7.0
+- **更新日期**: 2025-12-03
+- **狀態**: ✅ Released (v2.7.0 Complete)
 
 ---
 
@@ -1558,7 +1558,7 @@ When detecting user confusion, suggest:
 
 ## 版本資訊
 
-**當前版本**: v2.6.0 (2025-11-30)
+**當前版本**: v2.7.0 (2025-12-01)
 
 **開發狀態**：
 - v1.0 ✅ - 方法論驗證完成（5 專案測試）
@@ -1568,18 +1568,24 @@ When detecting user confusion, suggest:
   - `/atlas.impact` ✅ - 靜態影響分析（已完成，2025-11-25）
   - `/atlas.init` ✅ - 專案初始化（已完成，2025-11-30）
   - **多語言支援**: iOS (34), Kotlin (31), Python (26), TypeScript/React/Vue (50) = 141 patterns
-- v2.6.0 🔵 - 時序分析 (設計完成，準備實作)
-  - `/atlas.history` 🔵 - Git 歷史分析（設計確定，2025-11-30）
-  - **目標用戶**: Legacy Codebase 接手者
+- v2.6.0 ✅ - 時序分析完成
+  - `/atlas.history` ✅ - Git 歷史分析（已完成，2025-11-30）
   - **核心輸出**: Hotspots + Coupling + Recent Contributors
+- v2.7.0 ✅ - Flow 分析完成
+  - `/atlas.flow` ✅ - 流程追蹤（已完成，2025-12-01）⭐
+  - **11 種分析模式**：語言專屬入口點偵測
+  - **10 種邊界類型**：API, DB, LIB, LOOP, MQ, CLOUD, AUTH, PAY, FILE, PUSH
+  - **入口點識別準確率**: 60% → 90%
 - **完整三階段分析**：使用 `PROMPTS.md` 手動執行（深度盡職調查場景）
+
+**決策記錄** (2025-12-01):
+- ✅ `/atlas.flow` P0-A 準確性改善：語言專屬模式 + 信心評分
 
 **決策記錄** (2025-11-30):
 - ✅ 命名決定：`/atlas.history`（3 票勝出，直覺、跨平台通用）
 - ✅ 設計決定：單一命令 + 智慧輸出（零參數優先，利於跨平台移植）
 - ✅ 移除 `/atlas.expert` - 對 Legacy 接手者價值低（原作者可能已離職）
 - ✅ 政治友善設計：顯示「Recent Contributors」而非「Ownership %」
-- ✅ 目標用戶確定：Legacy Codebase 接手者（最高價值場景）
 
 **決策記錄** (2025-11-25):
 - ✅ 取消 `/atlas.find` - 功能已由現有 3 個 commands 涵蓋
