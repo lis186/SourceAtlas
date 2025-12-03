@@ -10,7 +10,7 @@
 
 **當前狀態**：
 - **v1.0** ✅ - 方法論驗證完成（2025-11-22）
-- **v2.6.0** ✅ - Commands 架構完成，含時序分析（2025-11-30）
+- **v2.7.0** ✅ - Commands 架構完成，含流程追蹤（2025-12-01）
 
 ## 架構
 
@@ -58,7 +58,7 @@ sourceatlas2/
 ├── README.md               # 使用者文檔（中文）
 ├── CLAUDE.md               # 本檔案 - AI 協作指南
 ├── PROMPTS.md              # 所有 3 個階段的完整 prompt 模板
-├── PRD.md                  # 產品需求（v2.5 Commands 架構）
+├── PRD.md                  # 產品需求（v2.7 Commands 架構）
 ├── USAGE_GUIDE.md          # 詳細使用說明
 ├── GLOBAL_INSTALLATION.md  # 全局安裝指南
 │
@@ -72,7 +72,7 @@ sourceatlas2/
 │
 ├── proposals/              # ✅ 功能提案（未實作功能）⭐
 │   ├── README.md           # 提案索引
-│   └── code-maat-integration/  # code-maat 整合設計 (v2.6 候選)
+│   └── code-maat-integration/  # code-maat 整合設計 (已實作於 v2.6)
 │       ├── SOURCEATLAS_CODEMAAT_INTEGRATION.md
 │       ├── CODE_MAAT_FORMAT_CHEATSHEET.md
 │       ├── PERFORMANCE_CONSIDERATIONS.md
