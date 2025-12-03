@@ -1,160 +1,168 @@
 # SourceAtlas Roadmap
 
-**Current Status**: v2.5.4 Multi-Language Patterns Complete ✅
-**Last Updated**: 2025-11-30
+**Current Status**: v2.7.0 Complete ✅
+**Last Updated**: 2025-12-03
 **Pattern Count**: 141 patterns (iOS 34, TypeScript/React/Vue 50, Android/Kotlin 31, Python 26)
 
 ---
 
-## 🎯 Immediate Actions (This Week)
+## 🎯 Current Release: v2.7.0 ✅
 
-### Phase 1 - Pattern Detection (Week 1) ✅ COMPLETE
-- [x] `/atlas.pattern` command
-- [x] `find-patterns.sh` script (ultra-fast version)
-- [x] Multi-project validation
+### Core Commands (6/6 Complete)
 
-### Phase 2 - Pattern System Optimization (Week 2-4) ✅ COMPLETE
-- [x] TypeScript patterns expansion (13→22→50)
-- [x] iOS patterns consolidation (34→29→34)
-- [x] Objective-C support (all 29 patterns)
-- [x] Patterns audit & cleanup
-- [x] Kotlin/Android patterns (31 patterns) ✅ (2025-11-30)
-- [x] Python patterns (26 patterns) ✅ (2025-11-30)
-- [x] React/Vue patterns expansion (50 patterns) ✅ (2025-11-30)
+| Command | Purpose | Completed |
+|---------|---------|-----------|
+| `/atlas.init` | Project initialization | 2025-11-30 |
+| `/atlas.overview` | Project fingerprint | 2025-11-20 |
+| `/atlas.pattern` | Learn patterns | 2025-11-22 |
+| `/atlas.impact` | Impact analysis | 2025-11-25 |
+| `/atlas.history` | Git temporal analysis | 2025-11-30 |
+| `/atlas.flow` | Flow tracing (11 modes) | 2025-12-01 |
 
-### Phase 3 - Core Commands (Week 5-8) ✅ COMPLETE
-- [x] `/atlas.overview` command (Stage 0) ✅ (2025-11-20)
-- [x] Command architecture simplification ✅ (2025-11-24)
-- [x] `/atlas.impact` command (change impact) ✅ (2025-11-25)
-- [x] `/atlas.init` command (auto-trigger rules) ✅ (2025-11-30)
-- [x] ~~`/atlas.find`~~ 已取消 - 功能由現有 commands 涵蓋 (2025-11-25)
+### Multi-Language Patterns (141 Total)
 
-### Phase 4 - Testing & Polish (Week 9-16) ✅ COMPLETE
-- [x] Comprehensive testing ✅ (2025-11-30) - 90% pass rate, 9/10 tests
-- [x] Documentation update ✅ (2025-11-30) - Plugin sync, PROMPTS.md, version unification
-- [x] Performance optimization ✅ (2025-11-30) - Current performance sufficient
-- [x] v2.5.4 Release ✅ (2025-11-30) - 141 patterns across 4 languages
+| Language | Patterns | Tier 1 | Tier 2 |
+|----------|----------|--------|--------|
+| iOS/Swift | 34 | 16 | 18 |
+| TypeScript/React/Vue | 50 | 25 | 25 |
+| Android/Kotlin | 31 | 12 | 19 |
+| Python | 26 | 12 | 14 |
 
 ---
 
-## 📅 Timeline
+## 📅 v2.8 Planning (Next)
 
-### v2.5.4 (Current) ✅ COMPLETE
+### Priority P0 - Must Do
 
-**Week 1-4** ✅ (11/20-11/23):
-- Pattern Detection System
-- Multi-language Support
-- Pattern Optimization
+#### 1. Language Expansion
+**Goal**: Add 60+ patterns for 2 more languages
 
-**Week 5-8** ✅ (11/25-11/30):
-- Core Commands Implementation (4/4 complete)
-- Kotlin/Android patterns (31 patterns)
-- Python patterns (26 patterns)
-- TypeScript/React/Vue patterns (50 patterns)
+**Candidates** (choose 2):
+| Language | Use Case | Difficulty |
+|----------|----------|------------|
+| **Go** | Backend, CLI, K8s | Medium |
+| **Rust** | Systems, WASM | High |
+| **Ruby** | Rails, Scripts | Low |
+| **PHP** | Laravel, WordPress | Low |
 
-**Week 9-12** ✅:
-- Advanced Commands (`/atlas.init`, `/atlas.impact`)
-- Performance Tuning (current performance sufficient)
-- User Documentation (complete)
+**Recommendation**: Start with Go + Ruby (broader coverage, lower risk)
 
-**Week 13-16** ✅:
-- Final Testing (90% pass rate)
-- Bug Fixes (Vue directive pattern, path-based patterns)
-- v2.5.4 Release (141 patterns across 4 languages)
+#### 2. `/atlas.flow` Improvements
+Based on P0-A implementation (2025-12-01):
 
-### v2.6 (Future Vision)
+| Feature | Impact | Effort |
+|---------|--------|--------|
+| AST analysis | High accuracy | High |
+| Import graph | Cross-file tracing | Medium |
+| Pattern learning | Project-specific | Medium |
 
-**`/atlas.history` - 智慧時序分析** ⭐ (2025-11-30 設計完成)
-- 單一命令 + 零參數優先 + 智慧輸出
-- 核心功能：Hotspots、Coupling、Recent Contributors
-- 目標用戶：Legacy Codebase 接手者
-- 使用 code-maat 進行 Git 歷史分析
+### Priority P1 - Should Do
 
-**SourceAtlas Monitor**:
-- Continuous tracking
-- Trend analysis
-- Health dashboard
+#### 3. SourceAtlas Monitor
+**Concept**: Continuous health tracking
 
-**Technical Debt Quantification**:
-- Automated debt detection
-- Refactoring suggestions
-- Priority ranking
+**MVP Features**:
+- Weekly health snapshot
+- Hotspot trend tracking
+- Bus factor alerts
+- Technical debt score
 
-**Multi-Repository Support**:
-- Monorepo analysis
-- Cross-project patterns
-- Dependency mapping
+**Decision**: Evaluate after v2.7 user feedback
 
----
+#### 4. User Feedback Collection
+- [ ] Publish release notes
+- [ ] Create feedback form
+- [ ] Track real usage
+- [ ] Identify top pain points
 
-## 🔥 v2.6 Planning
+### Priority P2 - Nice to Have
 
-### Priority P0 (Must Do) ⭐
-1. **`/atlas.history`** - 智慧時序分析（設計完成 2025-11-30）
-2. **Go/Rust patterns** - 新增語言支援
-3. **Ruby/PHP patterns** - 擴展 web 框架支援
-
-### Priority P1 (Should Do)
-4. SourceAtlas Monitor - 持續追蹤
-5. 技術債務量化
-6. Collect user feedback
-
-### Priority P2 (Nice to Have)
-7. Health dashboard
-8. Performance benchmarking
-9. Pattern statistics dashboard
-
-### Completed Technical Debt 🔧 ✅
-- [x] Plugin 同步：更新 `plugin/` 以匹配已實作的 4 個 commands (init, overview, pattern, impact) ✅ (2025-11-30)
-- [x] PROMPTS.md 更新：新增 v2.5 Commands 區段，保留手動 Prompts 用於深度分析 ✅ (2025-11-30)
-- [x] TypeScript/React/Vue patterns (50 patterns) ✅ (2025-11-30)
+- Performance dashboard
+- Pattern statistics
+- Monorepo support
+- Cross-repo analysis
+- `/atlas.standup` - GitLab MR integration
 
 ---
 
 ## 📊 Progress Tracking
 
 ### Completed Milestones ✅
-- [x] v1.0 Methodology Validation (2025-10-22)
-- [x] YAML Format Decision (2025-11-20)
-- [x] Atlas Overview Command (2025-11-20)
-- [x] Atlas Pattern Command (2025-11-22)
-- [x] TypeScript Patterns Expansion (2025-11-23)
-- [x] iOS Patterns Consolidation (2025-11-23)
-- [x] Objective-C Support (2025-11-23)
-- [x] Command Architecture Simplification (2025-11-24)
-- [x] Version Number Unification (2025-11-24)
-- [x] Atlas Impact Command (2025-11-25)
-- [x] Time Estimation Decision (2025-11-25)
-- [x] Atlas Init Command (2025-11-30)
-- [x] Kotlin/Android Patterns - 31 patterns (2025-11-30)
-- [x] Python Patterns - 26 patterns (2025-11-30)
-- [x] TypeScript/React/Vue Patterns - 50 patterns (2025-11-30)
-- [x] v2.5.4 Release - 141 patterns across 4 languages (2025-11-30)
+
+| Date | Milestone | Impact |
+|------|-----------|--------|
+| 2025-12-01 | v2.7.0 Release | 6 commands + `/atlas.flow` |
+| 2025-11-30 | `/atlas.history` | Git temporal analysis |
+| 2025-11-30 | 141 patterns | 4 language support |
+| 2025-11-25 | `/atlas.impact` | Change analysis |
+| 2025-11-22 | v1.0 Complete | Methodology validated |
+| 2025-11-20 | YAML Decision | Standard > optimization |
 
 ### In Progress 🔵
-- [ ] v2.6 Planning
-- [x] `/atlas.history` design (2025-11-30) ✅
-- [ ] Go/Rust patterns research
 
-### Blocked ❌
-- None
+- [ ] v2.8 Planning finalization
+- [ ] User feedback collection
+- [ ] Documentation sync
 
----
+### Upcoming 📋
 
-## 🎓 Lessons Learned
-
-從 v1.0 到當前的關鍵學習：
-
-1. **資訊理論有效**: <5% 掃描確實能達 70-80% 理解
-2. **規模感知重要**: 不同大小專案需要不同策略
-3. **標準優於優化**: YAML > TOON（+14% tokens 但生態系統好）
-4. **混合專案挑戰**: Swift/ObjC 需要特殊處理
-5. **Pattern 一致性**: 跨語言命名慣例相似度高
-6. **使用場景驅動設計** (2025-11-24): 從真實場景倒推功能需求，發現 `/atlas` 無實際使用場景
-7. **命令命名重要性** (2025-11-24): 技術性命名（如 "coupling"）不易理解，發現重疊後果斷簡化
-8. **跨工具可移植性** (2025-11-30): 零參數設計適合移植到 Cursor, Copilot, Windsurf 等 AI 工具
-9. **政治敏感度考量** (2025-11-30): 用「Recent Contributors」取代「Ownership %」避免團隊爭議
+- [ ] Go patterns research
+- [ ] Ruby patterns research
+- [ ] `/atlas.flow` AST integration
 
 ---
 
-**Next Review**: 每週日更新進度
+## 🎓 Key Learnings
+
+From v1.0 to v2.7.0:
+
+1. **Information Theory Works**: <5% scan achieves 70-80% understanding
+2. **Scale Awareness Matters**: Different project sizes need different strategies
+3. **Standard > Optimization**: YAML ecosystem > 14% token savings
+4. **Language-Specific Patterns**: Generic patterns don't achieve high accuracy
+5. **Zero-Parameter Design**: Better portability across AI tools
+6. **Political Sensitivity**: "Recent Contributors" > "Ownership %"
+7. **Confidence Scoring**: Helps users trust results appropriately
+
+---
+
+## 🔧 Technical Debt
+
+### Resolved ✅
+- [x] Plugin sync (4 → 6 commands)
+- [x] PROMPTS.md update
+- [x] Version unification
+- [x] Vue directive pattern fix
+- [x] Path-based patterns removal
+
+### Remaining
+- [ ] Linux compatibility testing
+- [ ] Performance benchmarking
+- [ ] Error message improvements
+
+---
+
+## 📈 Success Metrics
+
+### v2.7.0 (Achieved) ✅
+- [x] 6 core commands
+- [x] 141 patterns
+- [x] Entry point accuracy >90%
+- [x] 10 boundary types
+
+### v2.8.0 (Targets)
+- [ ] 200+ patterns (+60)
+- [ ] 6 languages supported (+2)
+- [ ] AST-based flow analysis
+- [ ] User satisfaction >4/5
+
+### Long-term Vision
+- [ ] 300+ patterns (8+ languages)
+- [ ] Real-time monitoring
+- [ ] IDE plugin integration
+- [ ] Team collaboration features
+
+---
+
+**Next Review**: Weekly on Sunday
+**Contact**: Check issues at https://github.com/lis186/sourceatlas

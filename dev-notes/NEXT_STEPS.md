@@ -1,346 +1,169 @@
-# SourceAtlas v2 - Next Steps
+# SourceAtlas - Next Steps
 
-**Status**: v1.0 Complete → v2.5 Implementation Starting
-**Date**: 2025-11-22
-**Timeline**: 3-4 weeks to v2.5.3
-
----
-
-## 🎯 Start Here
-
-### Immediate Actions (Today/This Week)
-
-**Priority P0** - Start Immediately:
-
-```bash
-# 1. Create the most important command
-touch .claude/commands/atlas.pattern.md
-touch scripts/atlas/find-patterns.sh
-
-# 2. Implement pattern detection script
-vim scripts/atlas/find-patterns.sh
-# (See implementation roadmap for spec)
-
-# 3. Create the command
-vim .claude/commands/atlas.pattern.md
-# (See templates in PRD.md or implementation roadmap)
-
-# 4. Test on real project
-cd /path/to/test/project
-# Use: /atlas.pattern "api endpoint"
-# Use: /atlas.pattern "background job"
-```
-
-**Goal**: Get `/atlas.pattern` working by end of week
+**Status**: v2.7.0 Complete (2025-12-01)
+**Next Target**: v2.8.0
 
 ---
 
-## 📋 Phase 1 Checklist (Week 1)
+## Current State
 
-### Day 1-2: `/atlas.pattern` Implementation
+### Completed Features (v2.7.0)
 
-- [ ] **Create `find-patterns.sh`**
-  - [ ] Detect "api endpoint" pattern (routes, controllers)
-  - [ ] Detect "background job" pattern (job classes, queue configs)
-  - [ ] Detect "file upload" pattern (upload handlers, storage)
-  - [ ] Detect "database query" pattern (models, query builders)
-  - [ ] Detect "authentication" pattern (auth middleware, sessions)
-  - [ ] Return relevance-ranked file list
+**6 Core Commands**:
+| Command | Purpose | Status |
+|---------|---------|--------|
+| `/atlas.init` | Project initialization | ✅ |
+| `/atlas.overview` | Project fingerprint (Stage 0) | ✅ |
+| `/atlas.pattern` | Learn design patterns | ✅ |
+| `/atlas.impact` | Change impact analysis | ✅ |
+| `/atlas.history` | Git temporal analysis | ✅ |
+| `/atlas.flow` | Flow tracing (11 modes) | ✅ |
 
-- [ ] **Create `atlas-pattern.md` command**
-  - [ ] Integrate `find-patterns.sh`
-  - [ ] Extract pattern from 2-3 best examples
-  - [ ] Provide step-by-step implementation guide
-  - [ ] Include testing patterns
-  - [ ] Add common pitfalls section
-
-- [ ] **Test on 3 projects**
-  - [ ] cursor-talk-to-figma-mcp: "websocket integration"
-  - [ ] sourceatlas2: "bash script pattern"
-  - [ ] Any project: "api endpoint", "file upload"
-
-- [ ] **Document**
-  - [ ] Add usage examples to USAGE_GUIDE.md
-  - [ ] Create pattern library starter (templates/patterns.yaml)
-  - [ ] Add to README.md quick start
-
-### Day 3-5: `/atlas` Full Analysis
-
-- [ ] **Create `collect-git.sh`**
-  - [ ] Commit frequency and patterns
-  - [ ] File hotspots (most changed files)
-  - [ ] Timeline reconstruction
-  - [ ] AI collaboration indicators
-
-- [ ] **Create `atlas.md` command**
-  - [ ] Stage 0: Use existing `detect-project-enhanced.sh` + `scan-entropy.sh`
-  - [ ] Stage 1: Systematic hypothesis validation
-  - [ ] Stage 2: Git analysis using `collect-git.sh`
-  - [ ] Output YAML (Stage 0) + Markdown (Stage 1/2)
-
-- [ ] **Migrate output format**
-  - [ ] Change Stage 0 output from TOON to YAML
-  - [ ] Update templates in templates/
-  - [ ] Test backward compatibility
-
-- [ ] **Integration test**
-  - [ ] Test on cursor-talk-to-figma-mcp (SMALL)
-  - [ ] Verify all 3 stages complete
-  - [ ] Check understanding targets (70%/85%/95%)
-
-### Day 6-7: Documentation & Review
-
-- [ ] **Update documentation**
-  - [ ] README.md: Add v2.5 features
-  - [ ] USAGE_GUIDE.md: Add Commands usage
-  - [ ] PRD.md: Update implementation status
-
-- [ ] **Review Phase 1**
-  - [ ] Are commands useful in practice?
-  - [ ] What's the actual usage frequency?
-  - [ ] Any performance issues?
-  - [ ] What patterns are requested most?
+**Multi-Language Support** (141 patterns):
+- iOS/Swift: 34 patterns
+- Kotlin/Android: 31 patterns
+- Python: 26 patterns
+- TypeScript/React/Vue: 50 patterns
 
 ---
 
-## 📅 Remaining Phases (Quick Reference)
+## v2.8 Planning
 
-### Phase 2: Impact Analysis (Week 2, Days 1-4)
+### Priority P0 - Language Expansion
 
-**Deliverable**: `/atlas.impact`
+**Goal**: Expand pattern support to more languages
 
-**Key Tasks**:
-- Create `analyze-dependencies.sh`
-- Create `atlas-impact.md` command
-- Test on function/model/API changes
-- Create migration checklist templates
+**Candidates**:
+1. **Go** - Backend services, CLI tools
+2. **Rust** - Systems programming, WebAssembly
+3. **Ruby** - Rails ecosystem
+4. **PHP** - Laravel, WordPress
 
-### Phase 3: Quick Tools (Week 2, Days 5-7)
+**Approach** (per language):
+1. Research: Identify 10+ test projects
+2. Analysis: Extract common patterns
+3. Implementation: Tier 1 (10-15) + Tier 2 (10-15)
+4. Validation: Test on 5+ projects
 
-**Deliverables**: `/atlas.find`, `/atlas.explain`
+### Priority P0 - `/atlas.flow` Improvements
 
-**Key Tasks**:
-- Create `atlas-find.md` (smart search)
-- Create `atlas-explain.md` (deep dive)
-- Optional: `smart-search.sh` script
+Based on `2025-12-01-atlas-flow-p0a-implementation.md`:
 
-### Phase 4: Polish & Launch (Week 3-4)
+- [ ] AST analysis integration (higher accuracy)
+- [ ] Cross-file tracing (import graph)
+- [ ] Dynamic pattern learning
+- [ ] More language support in flow analysis
 
-**Deliverables**: v2.5.3 Release
+### Priority P1 - SourceAtlas Monitor
 
-**Key Tasks**:
-- Real-world testing (5+ projects)
-- Complete documentation
-- Performance optimization
-- Bug fixes
-- Launch prep
+**Concept**: Continuous codebase health tracking
 
----
+**Features**:
+- Automated trend analysis
+- Health dashboard
+- Technical debt quantification
+- Refactoring suggestions
 
-## 🎯 Success Criteria
+**Decision Point**: Evaluate after user feedback on v2.7
 
-**Phase 1 Complete When**:
-- [x] `/atlas.pattern` returns actionable guidance in <10 min
-- [x] Works on 3+ different pattern types
-- [x] `/atlas` completes all 3 stages successfully
-- [x] Documentation updated
-- [x] No critical bugs
+### Priority P1 - User Feedback
 
-**v2.5.3 Release Ready When**:
-- [x] All 5 commands implemented and tested
-- [x] All 5 scripts working cross-platform
-- [x] 5+ real projects tested successfully
-- [x] Documentation complete and accurate
-- [x] User feedback >4/5 (if available)
+- [ ] Publish v2.7.0 release notes
+- [ ] Collect usage feedback
+- [ ] Identify pain points
+- [ ] Prioritize improvements
 
----
+### Priority P2 - Nice to Have
 
-## 🚀 Fast Track Option
-
-**If time is limited**, prioritize in this order:
-
-1. **Week 1**: `/atlas.pattern` only (P0) ⭐⭐⭐⭐⭐
-   - Most important command
-   - Immediate value
-   - Daily use expected
-
-2. **Week 2**: `/atlas.overview` refinement + `/atlas`
-   - Complete analysis capability
-   - Builds on v1.0 work
-
-3. **Later**: Impact analysis and quick tools
-   - Nice-to-have
-   - Can ship incrementally
+- Performance benchmarking dashboard
+- Pattern statistics visualization
+- Cross-repository analysis
+- Monorepo support
 
 ---
 
-## 📊 Tracking Progress
+## Immediate Actions
 
-### Daily Standup Questions
+### This Week
 
-1. What did I ship yesterday?
-2. What am I shipping today?
-3. Any blockers?
+1. **Documentation Sync** (Current)
+   - [x] Update NEXT_STEPS.md (this file)
+   - [ ] Update ROADMAP.md
+   - [ ] Update PRD.md version status
+   - [ ] Update HISTORY.md statistics
 
-### Weekly Review Questions
+2. **Release Preparation**
+   - [ ] Finalize v2.7.0 changelog
+   - [ ] Update README.md with new features
+   - [ ] Prepare release announcement
 
-1. Did we meet phase goals?
-2. What worked well?
-3. What needs adjustment?
-4. Should we adapt the plan?
+### Next Week
 
-### Metrics to Track
+Choose one focus area:
 
-- [ ] Commands implemented: 1/5 (`/atlas.overview` done)
-- [ ] Scripts implemented: 2/5 (detect-project-enhanced, scan-entropy done)
-- [ ] Projects tested: 5/5 (v1 testing done)
-- [ ] Documentation pages updated: 0/4
+**Option A: Language Expansion**
+- Start Go patterns research
+- Clone 5+ Go projects for testing
+- Draft Tier 1 pattern list
 
----
+**Option B: Flow Improvements**
+- Research AST parsing options
+- Prototype import graph analysis
+- Benchmark accuracy improvements
 
-## 🔗 Key Resources
-
-**Implementation Details**:
-- [Implementation Roadmap](./implementation-roadmap.md) - Complete plan
-- [PRD v2.5.3](PRD.md) - Product requirements
-- [PROMPTS.md](PROMPTS.md) - Stage 0/1/2 prompts (reference for `/atlas`)
-
-**v1.0 Learnings**:
-- [Implementation Log](./v1-implementation-log.md) - What we learned
-- [TOON vs YAML Analysis](./toon-vs-yaml-analysis.md) - Format decision
-
-**Existing Work**:
-- `.claude/commands/atlas.overview.md` - Working Stage 0 command
-- `scripts/atlas/detect-project-enhanced.sh` - Scale-aware detection
-- `scripts/atlas/scan-entropy.sh` - High-entropy file scanner
+**Option C: Monitor Planning**
+- Design data model for tracking
+- Prototype health metrics
+- Define MVP scope
 
 ---
 
-## 💡 Tips for Implementation
+## Decision Log
 
-### Pattern Detection Strategy
-
-**Good patterns have**:
-- Clear file naming conventions (e.g., `*Controller.ts`, `*Job.rb`)
-- Consistent directory structure (e.g., `app/controllers/`, `jobs/`)
-- Recognizable imports/requires
-- Similar method signatures
-
-**Start with**:
-1. File name patterns (glob)
-2. Directory structure (find)
-3. Content patterns (grep)
-4. Rank by relevance (count occurrences)
-
-### Command Design Principles
-
-**Keep commands focused**:
-- One clear purpose per command
-- Time limit: 5-15 minutes max
-- Output actionable, not exhaustive
-
-**Use scripts for data collection**:
-- Scripts collect, AI interprets
-- Keep scripts simple and fast (<5 sec)
-- Return raw data, not conclusions
-
-**Provide context**:
-- Show file:line references
-- Explain "why" not just "what"
-- Give next steps
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2025-12-01 | v2.7.0 Complete | 6 commands + 141 patterns |
+| 2025-11-30 | `/atlas.find` Cancelled | Covered by existing commands |
+| 2025-11-25 | Remove time estimates | Provide facts, not predictions |
+| 2025-11-24 | YAML > TOON | Ecosystem > 14% optimization |
 
 ---
 
-## 🚨 Watch Out For
+## Success Metrics
 
-### Common Pitfalls
+### v2.7.0 (Achieved)
+- [x] 6 core commands implemented
+- [x] 141 patterns across 4 languages
+- [x] `/atlas.flow` accuracy >90%
+- [x] Multi-project validation
 
-1. **Over-engineering**
-   - Start simple, add complexity as needed
-   - YAGNI (You Aren't Gonna Need It)
-
-2. **Platform-specific scripts**
-   - Test on macOS AND Linux
-   - Use POSIX-compliant bash
-   - Avoid GNU-specific flags
-
-3. **Too generic patterns**
-   - Be specific to codebase patterns
-   - Learn from 2-3 examples, not 1
-   - Avoid over-abstracting
-
-4. **Documentation drift**
-   - Update docs as you code, not after
-   - Keep examples real and tested
-   - PRD should match reality
-
-### Red Flags
-
-⚠️ **Stop and reassess if**:
-- Command takes >15 minutes
-- Pattern detection gives irrelevant results
-- Scripts fail on different platforms
-- Documentation is confusing
-- Real usage doesn't match expectations
+### v2.8.0 (Targets)
+- [ ] 200+ patterns (add 2 more languages)
+- [ ] `/atlas.flow` AST integration
+- [ ] User feedback >4/5 rating
+- [ ] Real-world usage data collected
 
 ---
 
-## ✅ Definition of Done
+## Quick Reference
 
-**For Each Command**:
-- [ ] Command file exists in `.claude/commands/`
-- [ ] Supporting scripts (if any) in `scripts/atlas/`
-- [ ] Tested on 3+ projects
-- [ ] Examples in USAGE_GUIDE.md
-- [ ] No critical bugs
-- [ ] Meets time/quality targets
+**Key Files**:
+- Commands: `.claude/commands/atlas.*.md`
+- Scripts: `scripts/atlas/*.sh`
+- Patterns: `scripts/atlas/find-patterns.sh`
 
-**For v2.5.3 Release**:
-- [ ] 5 commands: atlas-overview ✅, atlas-pattern, atlas-impact, atlas, atlas-find, atlas-explain
-- [ ] 5 scripts: detect-project-enhanced ✅, scan-entropy ✅, find-patterns, collect-git, analyze-dependencies
-- [ ] Real-world validation on 5+ projects
-- [ ] Complete documentation
-- [ ] PRD updated with actual status
+**Key Docs**:
+- [PRD.md](../PRD.md) - Product requirements
+- [ROADMAP.md](./ROADMAP.md) - Timeline and milestones
+- [HISTORY.md](./HISTORY.md) - Development history
+- [KEY_LEARNINGS.md](./KEY_LEARNINGS.md) - Core insights
 
----
-
-## 🎬 Getting Started Script
-
-Copy-paste this to start Phase 1:
-
-```bash
-# Navigate to project
-cd ***REMOVED***
-
-# Create Phase 1 files
-touch .claude/commands/atlas.pattern.md
-touch scripts/atlas/find-patterns.sh
-chmod +x scripts/atlas/find-patterns.sh
-
-# Open for editing
-code .claude/commands/atlas.pattern.md scripts/atlas/find-patterns.sh
-
-# (Implement based on specs in implementation-roadmap.md)
-
-# Test on sample project
-cd ***REMOVED***/dev/cursor-talk-to-figma-mcp
-# Use: /atlas.pattern "websocket integration"
-
-# Document results
-cd ***REMOVED***
-# Update USAGE_GUIDE.md with examples
-```
+**Test Projects** (in `test_targets/`):
+- iOS: Signal-iOS, wikipedia-ios
+- Android: nowinandroid, tivi
+- Python: Django, FastAPI
+- TypeScript: Excalidraw, Mantine
 
 ---
 
-**Ready to start? Begin with Phase 1, Day 1: Create `find-patterns.sh`** 🚀
-
-**Questions? Check**:
-- Implementation Roadmap for detailed specs
-- PRD for design decisions
-- v1 Implementation Log for lessons learned
-
-**Need help? Review**:
-- Existing `/atlas.overview` command for reference
-- PROMPTS.md for Stage 0/1/2 structure
-- Test results for validation approach
+**Last Updated**: 2025-12-03 (v2.7.0)
