@@ -30,6 +30,15 @@
 - 核心輸出：變動熱點、隱藏依賴、知識分佈、Bus Factor 風險
 → 檔案：`scripts/atlas/history.sh`, `.claude/commands/atlas.history.md`
 
+**`install-codemaat.sh` 安裝腳本** (11/30):
+- **安裝前先詢問**：使用 AskUserQuestion 工具取得用戶許可，不會未經同意自動安裝
+- 一鍵安裝 code-maat v1.0.4 到 `~/.sourceatlas/bin/`
+- 自動檢測 Java 版本（需 8+）
+- 自動配置環境變數（CODEMAAT_JAR）到 shell config
+- 支援 `--check`（檢查狀態）、`--remove`（解除安裝）
+- 支援 curl 或 wget 下載
+→ 檔案：`scripts/install-codemaat.sh`
+
 **TypeScript/React/Vue Patterns 擴展完成** (11/30):
 - 完成 50 個 patterns（25 Tier 1 + 25 Tier 2），pattern 總數達 141
 - **React Tier 1 (18)**: component, hook, context, hoc, error boundary, suspense, portal, lazy, ref, zustand, tanstack query, redux, framer motion, form hook, jest test, storybook, i18n, theme
