@@ -198,6 +198,19 @@ To implement similar functionality following this codebase's pattern:
 
 ---
 
+## Recommended Next
+
+<!-- 根據分析發現動態建議，省略此區塊若滿足結束條件 -->
+
+| # | 命令 | 用途 |
+|---|------|------|
+| 1 | `/atlas.flow "[入口點]"` | [基於發現的理由] |
+| 2 | `/atlas.impact "[檔案]"` | [基於發現的理由] |
+
+💡 輸入數字（如 `1`）或複製命令執行
+
+---
+
 ## Additional Notes
 
 [Any project-specific quirks, gotchas, or important context that doesn't fit above]
@@ -242,6 +255,48 @@ To implement similar functionality following this codebase's pattern:
 **If pattern is too generic:**
 1. Ask user to clarify what specific aspect they're interested in
 2. Provide examples of more specific patterns they could ask about
+
+---
+
+## Handoffs 判斷規則
+
+> 遵循 **Constitution Article VII: Handoffs 原則**
+
+### 結束條件（省略 `Recommended Next`）
+
+根據 Section 7.2，滿足以下任一條件時省略：
+- **Pattern 很簡單**：無複雜流程或依賴
+- **發現太模糊**：無法給出高信心（>0.7）的具體參數
+- **分析深度足夠**：已執行 4+ 個命令
+
+省略時提供結束提示：
+```markdown
+✅ **Pattern 分析完成** - 可按照上述 Step-by-Step Guide 開始實作
+```
+
+### 建議選擇（根據發現）
+
+| 發現 | 建議命令 | 參數來源 |
+|------|---------|---------|
+| 與其他 patterns 高度相關 | `/atlas.pattern` | 相關 pattern 名稱 |
+| Pattern 涉及複雜流程 | `/atlas.flow` | 入口點檔案 |
+| 在多處使用，有風險 | `/atlas.impact` | 核心檔案名 |
+| 需了解變動歷史 | `/atlas.history` | 可選：相關目錄 |
+
+### 輸出格式（Section 7.3）
+
+使用編號表格：
+```markdown
+| # | 命令 | 用途 |
+|---|------|------|
+| 1 | `/atlas.flow "LoginService"` | Pattern 涉及 3 層調用，需追蹤完整流程 |
+```
+
+### 品質要求（Section 7.4-7.5）
+
+- **參數具體**：如 `"repository"` 非 `"相關 pattern"`
+- **數量限制**：1-2 個建議，不強制填滿
+- **用途欄位**：引用具體發現（使用次數、檔案名、問題）
 
 ---
 

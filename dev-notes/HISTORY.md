@@ -6,6 +6,27 @@
 
 ## 2025-12（當前月份）
 
+### Week 1 (12/06): v2.8.1 Release - Handoffs 完成 ⭐⭐⭐⭐⭐
+
+**Constitution v1.1 + Handoffs 原則完成** (12/06):
+- 新增 Article VII: Handoffs 原則（5 個 Sections）
+  - Section 7.1: 發現驅動
+  - Section 7.2: 結束條件（4 種條件）
+  - Section 7.3: 建議數量（Primary 必須，Secondary 可選）
+  - Section 7.4: 參數品質（具體、非泛泛）
+  - Section 7.5: 理由品質（引用具體發現）
+- 更新所有 5 個 atlas 命令模板，引用 Constitution Article VII
+- 測試：9 個專案 × 3 種開發者 = 27 個場景，95%+ 成熟度
+→ 相關檔案：`ANALYSIS_CONSTITUTION.md`, `.claude/commands/atlas.*.md`
+
+**測試結果**:
+| 指標 | 結果 |
+|------|------|
+| 結束條件觸發率 | 100% |
+| Secondary 省略率 | 33% (符合預期) |
+| 參數品質 | 100% 具體 |
+| 理由品質 | 100% 引用具體發現 |
+
 ### Week 1 (12/05): v2.8.0 Release - Constitution v1.0 ⭐⭐⭐⭐⭐
 
 **Constitution v1.0 實作完成** (12/05):
@@ -195,6 +216,7 @@
 
 | 日期 | 事件 | 影響 | 連結 |
 |------|------|------|------|
+| 2025-12-06 | **Constitution v1.1 + Handoffs** | 發現驅動動態建議，95%+ 成熟度 | - |
 | 2025-12-05 | **Constitution v1.0** | 品質框架，+3900% 證據精確度 | [詳細](./2025-12/2025-12-05-constitution-quality-comparison-report.md) |
 | 2025-11-30 | TypeScript/React/Vue Patterns | 50 patterns, 141 total | - |
 | 2025-11-30 | Kotlin/Android Patterns | 31 patterns, 8 專案驗證 | [詳細](./2025-11/2025-11-30-kotlin-patterns-implementation-report.md) |
@@ -234,4 +256,4 @@
 
 ---
 
-**最後更新**: 2025-12-05 (v2.8.0)
+**最後更新**: 2025-12-06 (v2.8.1)

@@ -587,9 +587,52 @@ interface UserResponse {
 
 ---
 
-## What's Next?
+## Recommended Next (Handoffs)
 
-After `/atlas.impact`, users can:
-- Use `/atlas.pattern` to learn how to implement changes consistently
-- Use `/atlas.overview` for broader context
-- Create migration plan based on the checklist
+> 遵循 **Constitution Article VII: Handoffs 原則**
+
+在輸出末尾加入：
+
+```markdown
+---
+
+## Recommended Next
+
+| # | 命令 | 用途 |
+|---|------|------|
+| 1 | `/atlas.flow "[入口點]"` | 影響鏈涉及 N 層調用，需追蹤完整流程 |
+| 2 | `/atlas.history "[目錄]"` | 此區域變動頻繁，需了解歷史模式 |
+
+💡 輸入數字（如 `1`）或複製命令執行
+```
+
+### 結束條件（省略 Recommended Next）
+
+根據 Section 7.2，滿足以下任一條件時省略：
+- **影響範圍很小**：<5 個依賴，不需進一步分析
+- **發現太模糊**：無法給出高信心（>0.7）的具體參數
+- **分析深度足夠**：已執行 4+ 個命令
+
+省略時提供結束提示：
+```markdown
+✅ **Impact 分析完成** - 可按照 Migration Checklist 開始修改
+```
+
+### 建議選擇（根據發現）
+
+| 發現 | 建議命令 | 參數來源 |
+|------|---------|---------|
+| 涉及特定 pattern | `/atlas.pattern` | pattern 名稱 |
+| 影響鏈複雜 | `/atlas.flow` | 入口點檔案 |
+| 需了解變動歷史 | `/atlas.history` | 相關目錄 |
+| 需要更廣泛背景 | `/atlas.overview` | 無需參數 |
+
+### 輸出格式（Section 7.3）
+
+使用編號表格，方便快速選擇。
+
+### 品質要求（Section 7.4-7.5）
+
+- **參數具體**：使用實際發現的檔案名或入口點
+- **數量限制**：1-2 個建議，不強制填滿
+- **用途欄位**：引用具體發現（依賴數、風險等級、問題）
