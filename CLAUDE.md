@@ -977,9 +977,9 @@ touch test-results.md
 
 ---
 
-## 當前狀態（v2.8.1）
+## 當前狀態（v2.8.2）
 
-基於 PRD v2.8.1、v1.0 學習和 Constitution v1.1：
+基於 PRD v2.8.2、v1.0 學習和 Constitution v1.1：
 
 ### ✅ 已完成 - 核心 6 Commands
 - [x] `/atlas.init` - 專案初始化（自動觸發規則）✅ (2025-11-30)
@@ -994,6 +994,7 @@ touch test-results.md
 - [x] **Article VII: Handoffs 原則** - 發現驅動的動態下一步建議 ✅ (2025-12-06)
 - [x] **validate-constitution.sh** - 自動化合規驗證 ✅ (2025-12-05)
 - [x] **Monorepo 偵測** - lerna/pnpm/nx/turborepo/npm workspaces ✅ (2025-12-05)
+- [x] **Branch-Aware 分析** - Git 分支/子目錄/Package 偵測 ✅ (2025-12-06) ⭐ NEW
 
 ### ✅ 已完成 - 多語言支援
 - [x] iOS/Swift - 34 patterns
@@ -1016,6 +1017,7 @@ touch test-results.md
 - (2025-12-05): **Constitution v1.0** 實作完成 - 7 Articles + 驗證腳本 + Monorepo 偵測
 - (2025-12-06): **Constitution v1.1** 實作完成 - 新增 Article VII: Handoffs 原則（5 Sections）
 - (2025-12-06): `/atlas.validate` 已取消 - 改為內建品質檢查（獨立命令過度工程化）
+- (2025-12-06): **Branch-Aware 分析** 實作完成 - 學習 spec-kit context-aware 設計
 
 **詳細路線圖**：見 [dev-notes/implementation-roadmap.md](./dev-notes/implementation-roadmap.md) 和 [PRD.md](./PRD.md)
 

@@ -43,6 +43,8 @@ The script will:
 - Determine project scale (TINY/SMALL/MEDIUM/LARGE/VERY_LARGE)
 - Recommend file scan limits (to stay <10%)
 - Suggest hypothesis targets (scale-aware)
+- **Detect context** (Git branch, monorepo subdirectory, package name)
+- **Suggest output path** based on context (e.g., `.specstory/analyses/packages-auth/`)
 
 **Scale-Aware Scan Limits**:
 - **TINY** (<5 files): Scan 1-2 files max (50% max to avoid over-scanning tiny projects)
@@ -146,6 +148,12 @@ metadata:
   scan_ratio: "[percentage]"
   project_scale: "[TINY|SMALL|MEDIUM|LARGE|VERY_LARGE]"
   constitution_version: "1.1"
+  # Branch-Aware Context (v2.8.2)
+  context:
+    git_branch: "[branch name or null]"
+    relative_path: "[path within repo or null]"
+    package_name: "[detected package name or null]"
+    output_path: "[suggested output directory]"
 
 project_fingerprint:
   project_type: "[WEB_APP|CLI|LIBRARY|MOBILE_APP|MICROSERVICE|MONOREPO]"
