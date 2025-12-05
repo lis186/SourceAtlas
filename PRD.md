@@ -56,10 +56,11 @@ v2.7 (已完成) - SourceAtlas Commands ✅
   ├─ Git 歷史時序分析
   └─ 141 個 patterns 支援
   ↓
-v2.8 (當前) - Constitution v1.0 ✅
+v2.8 (當前) - Constitution v1.0 + Handoffs ✅
   ├─ 分析品質框架（7 個 Articles）
   ├─ 自動化合規驗證
-  └─ Monorepo 偵測支援
+  ├─ Monorepo 偵測支援
+  └─ 🆕 發現驅動 Handoffs（動態下一步建議）
   ↓
 v2.9 (未來) - SourceAtlas Monitor
   ├─ 持續追蹤系統
@@ -1392,6 +1393,68 @@ curl -sSL https://github.com/adamtornhill/code-maat/releases/download/v1.0.4/cod
 ```
 
 **決策點**：根據 `/atlas.history` 的使用回饋決定是否建立完整 Monitor 系統
+
+---
+
+### v2.8.1 - 發現驅動 Handoffs 🔵 (規劃中)
+
+**目標**：根據分析發現，動態建議下一步命令
+
+**狀態**：🔵 規劃中
+
+**設計原則**：
+
+| 原則 | 說明 |
+|------|------|
+| **發現驅動** | 根據實際分析結果，而非靜態清單 |
+| **限制數量** | 最多 1-2 個建議，避免選擇疲勞 |
+| **具體參數** | 包含實際參數，如 `/atlas.pattern "repository"` |
+| **理由說明** | 說明為什麼這個建議相關 |
+
+**為什麼不用 spec-kit 的線性 handoffs？**
+
+spec-kit 是**線性工作流**：
+```
+specify → clarify → plan → tasks → implement
+```
+
+SourceAtlas 是**探索式工具**：
+```
+         ┌─ pattern ─┐
+overview ├─ flow ────┼─ (依情境)
+         ├─ history ─┤
+         └─ impact ──┘
+```
+
+**實作方案**：
+
+在每個命令的輸出末尾，根據發現動態生成建議：
+
+```yaml
+# /atlas.overview 輸出末尾範例
+recommended_next:
+  primary:
+    command: "/atlas.pattern \"repository\""
+    why: "發現 Repository pattern 在 5 個服務中使用，學習慣例確保一致性"
+  secondary:
+    command: "/atlas.history"
+    why: "專案規模 LARGE (15k LOC)，hotspot 分析可識別重構優先區"
+```
+
+**Handoffs 邏輯對照表**：
+
+| 發現 | 建議命令 | 理由 |
+|------|---------|------|
+| API/Controller patterns | `/atlas.pattern "api endpoint"` | 學習 API 設計慣例 |
+| 複雜架構（多層/微服務） | `/atlas.flow` | 追蹤關鍵流程 |
+| 專案規模 >= LARGE | `/atlas.history` | 找出 hotspots |
+| AI 協作等級 >= 3 | （無建議） | 可直接開發 |
+| 測試覆蓋低 | `/atlas.pattern "test"` | 學習測試慣例 |
+
+**成功指標**：
+- [ ] 建議準確率 >80%（用戶實際執行建議命令）
+- [ ] 每個命令輸出最多 2 個建議
+- [ ] 建議包含具體參數和理由
 
 ---
 
