@@ -1,10 +1,10 @@
-# SourceAtlas PRD v2.7.0
+# SourceAtlas PRD v2.8.0
 
 **AI-Powered Codebase Understanding Assistant**
 
-- **版本**: 2.7.0
-- **更新日期**: 2025-12-03
-- **狀態**: ✅ Released (v2.7.0 Complete)
+- **版本**: 2.8.0
+- **更新日期**: 2025-12-05
+- **狀態**: ✅ Released (v2.8.0 Complete)
 
 ---
 
@@ -23,6 +23,7 @@ SourceAtlas 是一個整合在 Claude Code 中的智慧型程式碼理解助手�
 - 🧠 **智慧理解**：AI 動態推理，而非靜態索引
 - ⚡ **工作流整合**：融入 Claude Code，無縫使用
 - 🛠️ **輕量設計**：Scripts 收集資料，AI 負責理解
+- 📜 **品質保證**：Constitution v1.0 確保分析品質一致性
 
 ---
 
@@ -49,13 +50,18 @@ SourceAtlas 是一個整合在 Claude Code 中的智慧型程式碼理解助手�
 ```
 v2.0 (已完成) - 手動 Prompts 方法論
   ↓
-v2.6 (當前) - SourceAtlas Commands ✅
+v2.7 (已完成) - SourceAtlas Commands ✅
   ├─ Claude Code Commands 整合
-  ├─ 5 個核心命令完成
+  ├─ 6 個核心命令完成
   ├─ Git 歷史時序分析
   └─ 141 個 patterns 支援
   ↓
-v2.7 (未來) - SourceAtlas Monitor
+v2.8 (當前) - Constitution v1.0 ✅
+  ├─ 分析品質框架（7 個 Articles）
+  ├─ 自動化合規驗證
+  └─ Monorepo 偵測支援
+  ↓
+v2.9 (未來) - SourceAtlas Monitor
   ├─ 持續追蹤系統
   ├─ 歷史趨勢分析
   └─ 健康度儀表板
@@ -1559,7 +1565,7 @@ When detecting user confusion, suggest:
 
 ## 版本資訊
 
-**當前版本**: v2.7.0 (2025-12-01)
+**當前版本**: v2.8.0 (2025-12-05)
 
 **開發狀態**：
 - v1.0 ✅ - 方法論驗證完成（5 專案測試）
@@ -1577,7 +1583,16 @@ When detecting user confusion, suggest:
   - **11 種分析模式**：語言專屬入口點偵測
   - **10 種邊界類型**：API, DB, LIB, LOOP, MQ, CLOUD, AUTH, PAY, FILE, PUSH
   - **入口點識別準確率**: 60% → 90%
+- v2.8.0 ✅ - Constitution v1.0 品質框架 ⭐ NEW
+  - **Constitution v1.0** ✅ - 分析行為的不可變原則（已完成，2025-12-05）
+  - **validate-constitution.sh** ✅ - 自動化合規驗證
+  - **Monorepo 偵測** ✅ - lerna/pnpm/nx/turborepo/npm workspaces
+  - **品質改進**: +3900% file:line 引用、-63% 輸出行數、-95% 驗證成本
 - **完整三階段分析**：使用 `PROMPTS.md` 手動執行（深度盡職調查場景）
+
+**決策記錄** (2025-12-05):
+- ✅ Constitution v1.0 實作：學習 spec-kit 的 Constitution 模式
+- ✅ 7 個 Articles：資訊理論、排除原則、假設原則、證據原則、輸出原則、規模感知、修訂原則
 
 **決策記錄** (2025-12-01):
 - ✅ `/atlas.flow` P0-A 準確性改善：語言專屬模式 + 信心評分
