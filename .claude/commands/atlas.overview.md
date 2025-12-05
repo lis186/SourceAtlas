@@ -6,6 +6,14 @@ argument-hint: [optional: specific directory to analyze, e.g., "src/api"]
 
 # SourceAtlas: Project Overview (Stage 0 Fingerprint)
 
+> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md) v1.0
+>
+> Key principles enforced:
+> - Article I: 高熵優先、掃描比例上限
+> - Article II: 強制排除目錄
+> - Article III: 假設數量限制、必要元素
+> - Article IV: 證據格式要求
+
 ## Context
 
 **Analysis Target**: ${ARGUMENTS:-.}
@@ -133,10 +141,11 @@ metadata:
   project_name: "[detected name]"
   scan_time: "[ISO 8601 timestamp]"
   target_path: "${ARGUMENTS:-.}"
-  total_files_estimate: [estimate]
-  scanned_files: [actual count]
+  total_files: [actual count after exclusions]
+  scanned_files: [files read]
   scan_ratio: "[percentage]"
-  analysis_time: "[minutes]"
+  project_scale: "[TINY|SMALL|MEDIUM|LARGE|VERY_LARGE]"
+  constitution_version: "1.0"
 
 project_fingerprint:
   project_type: "[WEB_APP|CLI|LIBRARY|MOBILE_APP|MICROSERVICE|MONOREPO]"
