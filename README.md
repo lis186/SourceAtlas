@@ -4,7 +4,7 @@
 
 適用於 Claude Code | 支援 iOS/TypeScript/Android/Python
 
-[![Version](https://img.shields.io/badge/version-v2.7.0-blue)](https://github.com/lis186/SourceAtlas2/releases)
+[![Version](https://img.shields.io/badge/version-v2.7.0-blue)](https://github.com/lis186/SourceAtlas/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 ---
@@ -154,7 +154,7 @@
 
 ```bash
 # 1. Clone 專案
-git clone https://github.com/lis186/SourceAtlas2.git ~/dev/sourceatlas2
+git clone https://github.com/lis186/SourceAtlas.git ~/dev/sourceatlas2
 
 # 2. 執行安裝
 cd ~/dev/sourceatlas2 && ./install-global.sh
@@ -360,7 +360,7 @@ Claude Code + 2 分鐘安裝
 
 ## 🤝 回饋與貢獻
 
-- 💬 **回報問題**：[GitHub Issues](https://github.com/lis186/SourceAtlas2/issues)
+- 💬 **回報問題**：[GitHub Issues](https://github.com/lis186/SourceAtlas/issues)
 - 🔧 **貢獻程式**：歡迎 PR
 - 🌍 **新增語言**：Python、Ruby、Go、Rust...
 

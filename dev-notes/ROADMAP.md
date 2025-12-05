@@ -165,4 +165,4 @@ From v1.0 to v2.7.0:
 ---
 
 **Next Review**: Weekly on Sunday
-**Contact**: Check issues at https://github.com/lis186/sourceatlas
+**Contact**: Check issues at https://github.com/lis186/SourceAtlas
