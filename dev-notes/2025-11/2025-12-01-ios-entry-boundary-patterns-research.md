@@ -676,7 +676,7 @@ Action: Verify all UI updates are on main thread
 - CoreStore 用於資料庫（CRUD 抽象）
 - @StateObject 和 @Published 作為主要狀態管理
 
-### ***REMOVED***（電商）
+### commercial-ios-app（電商）
 - UIKit 為主（較傳統）
 - 混合 UIViewController 和 SwiftUI（部分視圖）
 

@@ -21,10 +21,10 @@
 
 | # | 專案 | 路徑 | 預期類型 | 預期規模 |
 |---|------|------|---------|---------|
-| 1 | foodies | test_targets/kotlin/android-compose-mvvm-foodies | Android/Kotlin | SMALL |
+| 1 | android-sample | test_targets/kotlin/android-compose-mvvm-sample | Android/Kotlin | SMALL |
 | 2 | python-fastapi | test_targets/python-fastapi | Python | MEDIUM |
-| 3 | ***REMOVED*** | test_targets/***REMOVED*** | iOS/Swift | LARGE |
-| 4 | Mir01 | test_targets/Mir01 | TypeScript | MEDIUM |
+| 3 | ios-commercial | test_targets/ios-commercial | iOS/Swift | LARGE |
+| 4 | monorepo-sample | test_targets/monorepo-sample | TypeScript | MEDIUM |
 | 5 | spec-kit | examples/spec-kit | Methodology | MEDIUM |
 | 6 | Swiftfin | test_targets/Swiftfin | iOS/Swift | LARGE |
 
@@ -32,10 +32,10 @@
 
 | # | 專案 | 實際類型 | 實際規模 | 檔案數 | 結果 |
 |---|------|---------|---------|--------|------|
-| 1 | foodies | ✅ Android/Kotlin | ✅ SMALL | 20 | **PASS** |
+| 1 | android-sample | ✅ Android/Kotlin | ✅ SMALL | 20 | **PASS** |
 | 2 | python-fastapi | ✅ Python | VERY_LARGE | 1,190 | ⚠️ 規模超預期 |
-| 3 | ***REMOVED*** | ✅ iOS/Swift | VERY_LARGE | 8,075 | ⚠️ 規模超預期 |
-| 4 | Mir01 | ❌ Unknown | VERY_LARGE | 722 | **FAIL** |
+| 3 | ios-commercial | ✅ iOS/Swift | VERY_LARGE | 8,075 | ⚠️ 規模超預期 |
+| 4 | monorepo-sample | ❌ Unknown | VERY_LARGE | 722 | **FAIL** |
 | 5 | spec-kit | ✅ Methodology | ✅ MEDIUM | 56 | **PASS** |
 | 6 | Swiftfin | ✅ iOS/Swift | VERY_LARGE | 829 | ⚠️ |
 
@@ -44,7 +44,7 @@
 **成功率**: 5/6 類型正確 (83%)
 
 **發現的問題**:
-1. **Monorepo 不支援**: Mir01 的 `package.json` 在子目錄 (`inventory-api/`, `inventory-client/`)，未被偵測
+1. **Monorepo 不支援**: monorepo-sample 的 `package.json` 在子目錄，未被偵測
 2. **規模判定合理**: 真實專案比想像中大是正常的
 
 **改進建議**:

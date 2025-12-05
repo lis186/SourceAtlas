@@ -56,7 +56,7 @@
 | 新格式 | **12** | 0 | 高 |
 
 **關鍵發現**:
-- 舊格式幾乎沒有 `file:line` 精確引用（僅 chiahsing1115-account 有 6 個）
+- 舊格式幾乎沒有 `file:line` 精確引用（僅 1 個專案有 6 個）
 - 新格式強制要求 `file:line` 格式，驗證成本降低 80%+
 
 ### 證據格式範例比較
@@ -246,26 +246,16 @@ Constitution 的價值不是讓分析「更豐富」，而是讓分析：
 
 ### 舊格式詳細驗證結果
 
-| 專案 | Pass | Fail | Warn | 結果 |
-|------|------|------|------|------|
-| chiahsing1115-account | 2 | 0 | 3 | PASSED |
-| Chuweii-Calculator | 2 | 0 | 3 | PASSED |
-| Chuweii-CathayBank-Interview | 2 | 0 | 3 | PASSED |
-| Chuweii-Foucasu | 2 | 0 | 3 | PASSED |
-| Chuweii-Generic-Vertical-CollectionView | 2 | 0 | 3 | PASSED |
-| Chuweii-Message-App | 2 | 0 | 3 | PASSED |
-| Chuweii-Movie-Trailer | 2 | 0 | 3 | PASSED |
-| Chuweii-Uber-Clone | 2 | 0 | 3 | PASSED |
-| Chuweii-Weather-App | 2 | 0 | 3 | PASSED |
-| h1431532403240-Mir01 | 2 | 0 | 3 | PASSED |
-| lis186-awesome-claude-skills | 2 | 0 | 3 | PASSED |
-| **lis186-MCP-Defender** | 1 | **1** | 3 | **FAILED** |
-| lis186-smart-tra-mcp-server | 2 | 0 | 3 | PASSED |
-| lis186-smart-weather-mcp-server | 2 | 0 | 3 | PASSED |
-| lis186-taiwan-holiday-mcp | 2 | 0 | 3 | PASSED |
-| lis186-waldzell-mcp | 2 | 0 | 3 | PASSED |
-| **taiwan-calendar** | 1 | **3** | 4 | **FAILED** |
-| trySwift | 2 | 0 | 3 | PASSED |
+測試了 18 個舊格式專案：
+- **通過**: 16 個專案（iOS App、MCP Server、工具庫等）
+- **失敗**: 2 個專案（違反 Article II 排除目錄規則）
+
+| 統計 | 數值 |
+|------|------|
+| 總測試數 | 18 |
+| 通過數 | 16 |
+| 失敗數 | 2 |
+| 通過率 | 89% |
 
 ### 新格式驗證結果
 
