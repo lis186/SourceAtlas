@@ -6,6 +6,13 @@ argument-hint: [pattern type, e.g., "api endpoint", "background job", "file uplo
 
 # SourceAtlas: Pattern Learning Mode
 
+> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md) v1.0
+>
+> Key principles enforced:
+> - Article I: 高熵優先（掃描 2-3 個最佳範例，非全部）
+> - Article II: 強制排除目錄
+> - Article IV: 證據格式（file:line 引用）
+
 ## Context
 
 **Pattern requested:** $ARGUMENTS
