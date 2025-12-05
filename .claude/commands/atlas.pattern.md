@@ -261,23 +261,34 @@ To implement similar functionality following this codebase's pattern:
 
 ## Handoffs 判斷規則
 
-根據分析發現，在 `Recommended Next` 區塊建議 1-2 個最相關的後續命令。
+> 遵循 **Constitution Article VII: Handoffs 原則**
 
-**何時建議**（根據發現選擇最相關的）：
-- 發現此 pattern 與其他 patterns 高度相關 → `/atlas.pattern "[相關 pattern]"`
-- Pattern 涉及複雜流程 → `/atlas.flow "[入口點]"`
-- Pattern 在多個區域使用，可能有風險 → `/atlas.impact "[pattern 名稱]"`
-- 需要了解 pattern 的變動歷史 → `/atlas.history [相關檔案]`
+### 結束條件（省略 `Recommended Next`）
 
-**何時不建議**（省略整個 `Recommended Next` 區塊）：
-- 分析結果太模糊，沒有高信心發現
-- Pattern 很簡單，不需要進一步分析
-- 無法確定具體參數
+根據 Section 7.2，滿足以下任一條件時省略：
+- **Pattern 很簡單**：無複雜流程或依賴
+- **發現太模糊**：無法給出高信心（>0.7）的具體參數
+- **分析深度足夠**：已執行 4+ 個命令
 
-**限制**：
-- 最多 2 個建議（Primary + Secondary）
-- 必須包含具體參數
-- 理由必須基於上述分析發現
+省略時提供結束提示：
+```markdown
+✅ **Pattern 分析完成** - 可按照上述 Step-by-Step Guide 開始實作
+```
+
+### 建議選擇（根據發現）
+
+| 發現 | 建議命令 | 參數來源 |
+|------|---------|---------|
+| 與其他 patterns 高度相關 | `/atlas.pattern` | 相關 pattern 名稱 |
+| Pattern 涉及複雜流程 | `/atlas.flow` | 入口點檔案 |
+| 在多處使用，有風險 | `/atlas.impact` | 核心檔案名 |
+| 需了解變動歷史 | `/atlas.history` | 可選：相關目錄 |
+
+### 品質要求（Section 7.4-7.5）
+
+- **Primary**: 必須，參數具體（如 `"repository"` 非 `"相關 pattern"`）
+- **Secondary**: 可選，僅在有明確第二選項時提供
+- **Why**: 引用具體發現（使用次數、檔案名、問題）
 
 ---
 

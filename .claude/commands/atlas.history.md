@@ -414,23 +414,38 @@ This could mean:
 
 ## Handoffs 判斷規則
 
-根據分析發現，在 `Recommended Next` 區塊建議 1-2 個最相關的後續命令。
+> 遵循 **Constitution Article VII: Handoffs 原則**
 
-**何時建議**（根據發現選擇最相關的）：
-- 發現高風險 hotspot → `/atlas.impact "[hotspot 檔案]"`
-- 發現可疑耦合 → `/atlas.flow "[耦合的模組入口]"`
-- Hotspot 需要重構 → `/atlas.pattern "[相關 pattern]"`
-- 需要更廣泛背景 → `/atlas.overview`
+### 結束條件（省略 Recommended Next）
 
-**何時不建議**（省略 Recommended Next 區塊）：
-- 分析結果太模糊，沒有高信心發現
-- 無法確定具體參數
-- 專案歷史太短，數據不足
+根據 Section 7.2，滿足以下任一條件時省略：
+- **歷史太短**：<50 commits 或 <3 個月，數據不足
+- **發現太模糊**：無法給出高信心（>0.7）的具體參數
+- **分析深度足夠**：已執行 4+ 個命令
 
-**限制**：
-- 最多 2 個建議（Primary + Secondary）
-- 必須包含具體參數（使用實際發現的檔案名）
-- 理由必須基於上述分析發現
+歷史太短時提供警示：
+```markdown
+⚠️ **數據不足警示**
+- Commits: N 個（建議 ≥50）
+- 期間: M 天（建議 ≥90 天）
+
+建議 3-6 個月後再分析時序模式
+```
+
+### 建議選擇（根據發現）
+
+| 發現 | 建議命令 | 參數來源 |
+|------|---------|---------|
+| 高風險 hotspot | `/atlas.impact` | hotspot 檔案名 |
+| 可疑耦合 | `/atlas.flow` | 耦合模組入口 |
+| Hotspot 需重構 | `/atlas.pattern` | 相關 pattern |
+| 需要更廣泛背景 | `/atlas.overview` | 無需參數 |
+
+### 品質要求（Section 7.4-7.5）
+
+- **Primary**: 必須，參數使用實際發現的檔案名
+- **Secondary**: 可選，僅在有明確第二選項時提供
+- **Why**: 引用具體發現（變動次數、耦合度、貢獻者數）
 
 ---
 
