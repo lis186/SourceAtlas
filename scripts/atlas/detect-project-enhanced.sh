@@ -314,4 +314,78 @@ echo "   Hypothesis target: $HYPOTHESIS_TARGET"
 echo "   Low-confidence hypothesis limit: $LOW_CONFIDENCE_LIMIT"
 echo ""
 
+# Branch-Aware Context Detection (spec-kit inspired)
+echo "🌿 Context Detection:"
+
+# Detect current Git branch
+if git rev-parse --git-dir > /dev/null 2>&1; then
+    GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+    GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+
+    if [ -n "$GIT_BRANCH" ]; then
+        echo "   Git branch: $GIT_BRANCH"
+    fi
+
+    # Detect relative position in repo (for monorepo awareness)
+    CURRENT_ABS=$(cd "$PROJECT_PATH" && pwd)
+    if [ -n "$GIT_ROOT" ] && [ "$CURRENT_ABS" != "$GIT_ROOT" ]; then
+        REL_PATH="${CURRENT_ABS#$GIT_ROOT/}"
+        echo "   Relative path: $REL_PATH"
+        CONTEXT_PATH="$REL_PATH"
+    else
+        CONTEXT_PATH=""
+    fi
+else
+    echo "   Git: Not a git repository"
+    GIT_BRANCH=""
+    CONTEXT_PATH=""
+fi
+
+# Detect package context (for monorepo subdirectories)
+PACKAGE_NAME=""
+if [ -f "$PROJECT_PATH/package.json" ]; then
+    PACKAGE_NAME=$(grep -o '"name"[[:space:]]*:[[:space:]]*"[^"]*"' "$PROJECT_PATH/package.json" 2>/dev/null | head -1 | sed 's/.*: *"\([^"]*\)".*/\1/')
+    if [ -n "$PACKAGE_NAME" ]; then
+        echo "   Package name: $PACKAGE_NAME"
+    fi
+elif [ -f "$PROJECT_PATH/Cargo.toml" ]; then
+    PACKAGE_NAME=$(grep -E '^\s*name\s*=' "$PROJECT_PATH/Cargo.toml" 2>/dev/null | head -1 | sed 's/.*= *"\([^"]*\)".*/\1/')
+    if [ -n "$PACKAGE_NAME" ]; then
+        echo "   Crate name: $PACKAGE_NAME"
+    fi
+elif [ -f "$PROJECT_PATH/go.mod" ]; then
+    PACKAGE_NAME=$(grep -E '^module ' "$PROJECT_PATH/go.mod" 2>/dev/null | head -1 | sed 's/module //')
+    if [ -n "$PACKAGE_NAME" ]; then
+        echo "   Module name: $PACKAGE_NAME"
+    fi
+elif [ -f "$PROJECT_PATH/pyproject.toml" ]; then
+    PACKAGE_NAME=$(grep -E '^\s*name\s*=' "$PROJECT_PATH/pyproject.toml" 2>/dev/null | head -1 | sed 's/.*= *"\([^"]*\)".*/\1/')
+    if [ -n "$PACKAGE_NAME" ]; then
+        echo "   Package name: $PACKAGE_NAME"
+    fi
+fi
+
+# Generate context-aware output path suggestion
+echo ""
+echo "📂 Suggested Output Path:"
+if [ -n "$CONTEXT_PATH" ]; then
+    # In subdirectory of repo
+    SAFE_CONTEXT=$(echo "$CONTEXT_PATH" | tr '/' '-')
+    OUTPUT_PATH=".specstory/analyses/$SAFE_CONTEXT"
+    echo "   $OUTPUT_PATH/"
+    echo "   (Context: analyzing subdirectory '$CONTEXT_PATH')"
+elif [ -n "$GIT_BRANCH" ] && [ "$GIT_BRANCH" != "main" ] && [ "$GIT_BRANCH" != "master" ]; then
+    # On feature branch
+    SAFE_BRANCH=$(echo "$GIT_BRANCH" | tr '/' '-')
+    OUTPUT_PATH=".specstory/analyses/$SAFE_BRANCH"
+    echo "   $OUTPUT_PATH/"
+    echo "   (Context: analyzing on branch '$GIT_BRANCH')"
+else
+    # Default: root analysis
+    OUTPUT_PATH=".specstory/analyses"
+    echo "   $OUTPUT_PATH/"
+    echo "   (Context: root project analysis)"
+fi
+
+echo ""
 echo "✅ Detection Complete"
