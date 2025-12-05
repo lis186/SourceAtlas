@@ -56,11 +56,14 @@ v2.7 (已完成) - SourceAtlas Commands ✅
   ├─ Git 歷史時序分析
   └─ 141 個 patterns 支援
   ↓
-v2.8.1 (當前) - Constitution v1.1 + Handoffs ✅
+v2.8.1 (已完成) - Constitution v1.1 + Handoffs ✅
   ├─ 分析品質框架（7 個 Articles）
   ├─ 自動化合規驗證
   ├─ Monorepo 偵測支援
   └─ ✅ 發現驅動 Handoffs（Article VII: Handoffs 原則）
+  ↓
+v2.8.2 (當前) - Analysis Quality Validation ⭐ NEW
+  └─ `/atlas.validate` - "Unit Tests for Analysis" 概念
   ↓
 v2.9 (未來) - SourceAtlas Monitor
   ├─ 持續追蹤系統
@@ -1664,6 +1667,10 @@ When detecting user confusion, suggest:
   - **動態下一步建議** ✅ - 根據分析發現，建議 1-2 個最相關的後續命令
   - **5 個 Sections**：發現驅動、結束條件、建議數量、參數品質、理由品質
   - **測試結果**：27 個場景 95%+ 成熟度
+- v2.8.2 🔵 - Analysis Quality Validation ⭐ NEW
+  - `/atlas.validate` - "Unit Tests for Analysis" 概念（學習自 spec-kit）
+  - 驗證分析輸出品質是否符合 Constitution 原則
+  - 6 個品質維度：Completeness, Clarity, Consistency, Measurability, Coverage, Traceability
 - **完整三階段分析**：使用 `PROMPTS.md` 手動執行（深度盡職調查場景）
 
 **決策記錄** (2025-12-06):
@@ -1672,6 +1679,10 @@ When detecting user confusion, suggest:
   - **核心洞察**：SourceAtlas 是探索式工具（非線性），不適合 spec-kit 的線性 handoffs
   - **設計選擇**：根據實際發現動態生成建議，而非靜態列出所有可能命令
   - **5 個 Sections**：發現驅動(7.1)、結束條件(7.2)、建議數量(7.3)、參數品質(7.4)、理由品質(7.5)
+- ✅ `/atlas.validate` 命令新增：學習 spec-kit 的 "Unit Tests for English" 概念
+  - **靈感來源**：spec-kit checklist.md 驗證需求品質而非實作
+  - **核心概念**："Unit Tests for Analysis" - 驗證分析品質，非目標專案
+  - **6 品質維度**：Completeness, Clarity, Consistency, Measurability, Coverage, Traceability
 
 **決策記錄** (2025-12-05):
 - ✅ Constitution v1.0 實作：學習 spec-kit 的 Constitution 模式
