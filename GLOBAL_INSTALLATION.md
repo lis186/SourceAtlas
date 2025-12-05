@@ -290,7 +290,7 @@ EOF
 ls ~/dev/sourceatlas2
 
 # 如果不存在，重新克隆
-git clone https://github.com/lis186/SourceAtlas2.git ~/dev/sourceatlas2
+git clone https://github.com/lis186/SourceAtlas.git ~/dev/sourceatlas2
 
 # 重新安裝
 cd ~/dev/sourceatlas2
@@ -303,7 +303,7 @@ cd ~/dev/sourceatlas2
 
 - **主要文檔**: [README.md](./README.md)
 - **使用指南**: [USAGE_GUIDE.md](./USAGE_GUIDE.md)
-- **回報問題**: [GitHub Issues](https://github.com/lis186/SourceAtlas2/issues)
+- **回報問題**: [GitHub Issues](https://github.com/lis186/SourceAtlas/issues)
 
 ---
 
