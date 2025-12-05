@@ -30,7 +30,7 @@ cp -r /path/to/sourceatlas-plugin ~/.claude/commands/sourceatlas
 
 ```bash
 # In Claude Code, add the marketplace
-/plugin marketplace add justinlee/sourceatlas-marketplace
+/plugin marketplace add lis186/sourceatlas-marketplace
 
 # Install the plugin
 /plugin install sourceatlas@sourceatlas-marketplace
