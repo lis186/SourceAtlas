@@ -38,11 +38,15 @@
 
 ### 核心設計原則
 
-**資訊理論基礎**：
+> ⚠️ **重要**：分析行為的完整原則定義在 [ANALYSIS_CONSTITUTION.md](./ANALYSIS_CONSTITUTION.md)。
+> 本節僅為摘要，Constitution 為權威來源。
+
+**資訊理論基礎**（詳見 Constitution Article I）：
 
 - 高熵檔案（configs、READMEs、models）包含不成比例的大量資訊
 - 結構 > 實作細節，更適合快速理解
 - 漸進式精煉勝過窮舉式掃描
+- 掃描比例上限：TINY 50%, SMALL 20%, MEDIUM 10%, LARGE 5%, VERY_LARGE 3%
 
 **格式選擇** (v1.0 決策)：
 
@@ -56,7 +60,8 @@
 ```
 sourceatlas2/
 ├── README.md               # 使用者文檔（中文）
-├── CLAUDE.md               # 本檔案 - AI 協作指南
+├── CLAUDE.md               # 本檔案 - AI 協作指南（開發 SourceAtlas）
+├── ANALYSIS_CONSTITUTION.md # ⭐ 分析憲法 - 分析行為的不可變原則
 ├── PROMPTS.md              # 所有 3 個階段的完整 prompt 模板
 ├── PRD.md                  # 產品需求（v2.7 Commands 架構）
 ├── USAGE_GUIDE.md          # 詳細使用說明
