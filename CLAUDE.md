@@ -161,7 +161,7 @@ cd ~/projects/any-project
 - `/atlas.pattern` ✅ - 學習設計模式（已實作，2025-11-22）
 - `/atlas.impact` ✅ - 影響範圍分析（已實作，2025-11-25）
 - `/atlas.history` ✅ - 時序分析（Git 歷史）（已實作，2025-11-30）
-- `/atlas.flow` ✅ - 流程追蹤與資料流分析（已實作，2025-12-01）⭐ NEW
+- `/atlas.flow` ✅ - 流程追蹤與資料流分析（已實作，2025-12-01）
 
 **完整三階段分析**（罕見場景）：
 針對深度盡職調查（評估開源專案、招聘評估、技術盡調），使用 `PROMPTS.md` 手動執行 Stage 0-1-2
@@ -990,7 +990,7 @@ touch test-results.md
 - [x] `/atlas.flow` - 流程追蹤（11 種分析模式）✅ (2025-12-01) ⭐⭐⭐⭐⭐
 
 ### ✅ 已完成 - 品質框架
-- [x] **Constitution v1.1** - 分析行為的不可變原則 + Handoffs 原則 ✅ (2025-12-06) ⭐ NEW
+- [x] **Constitution v1.1** - 分析行為的不可變原則 + Handoffs 原則 ✅ (2025-12-06)
 - [x] **Article VII: Handoffs 原則** - 發現驅動的動態下一步建議 ✅ (2025-12-06)
 - [x] **validate-constitution.sh** - 自動化合規驗證 ✅ (2025-12-05)
 - [x] **Monorepo 偵測** - lerna/pnpm/nx/turborepo/npm workspaces ✅ (2025-12-05)
@@ -1015,6 +1015,7 @@ touch test-results.md
 - (2025-12-01): `/atlas.flow` 實作完成 - 11 種分析模式 + 語言專屬入口點 + 增強邊界識別
 - (2025-12-05): **Constitution v1.0** 實作完成 - 7 Articles + 驗證腳本 + Monorepo 偵測
 - (2025-12-06): **Constitution v1.1** 實作完成 - 新增 Article VII: Handoffs 原則（5 Sections）
+- (2025-12-06): `/atlas.validate` 已取消 - 改為內建品質檢查（獨立命令過度工程化）
 
 **詳細路線圖**：見 [dev-notes/implementation-roadmap.md](./dev-notes/implementation-roadmap.md) 和 [PRD.md](./PRD.md)
 
