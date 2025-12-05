@@ -13,7 +13,6 @@
 - **v2.7.0** ✅ - Commands 架構完成，含流程追蹤（2025-12-01）
 - **v2.8.0** ✅ - Constitution v1.0 + Monorepo 支援（2025-12-05）
 - **v2.8.1** ✅ - Constitution v1.1 + Handoffs 原則（2025-12-06）
-- **v2.8.2** 🔵 - Analysis Quality Validation（進行中）
 
 ## 架構
 
@@ -163,7 +162,6 @@ cd ~/projects/any-project
 - `/atlas.impact` ✅ - 影響範圍分析（已實作，2025-11-25）
 - `/atlas.history` ✅ - 時序分析（Git 歷史）（已實作，2025-11-30）
 - `/atlas.flow` ✅ - 流程追蹤與資料流分析（已實作，2025-12-01）
-- `/atlas.validate` 🔵 - 分析品質驗證（"Unit Tests for Analysis"）⭐ NEW
 
 **完整三階段分析**（罕見場景）：
 針對深度盡職調查（評估開源專案、招聘評估、技術盡調），使用 `PROMPTS.md` 手動執行 Stage 0-1-2
@@ -979,9 +977,9 @@ touch test-results.md
 
 ---
 
-## 當前狀態（v2.8.2）
+## 當前狀態（v2.8.1）
 
-基於 PRD v2.8.2、v1.0 學習和 Constitution v1.1：
+基於 PRD v2.8.1、v1.0 學習和 Constitution v1.1：
 
 ### ✅ 已完成 - 核心 6 Commands
 - [x] `/atlas.init` - 專案初始化（自動觸發規則）✅ (2025-11-30)
@@ -996,7 +994,6 @@ touch test-results.md
 - [x] **Article VII: Handoffs 原則** - 發現驅動的動態下一步建議 ✅ (2025-12-06)
 - [x] **validate-constitution.sh** - 自動化合規驗證 ✅ (2025-12-05)
 - [x] **Monorepo 偵測** - lerna/pnpm/nx/turborepo/npm workspaces ✅ (2025-12-05)
-- [ ] `/atlas.validate` - 分析品質驗證（"Unit Tests for Analysis"）🔵 進行中 ⭐ NEW
 
 ### ✅ 已完成 - 多語言支援
 - [x] iOS/Swift - 34 patterns
@@ -1018,7 +1015,7 @@ touch test-results.md
 - (2025-12-01): `/atlas.flow` 實作完成 - 11 種分析模式 + 語言專屬入口點 + 增強邊界識別
 - (2025-12-05): **Constitution v1.0** 實作完成 - 7 Articles + 驗證腳本 + Monorepo 偵測
 - (2025-12-06): **Constitution v1.1** 實作完成 - 新增 Article VII: Handoffs 原則（5 Sections）
-- (2025-12-06): `/atlas.validate` 新增 - 學習 spec-kit "Unit Tests for English" 概念，驗證分析品質
+- (2025-12-06): `/atlas.validate` 已取消 - 改為內建品質檢查（獨立命令過度工程化）
 
 **詳細路線圖**：見 [dev-notes/implementation-roadmap.md](./dev-notes/implementation-roadmap.md) 和 [PRD.md](./PRD.md)
 
