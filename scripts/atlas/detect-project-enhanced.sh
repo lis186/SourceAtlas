@@ -2,6 +2,7 @@
 # Enhanced Project Detection with Scale-Aware Analysis
 # Based on ANALYSIS_CONSTITUTION.md v1.0
 # Updated: 2025-12-05 - Added methodology/documentation project support
+# Updated: 2025-12-05 - Added monorepo detection (workspaces, lerna, pnpm, nx)
 
 set -e
 
@@ -21,11 +22,93 @@ MD_COUNT=$(find "$PROJECT_PATH" -maxdepth 3 -type f -name "*.md" ! -path "*/.git
 SH_COUNT=$(find "$PROJECT_PATH" -maxdepth 3 -type f \( -name "*.sh" -o -name "*.ps1" \) ! -path "*/.git/*" 2>/dev/null | wc -l | tr -d ' ')
 CODE_COUNT=$(find "$PROJECT_PATH" -maxdepth 3 -type f \( -name "*.py" -o -name "*.ts" -o -name "*.js" -o -name "*.go" -o -name "*.rs" -o -name "*.swift" -o -name "*.kt" -o -name "*.java" -o -name "*.php" \) ! -path "*/.git/*" ! -path "*/node_modules/*" ! -path "*/.venv/*" ! -path "*/vendor/*" 2>/dev/null | wc -l | tr -d ' ')
 
+# Helper function: Check for monorepo markers
+check_monorepo() {
+    local path="$1"
+
+    # Check for explicit monorepo config files
+    if [ -f "$path/lerna.json" ]; then
+        echo "lerna"
+        return 0
+    fi
+    if [ -f "$path/pnpm-workspace.yaml" ]; then
+        echo "pnpm"
+        return 0
+    fi
+    if [ -f "$path/nx.json" ]; then
+        echo "nx"
+        return 0
+    fi
+    if [ -f "$path/turbo.json" ]; then
+        echo "turborepo"
+        return 0
+    fi
+
+    # Check for workspaces in package.json
+    if [ -f "$path/package.json" ]; then
+        if grep -q '"workspaces"' "$path/package.json" 2>/dev/null; then
+            echo "npm-workspaces"
+            return 0
+        fi
+    fi
+
+    # Check for Go workspace
+    if [ -f "$path/go.work" ]; then
+        echo "go-workspace"
+        return 0
+    fi
+
+    return 1
+}
+
+# Helper function: Detect type from subdirectories (for monorepo)
+detect_from_subdirs() {
+    local path="$1"
+    local found_type=""
+
+    # Check immediate subdirectories for config files
+    for subdir in "$path"/*/; do
+        [ -d "$subdir" ] || continue
+        subdir_name=$(basename "$subdir")
+
+        # Skip common non-package directories
+        [[ "$subdir_name" =~ ^(node_modules|\.git|\.venv|vendor|build|dist|target)$ ]] && continue
+
+        if [ -f "$subdir/package.json" ]; then
+            found_type="nodejs"
+            break
+        elif [ -f "$subdir/go.mod" ]; then
+            found_type="go"
+            break
+        elif [ -f "$subdir/pyproject.toml" ] || [ -f "$subdir/setup.py" ]; then
+            found_type="python"
+            break
+        elif [ -f "$subdir/Cargo.toml" ]; then
+            found_type="rust"
+            break
+        fi
+    done
+
+    echo "$found_type"
+}
+
 # Methodology project: Markdown > Code, and has shell scripts
 if [ "$MD_COUNT" -gt 10 ] && [ "$MD_COUNT" -gt "$CODE_COUNT" ] && [ "$SH_COUNT" -gt 0 ]; then
     echo "   ✓ Methodology/Documentation Project (Markdown-driven)"
     echo "     (Markdown: $MD_COUNT, Scripts: $SH_COUNT, Code: $CODE_COUNT)"
     PROJECT_TYPE="methodology"
+# Check for monorepo first (before single-package detection)
+elif MONOREPO_TYPE=$(check_monorepo "$PROJECT_PATH"); then
+    echo "   ✓ Monorepo ($MONOREPO_TYPE)"
+    PROJECT_TYPE="monorepo"
+    MONOREPO_TOOL="$MONOREPO_TYPE"
+
+    # Try to detect primary language from packages
+    SUBDIR_TYPE=$(detect_from_subdirs "$PROJECT_PATH")
+    if [ -n "$SUBDIR_TYPE" ]; then
+        echo "     Primary package type: $SUBDIR_TYPE"
+        MONOREPO_PRIMARY="$SUBDIR_TYPE"
+    fi
 elif [ -f "$PROJECT_PATH/package.json" ]; then
     echo "   ✓ Node.js/TypeScript (package.json found)"
     PROJECT_TYPE="nodejs"
@@ -51,8 +134,17 @@ elif [ -f "$PROJECT_PATH/Package.swift" ]; then
     echo "   ✓ Swift Package (Package.swift found)"
     PROJECT_TYPE="swift"
 else
-    echo "   ? Unknown project type"
-    PROJECT_TYPE="unknown"
+    # Last resort: check subdirectories for config files
+    SUBDIR_TYPE=$(detect_from_subdirs "$PROJECT_PATH")
+    if [ -n "$SUBDIR_TYPE" ]; then
+        echo "   ✓ $SUBDIR_TYPE (detected from subdirectory)"
+        echo "     Note: Config file in subdirectory, may be monorepo without explicit config"
+        PROJECT_TYPE="$SUBDIR_TYPE"
+        IS_IMPLICIT_MONOREPO="true"
+    else
+        echo "   ? Unknown project type"
+        PROJECT_TYPE="unknown"
+    fi
 fi
 
 echo ""
@@ -77,6 +169,37 @@ case "$PROJECT_TYPE" in
         echo "   Script files (sh/ps1): $SCRIPT_FILES"
         echo "   Python files: $PY_FILES"
         echo "   Config files (yaml/json/toml): $CONFIG_FILES"
+        ;;
+    monorepo)
+        # Monorepo: count based on primary type, or all code files
+        if [ "$MONOREPO_PRIMARY" = "nodejs" ]; then
+            TOTAL_FILES=$(find "$PROJECT_PATH" -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) \
+                ! -path "*/node_modules/*" ! -path "*/.git/*" ! -path "*/dist/*" ! -path "*/build/*" | wc -l | tr -d ' ')
+            echo "   TypeScript/JavaScript files: $TOTAL_FILES"
+        elif [ "$MONOREPO_PRIMARY" = "go" ]; then
+            TOTAL_FILES=$(find "$PROJECT_PATH" -type f -name "*.go" \
+                ! -path "*/vendor/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
+            echo "   Go files: $TOTAL_FILES"
+        elif [ "$MONOREPO_PRIMARY" = "python" ]; then
+            TOTAL_FILES=$(find "$PROJECT_PATH" -type f -name "*.py" \
+                ! -path "*/.venv/*" ! -path "*/venv/*" ! -path "*/__pycache__/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
+            echo "   Python files: $TOTAL_FILES"
+        elif [ "$MONOREPO_PRIMARY" = "rust" ]; then
+            TOTAL_FILES=$(find "$PROJECT_PATH" -type f -name "*.rs" \
+                ! -path "*/target/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
+            echo "   Rust files: $TOTAL_FILES"
+        else
+            # Mixed or unknown: count all code files
+            TOTAL_FILES=$(find "$PROJECT_PATH" -type f \( \
+                -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \
+                -o -name "*.py" -o -name "*.go" -o -name "*.rs" \
+                \) ! -path "*/.git/*" ! -path "*/node_modules/*" ! -path "*/.venv/*" \
+                ! -path "*/vendor/*" ! -path "*/target/*" ! -path "*/dist/*" ! -path "*/build/*" | wc -l | tr -d ' ')
+            echo "   Total code files (mixed): $TOTAL_FILES"
+        fi
+        # Count packages
+        PKG_COUNT=$(find "$PROJECT_PATH" -maxdepth 2 -name "package.json" -o -name "go.mod" -o -name "Cargo.toml" -o -name "pyproject.toml" 2>/dev/null | wc -l | tr -d ' ')
+        echo "   Packages detected: $PKG_COUNT"
         ;;
     nodejs)
         TOTAL_FILES=$(find "$PROJECT_PATH" -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) \
