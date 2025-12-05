@@ -344,10 +344,18 @@ Based on temporal analysis:
 
 ---
 
-💡 **What's Next?**
-- Use `/atlas.impact [hotspot file]` to understand dependencies
-- Use `/atlas.pattern` to learn existing patterns before refactoring
-- Use `/atlas.overview` for broader architectural context
+## Recommended Next (Handoffs)
+
+根據分析發現，動態建議 1-2 個最相關的後續命令：
+
+**Primary:**
+- **Command:** `/atlas.impact "[top hotspot file]"`
+- **Why:** [hotspot file] 變動 N 次，需了解其依賴關係
+
+**Secondary:** *(optional)*
+- **Command:** `/atlas.pattern "[相關 pattern]"` 或 `/atlas.flow "[風險區域入口]"`
+- **Why:** [1 句話理由，基於上述發現]
+
 ```
 
 ---
@@ -404,11 +412,28 @@ This could mean:
 
 ---
 
-## Integration with Other Commands
+## Handoffs 判斷規則
 
-After `/atlas.history`:
-- **`/atlas.impact [hotspot]`** - Understand what depends on a hotspot
-- **`/atlas.pattern "refactoring target"`** - Learn patterns before refactoring
-- **`/atlas.overview`** - Get broader architectural context
+根據分析發現，在 `Recommended Next` 區塊建議 1-2 個最相關的後續命令。
+
+**何時建議**（根據發現選擇最相關的）：
+- 發現高風險 hotspot → `/atlas.impact "[hotspot 檔案]"`
+- 發現可疑耦合 → `/atlas.flow "[耦合的模組入口]"`
+- Hotspot 需要重構 → `/atlas.pattern "[相關 pattern]"`
+- 需要更廣泛背景 → `/atlas.overview`
+
+**何時不建議**（省略 Recommended Next 區塊）：
+- 分析結果太模糊，沒有高信心發現
+- 無法確定具體參數
+- 專案歷史太短，數據不足
+
+**限制**：
+- 最多 2 個建議（Primary + Secondary）
+- 必須包含具體參數（使用實際發現的檔案名）
+- 理由必須基於上述分析發現
+
+---
+
+## Integration with Other Commands
 
 This command complements `/atlas.impact` (static analysis) with temporal insights.
