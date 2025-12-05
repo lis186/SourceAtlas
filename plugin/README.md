@@ -20,7 +20,7 @@ SourceAtlas helps developers quickly understand any codebase through pattern lea
 ```bash
 # Clone or download this repository
 cd ~/.claude/commands
-git clone https://github.com/justinlee/sourceatlas-plugin.git sourceatlas
+git clone https://github.com/lis186/SourceAtlas.git sourceatlas
 
 # Or copy the plugin directory
 cp -r /path/to/sourceatlas-plugin ~/.claude/commands/sourceatlas
@@ -30,7 +30,7 @@ cp -r /path/to/sourceatlas-plugin ~/.claude/commands/sourceatlas
 
 ```bash
 # In Claude Code, add the marketplace
-/plugin marketplace add justinlee/sourceatlas-marketplace
+/plugin marketplace add lis186/sourceatlas-marketplace
 
 # Install the plugin
 /plugin install sourceatlas@sourceatlas-marketplace
@@ -313,7 +313,7 @@ Based on SourceAtlas v2.5 methodology:
 
 ## 📚 Resources
 
-- [SourceAtlas Documentation](https://github.com/justinlee/sourceatlas2)
+- [SourceAtlas Documentation](https://github.com/lis186/SourceAtlas)
 - [Claude Code Plugin Docs](https://code.claude.com/docs/en/plugins)
 
 ---

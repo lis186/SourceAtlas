@@ -26,7 +26,7 @@
 ### 快速開始
 
 ```bash
-git clone https://github.com/lis186/SourceAtlas2.git ~/dev/sourceatlas2
+git clone https://github.com/lis186/SourceAtlas.git ~/dev/sourceatlas2
 cd ~/dev/sourceatlas2 && ./install-global.sh
 ```
 
@@ -618,7 +618,7 @@ cat .gitignore | grep -E "node_modules|Pods|build|\.app"
 | 專案過大 (>100K LOC) | 在子目錄執行：`cd src && /atlas.overview` | 依子目錄數量分散時間 |
 | 網路延遲 | 檢查 [Claude API 狀態](https://status.anthropic.com) | 等待或稍後重試 |
 
-**仍然緩慢？** 請[回報問題](https://github.com/lis186/SourceAtlas2/issues)並附上診斷結果
+**仍然緩慢？** 請[回報問題](https://github.com/lis186/SourceAtlas/issues)並附上診斷結果
 
 ### 問題 4: 命令找不到
 
@@ -722,7 +722,7 @@ echo -e "\n=== 檢查完成 ==="
 - **技術細節**: [CLAUDE.md](./CLAUDE.md)
 - **開發歷史**: [dev-notes/HISTORY.md](./dev-notes/HISTORY.md)
 - **功能提案**: [proposals/](./proposals/)
-- **回報問題**: [GitHub Issues](https://github.com/lis186/SourceAtlas2/issues)
+- **回報問題**: [GitHub Issues](https://github.com/lis186/SourceAtlas/issues)
 
 ---
 
