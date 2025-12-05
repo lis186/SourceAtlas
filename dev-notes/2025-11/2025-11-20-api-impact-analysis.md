@@ -406,7 +406,7 @@ find src -name "*user*.ts" -o -name "*user*.tsx"
    - 可能需要專門的 /atlas api 命令
 
 3. **準備測試案例**：
-   - 在 Mir01 專案測試（Laravel + Next.js）
+   - 在 Monorepo 專案測試（Laravel + Next.js）
    - 驗證能否準確追蹤 API 使用
 
 ---

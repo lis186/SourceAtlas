@@ -2,7 +2,7 @@
 
 **6 個斜線命令的完整使用說明**
 
-適用於 Claude Code | v2.7.0
+適用於 Claude Code | v2.8.0 | Constitution v1.0
 
 ---
 
