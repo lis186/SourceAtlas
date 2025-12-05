@@ -40,7 +40,7 @@ Every intended use case mapped to existing solutions:
 ## Research Method
 
 Simulated **8 developer roles** (Intern to Senior Architect) across 9 real-world projects:
-- iOS: nineyiappshop, Signal-iOS, Wikipedia-iOS, WordPress-iOS
+- iOS: commercial-ios-app, Signal-iOS, Wikipedia-iOS, WordPress-iOS
 - Android: NewPipe, AntennaPod, Signal Android
 - Ruby: Spree
 - Python: CTFd

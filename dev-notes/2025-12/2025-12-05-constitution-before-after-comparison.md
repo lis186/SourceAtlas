@@ -206,12 +206,12 @@ package.json            # 整檔引用（僅配置檔）
 
 ### 專案偵測
 
-| 專案 | Before | After |
-|------|--------|-------|
-| spec-kit | ❌ Unknown | ✅ Methodology |
-| Mir01 (monorepo) | ❌ Unknown | ✅ nodejs (from subdir) |
-| kotlin/foodies | ✅ Android | ✅ Android |
-| nineyiappshop | ✅ iOS | ✅ iOS |
+| 專案類型 | Before | After |
+|---------|--------|-------|
+| Methodology (spec-kit) | ❌ Unknown | ✅ Methodology |
+| Monorepo (TypeScript) | ❌ Unknown | ✅ nodejs (from subdir) |
+| Android/Kotlin | ✅ Android | ✅ Android |
+| iOS/Swift (商業專案) | ✅ iOS | ✅ iOS |
 
 **偵測成功率**: 67% → 100%
 

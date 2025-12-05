@@ -14,8 +14,8 @@ NC='\033[0m' # No Color
 echo -e "${BLUE}=== Swift Analyzer Integration Test ===${NC}\n"
 
 # Test parameters
-TEST_PROJECT="test_targets/nineyiappshop"
-TARGET_FILE="$TEST_PROJECT/NYCore/NYCore/Classes/ObjC/NYUIComponent/CustomCollectionViewCell/NYProductCell.m"
+TEST_PROJECT="test_targets/commercial-ios-app"
+TARGET_FILE="$TEST_PROJECT/Core/Core/Classes/ObjC/UIComponent/CustomCollectionViewCell/ProductCell.m"
 SWIFT_ANALYZER="scripts/atlas/analyzers/swift-analyzer.sh"
 
 # Test 1: Check analyzer script exists and is executable

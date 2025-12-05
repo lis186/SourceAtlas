@@ -548,7 +548,7 @@ else:
 ❌ Before (4 個分散檔案):
 - objective-c-support-gap-analysis.md
 - objective-c-support-test-report.md
-- nineyiappshop-objc-analysis.md
+- commercial-app-objc-analysis.md
 - objc-percentage-calculation-method.md
 
 ✅ After (1 個完整報告):
@@ -557,7 +557,7 @@ else:
   - Phase 2: Implementation
   - Phase 3: Testing
   - Appendix A: Calculation Method
-  - Appendix B: nineyiappshop Analysis
+  - Appendix B: Commercial App Analysis
 ```
 
 ### 更新大寫檔案的規則
