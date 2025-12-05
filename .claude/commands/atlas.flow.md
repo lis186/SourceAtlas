@@ -2388,7 +2388,57 @@ else:
 
 ---
 
-## What's Next?
+## Recommended Next (Handoffs)
+
+> 遵循 **Constitution Article VII: Handoffs 原則**
+
+**輸出格式**（加在分析結果末尾）：
+
+```markdown
+## Recommended Next
+
+| # | 命令 | 用途 |
+|---|------|------|
+| 1 | `/atlas.impact "[關鍵節點]"` | 發現此節點被 N 處調用，變更風險較高 |
+| 2 | `/atlas.pattern "[pattern]"` | 流程使用此 pattern，需了解實作慣例 |
+
+💡 輸入數字（如 `1`）或複製命令執行
+```
+
+### 結束條件（省略 Recommended Next）
+
+根據 Section 7.2，滿足以下任一條件時省略：
+- **流程很簡單**：無複雜分支或依賴
+- **發現太模糊**：無法給出高信心（>0.7）的具體參數
+- **分析深度足夠**：已執行 4+ 個命令
+
+省略時提供結束提示：
+```
+✅ **Flow 分析完成** - 可開始實作或修改
+```
+
+### 建議選擇（根據發現）
+
+| 發現 | 建議命令 | 參數來源 |
+|------|---------|---------|
+| 高耦合節點 | `/atlas.impact` | 節點檔案名 |
+| 涉及複雜 pattern | `/atlas.pattern` | pattern 名稱 |
+| 流程變動頻繁 | `/atlas.history` | 相關目錄 |
+| 發現相關流程 | `/atlas.flow` | 流程入口點 |
+
+### 輸出格式（Section 7.3）
+
+使用編號表格，方便快速選擇。
+
+### 品質要求（Section 7.4-7.5）
+
+- **參數具體**：使用實際的檔案名或節點名
+- **數量限制**：1-2 個建議，不強制填滿
+- **用途欄位**：引用具體發現（調用次數、依賴數、問題）
+
+---
+
+## Output Modes Reference
 
 After `/atlas.flow`, users can:
 - Expand specific sub-flows by typing the code (e.g., `3a`)

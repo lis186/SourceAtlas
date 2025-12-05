@@ -4,9 +4,9 @@
 
 適用於 Claude Code | 支援 iOS/TypeScript/Android/Python
 
-[![Version](https://img.shields.io/badge/version-v2.8.0-blue)](https://github.com/lis186/SourceAtlas/releases)
+[![Version](https://img.shields.io/badge/version-v2.8.1-blue)](https://github.com/lis186/SourceAtlas/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
-[![Constitution](https://img.shields.io/badge/constitution-v1.0-purple)](./ANALYSIS_CONSTITUTION.md)
+[![Constitution](https://img.shields.io/badge/constitution-v1.1-purple)](./ANALYSIS_CONSTITUTION.md)
 
 ---
 
@@ -356,6 +356,7 @@ Claude Code + 2 分鐘安裝
 | **排除原則** | 強制排除 node_modules, .venv, build 等 |
 | **假設原則** | 結構化假設 + 信心等級 + 證據引用 |
 | **證據原則** | `file:line` 精確引用，禁止無證據論點 |
+| **Handoffs** | 發現驅動的動態下一步建議（v1.1 新增） |
 
 ### 驗證工具
 
@@ -379,7 +380,7 @@ bash scripts/atlas/validate-constitution.sh --check-structure
 
 ## 🗺️ 開發狀態
 
-**v2.8.0 (當前)**：6/6 核心命令完成 + Constitution v1.0 ✅
+**v2.8.1 (當前)**：6/6 核心命令完成 + Constitution v1.1 ✅
 
 - ✅ `/atlas.init` - 專案初始化（自動觸發規則）
 - ✅ `/atlas.overview` - 專案概覽
@@ -387,7 +388,7 @@ bash scripts/atlas/validate-constitution.sh --check-structure
 - ✅ `/atlas.impact` - 影響分析（靜態分析）
 - ✅ `/atlas.history` - 時序分析（Git 歷史）
 - ✅ `/atlas.flow` - 流程追蹤（資料流分析）
-- ✅ **Constitution v1.0** - 分析品質框架 ⭐ NEW
+- ✅ **Constitution v1.1** - 分析品質框架 + Handoffs 原則 ⭐ NEW
 
 **v2.9 (規劃中)**：Go/Rust/Ruby patterns、AST 分析整合、SourceAtlas Monitor
 
@@ -402,6 +403,6 @@ bash scripts/atlas/validate-constitution.sh --check-structure
 ---
 
 **SourceAtlas** - Claude Code 的程式分析助手
-v2.8.0 | 最新更新: 2025-12-05 | MIT License
+v2.8.1 | 最新更新: 2025-12-06 | MIT License
 
 Made with ❤️ and 🤖

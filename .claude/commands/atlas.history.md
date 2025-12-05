@@ -344,10 +344,16 @@ Based on temporal analysis:
 
 ---
 
-💡 **What's Next?**
-- Use `/atlas.impact [hotspot file]` to understand dependencies
-- Use `/atlas.pattern` to learn existing patterns before refactoring
-- Use `/atlas.overview` for broader architectural context
+## Recommended Next
+
+根據分析發現，動態建議 1-2 個最相關的後續命令：
+
+| # | 命令 | 用途 |
+|---|------|------|
+| 1 | `/atlas.impact "[hotspot file]"` | [hotspot file] 變動 N 次，需了解依賴關係 |
+| 2 | `/atlas.pattern "[pattern]"` | Hotspot 涉及此 pattern，需了解實作慣例 |
+
+💡 輸入數字（如 `1`）或複製命令執行
 ```
 
 ---
@@ -404,11 +410,47 @@ This could mean:
 
 ---
 
-## Integration with Other Commands
+## Handoffs 判斷規則
 
-After `/atlas.history`:
-- **`/atlas.impact [hotspot]`** - Understand what depends on a hotspot
-- **`/atlas.pattern "refactoring target"`** - Learn patterns before refactoring
-- **`/atlas.overview`** - Get broader architectural context
+> 遵循 **Constitution Article VII: Handoffs 原則**
+
+### 結束條件（省略 Recommended Next）
+
+根據 Section 7.2，滿足以下任一條件時省略：
+- **歷史太短**：<50 commits 或 <3 個月，數據不足
+- **發現太模糊**：無法給出高信心（>0.7）的具體參數
+- **分析深度足夠**：已執行 4+ 個命令
+
+歷史太短時提供警示：
+```markdown
+⚠️ **數據不足警示**
+- Commits: N 個（建議 ≥50）
+- 期間: M 天（建議 ≥90 天）
+
+建議 3-6 個月後再分析時序模式
+```
+
+### 建議選擇（根據發現）
+
+| 發現 | 建議命令 | 參數來源 |
+|------|---------|---------|
+| 高風險 hotspot | `/atlas.impact` | hotspot 檔案名 |
+| 可疑耦合 | `/atlas.flow` | 耦合模組入口 |
+| Hotspot 需重構 | `/atlas.pattern` | 相關 pattern |
+| 需要更廣泛背景 | `/atlas.overview` | 無需參數 |
+
+### 輸出格式（Section 7.3）
+
+使用編號表格，方便快速選擇。
+
+### 品質要求（Section 7.4-7.5）
+
+- **參數具體**：使用實際發現的檔案名
+- **數量限制**：1-2 個建議，不強制填滿
+- **用途欄位**：引用具體發現（變動次數、耦合度、貢獻者數）
+
+---
+
+## Integration with Other Commands
 
 This command complements `/atlas.impact` (static analysis) with temporal insights.
