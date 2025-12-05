@@ -41,7 +41,7 @@ This directory contains comprehensive user research conducted to evaluate the ne
 | # | Role | Experience | Project | Queries |
 |---|------|------------|---------|---------|
 | 1 | Intern | 0 years | WordPress-iOS | 7 |
-| 2 | Junior Frontend | 6 months | ***REMOVED*** | 15 |
+| 2 | Junior Frontend | 6 months | commercial-ios-app | 15 |
 | 3 | Junior Android | 1 year | Signal Android | 5 |
 | 4 | Mid-level Backend | 3 years | Spree (Ruby) | 6 |
 | 5 | Mid-level Android | 4 years | Signal Android | 5 |
@@ -55,7 +55,7 @@ This directory contains comprehensive user research conducted to evaluate the ne
 
 | Platform | Project | LOC | Type |
 |----------|---------|-----|------|
-| iOS | ***REMOVED*** | 35K | E-commerce |
+| iOS | commercial-ios-app | 35K | E-commerce |
 | iOS | Signal-iOS | 180K | Encrypted messaging |
 | iOS | Wikipedia-iOS | 150K | Content platform |
 | iOS | WordPress-iOS | 250K | CMS |

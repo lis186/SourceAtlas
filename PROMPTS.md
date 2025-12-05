@@ -7,7 +7,7 @@
 **版本**: v2.6.0
 **更新時間**: 2025-11-30
 **作者**: SourceAtlas Team
-**驗證專案**: trySwiftTokyoApp, taiwan-calendar, Mir01, chiahsing1115 (5 projects)
+**驗證專案**: trySwiftTokyoApp, taiwan-calendar, monorepo-sample, sample-projects (5 projects)
 
 ---
 
@@ -436,7 +436,7 @@ next_stage_preparation: [READY | NEED_MORE_INFO]
 
 - `test_results/trySwift-stage0-fingerprint.yaml`
 - `test_results/taiwan-calendar-stage0-fingerprint.yaml`
-- `test_results/h1431532403240-Mir01-stage0-fingerprint.yaml`
+- `test_results/sample-project-stage0-fingerprint.yaml`
 
 ```
 
@@ -757,7 +757,7 @@ git log --format="%ad" --date=short | sort | uniq -c
 查看以下實際驗證範例：
 - `test_results/trySwift-stage1-validation.md`
 - `test_results/taiwan-calendar-stage1-validation.md`
-- `test_results/h1431532403240-Mir01-stage1-validation.md`
+- `test_results/sample-project-stage1-validation.md`
 ```
 
 ---
@@ -928,7 +928,7 @@ git log --all --format="%s" | head -50
 # 搜尋可能的 AI 生成代碼標記
 git log --all --grep="AI\|Claude\|GPT\|generated" --oneline
 
-# 檢查 commit message 的繁體中文使用（Mir01 特徵）
+# 檢查 commit message 的繁體中文使用
 git log --all --format="%s" | grep -E "[\u4e00-\u9fff]" | wc -l
 ```
 
@@ -1187,7 +1187,7 @@ refactor: [X] commits ([Y]%)
 
 - `test_results/trySwift-stage2-git-hotspots.md`
 - `test_results/taiwan-calendar-stage2-git-hotspots.md`
-- `test_results/h1431532403240-Mir01-stage2-git-hotspots.md`
+- `test_results/sample-project-stage2-git-hotspots.md`
 
 ```
 
@@ -1241,7 +1241,7 @@ refactor: [X] commits ([Y]%)
 
 ## 🎯 效果評估
 
-基於實際測試（trySwift, taiwan-calendar, Mir01, chiahsing1115）:
+基於實際測試（trySwift, taiwan-calendar, monorepo-sample, sample-projects）:
 
 | 指標 | 目標 | 實際 | 達成 |
 |------|------|------|------|
@@ -1253,7 +1253,7 @@ refactor: [X] commits ([Y]%)
 
 ### 成功案例
 
-1. **Mir01** (156k 行)
+1. **monorepo-sample** (156k 行)
    - 掃描 <5% 檔案達到 75% 理解
    - Stage 1 驗證率 87%
    - 識別出 Level 3 AI 協作
@@ -1262,7 +1262,7 @@ refactor: [X] commits ([Y]%)
    - Stage 0 準確度 100%
    - 完整識別架構和測試文化
 
-3. **chiahsing1115** (5 專案)
+3. **sample-projects** (5 專案)
    - 快速識別能力弱點（數據持久化）
    - 準確評估經驗年資
 

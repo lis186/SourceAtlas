@@ -6,6 +6,14 @@ argument-hint: (optional) [path or scope, e.g., "src/", "frontend", "last 6 mont
 
 # SourceAtlas: Smart Temporal Analysis (Git History)
 
+> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md) v1.0
+>
+> Key principles enforced:
+> - Article II: 強制排除目錄（git log 過濾）
+> - Article IV: 證據格式（commit hash、file:line 引用）
+> - Article V: 輸出格式（Markdown 報告）
+> - Article VI: 規模感知（大型專案限制分析範圍）
+
 ## Context
 
 **Analysis Scope:** $ARGUMENTS (default: entire repository)

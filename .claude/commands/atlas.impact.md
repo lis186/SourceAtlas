@@ -6,6 +6,14 @@ argument-hint: [target, e.g., "User model", "api /api/users/{id}", "authenticati
 
 # SourceAtlas: Impact Analysis (Static Dependencies)
 
+> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md) v1.0
+>
+> Key principles enforced:
+> - Article I: 結構優於細節（追蹤依賴關係，非實作細節）
+> - Article II: 強制排除目錄
+> - Article IV: 證據格式（file:line 引用）
+> - Article VI: 規模感知（大型專案限制追蹤深度）
+
 ## Context
 
 **Analysis Target:** $ARGUMENTS
