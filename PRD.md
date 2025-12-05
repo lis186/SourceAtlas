@@ -1672,6 +1672,10 @@ When detecting user confusion, suggest:
   - **核心洞察**：SourceAtlas 是探索式工具（非線性），不適合 spec-kit 的線性 handoffs
   - **設計選擇**：根據實際發現動態生成建議，而非靜態列出所有可能命令
   - **5 個 Sections**：發現驅動(7.1)、結束條件(7.2)、建議數量(7.3)、參數品質(7.4)、理由品質(7.5)
+- ❌ `/atlas.validate` 命令取消：改為內建品質檢查
+  - **靈感來源**：spec-kit checklist.md 的 "Unit Tests for English" 概念
+  - **取消原因**：獨立命令過度工程化，分析輸出通常即時消費、自己判斷品質
+  - **替代方案**：各命令輸出前內建自動檢查，不合規則警告
 
 **決策記錄** (2025-12-05):
 - ✅ Constitution v1.0 實作：學習 spec-kit 的 Constitution 模式
