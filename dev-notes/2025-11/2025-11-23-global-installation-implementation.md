@@ -119,7 +119,7 @@ sourceatlas2/
 
 ```bash
 # 1. Clone once
-git clone https://github.com/user/sourceatlas2.git ~/dev/sourceatlas2
+git clone https://github.com/lis186/SourceAtlas.git ~/dev/sourceatlas2
 
 # 2. Install globally
 cd ~/dev/sourceatlas2
