@@ -1430,15 +1430,15 @@ overview ├─ flow ────┼─ (依情境)
 
 在每個命令的輸出末尾，根據發現動態生成建議：
 
-```yaml
-# /atlas.overview 輸出末尾範例
-recommended_next:
-  primary:
-    command: "/atlas.pattern \"repository\""
-    why: "發現 Repository pattern 在 5 個服務中使用，學習慣例確保一致性"
-  secondary:
-    command: "/atlas.history"
-    why: "專案規模 LARGE (15k LOC)，hotspot 分析可識別重構優先區"
+```markdown
+## Recommended Next
+
+| # | 命令 | 用途 |
+|---|------|------|
+| 1 | `/atlas.pattern "repository"` | 發現 Repository pattern 在 5 個服務中使用，學習慣例確保一致性 |
+| 2 | `/atlas.history` | 專案規模 LARGE (15k LOC)，hotspot 分析可識別重構優先區 |
+
+💡 輸入數字（如 `1`）或複製命令執行
 ```
 
 **Handoffs 邏輯對照表**：
