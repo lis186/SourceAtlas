@@ -12,6 +12,7 @@
 - **v1.0** ✅ - 方法論驗證完成（2025-11-22）
 - **v2.7.0** ✅ - Commands 架構完成，含流程追蹤（2025-12-01）
 - **v2.8.0** ✅ - Constitution v1.0 + Monorepo 支援（2025-12-05）
+- **v2.8.1** ✅ - Constitution v1.1 + Handoffs 原則（2025-12-06）
 
 ## 架構
 
@@ -976,9 +977,9 @@ touch test-results.md
 
 ---
 
-## 當前狀態（v2.8.0）
+## 當前狀態（v2.8.1）
 
-基於 PRD v2.8.0、v1.0 學習和 Constitution v1.0：
+基於 PRD v2.8.1、v1.0 學習和 Constitution v1.1：
 
 ### ✅ 已完成 - 核心 6 Commands
 - [x] `/atlas.init` - 專案初始化（自動觸發規則）✅ (2025-11-30)
@@ -989,7 +990,8 @@ touch test-results.md
 - [x] `/atlas.flow` - 流程追蹤（11 種分析模式）✅ (2025-12-01) ⭐⭐⭐⭐⭐
 
 ### ✅ 已完成 - 品質框架
-- [x] **Constitution v1.0** - 分析行為的不可變原則 ✅ (2025-12-05) ⭐ NEW
+- [x] **Constitution v1.1** - 分析行為的不可變原則 + Handoffs 原則 ✅ (2025-12-06) ⭐ NEW
+- [x] **Article VII: Handoffs 原則** - 發現驅動的動態下一步建議 ✅ (2025-12-06)
 - [x] **validate-constitution.sh** - 自動化合規驗證 ✅ (2025-12-05)
 - [x] **Monorepo 偵測** - lerna/pnpm/nx/turborepo/npm workspaces ✅ (2025-12-05)
 
@@ -1012,12 +1014,13 @@ touch test-results.md
 - (2025-11-30): `/atlas.history` 實作完成 - 單一命令 + 零參數 + 智慧輸出 + 自動安裝 code-maat
 - (2025-12-01): `/atlas.flow` 實作完成 - 11 種分析模式 + 語言專屬入口點 + 增強邊界識別
 - (2025-12-05): **Constitution v1.0** 實作完成 - 7 Articles + 驗證腳本 + Monorepo 偵測
+- (2025-12-06): **Constitution v1.1** 實作完成 - 新增 Article VII: Handoffs 原則（5 Sections）
 
 **詳細路線圖**：見 [dev-notes/implementation-roadmap.md](./dev-notes/implementation-roadmap.md) 和 [PRD.md](./PRD.md)
 
 ---
 
-## 實作核心原則（基於 v1.0 經驗 + Constitution v1.0）
+## 實作核心原則（基於 v1.0 經驗 + Constitution v1.1）
 
 實作任何新功能時，**必須遵循**：
 
