@@ -262,7 +262,7 @@ VERY_LARGE: > 500 files
 2. [具體行動項目]
 ```
 
-### Section 7.3: 建議數量
+### Section 7.3: 建議數量與格式
 > **不可變**: Handoffs 建議遵循以下規則。
 
 - **Primary**: 必須提供（除非滿足結束條件）
@@ -270,6 +270,21 @@ VERY_LARGE: > 500 files
 
 **禁止**為了格式一致而強行提供 Secondary 建議。
 當只有一個明確方向時，只提供 Primary。
+
+**輸出格式**：使用編號表格，方便用戶快速選擇：
+
+```markdown
+## Recommended Next
+
+| # | 命令 | 用途 |
+|---|------|------|
+| 1 | `/atlas.pattern "repository"` | 發現 Repository 模式被 15 處使用，需了解實作慣例 |
+| 2 | `/atlas.flow "checkout"` | 追蹤結帳流程的完整執行路徑 |
+
+💡 輸入數字（如 `1`）或複製命令執行
+```
+
+用戶可直接輸入 `1` 快速執行，也可複製完整命令。
 
 ### Section 7.4: 參數品質
 > **不可變**: Handoffs 參數必須滿足以下品質標準。
