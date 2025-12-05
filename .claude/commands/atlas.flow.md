@@ -6,6 +6,14 @@ argument-hint: [flow description or entry point, e.g., "user checkout", "from Or
 
 # SourceAtlas: Business Flow Analysis
 
+> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md) v1.0
+>
+> Key principles enforced:
+> - Article I: 高熵優先（從入口點開始追蹤）
+> - Article II: 強制排除目錄
+> - Article IV: 證據格式（file:line 引用、呼叫鏈）
+> - Article VI: 規模感知（追蹤深度根據模式調整）
+
 ## Context
 
 **Analysis Target:** $ARGUMENTS

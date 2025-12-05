@@ -5,6 +5,11 @@ allowed-tools: Read, Write, Edit, Glob
 
 # SourceAtlas: Project Initialization
 
+> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md) v1.0
+>
+> Note: This initialization command injects auto-trigger rules. The injected rules reference
+> the Constitution principles that each triggered command will follow.
+
 ## Purpose
 
 Inject SourceAtlas auto-trigger rules into the project's CLAUDE.md so you (Claude Code)
