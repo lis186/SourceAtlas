@@ -587,9 +587,38 @@ interface UserResponse {
 
 ---
 
-## What's Next?
+## Recommended Next (Handoffs)
 
-After `/atlas.impact`, users can:
-- Use `/atlas.pattern` to learn how to implement changes consistently
-- Use `/atlas.overview` for broader context
-- Create migration plan based on the checklist
+根據分析發現，動態建議 1-2 個最相關的後續命令。
+
+在輸出末尾加入：
+
+```markdown
+---
+
+## 🎯 Recommended Next
+
+**Primary:**
+- **Command:** `[具體命令含參數]`
+- **Why:** [1 句話理由，基於上述發現]
+
+**Secondary:** *(optional)*
+- **Command:** `[具體命令含參數]`
+- **Why:** [1 句話理由]
+```
+
+**何時建議**（根據發現選擇最相關的）：
+- 影響範圍涉及特定 pattern → `/atlas.pattern "[pattern]"`
+- 影響鏈複雜，需追蹤流程 → `/atlas.flow "[入口點]"`
+- 需要了解變動歷史 → `/atlas.history [相關檔案]`
+- 需要更廣泛背景 → `/atlas.overview`
+
+**何時不建議**（省略 Recommended Next 區塊）：
+- 分析結果太模糊，沒有高信心發現
+- 無法確定具體參數
+- 影響範圍很小，不需要進一步分析
+
+**限制**：
+- 最多 2 個建議（Primary + Secondary）
+- 必須包含具體參數
+- 理由必須基於上述分析發現

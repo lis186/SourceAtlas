@@ -198,6 +198,20 @@ To implement similar functionality following this codebase's pattern:
 
 ---
 
+## Recommended Next
+
+<!-- Handoffs - 根據分析發現動態建議，省略此區塊若發現太模糊 -->
+
+**Primary:**
+- **Command:** `[具體命令含參數]`
+- **Why:** [1 句話理由，基於上述發現]
+
+**Secondary:** *(optional)*
+- **Command:** `[具體命令含參數]`
+- **Why:** [1 句話理由]
+
+---
+
 ## Additional Notes
 
 [Any project-specific quirks, gotchas, or important context that doesn't fit above]
@@ -242,6 +256,28 @@ To implement similar functionality following this codebase's pattern:
 **If pattern is too generic:**
 1. Ask user to clarify what specific aspect they're interested in
 2. Provide examples of more specific patterns they could ask about
+
+---
+
+## Handoffs 判斷規則
+
+根據分析發現，在 `Recommended Next` 區塊建議 1-2 個最相關的後續命令。
+
+**何時建議**（根據發現選擇最相關的）：
+- 發現此 pattern 與其他 patterns 高度相關 → `/atlas.pattern "[相關 pattern]"`
+- Pattern 涉及複雜流程 → `/atlas.flow "[入口點]"`
+- Pattern 在多個區域使用，可能有風險 → `/atlas.impact "[pattern 名稱]"`
+- 需要了解 pattern 的變動歷史 → `/atlas.history [相關檔案]`
+
+**何時不建議**（省略整個 `Recommended Next` 區塊）：
+- 分析結果太模糊，沒有高信心發現
+- Pattern 很簡單，不需要進一步分析
+- 無法確定具體參數
+
+**限制**：
+- 最多 2 個建議（Primary + Secondary）
+- 必須包含具體參數
+- 理由必須基於上述分析發現
 
 ---
 

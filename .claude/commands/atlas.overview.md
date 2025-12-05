@@ -214,9 +214,14 @@ summary:
     - "[finding 2]"
     - "[finding 3]"
 
-  recommended_next_steps:
-    - "[action 1]"
-    - "[action 2]"
+# Handoffs - 根據分析發現動態建議，省略此區塊若發現太模糊
+recommended_next:
+  primary:
+    command: "[具體命令含參數，如 /atlas.pattern \"repository\"]"
+    why: "[1 句話理由，基於上述發現]"
+  secondary:  # 可選，只有一個相關建議時省略
+    command: "[具體命令含參數]"
+    why: "[1 句話理由]"
 ```
 
 ---
@@ -243,9 +248,22 @@ summary:
 
 ---
 
-## What's Next?
+## Handoffs 判斷規則
 
-After `/atlas.overview`, users can:
-- Use `/atlas.pattern` to learn specific design patterns
-- Use `/atlas.impact` to analyze change impact
-- Run full `/atlas` for complete 3-stage analysis (Stage 0 + 1 + 2)
+根據分析發現，在 `recommended_next` 區塊建議 1-2 個最相關的後續命令。
+
+**何時建議**（根據發現選擇最相關的）：
+- 發現明確的設計 patterns（Repository, Service, Controller 等）→ `/atlas.pattern "[pattern名稱]"`
+- 架構複雜（多層、微服務、大量模組）→ `/atlas.flow "[主要入口點]"`
+- 專案規模 >= LARGE → `/atlas.history`（找出 hotspots）
+- 發現可能的高風險區域 → `/atlas.impact "[目標]"`
+
+**何時不建議**（省略整個 `recommended_next` 區塊）：
+- 分析結果太模糊，沒有高信心發現
+- 無法確定具體參數
+- AI 協作等級 >= 3 且專案規模 TINY/SMALL（可直接開發）
+
+**限制**：
+- 最多 2 個建議（primary + secondary）
+- 必須包含具體參數（不是泛泛的 "可以用 /atlas.pattern"）
+- 理由必須基於上述分析發現
