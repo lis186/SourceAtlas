@@ -6,6 +6,26 @@
 
 ## 2025-12（當前月份）
 
+### Week 1 (12/05): v2.8.0 Release - Constitution v1.0 ⭐⭐⭐⭐⭐
+
+**Constitution v1.0 實作完成** (12/05):
+- 學習 spec-kit 的 Constitution 模式，建立 SourceAtlas 分析憲法
+- 7 個 Articles：資訊理論、排除原則、假設原則、證據原則、輸出原則、規模感知、修訂原則
+- 驗證腳本：`validate-constitution.sh`（自動化合規檢查）
+- 專案偵測增強：Monorepo 支援（lerna, pnpm, nx, turborepo, npm workspaces）
+- 測試：18 個舊格式 TOON + 1 個新格式 YAML，品質改進 +3900% file:line 引用
+→ [測試報告](./2025-12/2025-12-05-constitution-testing-report.md)
+→ [品質比較](./2025-12/2025-12-05-constitution-quality-comparison-report.md)
+→ [前後對比](./2025-12/2025-12-05-constitution-before-after-comparison.md)
+
+**關鍵改進**:
+| 指標 | Before | After | 改進 |
+|------|--------|-------|------|
+| file:line 引用 | 0.3 個 | 12 個 | +3900% |
+| 驗證成本 | 手動審查 | 自動 1 秒 | -95% |
+| 輸出行數 | 361 行 | 133 行 | -63% |
+| 專案偵測成功率 | 83% | 100% | +17% |
+
 ### Week 1 (12/01): v2.7.0 Release - Flow 分析完成 ⭐⭐⭐⭐⭐
 
 **`/atlas.flow` P0-A 準確性改善** (12/01):
@@ -175,6 +195,7 @@
 
 | 日期 | 事件 | 影響 | 連結 |
 |------|------|------|------|
+| 2025-12-05 | **Constitution v1.0** | 品質框架，+3900% 證據精確度 | [詳細](./2025-12/2025-12-05-constitution-quality-comparison-report.md) |
 | 2025-11-30 | TypeScript/React/Vue Patterns | 50 patterns, 141 total | - |
 | 2025-11-30 | Kotlin/Android Patterns | 31 patterns, 8 專案驗證 | [詳細](./2025-11/2025-11-30-kotlin-patterns-implementation-report.md) |
 | 2025-11-24 | 命令架構簡化 | 版本號統一、移除 `/atlas` | [詳細](./2025-11/2025-11-24-atlas-command-simplification-decision.md) |
@@ -213,4 +234,4 @@
 
 ---
 
-**最後更新**: 2025-12-03 (v2.7.0)
+**最後更新**: 2025-12-05 (v2.8.0)
