@@ -145,7 +145,7 @@ metadata:
   scanned_files: [files read]
   scan_ratio: "[percentage]"
   project_scale: "[TINY|SMALL|MEDIUM|LARGE|VERY_LARGE]"
-  constitution_version: "1.0"
+  constitution_version: "1.1"
 
 project_fingerprint:
   project_type: "[WEB_APP|CLI|LIBRARY|MOBILE_APP|MICROSERVICE|MONOREPO]"
@@ -250,20 +250,31 @@ recommended_next:
 
 ## Handoffs 判斷規則
 
-根據分析發現，在 `recommended_next` 區塊建議 1-2 個最相關的後續命令。
+> 遵循 **Constitution Article VII: Handoffs 原則**
 
-**何時建議**（根據發現選擇最相關的）：
-- 發現明確的設計 patterns（Repository, Service, Controller 等）→ `/atlas.pattern "[pattern名稱]"`
-- 架構複雜（多層、微服務、大量模組）→ `/atlas.flow "[主要入口點]"`
-- 專案規模 >= LARGE → `/atlas.history`（找出 hotspots）
-- 發現可能的高風險區域 → `/atlas.impact "[目標]"`
+### 結束條件（省略 `recommended_next`）
 
-**何時不建議**（省略整個 `recommended_next` 區塊）：
-- 分析結果太模糊，沒有高信心發現
-- 無法確定具體參數
-- AI 協作等級 >= 3 且專案規模 TINY/SMALL（可直接開發）
+根據 Section 7.2，滿足以下任一條件時省略：
+- **專案太小**：TINY（<10 files）可直接閱讀
+- **發現太模糊**：無法給出高信心（>0.7）的具體參數
+- **目標已達成**：AI 協作 Level ≥3 且規模 TINY/SMALL（可直接開發）
 
-**限制**：
-- 最多 2 個建議（primary + secondary）
-- 必須包含具體參數（不是泛泛的 "可以用 /atlas.pattern"）
-- 理由必須基於上述分析發現
+省略時提供結束提示：
+```markdown
+✅ **分析已足夠** - 專案規模小，可直接閱讀全部檔案開始開發
+```
+
+### 建議選擇（根據發現）
+
+| 發現 | 建議命令 | 參數來源 |
+|------|---------|---------|
+| 明確設計 patterns | `/atlas.pattern` | 發現的 pattern 名稱 |
+| 架構複雜（多層/微服務） | `/atlas.flow` | 主要入口點檔案 |
+| 規模 ≥ LARGE | `/atlas.history` | 無需參數 |
+| 高風險區域 | `/atlas.impact` | 風險檔案/模組名 |
+
+### 品質要求（Section 7.4-7.5）
+
+- **Primary**: 必須，參數具體（如 `"repository"` 非 `"相關 pattern"`）
+- **Secondary**: 可選，僅在有明確第二選項時提供
+- **Why**: 引用具體發現（數字、檔案名）
