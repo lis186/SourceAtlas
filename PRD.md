@@ -1,10 +1,10 @@
-# SourceAtlas PRD v2.8.1
+# SourceAtlas PRD v2.8.2
 
 **AI-Powered Codebase Understanding Assistant**
 
-- **版本**: 2.8.1
+- **版本**: 2.8.2
 - **更新日期**: 2025-12-06
-- **狀態**: ✅ Released (v2.8.1 Complete)
+- **狀態**: ✅ Released (v2.8.2 Complete)
 
 ---
 
@@ -56,11 +56,17 @@ v2.7 (已完成) - SourceAtlas Commands ✅
   ├─ Git 歷史時序分析
   └─ 141 個 patterns 支援
   ↓
-v2.8.1 (當前) - Constitution v1.1 + Handoffs ✅
+v2.8.1 - Constitution v1.1 + Handoffs ✅
   ├─ 分析品質框架（7 個 Articles）
   ├─ 自動化合規驗證
   ├─ Monorepo 偵測支援
-  └─ ✅ 發現驅動 Handoffs（Article VII: Handoffs 原則）
+  └─ 發現驅動 Handoffs（Article VII: Handoffs 原則）
+  ↓
+v2.8.2 (當前) - Branch-Aware Analysis ✅
+  ├─ Git 分支偵測
+  ├─ Monorepo 子目錄感知
+  ├─ Package 名稱識別
+  └─ Context-Aware 輸出路徑建議
   ↓
 v2.9 (未來) - SourceAtlas Monitor
   ├─ 持續追蹤系統
@@ -1666,7 +1672,16 @@ When detecting user confusion, suggest:
   - **測試結果**：27 個場景 95%+ 成熟度
 - **完整三階段分析**：使用 `PROMPTS.md` 手動執行（深度盡職調查場景）
 
-**決策記錄** (2025-12-06):
+**決策記錄** (2025-12-06) - v2.8.2:
+- ✅ **Branch-Aware Context**：學習 spec-kit 的 context-aware 設計
+  - **Git 分支偵測**：自動識別當前分支
+  - **Monorepo 子目錄感知**：偵測相對路徑
+  - **Package 名稱識別**：從 package.json/Cargo.toml/go.mod/pyproject.toml 提取
+  - **Context Metadata**：YAML metadata 包含 `context` 區塊
+- ✅ **--save 參數**：可選儲存分析結果至 `.sourceatlas/overview.yaml`
+- ✅ **內建品質檢查**：Constitution Section 5.4
+
+**決策記錄** (2025-12-06) - v2.8.1:
 - ✅ Constitution v1.1 實作：新增 Article VII: Handoffs 原則
 - ✅ 發現驅動 Handoffs 完成：27 個測試場景驗證，95%+ 成熟度
   - **核心洞察**：SourceAtlas 是探索式工具（非線性），不適合 spec-kit 的線性 handoffs
