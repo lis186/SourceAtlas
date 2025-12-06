@@ -1,7 +1,7 @@
 ---
 description: Get project overview - scan <5% of files to achieve 70-80% understanding
-allowed-tools: Bash, Glob, Grep, Read
-argument-hint: [optional: specific directory to analyze, e.g., "src/api"]
+allowed-tools: Bash, Glob, Grep, Read, Write
+argument-hint: [path] [--save] (e.g., "src/api" or ". --save")
 ---
 
 # SourceAtlas: Project Overview (Stage 0 Fingerprint)
@@ -16,7 +16,14 @@ argument-hint: [optional: specific directory to analyze, e.g., "src/api"]
 
 ## Context
 
-**Analysis Target**: ${ARGUMENTS:-.}
+**Arguments**: ${ARGUMENTS:-.}
+
+**Save Mode**: Check if `--save` is in arguments. If present:
+- Remove `--save` from path argument
+- After analysis, save YAML to `.sourceatlas/overview.yaml`
+- Create `.sourceatlas/` directory if needed
+
+**Analysis Target**: Parse from arguments (default: current directory)
 
 **Goal**: Generate a comprehensive project fingerprint by scanning <5% of files to achieve 70-80% understanding in 10-15 minutes.
 
@@ -43,6 +50,7 @@ The script will:
 - Determine project scale (TINY/SMALL/MEDIUM/LARGE/VERY_LARGE)
 - Recommend file scan limits (to stay <10%)
 - Suggest hypothesis targets (scale-aware)
+- **Detect context** (Git branch, monorepo subdirectory, package name)
 
 **Scale-Aware Scan Limits**:
 - **TINY** (<5 files): Scan 1-2 files max (50% max to avoid over-scanning tiny projects)
@@ -146,6 +154,11 @@ metadata:
   scan_ratio: "[percentage]"
   project_scale: "[TINY|SMALL|MEDIUM|LARGE|VERY_LARGE]"
   constitution_version: "1.1"
+  # Branch-Aware Context (v2.8.2)
+  context:
+    git_branch: "[branch name or null]"
+    relative_path: "[path within repo or null]"
+    package_name: "[detected package name or null]"
 
 project_fingerprint:
   project_type: "[WEB_APP|CLI|LIBRARY|MOBILE_APP|MICROSERVICE|MONOREPO]"
@@ -289,3 +302,25 @@ summary:
 - **參數具體**：如 `"repository"` 非 `"相關 pattern"`
 - **數量限制**：1-2 個建議，不強制填滿
 - **用途欄位**：引用具體發現（數字、檔案名）
+
+---
+
+## Save Mode (--save)
+
+If `--save` flag is present in arguments:
+
+1. **Create directory** (if needed):
+```bash
+mkdir -p .sourceatlas
+```
+
+2. **Save YAML output** to `.sourceatlas/overview.yaml`
+
+3. **Confirm save**:
+```
+💾 已儲存至 .sourceatlas/overview.yaml
+```
+
+**File naming for subdirectory analysis**:
+- Root analysis: `.sourceatlas/overview.yaml`
+- Subdirectory (e.g., `src/api`): `.sourceatlas/overview-src-api.yaml`
