@@ -1675,7 +1675,7 @@ When detecting user confusion, suggest:
 **決策記錄** (2025-12-06) - v2.8.2:
 - ✅ **Branch-Aware 分析**：學習 spec-kit 的 context-aware 設計
   - **Git 分支偵測**：自動識別當前分支，建議對應輸出路徑
-  - **Monorepo 子目錄感知**：分析 `packages/auth` 時輸出至 `.specstory/analyses/packages-auth/`
+  - **Monorepo 子目錄感知**：分析 `packages/auth` 時輸出至 `.sourceatlas/packages-auth/`
   - **Package 名稱識別**：從 package.json/Cargo.toml/go.mod/pyproject.toml 提取
   - **Context-Aware 輸出**：YAML metadata 包含 `context` 區塊
 - ✅ **內建品質檢查**：Constitution Section 5.4

@@ -44,7 +44,7 @@ The script will:
 - Recommend file scan limits (to stay <10%)
 - Suggest hypothesis targets (scale-aware)
 - **Detect context** (Git branch, monorepo subdirectory, package name)
-- **Suggest output path** based on context (e.g., `.specstory/analyses/packages-auth/`)
+- **Suggest output path** based on context (e.g., `.sourceatlas/packages-auth/`)
 
 **Scale-Aware Scan Limits**:
 - **TINY** (<5 files): Scan 1-2 files max (50% max to avoid over-scanning tiny projects)
