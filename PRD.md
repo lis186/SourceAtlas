@@ -1677,7 +1677,8 @@ When detecting user confusion, suggest:
   - **Git 分支偵測**：自動識別當前分支
   - **Monorepo 子目錄感知**：偵測相對路徑
   - **Package 名稱識別**：從 package.json/Cargo.toml/go.mod/pyproject.toml 提取
-  - **Context Metadata**：YAML metadata 包含 `context` 區塊（無自動儲存）
+  - **Context Metadata**：YAML metadata 包含 `context` 區塊
+- ✅ **--save 參數**：可選儲存分析結果至 `.sourceatlas/overview.yaml`
 - ✅ **內建品質檢查**：Constitution Section 5.4
 
 **決策記錄** (2025-12-06) - v2.8.1:
