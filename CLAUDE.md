@@ -994,7 +994,8 @@ touch test-results.md
 - [x] **Article VII: Handoffs 原則** - 發現驅動的動態下一步建議 ✅ (2025-12-06)
 - [x] **validate-constitution.sh** - 自動化合規驗證 ✅ (2025-12-05)
 - [x] **Monorepo 偵測** - lerna/pnpm/nx/turborepo/npm workspaces ✅ (2025-12-05)
-- [x] **Branch-Aware 分析** - Git 分支/子目錄/Package 偵測 ✅ (2025-12-06) ⭐ NEW
+- [x] **Branch-Aware Context** - Git 分支/子目錄/Package 偵測 ✅ (2025-12-06)
+- [x] **--save 參數** - 可選儲存至 `.sourceatlas/` ✅ (2025-12-06) ⭐ NEW
 
 ### ✅ 已完成 - 多語言支援
 - [x] iOS/Swift - 34 patterns
@@ -1017,7 +1018,8 @@ touch test-results.md
 - (2025-12-05): **Constitution v1.0** 實作完成 - 7 Articles + 驗證腳本 + Monorepo 偵測
 - (2025-12-06): **Constitution v1.1** 實作完成 - 新增 Article VII: Handoffs 原則（5 Sections）
 - (2025-12-06): `/atlas.validate` 已取消 - 改為內建品質檢查（獨立命令過度工程化）
-- (2025-12-06): **Branch-Aware 分析** 實作完成 - 學習 spec-kit context-aware 設計
+- (2025-12-06): **Branch-Aware Context** 實作完成 - Git 分支/子目錄/Package 偵測
+- (2025-12-06): **--save 參數** 實作完成 - 可選儲存至 `.sourceatlas/overview.yaml`
 
 **詳細路線圖**：見 [dev-notes/implementation-roadmap.md](./dev-notes/implementation-roadmap.md) 和 [PRD.md](./PRD.md)
 
