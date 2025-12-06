@@ -371,18 +371,18 @@ echo "📂 Suggested Output Path:"
 if [ -n "$CONTEXT_PATH" ]; then
     # In subdirectory of repo
     SAFE_CONTEXT=$(echo "$CONTEXT_PATH" | tr '/' '-')
-    OUTPUT_PATH=".specstory/analyses/$SAFE_CONTEXT"
+    OUTPUT_PATH=".sourceatlas/$SAFE_CONTEXT"
     echo "   $OUTPUT_PATH/"
     echo "   (Context: analyzing subdirectory '$CONTEXT_PATH')"
 elif [ -n "$GIT_BRANCH" ] && [ "$GIT_BRANCH" != "main" ] && [ "$GIT_BRANCH" != "master" ]; then
     # On feature branch
     SAFE_BRANCH=$(echo "$GIT_BRANCH" | tr '/' '-')
-    OUTPUT_PATH=".specstory/analyses/$SAFE_BRANCH"
+    OUTPUT_PATH=".sourceatlas/$SAFE_BRANCH"
     echo "   $OUTPUT_PATH/"
     echo "   (Context: analyzing on branch '$GIT_BRANCH')"
 else
     # Default: root analysis
-    OUTPUT_PATH=".specstory/analyses"
+    OUTPUT_PATH=".sourceatlas"
     echo "   $OUTPUT_PATH/"
     echo "   (Context: root project analysis)"
 fi
