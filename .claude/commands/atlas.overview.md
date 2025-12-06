@@ -44,7 +44,6 @@ The script will:
 - Recommend file scan limits (to stay <10%)
 - Suggest hypothesis targets (scale-aware)
 - **Detect context** (Git branch, monorepo subdirectory, package name)
-- **Suggest output path** based on context (e.g., `.sourceatlas/packages-auth/`)
 
 **Scale-Aware Scan Limits**:
 - **TINY** (<5 files): Scan 1-2 files max (50% max to avoid over-scanning tiny projects)
@@ -153,7 +152,6 @@ metadata:
     git_branch: "[branch name or null]"
     relative_path: "[path within repo or null]"
     package_name: "[detected package name or null]"
-    output_path: "[suggested output directory]"
 
 project_fingerprint:
   project_type: "[WEB_APP|CLI|LIBRARY|MOBILE_APP|MICROSERVICE|MONOREPO]"
