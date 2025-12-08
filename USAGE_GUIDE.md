@@ -2,20 +2,83 @@
 
 **6 個斜線命令的完整使用說明**
 
-適用於 Claude Code | v2.8.0 | Constitution v1.0
+適用於 Claude Code | v2.8.1 | Constitution v1.1
 
 ---
 
 ## 目錄
 
-1. [安裝](#安裝)
-2. [命令 1: /atlas.overview](#命令-1-atlasoverview)
-3. [命令 2: /atlas.pattern](#命令-2-atlaspattern)
-4. [命令 3: /atlas.impact](#命令-3-atlasimpact)
-5. [命令 4: /atlas.history](#命令-4-atlashistory)
-6. [命令 5: /atlas.flow](#命令-5-atlasflow)
-7. [命令 6: /atlas.init](#命令-6-atlasinit)
-8. [常見問題](#常見問題)
+1. [使用情境](#使用情境)
+2. [建議流程](#建議流程)
+3. [安裝](#安裝)
+4. [命令 1: /atlas.overview](#命令-1-atlasoverview)
+5. [命令 2: /atlas.pattern](#命令-2-atlaspattern)
+6. [命令 3: /atlas.impact](#命令-3-atlasimpact)
+7. [命令 4: /atlas.history](#命令-4-atlashistory)
+8. [命令 5: /atlas.flow](#命令-5-atlasflow)
+9. [命令 6: /atlas.init](#命令-6-atlasinit)
+10. [常見問題](#常見問題)
+
+---
+
+## 使用情境
+
+SourceAtlas 適用於以下常見情境：
+
+| # | 情境 | 主要命令 | 說明 |
+|---|------|---------|------|
+| 1 | **接手新專案** | `/atlas.overview` | 加入團隊第一天，快速建立全局認知 |
+| 2 | **Code Review / 技術盡調** | `/atlas.overview` + `/atlas.history` | 評估程式碼品質和專案演進 |
+| 3 | **修 Bug** | `/atlas.flow` | 追蹤執行路徑，定位問題根源 |
+| 4 | **新增功能** | `/atlas.pattern` + `/atlas.impact` | 學習現有慣例，評估影響範圍 |
+| 5 | **面試評估候選人 GitHub** | `/atlas.overview` + `/atlas.history` | 快速判斷開發能力和習慣 |
+| 6 | **學習開源專案** | `/atlas.overview` + `/atlas.pattern` | 理解架構設計和 best practices |
+| 7 | **Breaking Change 評估** | `/atlas.impact` + `/atlas.flow` | 修改自己的 API，找出所有呼叫方 |
+| 8 | **Library/Framework 升級** | `/atlas.impact` + `/atlas.pattern` | 升級第三方套件，找出使用點、學新寫法 |
+
+### 不同經驗等級的切入點
+
+| 經驗等級 | 主要挑戰 | 建議起點 |
+|---------|---------|---------|
+| **Junior** | 不知道怎麼「讀」程式碼、容易迷失在細節 | `/atlas.overview` 給全局地圖 → `/atlas.pattern` 學習慣例 |
+| **Mid-level** | 知道怎麼讀，但效率不高、容易遺漏 | `/atlas.flow` 追蹤執行路徑 → `/atlas.impact` 評估改動範圍 |
+| **Senior** | 效率還行，但想更快、想驗證假設 | `/atlas.history` 看演進脈絡，快速驗證架構猜測 |
+
+---
+
+## 建議流程
+
+### 標準 5 步流程（適用大多數情境）
+
+```
+1. /atlas.overview     → 建立全局認知（5-10 分鐘）
+2. /atlas.pattern      → 學習該專案的慣例（按需）
+3. /atlas.flow         → 追蹤特定功能流程（按需）
+4. /atlas.impact       → 評估改動影響（準備動手時）
+5. /atlas.history      → 了解演進脈絡（深入時）
+```
+
+### 依情境的變體
+
+**情境 1-2：快速理解專案**
+```
+/atlas.overview → /atlas.history（可選）
+```
+
+**情境 3：修 Bug**
+```
+/atlas.flow "從 [entry point] 開始" → 定位問題
+```
+
+**情境 4：新增功能**
+```
+/atlas.pattern "[功能類型]" → /atlas.impact "[相關檔案]"
+```
+
+**情境 7-8：升級評估**
+```
+/atlas.impact "[API 或 library]" → /atlas.pattern "[新版寫法]"
+```
 
 ---
 
