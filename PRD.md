@@ -1,10 +1,10 @@
-# SourceAtlas PRD v2.8.2
+# SourceAtlas PRD v2.9.0
 
 **AI-Powered Codebase Understanding Assistant**
 
-- **版本**: 2.8.2
-- **更新日期**: 2025-12-06
-- **狀態**: ✅ Released (v2.8.2 Complete)
+- **版本**: 2.9.0
+- **更新日期**: 2025-12-08
+- **狀態**: 🔵 In Development (v2.9.0 /atlas.deps)
 
 ---
 
@@ -62,13 +62,19 @@ v2.8.1 - Constitution v1.1 + Handoffs ✅
   ├─ Monorepo 偵測支援
   └─ 發現驅動 Handoffs（Article VII: Handoffs 原則）
   ↓
-v2.8.2 (當前) - Branch-Aware Analysis ✅
+v2.8.2 - Branch-Aware Analysis ✅
   ├─ Git 分支偵測
   ├─ Monorepo 子目錄感知
   ├─ Package 名稱識別
   └─ Context-Aware 輸出路徑建議
   ↓
-v2.9 (未來) - SourceAtlas Monitor
+v2.9.0 (當前) - Dependency Analysis ⭐ NEW
+  ├─ /atlas.deps 命令
+  ├─ Library 使用點分析
+  ├─ Breaking Change 對照
+  └─ Migration Checklist 生成
+  ↓
+v3.0 (未來) - SourceAtlas Monitor
   ├─ 持續追蹤系統
   ├─ 歷史趨勢分析
   └─ 健康度儀表板
@@ -287,7 +293,77 @@ User model 驗證變更的影響範圍：
 
 ---
 
-#### 3B. API 改動的影響範圍（⭐ 高頻場景）
+#### 3B. Library/Framework 升級（⭐ 高頻場景）
+
+**情境**：
+```
+需要升級 React 17 → 18，或 axios 0.x → 1.x
+不確定專案用了哪些 API、哪些會受 breaking changes 影響
+```
+
+**傳統方式**：
+- 看 Migration Guide，逐項搜尋
+- `grep` 搜尋，但可能遺漏動態 import
+- 試著升級，看哪裡報錯
+- **經常遺漏、耗時數天**
+
+**使用 SourceAtlas**：
+```
+Developer: /atlas.deps "react"
+
+AI 回應：
+=== Dependency Analysis: react ===
+
+📦 版本資訊：
+  - 當前版本: 17.0.2
+  - 最新穩定版: 18.2.0
+
+📊 使用統計：
+  - Import 次數: 156 處
+  - 使用的 API: 23 種
+
+🔍 API 使用詳情：
+
+| API | 使用次數 | 檔案數 | React 18 狀態 |
+|-----|---------|--------|--------------|
+| `useState` | 89 | 45 | ✅ 相容 |
+| `useEffect` | 67 | 38 | ✅ 相容 |
+| `ReactDOM.render` | 3 | 1 | ⚠️ Deprecated → createRoot |
+| `componentWillMount` | 5 | 3 | 🔴 Removed |
+
+⚠️ Breaking Changes 影響：
+
+1. **ReactDOM.render** (3 處)
+   - `src/index.tsx:5` - App entry point
+   - `src/utils/modal.tsx:12` - Modal helper
+   - `tests/setup.ts:3` - Test setup
+   → 需改用 `createRoot`
+
+2. **componentWillMount** (5 處)
+   - `src/legacy/OldComponent.tsx:15`
+   - `src/legacy/AnotherOld.tsx:22`
+   → 需改用 `useEffect` 或 `componentDidMount`
+
+📋 Migration Checklist：
+
+- [ ] 更新 src/index.tsx: ReactDOM.render → createRoot
+- [ ] 重構 3 個 Legacy 組件的 lifecycle
+- [ ] 更新 test setup
+- [ ] 檢查 Concurrent Mode 相容性
+
+預估工作量：4-6 小時
+風險等級：🟡 中（有 deprecated API）
+```
+
+**價值**：
+- 完整盤點所有使用點，避免遺漏
+- 自動對照 breaking changes
+- 生成具體的 Migration Checklist
+- 評估工作量和風險
+
+---
+
+#### 3C. API 改動的影響範圍
 
 **情境**：
 ```
@@ -455,14 +531,15 @@ AI 回應：
 
 | 場景類型 | 需求特點 | 適用產品 | 使用命令 |
 |---------|---------|---------|----------|
-| **即時探索** | 不需歷史資料、即時推理 | ✅ SourceAtlas Commands (v2.5) | |
+| **即時探索** | 不需歷史資料、即時推理 | ✅ SourceAtlas Commands | |
 | 場景 0: 快速理解新專案 ⭐ | 10-15 分鐘獲得全局視角 | ✅ Commands | `/atlas.overview` ⭐⭐⭐⭐⭐ |
-| 場景 1: Bug 修復 | 快速定位問題 | ✅ Commands | `/atlas.impact` |
+| 場景 1: Bug 修復 | 快速定位問題 | ✅ Commands | `/atlas.flow` + `/atlas.impact` |
 | 場景 2: 學習模式 | 識別設計模式 | ✅ Commands | `/atlas.pattern` ⭐⭐⭐⭐⭐ |
-| 場景 3B: API 影響分析 ⭐ | 追蹤 API 調用鏈 | ✅ Commands | `/atlas.impact` ⭐⭐⭐⭐ |
+| 場景 3B: Library 升級 ⭐ | 盤點 dependency 使用點 | ✅ Commands (v2.9) | `/atlas.deps` ⭐⭐⭐⭐⭐ NEW |
+| 場景 3C: API 影響分析 | 追蹤 API 調用鏈 | ✅ Commands | `/atlas.impact` ⭐⭐⭐⭐ |
 | 場景 4: Code Review | 理解變更意圖 | ✅ Commands | `/atlas.overview` + `/atlas.pattern` |
-| **持續追蹤** | 需要歷史資料、趨勢分析 | 🔮 SourceAtlas Monitor (v2.6) | |
-| 場景 3A: Model 變更影響 | Git 歷史、關聯分析 | 🔮 Monitor | (未來功能) |
+| **持續追蹤** | 需要歷史資料、趨勢分析 | 🔮 SourceAtlas Monitor (v3.0) | |
+| 場景 3A: Model 變更影響 | Git 歷史、關聯分析 | ✅ Commands | `/atlas.history` |
 | 場景 5: 技術債務 | 持續追蹤、量化指標 | 🔮 Monitor | `/atlas.health` (未來) |
 
 ---
@@ -478,7 +555,11 @@ AI 回應：
 │  SourceAtlas Commands (Slash Commands)     │
 │  ├─ /atlas.overview      - Project Fingerprint ⭐⭐⭐⭐⭐
 │  ├─ /atlas.pattern       - Learn Patterns ⭐⭐⭐⭐⭐
-│  └─ /atlas.impact        - Impact Analysis ⭐⭐⭐⭐
+│  ├─ /atlas.impact        - Impact Analysis ⭐⭐⭐⭐
+│  ├─ /atlas.history       - Git Temporal Analysis ⭐⭐⭐⭐
+│  ├─ /atlas.flow          - Flow Tracing ⭐⭐⭐⭐
+│  ├─ /atlas.deps          - Dependency Analysis ⭐⭐⭐⭐⭐ NEW
+│  └─ /atlas.init          - Project Setup ⭐⭐⭐
 ├─────────────────────────────────────────────┤
 │  Helper Scripts (Bash)                      │
 │  ├─ detect-project.sh                      │
@@ -689,19 +770,28 @@ hypotheses:
 /atlas.pattern "background job"    # 學習背景任務模式
 /atlas.pattern "file upload"       # 學習檔案上傳流程
 
+# 優先級 ⭐⭐⭐⭐⭐ - Dependency 分析（v2.9 新增）⭐ NEW
+/atlas.deps "react"                   # 分析 React 使用情況
+/atlas.deps "axios"                   # 分析 axios 使用情況
+/atlas.deps "lodash" --breaking       # 顯示 breaking changes 影響
+
 # 優先級 ⭐⭐⭐⭐ - 影響範圍分析
 /atlas.impact "User authentication"   # 功能改動影響
 /atlas.impact api "/api/users/{id}"   # API 改動影響
 
-# 優先級 ⭐⭐⭐⭐ - Git 歷史分析（v2.6 新增）⭐
+# 優先級 ⭐⭐⭐⭐ - Git 歷史分析
 /atlas.history                        # 整個專案 hotspots
 /atlas.history auth                   # 模組分析（自動偵測）
 /atlas.history src/auth/login.ts      # 單一檔案詳細分析
 
+# 優先級 ⭐⭐⭐⭐ - 流程追蹤
+/atlas.flow "user checkout"           # 追蹤結帳流程
+/atlas.flow "from OrderService"       # 從特定 Service 開始追蹤
+
 # 優先級 ⭐⭐⭐ - 專案設定
 /atlas.init                           # 注入 SourceAtlas 觸發規則到 CLAUDE.md
 
-# 未來功能（v2.7+）
+# 未來功能（v3.0+）
 /atlas.health             # 專案健康度分析
 /atlas.review PR#123      # PR 變更分析
 ```
@@ -804,7 +894,100 @@ Output Format:
 Remember: Scan <5% of files, focus on patterns not exhaustive details.
 ```
 
-#### 範例 3: `/atlas.init` (專案設定) ⭐ NEW
+#### 範例 3: `/atlas.deps` (Dependency 分析) ⭐ NEW
+
+```markdown
+# .claude/commands/atlas.deps.md
+
+---
+description: Analyze dependency usage for library/framework upgrades
+allowed-tools: Bash, Glob, Grep, Read, WebFetch
+argument-hint: [library name, e.g., "react", "axios", "lodash"]
+---
+
+# SourceAtlas: Dependency Analysis
+
+## Context
+
+Target library: $ARGUMENTS
+
+Goal: Analyze how this library is used in the codebase to facilitate upgrade planning.
+
+## Your Task
+
+1. **Identify Current Version**
+   - Check package.json, requirements.txt, Cargo.toml, go.mod, etc.
+   - Note: locked version vs declared version
+
+2. **Find All Import/Usage Points**
+   - Search for import statements
+   - Search for require() calls
+   - Search for dynamic imports
+   - Count total usage occurrences
+
+3. **Categorize API Usage**
+   - List all unique APIs/functions used from the library
+   - Count usage frequency for each
+   - Identify deprecated APIs if known
+
+4. **Breaking Changes Assessment** (if --breaking flag or latest version differs)
+   - Fetch library's CHANGELOG or migration guide (WebFetch if needed)
+   - Cross-reference with found usages
+   - Highlight affected code locations
+
+5. **Generate Migration Checklist**
+   - List all files needing changes
+   - Provide specific file:line references
+   - Estimate effort level
+
+## Output Format
+
+```yaml
+dependency_analysis:
+  library: [name]
+  current_version: [version]
+  latest_version: [version]
+
+usage_summary:
+  total_imports: [number]
+  unique_files: [number]
+  api_count: [number]
+
+api_usage:
+  - api: [function/class name]
+    count: [number]
+    files: [list of file:line]
+    status: compatible | deprecated | removed
+
+breaking_changes:
+  - change: [description]
+    affected_files: [count]
+    locations:
+      - file: [path]
+        line: [number]
+        current_usage: [code snippet]
+        migration: [suggested fix]
+
+migration_checklist:
+  - task: [description]
+    files: [list]
+    effort: low | medium | high
+
+risk_level: low | medium | high
+estimated_effort: [hours]
+```
+
+## Key Principles
+
+- Focus on USED APIs, not all available APIs
+- Provide specific file:line references (Constitution Article IV)
+- Include migration suggestions, not just problem identification
+- Assess risk honestly
+```
+
+---
+
+#### 範例 4: `/atlas.init` (專案設定)
 
 ```markdown
 # .claude/commands/atlas.init.md
@@ -1642,7 +1825,7 @@ When detecting user confusion, suggest:
 
 ## 版本資訊
 
-**當前版本**: v2.8.1 (2025-12-06)
+**當前版本**: v2.9.0 (2025-12-08)
 
 **開發狀態**：
 - v1.0 ✅ - 方法論驗證完成（5 專案測試）
@@ -1665,12 +1848,23 @@ When detecting user confusion, suggest:
   - **validate-constitution.sh** ✅ - 自動化合規驗證
   - **Monorepo 偵測** ✅ - lerna/pnpm/nx/turborepo/npm workspaces
   - **品質改進**: +3900% file:line 引用、-63% 輸出行數、-95% 驗證成本
-- v2.8.1 ✅ - 發現驅動 Handoffs ⭐ COMPLETE
+- v2.8.1 ✅ - 發現驅動 Handoffs
   - **Constitution v1.1** ✅ - 新增 Article VII: Handoffs 原則（已完成，2025-12-06）
   - **動態下一步建議** ✅ - 根據分析發現，建議 1-2 個最相關的後續命令
   - **5 個 Sections**：發現驅動、結束條件、建議數量、參數品質、理由品質
   - **測試結果**：27 個場景 95%+ 成熟度
+- v2.9.0 🔵 - Dependency Analysis ⭐ IN PROGRESS
+  - `/atlas.deps` 🔵 - Dependency 使用分析（開發中）
+  - **核心功能**：Library 使用點盤點、Breaking Change 對照、Migration Checklist
+  - **目標場景**：Library/Framework 升級（情境 8）
 - **完整三階段分析**：使用 `PROMPTS.md` 手動執行（深度盡職調查場景）
+
+**決策記錄** (2025-12-08) - v2.9.0:
+- 🔵 **新增 `/atlas.deps` 命令**：專門處理 Library/Framework 升級場景
+  - **問題識別**：情境 8（Library 升級）目前缺乏專門工具
+  - **設計選擇**：新建命令（語意清晰）而非擴展 impact（概念混淆）
+  - **核心功能**：Usage 盤點、Breaking Change 對照、Migration Checklist
+  - **輸出格式**：YAML（符合現有 Constitution 規範）
 
 **決策記錄** (2025-12-06) - v2.8.2:
 - ✅ **Branch-Aware Context**：學習 spec-kit 的 context-aware 設計
