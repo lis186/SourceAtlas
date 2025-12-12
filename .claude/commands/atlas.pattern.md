@@ -29,8 +29,9 @@ argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--save] [
 **如果參數中沒有 `--force`**，先檢查快取：
 
 1. 從 `$ARGUMENTS` 提取 pattern 名稱（移除 `--save`、`--force`）
-2. 轉換為檔名：空格→`-`、小寫、移除特殊字元
+2. 轉換為檔名：空格→`-`、小寫、移除特殊字元、**截斷至 50 字元**
    - 例：`"api endpoint"` → `api-endpoint.md`
+   - 例：`"very long pattern name that exceeds limit"` → `very-long-pattern-name-that-exceeds-limit.md`（截斷）
 3. 檢查快取：
    ```bash
    ls -la .sourceatlas/patterns/{name}.md 2>/dev/null
@@ -43,7 +44,13 @@ argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--save] [
      ```
      📁 載入快取：.sourceatlas/patterns/{name}.md（N 天前）
      💡 重新分析請加 --force
-
+     ```
+   - **如果超過 30 天**，額外顯示：
+     ```
+     ⚠️ 快取已超過 30 天，建議重新分析
+     ```
+   - 然後輸出：
+     ```
      ---
      [快取內容]
      ```
