@@ -1,11 +1,11 @@
 # Proposal: 探索結果持久化
 
 **Status**: 🟡 Phase 2 設計中
-**Version**: 1.2
+**Version**: 1.3
 **Author**: Claude & Justin
 **Created**: 2025-12-12
 **Updated**: 2025-12-12
-**Completed**: 2025-12-12
+**Phase 1 Completed**: 2025-12-12
 
 ---
 
@@ -329,145 +329,243 @@ rm -rf .sourceatlas/deps/         # for "deps"
 
 ---
 
-## Phase 2：快取整合（設計中）
+## Phase 2：快取整合
 
-### 問題：存了但沒用到
+### 設計審查會議結論（2025-12-12）
 
-Phase 1 完成後，使用者模擬測試發現：
+**參與者**：架構師、Claude Code 資深工程師、實作工程師、資深 PO
 
-> 「存了就要能用」— 中階工程師
->
-> 「我怎麼知道什麼時候該重新分析？」— 初學者
->
-> 「不要太囉嗦，要能跳過」— 資深工程師
+#### 核心問題
 
-### 使用者回饋整理
+Phase 1 的 `--save` 只是「匯出」，存了但沒用到。使用者的真正需求是：
 
-| 面向 | 初學者 | 中階 | 資深 |
-|------|--------|------|------|
-| **自動檢查快取** | ✅ 很有幫助 | ✅ 應該要有 | ⚠️ 可以，但要能跳過 |
-| **詢問確認** | ✅ 需要引導 | ✅ OK | ❌ 太囉嗦，要 `--force` |
-| **顯示快取清單** | 🤔 不知道要看 | ✅ 想要 | ✅ 想要 |
-| **差異比較** | 🤔 看不懂 | ✅ 有價值 | ✅ 核心功能 |
-| **自動過期** | ✅ 需要建議 | ✅ 7天合理 | ⚠️ 讓我自己決定 |
+> **「不要讓我浪費時間重複做一樣的事」**
+
+#### 方案比較
+
+| 方案 | 描述 | 結論 |
+|------|------|------|
+| **詢問式** | 發現快取後詢問「要重用嗎？」 | ❌ UX 差，打斷流程 |
+| **提示式** | 加「💡 執行 /atlas.list 查看」 | ❌ 時機太晚，分析已開始 |
+| **告知式** | 有快取直接用，顯示來源 | ✅ 採用 |
+
+#### 關鍵決策
+
+1. **預設行為**：有快取就直接用，不詢問
+2. **跳過方式**：`--force` 強制重新分析
+3. **不做過期**：顯示日期，讓使用者自己判斷
 
 ---
 
-### Phase 2a：基礎快取整合
+### Phase 2a：告知式快取
 
-**目標**：讓 Claude 知道快取存在，提供選擇
+#### 設計原則
 
-#### 1. 新增 `--force` 參數
+- **Opt-out** 而非 **Opt-in**：預設用快取，要重跑才加參數
+- **不打斷流程**：不詢問，直接執行
+- **透明度**：清楚顯示來源和日期
 
-跳過快取檢查，直接重新分析：
+#### 行為矩陣
 
-```bash
-/atlas.overview --force        # 忽略快取，重新分析
-/atlas.pattern "api" --force   # 忽略快取，重新分析
-```
+| 快取存在 | `--force` | `--save` | 行為 |
+|---------|-----------|----------|------|
+| ❌ | - | ❌ | 正常分析 |
+| ❌ | - | ✅ | 分析 + 儲存 |
+| ✅ | ❌ | - | **直接載入快取**（顯示來源） |
+| ✅ | ✅ | ❌ | 重新分析（不覆蓋舊快取） |
+| ✅ | ✅ | ✅ | 重新分析 + 覆蓋 |
 
-#### 2. 新增 `/atlas.list` 命令
+#### 功能 1：告知式快取檢查
 
-列出所有已儲存的分析：
-
-```bash
-/atlas.list
-
-輸出：
-📁 .sourceatlas/ 內容：
-
-| 類型 | 檔案 | 儲存時間 | 年齡 |
-|------|------|----------|------|
-| overview | overview.yaml | 2025-12-10 | 2 天前 |
-| pattern | patterns/repository.md | 2025-12-09 | 3 天前 |
-| pattern | patterns/api-endpoint.md | 2025-12-09 | 3 天前 |
-| history | history.md | 2025-12-08 | 4 天前 |
-
-💡 使用 `/atlas.clear [target]` 清空特定類型
-```
-
-#### 3. 執行時檢查快取
-
-修改各命令 prompt，加入快取檢查邏輯：
+**各命令加入快取檢查邏輯**：
 
 ```markdown
-## Cache Check (執行分析前)
+## Cache Check（分析前，最高優先）
 
-1. 檢查對應的快取檔案是否存在
-2. 如果存在，顯示：
-   ```
-   📁 發現既有分析：.sourceatlas/overview.yaml（3 天前）
+**如果沒有 `--force`**：
 
-   選擇：
-   1. 查看既有分析（推薦）
-   2. 重新分析（覆蓋既有）
+1. 根據參數計算快取檔案路徑：
+   - `/atlas.overview` → `.sourceatlas/overview.yaml`
+   - `/atlas.pattern "api"` → `.sourceatlas/patterns/api.md`
+   - `/atlas.history` → `.sourceatlas/history.md`
+   - 以此類推...
+
+2. 用 Bash 檢查檔案是否存在：
+   ```bash
+   ls -la .sourceatlas/overview.yaml 2>/dev/null
    ```
-3. 如果使用者選 1，直接讀取並顯示快取內容
-4. 如果使用者選 2，執行分析並覆蓋
-5. 如果有 `--force`，跳過此檢查
+
+3. 如果存在：
+   - 讀取檔案修改時間（從 ls 輸出）
+   - 計算距今天數
+   - 用 Read tool 讀取檔案內容
+   - 輸出：
+     ```
+     📁 載入快取：.sourceatlas/overview.yaml（3 天前）
+     💡 重新分析請加 --force
+
+     ---
+     [快取內容]
+     ```
+   - **結束，不執行分析**
+
+4. 如果不存在：正常執行分析
+
+**如果有 `--force`**：跳過快取檢查，直接分析
+```
+
+#### 功能 2：`--force` 參數
+
+**用途**：強制重新分析，忽略快取
+
+**各命令修改**：
+
+1. 更新 `argument-hint`：
+   ```yaml
+   argument-hint: [pattern type] [--save] [--force]
+   ```
+
+2. 在 Cache Check 區段處理 `--force`
+
+#### 功能 3：`/atlas.list` 命令
+
+**用途**：列出所有已儲存的分析
+
+**新檔案**：`.claude/commands/atlas.list.md`
+
+```markdown
+---
+description: List saved SourceAtlas analysis results
+model: haiku
+allowed-tools: Bash
+---
+
+# SourceAtlas: List Saved Results
+
+## Your Task
+
+列出 `.sourceatlas/` 目錄中所有已儲存的分析結果。
+
+### Step 1: Check directory exists
+
+```bash
+ls -la .sourceatlas/ 2>/dev/null || echo "NOT_FOUND"
+```
+
+如果輸出 `NOT_FOUND`：
+```
+📁 尚無已儲存的分析
+
+使用 `--save` 參數儲存分析結果：
+- `/atlas.overview --save`
+- `/atlas.pattern "api" --save`
+```
+結束。
+
+### Step 2: List all files with dates
+
+```bash
+find .sourceatlas -type f -exec ls -la {} \; 2>/dev/null
+```
+
+### Step 3: Format output
+
+將結果整理成表格：
+
+```
+📁 .sourceatlas/ 已儲存的分析：
+
+| 類型 | 檔案 | 大小 | 修改時間 |
+|------|------|------|----------|
+| overview | overview.yaml | 2.3 KB | 3 天前 |
+| pattern | patterns/api.md | 1.5 KB | 5 天前 |
+| pattern | patterns/repository.md | 2.1 KB | 5 天前 |
+| history | history.md | 4.2 KB | 7 天前 |
+
+💡 提示：
+- 重新分析：`/atlas.pattern "api" --force`
+- 清空快取：`/atlas.clear`
+```
 ```
 
 ---
 
-### Phase 2b：進階功能（未來）
+### 快取檔案路徑對照表
 
-#### 4. 過期建議
+| 命令 | 參數 | 快取路徑 |
+|------|------|----------|
+| `/atlas.overview` | - | `.sourceatlas/overview.yaml` |
+| `/atlas.overview` | `src/api` | `.sourceatlas/overview-src-api.yaml` |
+| `/atlas.pattern` | `"api"` | `.sourceatlas/patterns/api.md` |
+| `/atlas.pattern` | `"User Service"` | `.sourceatlas/patterns/user-service.md` |
+| `/atlas.history` | - | `.sourceatlas/history.md` |
+| `/atlas.flow` | `"checkout"` | `.sourceatlas/flows/checkout.md` |
+| `/atlas.impact` | `"User model"` | `.sourceatlas/impact/user-model.md` |
+| `/atlas.deps` | `"react"` | `.sourceatlas/deps/react.md` |
 
-根據分析類型建議不同過期時間：
-
-| 類型 | 建議過期 | 原因 |
-|------|---------|------|
-| overview | 7 天 | 專案結構可能變動 |
-| pattern | 30 天 | 設計模式較穩定 |
-| history | 7 天 | Git 持續變動 |
-| flow | 14 天 | 流程較穩定 |
-| impact | 7 天 | 依賴可能變動 |
-| deps | 30 天 | 依賴版本較穩定 |
-
-#### 5. 差異比較
-
-重新分析後，與舊版比較：
-
-```
-與舊分析相比：
-- 新增 2 個假設（發現新的 API 模組）
-- 移除 1 個假設（舊的 legacy 模組已刪除）
-- 信心度變化：JWT auth 0.75 → 0.85
-
-要覆蓋舊的 overview.yaml 嗎？
-```
+**檔名正規化規則**：
+1. 移除 `--save`、`--force` 參數
+2. 空格 → `-`
+3. 斜線 `/` → `-`
+4. 移除特殊字元 `{}()`
+5. 全小寫
 
 ---
 
 ### 不做的功能
 
-| 功能 | 原因 |
-|------|------|
-| 自動讀取快取作為 context | 太複雜，可能造成混亂 |
-| 強制過期刪除 | 讓使用者決定 |
-| 快取版本控制 | 過度工程化 |
+| 功能 | 原因 | 來源 |
+|------|------|------|
+| 詢問式互動 | UX 差，打斷流程 | 架構師 |
+| 過期自動失效 | 太聰明，讓使用者決定 | 架構師 |
+| 差異比較 | 複雜度高，Phase 2b 觀察 | 工程師 |
+| 快取版本控制 | 過度工程化 | 架構師 |
 
 ---
 
-### Phase 2 實作計畫
+### Phase 2a 實作計畫
 
-| 階段 | 內容 | 工作量 |
+| 項目 | 內容 | 工作量 |
 |------|------|--------|
-| 2a-1 | `--force` 參數（6 個命令） | 30min |
-| 2a-2 | `/atlas.list` 命令 | 30min |
-| 2a-3 | 快取檢查邏輯（6 個命令） | 1h |
-| 2a | **小計** | **2h** |
-| 2b | 過期建議 + 差異比較 | 2h |
-| | **總計** | **~4h** |
+| 1 | `/atlas.list` 命令 | 30min |
+| 2 | 各命令加入 Cache Check 區段（6 個） | 1.5h |
+| 3 | 各命令加入 `--force` 參數（包含在上面） | - |
+| 4 | 測試 | 30min |
+| | **總計** | **~2.5h** |
 
 ---
 
-### Phase 2 驗收標準
+### Phase 2a 驗收標準
 
-- [ ] `--force` 可跳過快取檢查
-- [ ] `/atlas.list` 可列出所有快取
-- [ ] 執行命令時會檢查並提示快取
-- [ ] 使用者可選擇重用或重新分析
+- [ ] `/atlas.list` 可列出所有快取及修改時間
+- [ ] 有快取時，直接載入並顯示來源
+- [ ] `--force` 可跳過快取，強制重新分析
+- [ ] `--force --save` 可重新分析並覆蓋快取
+
+---
+
+### 成功指標（Linda 建議）
+
+| 指標 | 定義 | 目標 |
+|------|------|------|
+| 快取命中率 | 載入快取次數 / 總執行次數 | > 30% |
+| `--force` 使用率 | 使用 --force 次數 / 快取存在時的執行次數 | < 50% |
+
+**判讀**：
+- 如果 `--force` 使用率 > 50%，代表快取沒用，需重新評估
+- 如果快取命中率 < 10%，代表使用者不常用 `--save`
+
+---
+
+### Phase 2b：進階功能（觀察後決定）
+
+以下功能**暫不實作**，根據 Phase 2a 使用情況決定：
+
+| 功能 | 觸發條件 |
+|------|---------|
+| 過期建議 | 使用者抱怨「用了舊的分析」 |
+| 差異比較 | 使用者要求「看看有什麼不同」 |
+| 自動清理 | 快取檔案累積太多 |
 
 ---
 
