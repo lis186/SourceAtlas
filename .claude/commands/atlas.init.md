@@ -68,6 +68,13 @@ When encountering these situations, automatically execute the corresponding comm
 - `/atlas.history` - Temporal analysis using git history (hotspots, coupling, contributors)
 - `/atlas.flow [query]` - Trace code execution flow (11 analysis modes: forward, reverse, error, data...)
 - `/atlas.deps [upgrade query]` - Dependency analysis for library/framework upgrades (iOS, Android, Python, etc.)
+- `/atlas.clear [target]` - Clear saved analysis results from .sourceatlas/
+
+### Persistence
+
+All analysis commands support `--save` to persist results:
+- `/atlas.pattern "api" --save` → `.sourceatlas/patterns/api.md`
+- `/atlas.overview --save` → `.sourceatlas/overview.yaml`
 ```
 
 ### Step 3: Apply Changes
@@ -116,6 +123,13 @@ When encountering these situations, automatically execute the corresponding comm
 - `/atlas.history` - Temporal analysis using git history (hotspots, coupling, contributors)
 - `/atlas.flow [query]` - Trace code execution flow (11 analysis modes: forward, reverse, error, data...)
 - `/atlas.deps [upgrade query]` - Dependency analysis for library/framework upgrades (iOS, Android, Python, etc.)
+- `/atlas.clear [target]` - Clear saved analysis results from .sourceatlas/
+
+### Persistence
+
+All analysis commands support `--save` to persist results:
+- `/atlas.pattern "api" --save` → `.sourceatlas/patterns/api.md`
+- `/atlas.overview --save` → `.sourceatlas/overview.yaml`
 ```
 
 2. Report that a new CLAUDE.md was created
