@@ -1,8 +1,8 @@
 ---
 description: Smart temporal analysis using git history - Hotspots, Coupling, and Recent Contributors
 model: sonnet
-allowed-tools: Bash, Glob, Grep, Read
-argument-hint: (optional) [path or scope, e.g., "src/", "frontend", "last 6 months"]
+allowed-tools: Bash, Glob, Grep, Read, Write
+argument-hint: (optional) [path or scope, e.g., "src/", "frontend", "last 6 months"] [--save]
 ---
 
 # SourceAtlas: Smart Temporal Analysis (Git History)
@@ -455,3 +455,26 @@ This could mean:
 ## Integration with Other Commands
 
 This command complements `/atlas.impact` (static analysis) with temporal insights.
+
+---
+
+## Save Mode (--save)
+
+If `--save` is present in `$ARGUMENTS`:
+
+### Step 1: Create directory
+
+```bash
+mkdir -p .sourceatlas
+```
+
+### Step 2: Save output
+
+After generating the complete analysis, save the **entire output** (from `=== Smart Temporal Analysis ===` to the end) to `.sourceatlas/history.md`
+
+### Step 3: Confirm
+
+Add at the very end:
+```
+💾 已儲存至 .sourceatlas/history.md
+```

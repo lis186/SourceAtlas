@@ -1,8 +1,8 @@
 ---
 description: Learn design patterns from the current codebase
 model: sonnet
-allowed-tools: Bash, Glob, Grep, Read
-argument-hint: [pattern type, e.g., "api endpoint", "background job", "file upload"]
+allowed-tools: Bash, Glob, Grep, Read, Write
+argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--save]
 ---
 
 # SourceAtlas: Pattern Learning Mode
@@ -298,6 +298,41 @@ To implement similar functionality following this codebase's pattern:
 - **參數具體**：如 `"repository"` 非 `"相關 pattern"`
 - **數量限制**：1-2 個建議，不強制填滿
 - **用途欄位**：引用具體發現（使用次數、檔案名、問題）
+
+---
+
+## Save Mode (--save)
+
+If `--save` is present in `$ARGUMENTS`:
+
+### Step 1: Parse pattern name
+
+Extract pattern name from arguments (remove `--save`):
+- `"repository" --save` → pattern name is `repository`
+- `"api endpoint" --save` → pattern name is `api-endpoint`
+
+Convert to filename:
+- Spaces → `-`
+- Lowercase
+- Remove special characters
+- Example: `"User Service"` → `user-service.md`
+
+### Step 2: Create directory
+
+```bash
+mkdir -p .sourceatlas/patterns
+```
+
+### Step 3: Save output
+
+After generating the complete analysis, save the **entire output** (from `# Pattern:` to the end) to `.sourceatlas/patterns/{name}.md`
+
+### Step 4: Confirm
+
+Add at the very end:
+```
+💾 已儲存至 .sourceatlas/patterns/{name}.md
+```
 
 ---
 

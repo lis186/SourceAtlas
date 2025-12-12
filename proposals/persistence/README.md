@@ -1,10 +1,11 @@
 # Proposal: 探索結果持久化
 
-**Status**: 🟢 已批准待實作
+**Status**: ⚫ 已完成
 **Version**: 1.1
 **Author**: Claude & Justin
 **Created**: 2025-12-12
-**Updated**: 2025-12-12（資深工程師審查後簡化）
+**Updated**: 2025-12-12
+**Completed**: 2025-12-12
 
 ---
 
@@ -255,12 +256,12 @@ rm -rf .sourceatlas/deps/         # for "deps"
 | 命令 | `--save` 狀態 | 儲存格式 |
 |------|---------------|----------|
 | `/atlas.overview` | ✅ 已有 | YAML |
-| `/atlas.pattern` | ❌ 待實作 | Markdown |
-| `/atlas.flow` | ❌ 待實作 | Markdown |
-| `/atlas.history` | ❌ 待實作 | Markdown |
-| `/atlas.impact` | ❌ 待實作 | Markdown |
-| `/atlas.deps` | ❌ 待實作 | Markdown |
-| `/atlas.clear` | 🆕 待建立 | - |
+| `/atlas.pattern` | ✅ 已完成 | Markdown |
+| `/atlas.flow` | ✅ 已完成 | Markdown |
+| `/atlas.history` | ✅ 已完成 | Markdown |
+| `/atlas.impact` | ✅ 已完成 | Markdown |
+| `/atlas.deps` | ✅ 已完成 | Markdown |
+| `/atlas.clear` | ✅ 已建立 | - |
 
 ---
 
@@ -321,9 +322,9 @@ rm -rf .sourceatlas/deps/         # for "deps"
 
 ## 驗收標準
 
-- [ ] 5 個命令支援 `--save`
-- [ ] `/atlas.clear` 可清空 `.sourceatlas/`
-- [ ] 文檔已更新
+- [x] 5 個命令支援 `--save`
+- [x] `/atlas.clear` 可清空 `.sourceatlas/`
+- [x] 文檔已更新
 - [ ] 在 1 個真實專案測試通過
 
 ---
