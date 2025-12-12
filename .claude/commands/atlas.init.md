@@ -56,15 +56,17 @@ When encountering these situations, automatically execute the corresponding comm
 - User is doing routine coding tasks
 - User explicitly says they don't need overview/analysis
 
-### Available Commands Reference
+### Available Commands Reference (7 commands)
 
-- `/atlas.overview [dir]` - Quick project fingerprint (<5% file scan, 70-80% understanding)
-- `/atlas.pattern [type]` - Learn how this codebase implements specific patterns
-- `/atlas.impact [target]` - Analyze impact scope of code changes
-- `/atlas.history` - Temporal analysis using git history (hotspots, coupling, contributors)
-- `/atlas.flow [query]` - Trace code execution flow (11 analysis modes: forward, reverse, error, data...)
-- `/atlas.deps [upgrade query]` - Dependency analysis for library/framework upgrades (iOS, Android, Python, etc.)
-- `/atlas.clear [target]` - Clear saved analysis results from .sourceatlas/
+**IMPORTANT: You MUST include ALL 7 commands below. Do not skip any.**
+
+1. `/atlas.overview [dir]` - Quick project fingerprint (<5% file scan, 70-80% understanding)
+2. `/atlas.pattern [type]` - Learn how this codebase implements specific patterns
+3. `/atlas.impact [target]` - Analyze impact scope of code changes
+4. `/atlas.history` - Temporal analysis using git history (hotspots, coupling, contributors)
+5. `/atlas.flow [query]` - Trace code execution flow (11 analysis modes: forward, reverse, error, data...)
+6. `/atlas.deps [upgrade query]` - Dependency analysis for library/framework upgrades
+7. `/atlas.clear [target]` - Clear saved analysis results from .sourceatlas/
 
 ### Persistence
 
@@ -111,15 +113,17 @@ When encountering these situations, automatically execute the corresponding comm
 - User is doing routine coding tasks
 - User explicitly says they don't need overview/analysis
 
-### Available Commands Reference
+### Available Commands Reference (7 commands)
 
-- `/atlas.overview [dir]` - Quick project fingerprint (<5% file scan, 70-80% understanding)
-- `/atlas.pattern [type]` - Learn how this codebase implements specific patterns
-- `/atlas.impact [target]` - Analyze impact scope of code changes
-- `/atlas.history` - Temporal analysis using git history (hotspots, coupling, contributors)
-- `/atlas.flow [query]` - Trace code execution flow (11 analysis modes: forward, reverse, error, data...)
-- `/atlas.deps [upgrade query]` - Dependency analysis for library/framework upgrades (iOS, Android, Python, etc.)
-- `/atlas.clear [target]` - Clear saved analysis results from .sourceatlas/
+**IMPORTANT: You MUST include ALL 7 commands below. Do not skip any.**
+
+1. `/atlas.overview [dir]` - Quick project fingerprint (<5% file scan, 70-80% understanding)
+2. `/atlas.pattern [type]` - Learn how this codebase implements specific patterns
+3. `/atlas.impact [target]` - Analyze impact scope of code changes
+4. `/atlas.history` - Temporal analysis using git history (hotspots, coupling, contributors)
+5. `/atlas.flow [query]` - Trace code execution flow (11 analysis modes: forward, reverse, error, data...)
+6. `/atlas.deps [upgrade query]` - Dependency analysis for library/framework upgrades
+7. `/atlas.clear [target]` - Clear saved analysis results from .sourceatlas/
 
 ### Persistence
 
@@ -142,13 +146,14 @@ After completion, provide a summary:
 Changes made:
 - [Created new CLAUDE.md | Updated existing CLAUDE.md]
 
-You can now use these commands in this project:
-- /atlas.overview  - Quick project understanding
-- /atlas.pattern   - Learn design patterns
-- /atlas.impact    - Analyze change impact
-- /atlas.history   - Git history analysis (hotspots, coupling)
-- /atlas.flow      - Trace code execution flow
-- /atlas.deps      - Dependency analysis for upgrades
+You can now use these 7 commands in this project:
+1. /atlas.overview  - Quick project understanding
+2. /atlas.pattern   - Learn design patterns
+3. /atlas.impact    - Analyze change impact
+4. /atlas.history   - Git history analysis (hotspots, coupling)
+5. /atlas.flow      - Trace code execution flow
+6. /atlas.deps      - Dependency analysis for upgrades
+7. /atlas.clear     - Clear saved analysis results
 
 Claude Code will now automatically suggest these commands when appropriate.
 ```
