@@ -1,23 +1,24 @@
 # SourceAtlas Roadmap
 
-**Current Status**: v2.7.0 Complete ✅
-**Last Updated**: 2025-12-03
+**Current Status**: v2.9.0 In Development 🔵
+**Last Updated**: 2025-12-08
 **Pattern Count**: 141 patterns (iOS 34, TypeScript/React/Vue 50, Android/Kotlin 31, Python 26)
 
 ---
 
-## 🎯 Current Release: v2.7.0 ✅
+## 🎯 Current Release: v2.9.0 🔵
 
-### Core Commands (6/6 Complete)
+### Core Commands (7 Total)
 
-| Command | Purpose | Completed |
-|---------|---------|-----------|
-| `/atlas.init` | Project initialization | 2025-11-30 |
-| `/atlas.overview` | Project fingerprint | 2025-11-20 |
-| `/atlas.pattern` | Learn patterns | 2025-11-22 |
-| `/atlas.impact` | Impact analysis | 2025-11-25 |
-| `/atlas.history` | Git temporal analysis | 2025-11-30 |
-| `/atlas.flow` | Flow tracing (11 modes) | 2025-12-01 |
+| Command | Purpose | Status |
+|---------|---------|--------|
+| `/atlas.init` | Project initialization | ✅ 2025-11-30 |
+| `/atlas.overview` | Project fingerprint | ✅ 2025-11-20 |
+| `/atlas.pattern` | Learn patterns | ✅ 2025-11-22 |
+| `/atlas.impact` | Impact analysis | ✅ 2025-11-25 |
+| `/atlas.history` | Git temporal analysis | ✅ 2025-11-30 |
+| `/atlas.flow` | Flow tracing (11 modes) | ✅ 2025-12-01 |
+| `/atlas.deps` | Dependency analysis ⭐ NEW | 🔵 In Progress |
 
 ### Multi-Language Patterns (141 Total)
 
@@ -30,7 +31,41 @@
 
 ---
 
-## 📅 v2.8 Planning (Next)
+## 🔵 v2.9.0 - Dependency Analysis (Current)
+
+### `/atlas.deps` Command
+
+**目標場景**：Library/Framework 升級（情境 8）
+
+**核心功能**：
+- Library 使用點盤點
+- API 使用統計
+- Breaking Change 對照
+- Migration Checklist 生成
+
+**使用方式**：
+```bash
+/atlas.deps "react"           # 分析 React 使用情況
+/atlas.deps "axios"           # 分析 axios 使用情況
+/atlas.deps "lodash" --breaking  # 顯示 breaking changes
+```
+
+**輸出內容**：
+- 版本資訊（當前 vs 最新）
+- 使用統計（import 次數、檔案數、API 種類）
+- API 使用詳情（每個 API 的使用次數和位置）
+- Breaking Changes 影響（哪些使用會受影響）
+- Migration Checklist（需要修改的檔案和建議）
+
+**設計決策** (2025-12-08)：
+- 選擇新建命令（語意清晰）而非擴展 `/atlas.impact`（概念混淆）
+- 與 `/atlas.impact` 的區別：
+  - `/atlas.impact`：「改這個會影響誰」（我是 provider）
+  - `/atlas.deps`：「我用了誰的什麼」（我是 consumer）
+
+---
+
+## 📅 v3.0 Planning (Next)
 
 ### Priority P0 - Must Do
 
@@ -67,7 +102,7 @@ Based on P0-A implementation (2025-12-01):
 - Bus factor alerts
 - Technical debt score
 
-**Decision**: Evaluate after v2.7 user feedback
+**Decision**: Evaluate after v2.9 user feedback
 
 #### 4. User Feedback Collection
 - [ ] Publish release notes
@@ -79,7 +114,6 @@ Based on P0-A implementation (2025-12-01):
 
 - Performance dashboard
 - Pattern statistics
-- Monorepo support
 - Cross-repo analysis
 - `/atlas.standup` - GitLab MR integration
 
@@ -91,6 +125,8 @@ Based on P0-A implementation (2025-12-01):
 
 | Date | Milestone | Impact |
 |------|-----------|--------|
+| 2025-12-06 | v2.8.1 Release | Constitution v1.1 + Handoffs |
+| 2025-12-05 | v2.8.0 Release | Constitution v1.0 + Monorepo |
 | 2025-12-01 | v2.7.0 Release | 6 commands + `/atlas.flow` |
 | 2025-11-30 | `/atlas.history` | Git temporal analysis |
 | 2025-11-30 | 141 patterns | 4 language support |
@@ -100,9 +136,9 @@ Based on P0-A implementation (2025-12-01):
 
 ### In Progress 🔵
 
-- [ ] v2.8 Planning finalization
+- [x] v2.9.0 `/atlas.deps` 設計 ⭐
+- [ ] `/atlas.deps` 命令實作
 - [ ] User feedback collection
-- [ ] Documentation sync
 
 ### Upcoming 📋
 
@@ -144,13 +180,19 @@ From v1.0 to v2.7.0:
 
 ## 📈 Success Metrics
 
-### v2.7.0 (Achieved) ✅
-- [x] 6 core commands
+### v2.8.1 (Achieved) ✅
+- [x] 7 core commands (6 + deps in progress)
 - [x] 141 patterns
-- [x] Entry point accuracy >90%
-- [x] 10 boundary types
+- [x] Constitution v1.1
+- [x] Handoffs 原則
 
-### v2.8.0 (Targets)
+### v2.9.0 (Targets)
+- [ ] `/atlas.deps` command complete
+- [ ] Library upgrade scenario covered
+- [ ] Breaking change detection
+- [ ] Migration checklist generation
+
+### v3.0.0 (Future Targets)
 - [ ] 200+ patterns (+60)
 - [ ] 6 languages supported (+2)
 - [ ] AST-based flow analysis

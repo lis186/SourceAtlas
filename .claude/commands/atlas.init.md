@@ -50,6 +50,7 @@ When encountering these situations, automatically execute the corresponding comm
 | "What will this change affect", "Impact of modifying X", "Dependencies of Y" | `/atlas.impact [target]` |
 | "Show me hotspots", "Which files change together", "Who worked on this", "Git history analysis" | `/atlas.history` |
 | "How does X flow work", "Trace the login process", "What happens when user clicks Y", "Data flow of Z" | `/atlas.flow [query]` |
+| "Upgrade to iOS 17", "Update React to v18", "Migration to Python 3.12", "Check library usage" | `/atlas.deps [upgrade query]` |
 | User just joined project and seems unfamiliar with codebase structure | `/atlas.overview` |
 
 ### When NOT to auto-trigger
@@ -65,6 +66,7 @@ When encountering these situations, automatically execute the corresponding comm
 - `/atlas.impact [target]` - Analyze impact scope of code changes
 - `/atlas.history` - Temporal analysis using git history (hotspots, coupling, contributors)
 - `/atlas.flow [query]` - Trace code execution flow (11 analysis modes: forward, reverse, error, data...)
+- `/atlas.deps [upgrade query]` - Dependency analysis for library/framework upgrades (iOS, Android, Python, etc.)
 ```
 
 ### Step 3: Apply Changes
@@ -96,6 +98,7 @@ When encountering these situations, automatically execute the corresponding comm
 | "What will this change affect", "Impact of modifying X", "Dependencies of Y" | `/atlas.impact [target]` |
 | "Show me hotspots", "Which files change together", "Who worked on this", "Git history analysis" | `/atlas.history` |
 | "How does X flow work", "Trace the login process", "What happens when user clicks Y", "Data flow of Z" | `/atlas.flow [query]` |
+| "Upgrade to iOS 17", "Update React to v18", "Migration to Python 3.12", "Check library usage" | `/atlas.deps [upgrade query]` |
 | User just joined project and seems unfamiliar with codebase structure | `/atlas.overview` |
 
 ### When NOT to auto-trigger
@@ -111,6 +114,7 @@ When encountering these situations, automatically execute the corresponding comm
 - `/atlas.impact [target]` - Analyze impact scope of code changes
 - `/atlas.history` - Temporal analysis using git history (hotspots, coupling, contributors)
 - `/atlas.flow [query]` - Trace code execution flow (11 analysis modes: forward, reverse, error, data...)
+- `/atlas.deps [upgrade query]` - Dependency analysis for library/framework upgrades (iOS, Android, Python, etc.)
 ```
 
 2. Report that a new CLAUDE.md was created
@@ -133,6 +137,7 @@ You can now use these commands in this project:
 - /atlas.impact    - Analyze change impact
 - /atlas.history   - Git history analysis (hotspots, coupling)
 - /atlas.flow      - Trace code execution flow
+- /atlas.deps      - Dependency analysis for upgrades
 
 Claude Code will now automatically suggest these commands when appropriate.
 ```

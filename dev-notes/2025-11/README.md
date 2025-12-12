@@ -93,7 +93,7 @@
   - `scripts/atlas/analyzers/swift-analyzer.sh`（482 行）
   - `.claude/commands/atlas.impact.md`（557 行）
   - `.claude/commands/atlas.init.md`（新增）
-- **測試專案**: 10+ 個（Signal-iOS, Wikipedia-iOS, Swiftfin, android-signal, android-antennapod, ruby-spree, python-ctfd, commercial-ios-app, WordPress-iOS, aigc-weekly 等）
+- **測試專案**: 10+ 個匿名測試專案（涵蓋 iOS, Android, Ruby, Python, TypeScript 等多種技術棧）
 - **文檔產出**: 13 份完整報告
 - **Patterns 總數**:
   - iOS: 29 (27 支援 ObjC)
