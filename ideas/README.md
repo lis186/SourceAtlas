@@ -49,15 +49,18 @@ dev-notes/YYYY-MM/implementation.md
 
 ### 活躍想法
 
-- **[Claude Code Plugins 學習筆記](./claude-code-plugins-learnings.md)** 🆕
+- **[Claude Code Plugins 學習筆記](./claude-code-plugins-learnings.md)** 🔥 進行中
   - **建立日期**: 2025-12-12
-  - **成熟度**: 20%
+  - **成熟度**: 60%
   - **內容**: 分析 Claude Code 官方 plugins，提煉可借鑑的設計模式
-  - **高優先級方向**:
-    - 漸進式輸出（Progressive Disclosure）⭐⭐⭐⭐
-    - 信心分數 + Threshold 機制 ⭐⭐⭐
-    - 輸出格式統一 ⭐⭐⭐
-  - **下一步**: 評估可行性，成熟後升級到 proposals/
+  - **深度探索完成**:
+    - ✅ **漸進式輸出** - 已完成設計，建議升級到 proposals/
+      - 發現 `/atlas.flow` 已有實作可參考
+      - 設計了 Level 1/2/3 輸出結構
+      - 評估工作量 6-8 小時
+    - 🔲 信心分數 + Threshold 機制
+    - 🔲 輸出格式統一
+  - **下一步**: 將「漸進式輸出」升級到 proposals/
 
 ### 已升級
 
