@@ -4,39 +4,22 @@ SourceAtlas 未來功能的完整設計文檔。
 
 ## 📋 當前提案
 
-### 🟢 已批准待實作（v2.6）
+### ⚫ 已完成（歸檔）
 
-- **[code-maat Integration](./code-maat-integration/SOURCEATLAS_CODEMAAT_INTEGRATION.md)** (v2.6 候選)
-  - **目標**: 為 SourceAtlas v2.6 增加時序分析能力
-  - **命令**: **1 個新命令**（單一命令設計）⭐
-    - `/atlas.history` - 智慧時序分析（Hotspots、Coupling、Recent Contributors）
-  - **狀態**: 設計完成（2025-11-30），待排入 roadmap
-  - **目標用戶**: Legacy Codebase 接手者（最高價值場景）
-  - **設計原則**:
-    - ✅ **零參數優先** - 適合跨 AI 工具移植（Cursor, Copilot, Windsurf）
-    - ✅ **智慧輸出** - 根據輸入自動判斷分析類型
-    - ✅ **政治敏感度** - 用「Recent Contributors」取代「Ownership %」
-    - ✅ 與 v2.5 `/atlas.impact`（靜態分析）互補不衝突
-  - **文檔**:
-    - [完整提案](./code-maat-integration/SOURCEATLAS_CODEMAAT_INTEGRATION.md) (2,500+ 行)
+- **[code-maat Integration](./code-maat-integration/SOURCEATLAS_CODEMAAT_INTEGRATION.md)**
+  - **實作為**: `/atlas.history` (v2.6.0)
+  - **完成日期**: 2025-11-30
+  - **成果**: 智慧時序分析（Hotspots、Coupling、Recent Contributors）
+  - **文檔保留供參考**:
+    - [完整提案](./code-maat-integration/SOURCEATLAS_CODEMAAT_INTEGRATION.md)
     - [快速參考](./code-maat-integration/CODE_MAAT_FORMAT_CHEATSHEET.md)
     - [效能考量](./code-maat-integration/PERFORMANCE_CONSIDERATIONS.md)
-    - [更新歷史](./code-maat-integration/UPDATES_SUMMARY.md)
 
-### 🔵 待評估
-
-- **[/atlas.flow - 業務流程分析](./atlas-flow/README.md)** (v2.7 候選) ⭐ NEW
-  - **目標**: 從程式碼抽取業務邏輯流程
-  - **命令**: `/atlas.flow "功能名稱"`
-  - **狀態**: 草案（2025-12-01）
-  - **問題**: 工程師梳理 flow 花 4-16 小時，每次都重來
-  - **解決**: 即時生成流程分析，5 分鐘搞定
-  - **特色**:
-    - ✅ **ASCII + 顏色** - 終端友好，掃一眼知重點
-    - ✅ **高熵標記** - 標注「不尋常」的地方（資訊理論應用）
-    - ✅ **分層輸出** - 高層概覽 ↔ 完整細節
-    - ✅ **Mermaid 支援** - 用 prompt 控制輸出格式
-    - ✅ **零參數設計** - AI 工具友善
+- **[/atlas.flow - 業務流程分析](./atlas-flow/README.md)**
+  - **實作為**: `/atlas.flow` (v2.7.0)
+  - **完成日期**: 2025-12-01
+  - **成果**: 11 種分析模式、語言專屬入口點偵測、漸進式展開
+  - **文檔保留供參考**
 
 ### 🟡 研究中
 
@@ -50,7 +33,7 @@ SourceAtlas 未來功能的完整設計文檔。
   - **原因**: 經多角色審查後決定暫不實作
     - PM 評估：無使用者需求，ROI 為負
     - 現有發現機制（`find-patterns.sh` 無參數）已足夠
-    - 優先完善現有 4 個 commands 和多語言支援
+    - 優先完善現有 commands 和多語言支援
   - **未來**: 待使用者明確需求時再評估
 
 ---
