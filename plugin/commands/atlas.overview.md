@@ -1,5 +1,6 @@
 ---
 description: Get project overview - scan <5% of files to achieve 70-80% understanding
+model: sonnet
 allowed-tools: Bash, Glob, Grep, Read
 argument-hint: [optional: specific directory to analyze, e.g., "src/api"]
 ---

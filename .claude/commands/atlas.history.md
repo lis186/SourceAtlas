@@ -1,5 +1,6 @@
 ---
 description: Smart temporal analysis using git history - Hotspots, Coupling, and Recent Contributors
+model: sonnet
 allowed-tools: Bash, Glob, Grep, Read
 argument-hint: (optional) [path or scope, e.g., "src/", "frontend", "last 6 months"]
 ---
