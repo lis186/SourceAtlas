@@ -48,6 +48,7 @@ When encountering these situations, automatically execute the corresponding comm
 | "Show me hotspots", "Which files change together", "Who worked on this", "Git history analysis" | `/atlas.history` |
 | "How does X flow work", "Trace the login process", "What happens when user clicks Y", "Data flow of Z" | `/atlas.flow [query]` |
 | "Upgrade to iOS 17", "Update React to v18", "Migration to Python 3.12", "Check library usage" | `/atlas.deps [upgrade query]` |
+| "What have I analyzed", "Show saved analysis", "List cached results" | `/atlas.list` |
 | User just joined project and seems unfamiliar with codebase structure | `/atlas.overview` |
 
 ### When NOT to auto-trigger
@@ -56,9 +57,9 @@ When encountering these situations, automatically execute the corresponding comm
 - User is doing routine coding tasks
 - User explicitly says they don't need overview/analysis
 
-### Available Commands Reference (7 commands)
+### Available Commands Reference (8 commands)
 
-**IMPORTANT: You MUST include ALL 7 commands below. Do not skip any.**
+**IMPORTANT: You MUST include ALL 8 commands below. Do not skip any.**
 
 1. `/atlas.overview [dir]` - Quick project fingerprint (<5% file scan, 70-80% understanding)
 2. `/atlas.pattern [type]` - Learn how this codebase implements specific patterns
@@ -66,7 +67,8 @@ When encountering these situations, automatically execute the corresponding comm
 4. `/atlas.history` - Temporal analysis using git history (hotspots, coupling, contributors)
 5. `/atlas.flow [query]` - Trace code execution flow (11 analysis modes: forward, reverse, error, data...)
 6. `/atlas.deps [upgrade query]` - Dependency analysis for library/framework upgrades
-7. `/atlas.clear [target]` - Clear saved analysis results from .sourceatlas/
+7. `/atlas.list` - List saved analysis results in .sourceatlas/
+8. `/atlas.clear [target]` - Clear saved analysis results from .sourceatlas/
 
 ### Persistence
 
@@ -105,6 +107,7 @@ When encountering these situations, automatically execute the corresponding comm
 | "Show me hotspots", "Which files change together", "Who worked on this", "Git history analysis" | `/atlas.history` |
 | "How does X flow work", "Trace the login process", "What happens when user clicks Y", "Data flow of Z" | `/atlas.flow [query]` |
 | "Upgrade to iOS 17", "Update React to v18", "Migration to Python 3.12", "Check library usage" | `/atlas.deps [upgrade query]` |
+| "What have I analyzed", "Show saved analysis", "List cached results" | `/atlas.list` |
 | User just joined project and seems unfamiliar with codebase structure | `/atlas.overview` |
 
 ### When NOT to auto-trigger
@@ -113,9 +116,9 @@ When encountering these situations, automatically execute the corresponding comm
 - User is doing routine coding tasks
 - User explicitly says they don't need overview/analysis
 
-### Available Commands Reference (7 commands)
+### Available Commands Reference (8 commands)
 
-**IMPORTANT: You MUST include ALL 7 commands below. Do not skip any.**
+**IMPORTANT: You MUST include ALL 8 commands below. Do not skip any.**
 
 1. `/atlas.overview [dir]` - Quick project fingerprint (<5% file scan, 70-80% understanding)
 2. `/atlas.pattern [type]` - Learn how this codebase implements specific patterns
@@ -123,7 +126,8 @@ When encountering these situations, automatically execute the corresponding comm
 4. `/atlas.history` - Temporal analysis using git history (hotspots, coupling, contributors)
 5. `/atlas.flow [query]` - Trace code execution flow (11 analysis modes: forward, reverse, error, data...)
 6. `/atlas.deps [upgrade query]` - Dependency analysis for library/framework upgrades
-7. `/atlas.clear [target]` - Clear saved analysis results from .sourceatlas/
+7. `/atlas.list` - List saved analysis results in .sourceatlas/
+8. `/atlas.clear [target]` - Clear saved analysis results from .sourceatlas/
 
 ### Persistence
 
@@ -146,14 +150,15 @@ After completion, provide a summary:
 Changes made:
 - [Created new CLAUDE.md | Updated existing CLAUDE.md]
 
-You can now use these 7 commands in this project:
+You can now use these 8 commands in this project:
 1. /atlas.overview  - Quick project understanding
 2. /atlas.pattern   - Learn design patterns
 3. /atlas.impact    - Analyze change impact
 4. /atlas.history   - Git history analysis (hotspots, coupling)
 5. /atlas.flow      - Trace code execution flow
 6. /atlas.deps      - Dependency analysis for upgrades
-7. /atlas.clear     - Clear saved analysis results
+7. /atlas.list      - List saved analysis results
+8. /atlas.clear     - Clear saved analysis results
 
 Claude Code will now automatically suggest these commands when appropriate.
 ```
