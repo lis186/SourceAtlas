@@ -24,14 +24,10 @@ know when to automatically suggest using Atlas commands.
 
 First, check if CLAUDE.md exists and if SourceAtlas is already configured:
 
-```bash
-# Check for CLAUDE.md in project root
-ls -la CLAUDE.md 2>/dev/null || echo "CLAUDE.md does not exist"
-```
-
-If CLAUDE.md exists, read it to check for existing SourceAtlas configuration:
-- Look for `## SourceAtlas` or `# SourceAtlas` section
-- If found, inform user that SourceAtlas is already configured and stop
+1. Use `Glob` to check: `CLAUDE.md`
+2. If file exists, use `Read` to read it
+3. Look for `## SourceAtlas` or `# SourceAtlas` section
+4. If found, inform user that SourceAtlas is already configured and stop
 
 ### Step 2: Prepare the Content to Inject
 
