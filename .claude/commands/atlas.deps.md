@@ -1,5 +1,6 @@
 ---
 description: Analyze dependency usage for library/framework/SDK upgrades
+model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, WebFetch, WebSearch, AskUserQuestion
 argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3.12"]
 ---

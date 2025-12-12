@@ -1,5 +1,6 @@
 ---
 description: Get project overview - scan <5% of files to achieve 70-80% understanding
+model: haiku
 allowed-tools: Bash, Glob, Grep, Read, Write
 argument-hint: [path] [--save] (e.g., "src/api" or ". --save")
 ---
