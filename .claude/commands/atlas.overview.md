@@ -51,7 +51,13 @@ argument-hint: [path] [--save] [--force] (e.g., "src/api" or ". --save")
      ```
      📁 載入快取：.sourceatlas/overview.yaml（N 天前）
      💡 重新分析請加 --force
-
+     ```
+   - **如果超過 30 天**，額外顯示：
+     ```
+     ⚠️ 快取已超過 30 天，建議重新分析
+     ```
+   - 然後輸出：
+     ```
      ---
      [快取內容]
      ```

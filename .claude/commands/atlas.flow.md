@@ -28,7 +28,7 @@ argument-hint: [flow description or entry point, e.g., "user checkout", "from Or
 **如果參數中沒有 `--force`**，先檢查快取：
 
 1. 從 `$ARGUMENTS` 提取 flow 名稱（移除 `--save`、`--force`、`--quick`、`--thorough`、`--verify`）
-2. 轉換為檔名：空格→`-`、小寫、移除特殊字元
+2. 轉換為檔名：空格→`-`、小寫、移除特殊字元、**截斷至 50 字元**
    - 例：`"user checkout"` → `user-checkout.md`
    - 例：`"from OrderService.create()"` → `orderservice-create.md`
 3. 檢查快取：
@@ -43,7 +43,13 @@ argument-hint: [flow description or entry point, e.g., "user checkout", "from Or
      ```
      📁 載入快取：.sourceatlas/flows/{name}.md（N 天前）
      💡 重新分析請加 --force
-
+     ```
+   - **如果超過 30 天**，額外顯示：
+     ```
+     ⚠️ 快取已超過 30 天，建議重新分析
+     ```
+   - 然後輸出：
+     ```
      ---
      [快取內容]
      ```

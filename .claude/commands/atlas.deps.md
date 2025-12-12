@@ -26,7 +26,7 @@ argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3
 **如果參數中沒有 `--force`**，先檢查快取：
 
 1. 從 `$ARGUMENTS` 提取 dependency 名稱（移除 `--save`、`--force`）
-2. 轉換為檔名：空格→`-`、`→`→`to`、小寫、移除特殊字元
+2. 轉換為檔名：空格→`-`、`→`→`to`、小寫、移除特殊字元、**截斷至 50 字元**
    - 例：`"react"` → `react.md`
    - 例：`"iOS 16 → 17"` → `ios-16-to-17.md`
    - 例：`"Python 3.12"` → `python-3-12.md`
@@ -42,7 +42,13 @@ argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3
      ```
      📁 載入快取：.sourceatlas/deps/{name}.md（N 天前）
      💡 重新分析請加 --force
-
+     ```
+   - **如果超過 30 天**，額外顯示：
+     ```
+     ⚠️ 快取已超過 30 天，建議重新分析
+     ```
+   - 然後輸出：
+     ```
      ---
      [快取內容]
      ```
