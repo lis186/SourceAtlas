@@ -6,6 +6,41 @@
 
 ## 2025-12（當前月份）
 
+### Week 2 (12/12): v2.9.0 Release - Dependency Analysis ⭐⭐⭐⭐⭐
+
+**/atlas.deps 完整測試完成** (12/12):
+- 4 個場景並行測試：iOS 16→17, Android API 35, Kotlin 純粹盤點, Flask 升級
+- **整體準確率**: 100% (42/42 樣本驗證)
+- **Phase 0 規則確認**: 100% 有效（Built-in rules + WebSearch 動態生成）
+- **模式識別**: 100% 準確（正確區分升級 vs 盤點模式）
+- **Constitution v1.1**: 100% 合規 (24/24 checks)
+- **Production Ready**: ✅ 批准上線
+→ [測試報告](./2025-12/2025-12-12-atlas-deps-testing-report.md)
+
+**測試結果總覽**:
+| 場景 | 規模 | 準確率 | Phase 0 | 評分 |
+|------|------|--------|---------|------|
+| iOS 16→17 (iOS App A) | 2,108 files | 100% (12/12) | ✅ Built-in | A+ (9.8/10) |
+| Android API 35 (Android App B) | 303 files, 30 modules | 100% (15/15) | ✅ Built-in | A+ (10/10) |
+| Kotlin coroutines 盤點 | 578 files, 1,509 imports | 100% | ✅ 正確跳過 | A+ (9.8/10) |
+| Flask 升級 (Python App C) | 7 files | 100% (12/12) | ✅ WebSearch | A (9.8/10) |
+
+**關鍵成功**:
+- ✅ Phase 0 機制顯著提升穩定度（相比 /atlas.flow +5-10% 準確率）
+- ✅ Multi-module Android 處理完美 (30/30 modules)
+- ✅ 缺少依賴檔案 Robust 處理 (README.md + git history 推論)
+- ✅ Edge case 偵測優秀 (Django+Flask 混用、unused imports)
+
+### Week 2 (12/08): /atlas.deps 實作完成
+
+**/atlas.deps 命令實作** (12/08):
+- 新增 Phase 0 規則確認機制（升級規則預覽 + 使用者確認）
+- Built-in rules: iOS 16→17, React 17→18, Python 3.11→3.12
+- WebSearch/WebFetch 整合：動態查詢最新 migration guides
+- 5 個輸出 sections：required_changes, modernization_opportunities, usage_summary, third_party_dependencies, summary
+- 支援「純粹盤點」vs「升級」模式自動識別
+→ [命令規格](./.claude/commands/atlas.deps.md)
+
 ### Week 1 (12/06): v2.8.1 Release - Handoffs 完成 ⭐⭐⭐⭐⭐
 
 **Constitution v1.1 + Handoffs 原則完成** (12/06):
@@ -92,7 +127,7 @@
 
 **Kotlin/Android Patterns 實作完成** (11/30):
 - 完成 6 階段方法論驗證，8 個測試專案（5,237+ 檔案）
-- 測試專案：nowinandroid, tivi, Pokedex, Foodium, foodies, thunderbird-android, NewPipe, AntennaPod
+- 測試專案：8 個匿名 Android 專案（涵蓋 Clean Architecture, Circuit/MVI, MVVM, 生產級應用等）
 - **31 個 patterns** 實作完成（12 Tier 1 + 19 Tier 2），95%+ 準確率
 - 關鍵發現：Circuit library 使用 Presenter/Component 模式；生產級 App 需要 Factory/Provider/Contract 等更多 patterns
 - 新增核心 patterns：`*Presenter.kt`, `*Component.kt`, `*UiState.kt`, `*Intent.kt`, `*Effect.kt`
@@ -248,11 +283,11 @@
 - **總計**: 6 commands ⭐
 
 ### 測試專案
-- **iOS**: wikipedia-ios, Signal-iOS, 大型商業 App（混合專案）
-- **TypeScript/React**: Excalidraw, Mantine, Shadcn UI, Bulletproof React（7 專案）
-- **Vue**: Element Plus, VueUse, Naive UI
-- **Android**: nowinandroid, tivi, thunderbird-android, NewPipe, AntennaPod（8 專案）
-- **Python**: Django, FastAPI, Flask 專案（10 專案）
+- **iOS**: 匿名 iOS 專案（包含混合 Swift/ObjC 專案）
+- **TypeScript/React**: 匿名前端專案（包含 UI 組件庫、畫布應用、最佳實踐範例等，7 專案）
+- **Vue**: 匿名 Vue 專案（包含企業級 UI 組件、Utility Composables 等）
+- **Android**: 8 個匿名 Android 專案（包含 Clean Architecture, Circuit/MVI, MVVM, 生產級應用等）
+- **Python**: 匿名 Python 專案（包含 Django, FastAPI, Flask 等框架，10 專案）
 
 ---
 
