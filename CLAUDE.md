@@ -170,6 +170,31 @@ cd ~/projects/any-project
 - 加入 `--save` 參數可將分析結果儲存至 `.sourceatlas/` 目錄
 - 範例：`/atlas.pattern "repository" --save` → 儲存至 `.sourceatlas/patterns/repository.md`
 - 使用 `/atlas.clear` 清空已儲存的分析結果
+- 使用 `/atlas.list` 查看已儲存的分析結果
+- 已儲存的分析會自動作為快取，下次執行相同命令時直接載入
+- 加入 `--force` 參數可跳過快取，強制重新分析
+
+### 使用專案記憶（.sourceatlas/）
+
+**觸發條件**：當使用者問題涉及以下情境時，主動查詢 `.sourceatlas/`：
+- 專案層級問題：「這專案」「這個 codebase」「專案架構」「整體」「全貌」
+- 延續之前分析：「之前分析」「上次」「我們討論過」
+- 明確要求概覽：「overview」「summarize」「給我背景」
+
+**動作**：
+1. 執行 `ls .sourceatlas/ 2>/dev/null` 檢查是否存在
+2. 如果存在，優先讀取 `overview.yaml`（專案全貌）
+3. 根據問題內容，判斷是否需要讀取其他快取：
+   - Pattern 相關 → `.sourceatlas/patterns/`
+   - 依賴相關 → `.sourceatlas/deps/`
+   - 歷史相關 → `.sourceatlas/history.md`
+   - 影響分析 → `.sourceatlas/impact/`
+   - 流程相關 → `.sourceatlas/flows/`
+
+**不觸發**（避免不必要的 token 成本）：
+- 「幫我改這個 bug」→ 直接改，不需要快取
+- 「這個 function 做什麼」→ 直接讀原始碼
+- 「執行測試」→ 直接執行，不需要背景
 
 **完整三階段分析**（罕見場景）：
 針對深度盡職調查（評估開源專案、招聘評估、技術盡調），使用 `PROMPTS.md` 手動執行 Stage 0-1-2
