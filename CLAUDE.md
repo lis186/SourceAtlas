@@ -158,12 +158,18 @@ cd ~/projects/any-project
 
 **v2.9.0 方式**（Commands）：
 - `/atlas.init` ✅ - 專案初始化，注入自動觸發規則（已實作，2025-11-30）
-- `/atlas.overview` ✅ - Stage 0 專案指紋（已實作，2025-11-20）
-- `/atlas.pattern` ✅ - 學習設計模式（已實作，2025-11-22）
-- `/atlas.impact` ✅ - 影響範圍分析（已實作，2025-11-25）
-- `/atlas.history` ✅ - 時序分析（Git 歷史）（已實作，2025-11-30）
-- `/atlas.flow` ✅ - 流程追蹤與資料流分析（已實作，2025-12-01）
-- `/atlas.deps` ✅ - Dependency 分析（已完成測試，2025-12-12）⭐ NEW
+- `/atlas.overview` ✅ - Stage 0 專案指紋（已實作，2025-11-20）【支援 `--save`】
+- `/atlas.pattern` ✅ - 學習設計模式（已實作，2025-11-22）【支援 `--save`】
+- `/atlas.impact` ✅ - 影響範圍分析（已實作，2025-11-25）【支援 `--save`】
+- `/atlas.history` ✅ - 時序分析（Git 歷史）（已實作，2025-11-30）【支援 `--save`】
+- `/atlas.flow` ✅ - 流程追蹤與資料流分析（已實作，2025-12-01）【支援 `--save`】
+- `/atlas.deps` ✅ - Dependency 分析（已完成測試，2025-12-12）【支援 `--save`】
+- `/atlas.clear` ✅ - 清空已儲存的分析結果（2025-12-12）⭐ NEW
+
+**持久化功能**：
+- 加入 `--save` 參數可將分析結果儲存至 `.sourceatlas/` 目錄
+- 範例：`/atlas.pattern "repository" --save` → 儲存至 `.sourceatlas/patterns/repository.md`
+- 使用 `/atlas.clear` 清空已儲存的分析結果
 
 **完整三階段分析**（罕見場景）：
 針對深度盡職調查（評估開源專案、招聘評估、技術盡調），使用 `PROMPTS.md` 手動執行 Stage 0-1-2
@@ -1006,7 +1012,8 @@ touch test-results.md
 - [x] **validate-constitution.sh** - 自動化合規驗證 ✅ (2025-12-05)
 - [x] **Monorepo 偵測** - lerna/pnpm/nx/turborepo/npm workspaces ✅ (2025-12-05)
 - [x] **Branch-Aware Context** - Git 分支/子目錄/Package 偵測 ✅ (2025-12-06)
-- [x] **--save 參數** - 可選儲存至 `.sourceatlas/` ✅ (2025-12-06)
+- [x] **--save 參數** - 所有分析命令支援儲存至 `.sourceatlas/` ✅ (2025-12-12)
+- [x] **/atlas.clear** - 清空已儲存的分析結果 ✅ (2025-12-12)
 
 ### ✅ 已完成 - Model 效能優化 (2025-12-12)
 
@@ -1021,6 +1028,7 @@ touch test-results.md
 | `/atlas.impact` | Sonnet | 依賴追蹤和風險評估 |
 | `/atlas.deps` | Sonnet | 依賴盤點和規則匹配 |
 | `/atlas.flow` | Opus | 複雜多層邏輯流追蹤（11 種分析模式）|
+| `/atlas.clear` | Haiku | 簡單檔案刪除操作 |
 
 **預期效益**：
 - Haiku 命令：速度提升 50%+，成本降低 70%

@@ -200,13 +200,15 @@ cd ~/projects/any-project
 # 檢查命令是否安裝成功
 ls ~/.claude/commands/atlas.*.md
 
-# 應該看到 6 個檔案：
+# 應該看到 8 個檔案：
 # atlas.init.md
 # atlas.overview.md
 # atlas.pattern.md
 # atlas.impact.md
 # atlas.history.md
 # atlas.flow.md
+# atlas.deps.md
+# atlas.clear.md
 ```
 
 📚 **完整安裝指南**：[GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
@@ -364,6 +366,34 @@ Claude Code + 2 分鐘安裝
 <summary><b>Q: 沒有 Claude Code 怎麼辦？</b></summary>
 
 可用手動方式（見 [PROMPTS.md](./PROMPTS.md)），但建議用 Claude Code 以獲得最佳體驗。
+
+</details>
+
+<details>
+<summary><b>Q: 分析結果可以儲存嗎？</b></summary>
+
+**可以！** 所有分析命令支援 `--save` 參數：
+
+```bash
+/atlas.overview --save           # 儲存至 .sourceatlas/overview.yaml
+/atlas.pattern "api" --save      # 儲存至 .sourceatlas/patterns/api.md
+/atlas.flow "login" --save       # 儲存至 .sourceatlas/flows/login.md
+/atlas.history --save            # 儲存至 .sourceatlas/history.md
+/atlas.impact "User" --save      # 儲存至 .sourceatlas/impact/user.md
+/atlas.deps "react" --save       # 儲存至 .sourceatlas/deps/react.md
+```
+
+**清空已儲存的分析**：
+
+```bash
+/atlas.clear              # 清空全部
+/atlas.clear patterns     # 只清空 patterns/
+```
+
+**用途**：
+- 📝 保留分析結果供日後參考
+- 👥 新成員可以直接閱讀已有分析
+- 🔄 避免重複執行相同分析
 
 </details>
 

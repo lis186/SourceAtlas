@@ -1,8 +1,8 @@
 ---
 description: Extract business logic flow from code, trace execution path from entry point
 model: opus
-allowed-tools: Bash, Glob, Grep, Read
-argument-hint: [flow description or entry point, e.g., "user checkout", "from OrderService.create()"]
+allowed-tools: Bash, Glob, Grep, Read, Write
+argument-hint: [flow description or entry point, e.g., "user checkout", "from OrderService.create()"] [--save]
 ---
 
 # SourceAtlas: Business Flow Analysis
@@ -2481,3 +2481,38 @@ After `/atlas.flow`, users can:
 - "event" / "事件" → Event/Message Tracing
 - "transaction" / "交易" → Transaction Boundary
 - "cache" / "快取" → Cache Flow Analysis
+
+---
+
+## Save Mode (--save)
+
+If `--save` is present in `$ARGUMENTS`:
+
+### Step 1: Parse flow name
+
+Extract flow name from arguments (remove `--save` and other flags):
+- `"checkout flow" --save` → flow name is `checkout-flow`
+- `"from OrderService.create()" --save` → flow name is `orderservice-create`
+
+Convert to filename:
+- Spaces → `-`
+- Lowercase
+- Remove special characters, parentheses
+- Example: `"User Registration"` → `user-registration.md`
+
+### Step 2: Create directory
+
+```bash
+mkdir -p .sourceatlas/flows
+```
+
+### Step 3: Save output
+
+After generating the complete analysis, save the **entire output** to `.sourceatlas/flows/{name}.md`
+
+### Step 4: Confirm
+
+Add at the very end:
+```
+💾 已儲存至 .sourceatlas/flows/{name}.md
+```

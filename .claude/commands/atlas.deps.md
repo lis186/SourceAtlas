@@ -1,8 +1,8 @@
 ---
 description: Analyze dependency usage for library/framework/SDK upgrades
 model: sonnet
-allowed-tools: Bash, Glob, Grep, Read, WebFetch, WebSearch, AskUserQuestion
-argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3.12"]
+allowed-tools: Bash, Glob, Grep, Read, Write, WebFetch, WebSearch, AskUserQuestion
+argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3.12"] [--save]
 ---
 
 # SourceAtlas: Dependency Analysis
@@ -500,3 +500,39 @@ Phase 0 查詢 React 18 migration guide → 確認規則 → 掃描 ReactDOM.ren
 | 高風險 API 集中在特定檔案 | `/atlas.impact "[file]"` |
 | 需要學習新版本寫法 | `/atlas.pattern "[new pattern]"` |
 | 想了解該模組的歷史變更 | `/atlas.history "[module]"` |
+
+---
+
+## Save Mode (--save)
+
+If `--save` is present in `$ARGUMENTS`:
+
+### Step 1: Parse library/SDK name
+
+Extract name from arguments (remove `--save`):
+- `"react" --save` → name is `react`
+- `"iOS 16 → 17" --save` → name is `ios-16-to-17`
+
+Convert to filename:
+- Spaces → `-`
+- `→` → `to`
+- Remove special characters
+- Lowercase
+- Example: `"Python 3.12"` → `python-3-12.md`
+
+### Step 2: Create directory
+
+```bash
+mkdir -p .sourceatlas/deps
+```
+
+### Step 3: Save output
+
+After generating the complete analysis, save the **entire YAML output** to `.sourceatlas/deps/{name}.md`
+
+### Step 4: Confirm
+
+Add at the very end:
+```
+💾 已儲存至 .sourceatlas/deps/{name}.md
+```

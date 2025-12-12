@@ -1,8 +1,8 @@
 ---
 description: Analyze the impact scope of code changes using static dependency analysis
 model: sonnet
-allowed-tools: Bash, Glob, Grep, Read
-argument-hint: [target, e.g., "User model", "api /api/users/{id}", "authentication"]
+allowed-tools: Bash, Glob, Grep, Read, Write
+argument-hint: [target, e.g., "User model", "api /api/users/{id}", "authentication"] [--save]
 ---
 
 # SourceAtlas: Impact Analysis (Static Dependencies)
@@ -637,3 +637,39 @@ interface UserResponse {
 - **參數具體**：使用實際發現的檔案名或入口點
 - **數量限制**：1-2 個建議，不強制填滿
 - **用途欄位**：引用具體發現（依賴數、風險等級、問題）
+
+---
+
+## Save Mode (--save)
+
+If `--save` is present in `$ARGUMENTS`:
+
+### Step 1: Parse target name
+
+Extract target name from arguments (remove `--save`):
+- `"User model" --save` → target name is `user-model`
+- `"api /api/users/{id}" --save` → target name is `api-users-id`
+
+Convert to filename:
+- Spaces → `-`
+- Slashes → `-`
+- Remove `{`, `}`, special characters
+- Lowercase
+- Example: `"User model"` → `user-model.md`
+
+### Step 2: Create directory
+
+```bash
+mkdir -p .sourceatlas/impact
+```
+
+### Step 3: Save output
+
+After generating the complete analysis, save the **entire output** (from `=== ... Impact Analysis ===` to the end) to `.sourceatlas/impact/{name}.md`
+
+### Step 4: Confirm
+
+Add at the very end:
+```
+💾 已儲存至 .sourceatlas/impact/{name}.md
+```
