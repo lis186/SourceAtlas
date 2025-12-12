@@ -536,6 +536,153 @@ find . -name '*.h' -not -path '*/Pods/*' -exec \
 
 ---
 
+## 命令 6: /atlas.deps
+
+**分析 Library/Framework 使用情況，協助升級規劃** ⭐ NEW
+
+### 使用方式
+
+```bash
+/atlas.deps "react"
+/atlas.deps "axios"
+/atlas.deps "lodash" --breaking
+```
+
+### 什麼是 Dependency 分析？
+
+當你需要升級某個 library 或 framework 時，需要知道：
+- 專案用了這個 library 的**哪些 API**？
+- 哪些 API 在新版本會有 **breaking changes**？
+- 需要修改**哪些檔案**？
+
+`/atlas.deps` 幫你自動盤點所有使用點，對照 breaking changes，生成 migration checklist。
+
+### 你會得到什麼
+
+1. **版本資訊**：當前版本 vs 最新版本
+2. **使用統計**：import 次數、檔案數、API 種類
+3. **API 使用詳情**：每個 API 的使用次數和位置
+4. **Breaking Changes 影響**：哪些使用會受影響
+5. **Migration Checklist**：需要修改的檔案和建議
+
+### 執行時間
+
+**1-3 分鐘**（取決於專案大小和 library 使用量）
+
+### 使用範例
+
+#### 範例 1: React 升級評估
+
+**情境**：專案使用 React 17，想升級到 React 18
+
+**命令**：
+```bash
+/atlas.deps "react"
+```
+
+**輸出**（摘要）：
+```
+=== Dependency Analysis: react ===
+
+📦 版本資訊：
+  - 當前版本: 17.0.2
+  - 最新穩定版: 18.2.0
+
+📊 使用統計：
+  - Import 次數: 156 處
+  - 使用的 API: 23 種
+
+🔍 API 使用詳情：
+
+| API | 使用次數 | React 18 狀態 |
+|-----|---------|--------------|
+| useState | 89 | ✅ 相容 |
+| useEffect | 67 | ✅ 相容 |
+| ReactDOM.render | 3 | ⚠️ Deprecated |
+| componentWillMount | 5 | 🔴 Removed |
+
+⚠️ Breaking Changes 影響：
+
+1. ReactDOM.render (3 處)
+   - src/index.tsx:5
+   - src/utils/modal.tsx:12
+   → 需改用 createRoot
+
+2. componentWillMount (5 處)
+   - src/legacy/OldComponent.tsx:15
+   → 需改用 useEffect
+
+📋 Migration Checklist：
+- [ ] 更新 src/index.tsx
+- [ ] 重構 Legacy 組件
+- [ ] 更新 test setup
+
+預估工作量：4-6 小時
+風險等級：🟡 中
+```
+
+**你學到什麼**：
+- 專案有 156 處使用 React
+- 大部分 API 相容，但有 3 處需要修改 `ReactDOM.render`
+- 有 5 個 Legacy 組件使用已移除的 lifecycle
+- 預估 4-6 小時可以完成升級
+
+**下一步**：按照 Migration Checklist 逐一修改
+
+#### 範例 2: axios 升級
+
+**情境**：axios 從 0.x 升級到 1.x
+
+**命令**：
+```bash
+/atlas.deps "axios" --breaking
+```
+
+**輸出**（摘要）：
+```
+=== Dependency Analysis: axios ===
+
+📦 版本資訊：
+  - 當前版本: 0.27.2
+  - 最新穩定版: 1.6.2
+
+⚠️ Breaking Changes 影響：
+
+1. Response type changes
+   - 12 處使用 response.data 的地方
+   - TypeScript 類型需要更新
+
+2. Error handling
+   - 8 處 catch block 需要調整
+   - error.response 結構改變
+
+📋 Migration Checklist：
+- [ ] 更新 TypeScript 類型定義
+- [ ] 調整 8 處 error handling
+- [ ] 更新 interceptors 寫法
+
+預估工作量：2-3 小時
+風險等級：🟡 中
+```
+
+---
+
+## 命令 7: /atlas.init
+
+**初始化 SourceAtlas 觸發規則**
+
+### 使用方式
+
+```bash
+/atlas.init
+```
+
+### 功能說明
+
+將 SourceAtlas 的自動觸發規則注入到專案的 CLAUDE.md 中，讓 Claude Code 知道何時自動建議使用 Atlas 命令。
+
+---
+
 ## 常見問題
 
 ### Q: 命令執行失敗怎麼辦？
