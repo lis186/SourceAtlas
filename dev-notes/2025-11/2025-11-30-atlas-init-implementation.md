@@ -93,16 +93,16 @@ SourceAtlas 的命令（`/atlas-overview`, `/atlas-pattern`, `/atlas-impact`）�
 
 | 專案 | 類型 | 開發者 | 查詢 | 預期 | 結果 |
 |------|------|--------|------|------|------|
-| Signal-iOS | iOS | Junior | 「幫我理解這個 codebase」 | `/atlas-overview` | ✅ |
-| Wikipedia-iOS | iOS | Mid | 「改 Article 模型會影響什麼」 | `/atlas-impact` | ✅ |
-| Swiftfin | SwiftUI | Senior | 「看看 API client 的實作模式」 | `/atlas-pattern` | ✅ |
-| android-signal | Android | Junior | "What is this project?" | `/atlas-overview` | ✅ |
-| android-antennapod | Android | Mid | "What depends on download manager?" | `/atlas-impact` | ✅ |
-| ruby-spree | Ruby | Senior | "Show me payment processing pattern" | `/atlas-pattern` | ✅ |
-| python-ctfd | Python | Junior | "Quick overview of architecture?" | `/atlas-overview` | ✅ |
-| ***REMOVED*** | Ruby | Mid | 「在 product.rb 加 validation」 | 不觸發 | ✅ |
-| WordPress-iOS | iOS | Senior | "Fix line 245 in PostListViewController" | 不觸發 | ✅ |
-| aigc-weekly | Web | Mid | "How does this handle API endpoints?" | `/atlas-pattern` | ✅ |
+| iOS App 1 | iOS | Junior | 「幫我理解這個 codebase」 | `/atlas-overview` | ✅ |
+| iOS App 2 | iOS | Mid | 「改 Article 模型會影響什麼」 | `/atlas-impact` | ✅ |
+| iOS App 3 | SwiftUI | Senior | 「看看 API client 的實作模式」 | `/atlas-pattern` | ✅ |
+| Android App 1 | Android | Junior | "What is this project?" | `/atlas-overview` | ✅ |
+| Android App 2 | Android | Mid | "What depends on download manager?" | `/atlas-impact` | ✅ |
+| Ruby App 1 | Ruby | Senior | "Show me payment processing pattern" | `/atlas-pattern` | ✅ |
+| Python App 1 | Python | Junior | "Quick overview of architecture?" | `/atlas-overview` | ✅ |
+| iOS App 4 | iOS | Mid | 「在 product.rb 加 validation」 | 不觸發 | ✅ |
+| iOS App 5 | iOS | Senior | "Fix line 245 in PostListViewController" | 不觸發 | ✅ |
+| Web App 1 | Web | Mid | "How does this handle API endpoints?" | `/atlas-pattern` | ✅ |
 
 ### 測試結果
 
