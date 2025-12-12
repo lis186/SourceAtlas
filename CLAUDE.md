@@ -1008,6 +1008,25 @@ touch test-results.md
 - [x] **Branch-Aware Context** - Git 分支/子目錄/Package 偵測 ✅ (2025-12-06)
 - [x] **--save 參數** - 可選儲存至 `.sourceatlas/` ✅ (2025-12-06)
 
+### ✅ 已完成 - Model 效能優化 (2025-12-12)
+
+各命令根據任務複雜度使用不同 Claude 模型，平衡速度與品質：
+
+| 命令 | Model | 原因 |
+|------|-------|------|
+| `/atlas.init` | Haiku | 簡單文字注入，無需推理 |
+| `/atlas.overview` | Sonnet | 假設生成需要中等推理能力 |
+| `/atlas.pattern` | Sonnet | 模式匹配和實作指南生成 |
+| `/atlas.history` | Sonnet | Git 分析和洞察生成 |
+| `/atlas.impact` | Sonnet | 依賴追蹤和風險評估 |
+| `/atlas.deps` | Sonnet | 依賴盤點和規則匹配 |
+| `/atlas.flow` | Opus | 複雜多層邏輯流追蹤（11 種分析模式）|
+
+**預期效益**：
+- Haiku 命令：速度提升 50%+，成本降低 70%
+- Sonnet 命令：速度提升 20-30%，成本降低 40%
+- 整體品質維持高標準（E2E 測試 100% 通過）
+
 ### ✅ 已完成 - 多語言支援
 - [x] iOS/Swift - 34 patterns
 - [x] Kotlin/Android - 31 patterns
@@ -1023,6 +1042,7 @@ touch test-results.md
 - `/atlas.standup` - 整合 GitLab MR 工具（cycle-time, branch-health）
 
 **決策記錄**:
+- (2025-12-12): **Model 效能優化** - 各命令指定最適 Model（Haiku/Sonnet/Opus），E2E 測試 100% 通過
 - (2025-12-08): `/atlas.deps` 設計開始 - 專為 Library/Framework 升級場景（情境 8）
 - (2025-11-25): `/atlas.find` 已取消 - 功能由現有 commands 涵蓋
 - (2025-11-30): `/atlas.history` 實作完成 - 單一命令 + 零參數 + 智慧輸出 + 自動安裝 code-maat

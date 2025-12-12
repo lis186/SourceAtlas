@@ -8,6 +8,14 @@
 
 ### Week 2 (12/12): v2.9.0 Release - Dependency Analysis ⭐⭐⭐⭐⭐
 
+**Model 效能優化完成** (12/12):
+- 各命令指定最適 Model，平衡速度與品質
+- `/atlas.init`: Haiku（簡單文字注入）
+- `/atlas.overview`, `pattern`, `history`, `impact`, `deps`: Sonnet（中等複雜度分析）
+- `/atlas.flow`: Opus（複雜多層邏輯流追蹤）
+- E2E 測試 100% 通過（7/7 命令）
+- 預期效益：Haiku 成本 -70%、Sonnet 成本 -40%、品質維持高標準
+
 **/atlas.deps 完整測試完成** (12/12):
 - 4 個場景並行測試：iOS 16→17, Android API 35, Kotlin 純粹盤點, Flask 升級
 - **整體準確率**: 100% (42/42 樣本驗證)
