@@ -301,19 +301,25 @@ To implement similar functionality following this codebase's pattern:
 
 > 遵循 **Constitution Article VII: Handoffs 原則**
 
-### 結束條件（省略 `Recommended Next`）
+### 結束條件 vs 建議（二擇一，不可同時）
 
-根據 Section 7.2，滿足以下任一條件時省略：
-- **Pattern 很簡單**：無複雜流程或依賴
-- **發現太模糊**：無法給出高信心（>0.7）的具體參數
-- **分析深度足夠**：已執行 4+ 個命令
+**⚠️ 重要：以下兩種輸出互斥，只能選一種**
 
-省略時提供結束提示：
+**情況 A - 結束（省略 Recommended Next）**：
+滿足以下任一條件時，**只輸出結束提示，不輸出表格**：
+- Pattern 很簡單：無複雜流程或依賴
+- 發現太模糊：無法給出高信心（>0.7）的具體參數
+- 分析深度足夠：已執行 4+ 個命令
+
+輸出：
 ```markdown
 ✅ **Pattern 分析完成** - 可按照上述 Step-by-Step Guide 開始實作
 ```
 
-### 建議選擇（根據發現）
+**情況 B - 建議（輸出 Recommended Next 表格）**：
+Pattern 涉及複雜流程或有明確後續時，**只輸出表格，不輸出結束提示**。
+
+### 建議選擇（情況 B 適用）
 
 | 發現 | 建議命令 | 參數來源 |
 |------|---------|---------|
