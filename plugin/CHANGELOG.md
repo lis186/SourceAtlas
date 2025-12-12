@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced plugin description to include dependency analysis
 - Updated README with complete `/atlas.deps` documentation
 - Bumped version to 2.9.0 for major feature release
+- **Model Performance Optimization**: Each command now specifies optimal Claude model
+  - `/atlas.init`: Haiku (simple text injection)
+  - `/atlas.overview`, `pattern`, `history`, `impact`, `deps`: Sonnet (moderate complexity)
+  - `/atlas.flow`: Opus (complex multi-layer flow tracing)
+  - Expected benefits: 50%+ faster for Haiku commands, 20-30% faster for Sonnet, 40-70% cost reduction
 
 ### Tested
 - **4 Scenarios**: iOS 16→17, Android API 35, Kotlin coroutines inventory, Flask upgrade
