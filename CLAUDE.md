@@ -804,16 +804,16 @@ touch test-results.md
 
 ### 測試專案
 
-| 專案 | Stars | 檔案數 | 架構 |
-|------|-------|--------|------|
-| nowinandroid | 18k+ | 303 | Clean + MVVM |
-| tivi | 6k+ | 629 | Circuit/MVI (KMP) |
-| Pokedex | 7k+ | 56 | MVVM |
-| Foodium | 2k+ | 27 | MVVM |
-| foodies | 1k+ | 20 | MVVM + Compose |
-| thunderbird-android | 10k+ | 3,131 | 生產級郵件客戶端 |
-| NewPipe | 30k+ | 475 | 視頻串流 |
-| AntennaPod | 6k+ | 596 | Podcast App |
+| 專案 | 規模 | 檔案數 | 架構 |
+|------|------|--------|------|
+| Android App 1 | Large | 303 | Clean + MVVM |
+| Android App 2 | Large | 629 | Circuit/MVI (KMP) |
+| Android App 3 | Small | 56 | MVVM |
+| Android App 4 | Small | 27 | MVVM |
+| Android App 5 | Small | 20 | MVVM + Compose |
+| Android App 6 | Very Large | 3,131 | 生產級郵件客戶端 |
+| Android App 7 | Medium | 475 | 視頻串流 |
+| Android App 8 | Medium | 596 | Podcast App |
 
 > **詳細報告**：見 [dev-notes/2025-11/2025-11-30-kotlin-patterns-implementation-report.md](./dev-notes/2025-11/2025-11-30-kotlin-patterns-implementation-report.md)
 
