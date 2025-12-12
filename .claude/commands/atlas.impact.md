@@ -2,7 +2,7 @@
 description: Analyze the impact scope of code changes using static dependency analysis
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: [target, e.g., "User model", "api /api/users/{id}", "authentication"] [--save]
+argument-hint: [target, e.g., "User model", "api /api/users/{id}", "authentication"] [--save] [--force]
 ---
 
 # SourceAtlas: Impact Analysis (Static Dependencies)
@@ -22,6 +22,38 @@ argument-hint: [target, e.g., "User model", "api /api/users/{id}", "authenticati
 **Goal:** Identify all code affected by changes to the target component through static dependency analysis.
 
 **Time Limit:** Complete in 5-10 minutes.
+
+---
+
+## Cache Check（最高優先）
+
+**如果參數中沒有 `--force`**，先檢查快取：
+
+1. 從 `$ARGUMENTS` 提取 target 名稱（移除 `--save`、`--force`）
+2. 轉換為檔名：空格→`-`、斜線→`-`、小寫、移除 `{}`
+   - 例：`"User model"` → `user-model.md`
+   - 例：`"api /api/users/{id}"` → `api-users-id.md`
+3. 檢查快取：
+   ```bash
+   ls -la .sourceatlas/impact/{name}.md 2>/dev/null
+   ```
+
+4. **如果快取存在**：
+   - 計算距今天數
+   - 用 Read tool 讀取快取內容
+   - 輸出：
+     ```
+     📁 載入快取：.sourceatlas/impact/{name}.md（N 天前）
+     💡 重新分析請加 --force
+
+     ---
+     [快取內容]
+     ```
+   - **結束，不執行後續分析**
+
+5. **如果快取不存在**：繼續執行下方的分析流程
+
+**如果參數中有 `--force`**：跳過快取檢查，直接執行分析
 
 ---
 

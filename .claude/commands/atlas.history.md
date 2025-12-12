@@ -2,7 +2,7 @@
 description: Smart temporal analysis using git history - Hotspots, Coupling, and Recent Contributors
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: (optional) [path or scope, e.g., "src/", "frontend", "last 6 months"] [--save]
+argument-hint: (optional) [path or scope, e.g., "src/", "frontend", "last 6 months"] [--save] [--force]
 ---
 
 # SourceAtlas: Smart Temporal Analysis (Git History)
@@ -27,6 +27,35 @@ argument-hint: (optional) [path or scope, e.g., "src/", "frontend", "last 6 mont
 **Time Limit:** Complete in 5-10 minutes.
 
 **Prerequisite:** code-maat must be installed. If not found, **ask user permission** before installing.
+
+---
+
+## Cache Check（最高優先）
+
+**如果參數中沒有 `--force`**，先檢查快取：
+
+1. 快取路徑固定為：`.sourceatlas/history.md`
+2. 檢查快取：
+   ```bash
+   ls -la .sourceatlas/history.md 2>/dev/null
+   ```
+
+3. **如果快取存在**：
+   - 計算距今天數
+   - 用 Read tool 讀取快取內容
+   - 輸出：
+     ```
+     📁 載入快取：.sourceatlas/history.md（N 天前）
+     💡 重新分析請加 --force
+
+     ---
+     [快取內容]
+     ```
+   - **結束，不執行後續分析**
+
+4. **如果快取不存在**：繼續執行下方的分析流程
+
+**如果參數中有 `--force`**：跳過快取檢查，直接執行分析
 
 ---
 

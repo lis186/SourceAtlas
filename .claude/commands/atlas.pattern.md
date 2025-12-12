@@ -2,7 +2,7 @@
 description: Learn design patterns from the current codebase
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--save]
+argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--save] [--force]
 ---
 
 # SourceAtlas: Pattern Learning Mode
@@ -21,6 +21,37 @@ argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--save]
 **Goal:** Learn how THIS specific codebase implements the requested pattern, so you can follow the same approach for new features.
 
 **Time Limit:** Complete in 5-10 minutes maximum.
+
+---
+
+## Cache Check（最高優先）
+
+**如果參數中沒有 `--force`**，先檢查快取：
+
+1. 從 `$ARGUMENTS` 提取 pattern 名稱（移除 `--save`、`--force`）
+2. 轉換為檔名：空格→`-`、小寫、移除特殊字元
+   - 例：`"api endpoint"` → `api-endpoint.md`
+3. 檢查快取：
+   ```bash
+   ls -la .sourceatlas/patterns/{name}.md 2>/dev/null
+   ```
+
+4. **如果快取存在**：
+   - 計算距今天數
+   - 用 Read tool 讀取快取內容
+   - 輸出：
+     ```
+     📁 載入快取：.sourceatlas/patterns/{name}.md（N 天前）
+     💡 重新分析請加 --force
+
+     ---
+     [快取內容]
+     ```
+   - **結束，不執行後續分析**
+
+5. **如果快取不存在**：繼續執行下方的分析流程
+
+**如果參數中有 `--force`**：跳過快取檢查，直接執行分析
 
 ---
 

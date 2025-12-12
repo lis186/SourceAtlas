@@ -2,7 +2,7 @@
 description: Analyze dependency usage for library/framework/SDK upgrades
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write, WebFetch, WebSearch, AskUserQuestion
-argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3.12"] [--save]
+argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3.12"] [--save] [--force]
 ---
 
 # SourceAtlas: Dependency Analysis
@@ -18,6 +18,39 @@ argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3
 **Arguments**: ${ARGUMENTS}
 
 **Goal**: Analyze how a specific library, framework, or SDK is used in the codebase to facilitate upgrade planning.
+
+---
+
+## Cache Check（最高優先）
+
+**如果參數中沒有 `--force`**，先檢查快取：
+
+1. 從 `$ARGUMENTS` 提取 dependency 名稱（移除 `--save`、`--force`）
+2. 轉換為檔名：空格→`-`、`→`→`to`、小寫、移除特殊字元
+   - 例：`"react"` → `react.md`
+   - 例：`"iOS 16 → 17"` → `ios-16-to-17.md`
+   - 例：`"Python 3.12"` → `python-3-12.md`
+3. 檢查快取：
+   ```bash
+   ls -la .sourceatlas/deps/{name}.md 2>/dev/null
+   ```
+
+4. **如果快取存在**：
+   - 計算距今天數
+   - 用 Read tool 讀取快取內容
+   - 輸出：
+     ```
+     📁 載入快取：.sourceatlas/deps/{name}.md（N 天前）
+     💡 重新分析請加 --force
+
+     ---
+     [快取內容]
+     ```
+   - **結束，不執行後續分析**
+
+5. **如果快取不存在**：繼續執行下方的分析流程
+
+**如果參數中有 `--force`**：跳過快取檢查，直接執行分析
 
 ---
 
