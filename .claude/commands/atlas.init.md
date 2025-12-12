@@ -1,5 +1,6 @@
 ---
 description: Initialize SourceAtlas in current project - inject auto-trigger rules into CLAUDE.md
+model: haiku
 allowed-tools: Read, Write, Edit, Glob
 ---
 

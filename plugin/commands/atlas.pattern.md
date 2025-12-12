@@ -1,5 +1,6 @@
 ---
 description: Learn design patterns from the current codebase
+model: sonnet
 allowed-tools: Bash, Glob, Grep, Read
 argument-hint: [pattern type, e.g., "api endpoint", "background job", "file upload"]
 ---
