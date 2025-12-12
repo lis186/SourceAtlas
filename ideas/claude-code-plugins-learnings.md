@@ -30,7 +30,7 @@
 
 ---
 
-### 2. 漸進式輸出（Progressive Disclosure）
+### 2. 漸進式輸出（Progressive Disclosure）⭐ 深度探索
 
 **來自**：plugin-dev
 
@@ -41,25 +41,154 @@ Level 2: Core SKILL.md（觸發時）- 核心 API，~1,500 tokens
 Level 3: References/Examples（按需）- 詳細指南，~3,000+ tokens
 ```
 
-**潛在應用**：
+---
+
+#### 🔍 深度分析（2025-12-12）
+
+##### 現況盤點
+
+| 命令 | 現況 | 預估 tokens | 問題 |
+|------|------|-------------|------|
+| `/atlas.overview` | 全量 YAML | ~2,000 | 小專案不需要這麼多 |
+| `/atlas.pattern` | 完整報告 | ~800 | 有時只想知道「有沒有」 |
+| `/atlas.flow` | 已有漸進！ | 變動 | ✅ 標記 🔍 讓用戶選擇展開 |
+| `/atlas.history` | 全量報告 | ~1,500 | - |
+| `/atlas.impact` | 全量分析 | ~1,000 | - |
+| `/atlas.deps` | 全量盤點 | ~1,200 | - |
+
+**發現**：`/atlas.flow` 已經實作漸進式揭露！
+- 主路徑 >7 步驟會停下來
+- 標記 🔍 讓用戶選擇展開
+- 這是現成的參考模式
+
+##### 三種實作方式比較
+
+| 方式 | 優點 | 缺點 | 適用 |
+|------|------|------|------|
+| **A. 參數控制** | 簡單、明確 | 增加學習成本 | 進階用戶 |
+| **B. 互動式** | 漸進揭露 | 打斷流程 | 探索場景 |
+| **C. 智慧預設** | 零學習 | 可能猜錯 | 大部分場景 |
+
+**建議**：**C + A 混合** - 智慧預設 + 可選覆蓋
+
+##### 各命令漸進式設計
+
+**1. `/atlas.overview` 漸進式**
+
 ```
-/atlas.overview
-├── Level 1：專案指紋（類型、規模、主語言）~50 tokens
-├── Level 2：假設列表 + 掃描檔案 ~200 tokens
-└── Level 3：完整 YAML + 證據 ~2,000 tokens
+預設行為（智慧判斷）：
+├── TINY 專案：Level 1 only（50 tokens）
+├── SMALL 專案：Level 1-2（200 tokens）
+└── MEDIUM+ 專案：Level 1-3（完整，2000 tokens）
 
-/atlas.pattern
-├── Level 1：Pattern 名稱 + 檔案計數 ~30 tokens
-├── Level 2：實作指南摘要 ~150 tokens
-└── Level 3：完整範例程式碼 ~500+ tokens
+可選參數：
+--brief    → 強制 Level 1
+--full     → 強制 Level 3
+--save     → 儲存完整版本
 ```
 
-**待驗證**：
-- [ ] 如何讓使用者選擇輸出層級？（參數？互動？）
-- [ ] 是否需要改 command 架構？
-- [ ] 與 `--save` 參數的互動？
+Level 1（指紋卡片）：
+```markdown
+## 專案指紋
 
-**SourceAtlas 現況**：全量輸出，token 效率可改善
+| 項目 | 值 |
+|------|-----|
+| 類型 | WEB_APP |
+| 規模 | MEDIUM (2.5K files) |
+| 語言 | TypeScript + React |
+| 架構 | Clean Architecture |
+| AI 協作 | Level 3 |
+
+💡 輸入 `more` 查看假設列表
+```
+
+Level 2（假設摘要）：
+```markdown
+## 假設（共 12 個）
+
+高信心（≥0.8）：
+1. 使用 Zustand 狀態管理 (0.95)
+2. Repository pattern 資料層 (0.88)
+3. Jest + Testing Library 測試 (0.85)
+
+中信心（0.5-0.8）：
+4. 可能有未使用的 Redux 遺留 (0.65)
+
+💡 輸入 `full` 查看完整 YAML
+```
+
+Level 3（完整 YAML）：現有格式
+
+**2. `/atlas.pattern` 漸進式**
+
+```
+預設行為：
+├── 找到 ≤3 個檔案：Level 2（實作指南摘要）
+└── 找到 >3 個檔案：Level 1（統計 + 選擇）
+
+可選參數：
+--list     → 只列出檔案
+--full     → 完整分析
+```
+
+Level 1（統計 + 選擇）：
+```markdown
+## Pattern: Repository
+
+找到 15 個匹配檔案：
+
+📊 分布統計：
+- src/repositories/: 8 個
+- src/data/: 5 個
+- tests/: 2 個
+
+🔍 選擇要深入分析的：
+1. UserRepository.ts (核心，最多引用)
+2. BaseRepository.ts (基底類別)
+3. OrderRepository.ts (複雜度最高)
+
+💡 輸入數字（如 `1`）或 `all` 完整分析
+```
+
+**3. `/atlas.history` 漸進式**
+
+已經有選擇機制（Hotspots/Coupling/Contributors），可增加：
+
+```
+Level 1：Top 5 熱點 + 建議
+Level 2：Top 20 + 趨勢分析
+Level 3：完整報告 + 圖表
+```
+
+##### 實作成本評估
+
+| 命令 | 改動幅度 | 工作量 | 優先級 |
+|------|----------|--------|--------|
+| `/atlas.overview` | 中 | 2-3h | ⭐⭐⭐⭐ |
+| `/atlas.pattern` | 中 | 2h | ⭐⭐⭐ |
+| `/atlas.flow` | 已有 | - | ✅ |
+| `/atlas.history` | 小 | 1h | ⭐⭐ |
+| `/atlas.deps` | 小 | 1h | ⭐⭐ |
+
+**總工作量**：約 6-8 小時
+
+##### 風險評估
+
+| 風險 | 機率 | 影響 | 緩解 |
+|------|------|------|------|
+| 智慧預設猜錯 | 中 | 低 | 提供 `--full` 覆蓋 |
+| 用戶不習慣 | 中 | 中 | 清楚的 `💡` 提示 |
+| 增加維護複雜度 | 低 | 中 | 統一 Level 定義 |
+
+##### 結論
+
+**可行性**：✅ 高
+**價值**：
+- Token 效率提升 30-50%（小專案）
+- 認知負擔降低（先看摘要再深入）
+- 與 `/atlas.flow` 現有設計一致
+
+**建議**：升級到 `proposals/` 進行正式設計
 
 ---
 
