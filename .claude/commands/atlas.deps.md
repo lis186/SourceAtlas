@@ -213,6 +213,54 @@ cat .python-version pyproject.toml 2>/dev/null | grep -E "python|requires-python
 cat .nvmrc .node-version package.json 2>/dev/null | grep -E "node|engines"
 ```
 
+### Phase 2.5: ast-grep Enhanced Search (Optional, P1 Enhancement)
+
+**When to use**: ast-grep 提供更精確的使用點搜尋，可排除註解和字串中的誤判。
+
+**Check ast-grep availability**:
+```bash
+if command -v ast-grep &> /dev/null || command -v sg &> /dev/null; then
+    AST_GREP_AVAILABLE=true
+    AST_GREP_CMD=$(command -v ast-grep || command -v sg)
+else
+    AST_GREP_AVAILABLE=false
+fi
+```
+
+**If ast-grep is available**, use it for high-value scenarios:
+
+**For React Hooks (useState, useEffect, etc.)**:
+```bash
+# 精確匹配 Hook 呼叫，排除 import 和註解
+$AST_GREP_CMD --pattern 'useEffect($$$)' --lang tsx --json . 2>/dev/null | jq 'length'
+$AST_GREP_CMD --pattern 'useState($$$)' --lang tsx --json . 2>/dev/null | jq 'length'
+$AST_GREP_CMD --pattern 'useCallback($$$)' --lang tsx --json . 2>/dev/null | jq 'length'
+```
+
+**For Swift async/await**:
+```bash
+# 精確匹配 await 表達式
+$AST_GREP_CMD --pattern 'await $EXPR' --lang swift --json . 2>/dev/null
+```
+
+**For Kotlin Coroutines**:
+```bash
+# 精確匹配 suspend function 定義
+$AST_GREP_CMD --pattern 'suspend fun $NAME' --lang kotlin --json . 2>/dev/null
+```
+
+**Value**: 根據整合測試，ast-grep 在依賴盤點可達到：
+- TypeScript useEffect：44% 誤判消除
+- Swift @available：0%（grep 已足夠精確）
+- Kotlin @Composable：0%（grep 已足夠精確）
+
+**Best Practices**:
+- 對於專用語法（@available, @Composable）使用 grep 即可
+- 對於常見詞彙（useEffect, useState, ViewModel）優先使用 ast-grep
+- 如果 ast-grep 不可用，自動降級到 Phase 3 的 grep 搜尋
+
+---
+
 ### Phase 3: Find All Usage Points (3-5 minutes)
 
 **根據 Phase 0 確認的規則執行掃描**

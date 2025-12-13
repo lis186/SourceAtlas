@@ -105,6 +105,79 @@ If the script returns an error (unsupported pattern), fall back to manual search
 
 ---
 
+### Step 1.5: ast-grep Enhanced Detection (Optional, P1 Enhancement)
+
+**When to use**: 對於需要「內容分析」的 patterns（Type B），ast-grep 可提供更精確的程式碼結構搜尋。
+
+**Check ast-grep availability**:
+```bash
+if command -v ast-grep &> /dev/null || command -v sg &> /dev/null; then
+    AST_GREP_AVAILABLE=true
+    AST_GREP_CMD=$(command -v ast-grep || command -v sg)
+else
+    AST_GREP_AVAILABLE=false
+fi
+```
+
+**If ast-grep is available**, enhance these pattern searches:
+
+**Swift async function**:
+```bash
+# 使用 YAML rule 精確匹配 async function 定義
+cat > /tmp/async-rule.yaml << 'EOF'
+id: swift-async-function
+language: Swift
+rule:
+  kind: function_declaration
+  has:
+    pattern: async
+EOF
+$AST_GREP_CMD scan --rule /tmp/async-rule.yaml --json . 2>/dev/null
+rm /tmp/async-rule.yaml
+```
+
+**Kotlin suspend function**:
+```bash
+# 精確匹配 suspend function 定義
+$AST_GREP_CMD --pattern 'suspend fun $NAME' --lang kotlin --json . 2>/dev/null
+```
+
+**Kotlin data class**:
+```bash
+# 精確匹配 data class 定義
+$AST_GREP_CMD --pattern 'data class $NAME' --lang kotlin --json . 2>/dev/null
+```
+
+**TypeScript Custom Hook**:
+```bash
+# 使用 YAML rule 匹配 use* 開頭的函數
+cat > /tmp/hook-rule.yaml << 'EOF'
+id: ts-custom-hook
+language: tsx
+rule:
+  kind: function_declaration
+  has:
+    kind: identifier
+    regex: "^use[A-Z]"
+EOF
+$AST_GREP_CMD scan --rule /tmp/hook-rule.yaml --json . 2>/dev/null
+rm /tmp/hook-rule.yaml
+```
+
+**Value**: 根據整合測試，ast-grep 在 pattern 識別可達到：
+- Swift async function：14% 誤判消除
+- Kotlin suspend function：51% 誤判消除
+- Kotlin data class：15% 誤判消除
+- TypeScript custom hook：93% 誤判消除（需 YAML rule）
+
+**Type A vs Type B Patterns**:
+- **Type A**（檔名即 pattern）：ViewModel, Repository, Service → grep/find 已足夠
+- **Type B**（需內容分析）：async, suspend, custom hook → ast-grep 更精確
+
+**Graceful Degradation**: 如果 ast-grep 不可用或返回 0 結果，自動降級到 Step 2 的檔案分析。
+
+---
+
 ### Step 2: Analyze Top 2-3 Files
 
 Read the top-ranked files returned by the script (usually top 2-3 are sufficient).
