@@ -4,8 +4,7 @@
 # 設計原則：
 # 1. 單一入口 - 所有 atlas 命令通過此腳本使用 ast-grep
 # 2. 優雅降級 - ast-grep 不可用時提供 grep fallback 命令
-# 3. 規則集中 - YAML rules 統一管理於 ast-grep-rules/
-# 4. 效能優先 - 快取偵測結果，避免重複檢查
+# 3. 效能優先 - 快取偵測結果，避免重複檢查
 #
 # 使用方式：
 #   ./ast-grep-search.sh <operation> <target> [options]
@@ -37,7 +36,6 @@ set -euo pipefail
 # 配置
 # ============================================================
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-RULES_DIR="${SCRIPT_DIR}/ast-grep-rules"
 
 # 預設值
 PROJECT_PATH="."
@@ -107,19 +105,8 @@ detect_language() {
 }
 
 # ============================================================
-# YAML Rule 執行
+# Inline Rule 執行
 # ============================================================
-run_yaml_rule() {
-    local rule_file="$1"
-
-    if [[ -f "$RULES_DIR/$rule_file" ]]; then
-        $AST_GREP_CMD scan --rule "$RULES_DIR/$rule_file" --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
-    else
-        # 規則檔案不存在，返回空
-        echo "[]"
-    fi
-}
-
 run_inline_rule() {
     local rule_content="$1"
     local temp_rule

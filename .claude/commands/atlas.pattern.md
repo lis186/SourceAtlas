@@ -128,12 +128,6 @@ If the script returns an error (unsupported pattern), fall back to manual search
 ./scripts/atlas/ast-grep-search.sh pattern "async" --fallback
 ```
 
-**預定義 YAML Rules** (`scripts/atlas/ast-grep-rules/`):
-- `swift/async-function.yaml` - Swift async function 定義
-- `typescript/custom-hook.yaml` - React custom hook 定義
-- `kotlin/suspend-function.yaml` - Kotlin suspend function 定義
-- `kotlin/data-class.yaml` - Kotlin data class 定義
-
 **Value**: 根據整合測試，ast-grep 在 pattern 識別可達到：
 - Swift async function：14% 誤判消除
 - Kotlin suspend function：51% 誤判消除
