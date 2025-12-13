@@ -14,6 +14,8 @@
 - **v2.8.0** ✅ - Constitution v1.0 + Monorepo 支援（2025-12-05）
 - **v2.8.1** ✅ - Constitution v1.1 + Handoffs 原則（2025-12-06）
 - **v2.9.0** ✅ - Dependency Analysis `/atlas.deps` 完成測試（2025-12-12）
+- **v2.9.1** ✅ - 持久化 v2.0：30 天過期警告、Handoffs 互斥規則（2025-12-13）
+- **v2.9.2** ✅ - `/atlas.list` 過期標記增強、`/atlas.init` 驗證機制（2025-12-13）
 
 ## 架構
 
@@ -164,7 +166,8 @@ cd ~/projects/any-project
 - `/atlas.history` ✅ - 時序分析（Git 歷史）（已實作，2025-11-30）【支援 `--save`】
 - `/atlas.flow` ✅ - 流程追蹤與資料流分析（已實作，2025-12-01）【支援 `--save`】
 - `/atlas.deps` ✅ - Dependency 分析（已完成測試，2025-12-12）【支援 `--save`】
-- `/atlas.clear` ✅ - 清空已儲存的分析結果（2025-12-12）⭐ NEW
+- `/atlas.list` ✅ - 列出已儲存的分析結果（2025-12-13）⭐ NEW
+- `/atlas.clear` ✅ - 清空已儲存的分析結果（2025-12-12）
 
 **持久化功能**：
 - 加入 `--save` 參數可將分析結果儲存至 `.sourceatlas/` 目錄
