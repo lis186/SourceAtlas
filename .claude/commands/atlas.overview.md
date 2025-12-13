@@ -2,7 +2,7 @@
 description: Get project overview - scan <5% of files to achieve 70-80% understanding
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: [path] [--save] (e.g., "src/api" or ". --save")
+argument-hint: [path] [--save] [--force] (e.g., "src/api" or ". --save")
 ---
 
 # SourceAtlas: Project Overview (Stage 0 Fingerprint)
@@ -27,6 +27,45 @@ argument-hint: [path] [--save] (e.g., "src/api" or ". --save")
 **Analysis Target**: Parse from arguments (default: current directory)
 
 **Goal**: Generate a comprehensive project fingerprint by scanning <5% of files to achieve 70-80% understanding in 10-15 minutes.
+
+---
+
+## Cache Check（最高優先）
+
+**如果參數中沒有 `--force`**，先檢查快取：
+
+1. 計算快取路徑：
+   - 無路徑參數或 `.`：`.sourceatlas/overview.yaml`
+   - 有路徑參數（如 `src/api`）：`.sourceatlas/overview-src-api.yaml`（斜線換成 `-`）
+
+2. 檢查快取是否存在：
+   ```bash
+   ls -la .sourceatlas/overview.yaml 2>/dev/null
+   ```
+
+3. **如果快取存在**：
+   - 從 `ls` 輸出讀取修改日期
+   - 計算距今天數
+   - 用 Read tool 讀取快取內容
+   - 輸出：
+     ```
+     📁 載入快取：.sourceatlas/overview.yaml（N 天前）
+     💡 重新分析請加 --force
+     ```
+   - **如果超過 30 天**，額外顯示：
+     ```
+     ⚠️ 快取已超過 30 天，建議重新分析
+     ```
+   - 然後輸出：
+     ```
+     ---
+     [快取內容]
+     ```
+   - **結束，不執行後續分析**
+
+4. **如果快取不存在**：繼續執行下方的分析流程
+
+**如果參數中有 `--force`**：跳過快取檢查，直接執行分析
 
 ---
 
@@ -268,19 +307,25 @@ summary:
 
 > 遵循 **Constitution Article VII: Handoffs 原則**
 
-### 結束條件（省略 `recommended_next`）
+### 結束條件 vs 建議（二擇一，不可同時）
 
-根據 Section 7.2，滿足以下任一條件時省略：
-- **專案太小**：TINY（<10 files）可直接閱讀
-- **發現太模糊**：無法給出高信心（>0.7）的具體參數
-- **目標已達成**：AI 協作 Level ≥3 且規模 TINY/SMALL（可直接開發）
+**⚠️ 重要：以下兩種輸出互斥，只能選一種**
 
-省略時提供結束提示：
+**情況 A - 結束（省略 Recommended Next）**：
+滿足以下任一條件時，**只輸出結束提示，不輸出表格**：
+- 專案太小：TINY（<10 files）可直接閱讀
+- 發現太模糊：無法給出高信心（>0.7）的具體參數
+- 目標已達成：AI 協作 Level ≥3 且規模 TINY/SMALL（可直接開發）
+
+輸出：
 ```markdown
 ✅ **分析已足夠** - 專案規模小，可直接閱讀全部檔案開始開發
 ```
 
-### 建議選擇（根據發現）
+**情況 B - 建議（輸出 Recommended Next 表格）**：
+專案規模夠大或有明確後續時，**只輸出表格，不輸出結束提示**。
+
+### 建議選擇（情況 B 適用）
 
 | 發現 | 建議命令 | 參數來源 |
 |------|---------|---------|

@@ -1,17 +1,71 @@
 ---
 description: Get project overview - scan <5% of files to achieve 70-80% understanding
 model: sonnet
-allowed-tools: Bash, Glob, Grep, Read
-argument-hint: [optional: specific directory to analyze, e.g., "src/api"]
+allowed-tools: Bash, Glob, Grep, Read, Write
+argument-hint: [path] [--save] [--force] (e.g., "src/api" or ". --save")
 ---
 
 # SourceAtlas: Project Overview (Stage 0 Fingerprint)
 
+> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md) v1.0
+>
+> Key principles enforced:
+> - Article I: 高熵優先、掃描比例上限
+> - Article II: 強制排除目錄
+> - Article III: 假設數量限制、必要元素
+> - Article IV: 證據格式要求
+
 ## Context
 
-**Analysis Target**: ${ARGUMENTS:-.}
+**Arguments**: ${ARGUMENTS:-.}
+
+**Save Mode**: Check if `--save` is in arguments. If present:
+- Remove `--save` from path argument
+- After analysis, save YAML to `.sourceatlas/overview.yaml`
+- Create `.sourceatlas/` directory if needed
+
+**Analysis Target**: Parse from arguments (default: current directory)
 
 **Goal**: Generate a comprehensive project fingerprint by scanning <5% of files to achieve 70-80% understanding in 10-15 minutes.
+
+---
+
+## Cache Check（最高優先）
+
+**如果參數中沒有 `--force`**，先檢查快取：
+
+1. 計算快取路徑：
+   - 無路徑參數或 `.`：`.sourceatlas/overview.yaml`
+   - 有路徑參數（如 `src/api`）：`.sourceatlas/overview-src-api.yaml`（斜線換成 `-`）
+
+2. 檢查快取是否存在：
+   ```bash
+   ls -la .sourceatlas/overview.yaml 2>/dev/null
+   ```
+
+3. **如果快取存在**：
+   - 從 `ls` 輸出讀取修改日期
+   - 計算距今天數
+   - 用 Read tool 讀取快取內容
+   - 輸出：
+     ```
+     📁 載入快取：.sourceatlas/overview.yaml（N 天前）
+     💡 重新分析請加 --force
+     ```
+   - **如果超過 30 天**，額外顯示：
+     ```
+     ⚠️ 快取已超過 30 天，建議重新分析
+     ```
+   - 然後輸出：
+     ```
+     ---
+     [快取內容]
+     ```
+   - **結束，不執行後續分析**
+
+4. **如果快取不存在**：繼續執行下方的分析流程
+
+**如果參數中有 `--force`**：跳過快取檢查，直接執行分析
 
 ---
 
@@ -36,6 +90,7 @@ The script will:
 - Determine project scale (TINY/SMALL/MEDIUM/LARGE/VERY_LARGE)
 - Recommend file scan limits (to stay <10%)
 - Suggest hypothesis targets (scale-aware)
+- **Detect context** (Git branch, monorepo subdirectory, package name)
 
 **Scale-Aware Scan Limits**:
 - **TINY** (<5 files): Scan 1-2 files max (50% max to avoid over-scanning tiny projects)
@@ -134,10 +189,16 @@ metadata:
   project_name: "[detected name]"
   scan_time: "[ISO 8601 timestamp]"
   target_path: "${ARGUMENTS:-.}"
-  total_files_estimate: [estimate]
-  scanned_files: [actual count]
+  total_files: [actual count after exclusions]
+  scanned_files: [files read]
   scan_ratio: "[percentage]"
-  analysis_time: "[minutes]"
+  project_scale: "[TINY|SMALL|MEDIUM|LARGE|VERY_LARGE]"
+  constitution_version: "1.1"
+  # Branch-Aware Context (v2.8.2)
+  context:
+    git_branch: "[branch name or null]"
+    relative_path: "[path within repo or null]"
+    package_name: "[detected package name or null]"
 
 project_fingerprint:
   project_type: "[WEB_APP|CLI|LIBRARY|MOBILE_APP|MICROSERVICE|MONOREPO]"
@@ -206,9 +267,16 @@ summary:
     - "[finding 2]"
     - "[finding 3]"
 
-  recommended_next_steps:
-    - "[action 1]"
-    - "[action 2]"
+## Recommended Next
+
+<!-- 根據分析發現動態建議，省略此區塊若滿足結束條件 -->
+
+| # | 命令 | 用途 |
+|---|------|------|
+| 1 | `/atlas.pattern "[pattern名稱]"` | [基於發現的理由] |
+| 2 | `/atlas.flow "[入口點]"` | [基於發現的理由] |
+
+💡 輸入數字（如 `1`）或複製命令執行
 ```
 
 ---
@@ -235,9 +303,70 @@ summary:
 
 ---
 
-## What's Next?
+## Handoffs 判斷規則
 
-After `/atlas.overview`, users can:
-- Use `/atlas.pattern` to learn specific design patterns
-- Use `/atlas.impact` to analyze change impact
-- Run full `/atlas` for complete 3-stage analysis (Stage 0 + 1 + 2)
+> 遵循 **Constitution Article VII: Handoffs 原則**
+
+### 結束條件 vs 建議（二擇一，不可同時）
+
+**⚠️ 重要：以下兩種輸出互斥，只能選一種**
+
+**情況 A - 結束（省略 Recommended Next）**：
+滿足以下任一條件時，**只輸出結束提示，不輸出表格**：
+- 專案太小：TINY（<10 files）可直接閱讀
+- 發現太模糊：無法給出高信心（>0.7）的具體參數
+- 目標已達成：AI 協作 Level ≥3 且規模 TINY/SMALL（可直接開發）
+
+輸出：
+```markdown
+✅ **分析已足夠** - 專案規模小，可直接閱讀全部檔案開始開發
+```
+
+**情況 B - 建議（輸出 Recommended Next 表格）**：
+專案規模夠大或有明確後續時，**只輸出表格，不輸出結束提示**。
+
+### 建議選擇（情況 B 適用）
+
+| 發現 | 建議命令 | 參數來源 |
+|------|---------|---------|
+| 明確設計 patterns | `/atlas.pattern` | 發現的 pattern 名稱 |
+| 架構複雜（多層/微服務） | `/atlas.flow` | 主要入口點檔案 |
+| 規模 ≥ LARGE | `/atlas.history` | 無需參數 |
+| 高風險區域 | `/atlas.impact` | 風險檔案/模組名 |
+
+### 輸出格式（Section 7.3）
+
+使用編號表格：
+```markdown
+| # | 命令 | 用途 |
+|---|------|------|
+| 1 | `/atlas.pattern "repository"` | 發現 Repository 模式被 15 處使用 |
+```
+
+### 品質要求（Section 7.4-7.5）
+
+- **參數具體**：如 `"repository"` 非 `"相關 pattern"`
+- **數量限制**：1-2 個建議，不強制填滿
+- **用途欄位**：引用具體發現（數字、檔案名）
+
+---
+
+## Save Mode (--save)
+
+If `--save` flag is present in arguments:
+
+1. **Create directory** (if needed):
+```bash
+mkdir -p .sourceatlas
+```
+
+2. **Save YAML output** to `.sourceatlas/overview.yaml`
+
+3. **Confirm save**:
+```
+💾 已儲存至 .sourceatlas/overview.yaml
+```
+
+**File naming for subdirectory analysis**:
+- Root analysis: `.sourceatlas/overview.yaml`
+- Subdirectory (e.g., `src/api`): `.sourceatlas/overview-src-api.yaml`

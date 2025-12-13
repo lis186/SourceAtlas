@@ -1,10 +1,10 @@
 # SourceAtlas
 
-**7 個斜線命令，快速理解任何 codebase**
+**9 個斜線命令，快速理解任何 codebase**
 
 適用於 Claude Code | 支援 iOS/TypeScript/Android/Python
 
-[![Version](https://img.shields.io/badge/version-v2.9.0-blue)](https://github.com/lis186/SourceAtlas/releases)
+[![Version](https://img.shields.io/badge/version-v2.9.2-blue)](https://github.com/lis186/SourceAtlas/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![Constitution](https://img.shields.io/badge/constitution-v1.1-purple)](./ANALYSIS_CONSTITUTION.md)
 
@@ -20,7 +20,7 @@
 
 ---
 
-## 🚀 七個命令
+## 🚀 九個命令
 
 ### 1. 快速理解專案
 
@@ -138,6 +138,27 @@
 
 ---
 
+### 8. 查看已儲存的分析
+
+```bash
+/atlas.list
+```
+
+**即時查看**：列出 `.sourceatlas/` 中所有快取，顯示過期狀態（⚠️ >30 天），提供可複製的重新分析命令
+
+---
+
+### 9. 清空快取
+
+```bash
+/atlas.clear              # 清空全部
+/atlas.clear patterns     # 只清空 patterns/
+```
+
+**快取管理**：清空已儲存的分析結果，釋放空間或強制重新分析
+
+---
+
 ## ⚡ 快速開始
 
 ### 前置需求
@@ -200,13 +221,16 @@ cd ~/projects/any-project
 # 檢查命令是否安裝成功
 ls ~/.claude/commands/atlas.*.md
 
-# 應該看到 6 個檔案：
+# 應該看到 9 個檔案：
 # atlas.init.md
 # atlas.overview.md
 # atlas.pattern.md
 # atlas.impact.md
 # atlas.history.md
 # atlas.flow.md
+# atlas.deps.md
+# atlas.list.md
+# atlas.clear.md
 ```
 
 📚 **完整安裝指南**：[GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
@@ -367,6 +391,34 @@ Claude Code + 2 分鐘安裝
 
 </details>
 
+<details>
+<summary><b>Q: 分析結果可以儲存嗎？</b></summary>
+
+**可以！** 所有分析命令支援 `--save` 參數：
+
+```bash
+/atlas.overview --save           # 儲存至 .sourceatlas/overview.yaml
+/atlas.pattern "api" --save      # 儲存至 .sourceatlas/patterns/api.md
+/atlas.flow "login" --save       # 儲存至 .sourceatlas/flows/login.md
+/atlas.history --save            # 儲存至 .sourceatlas/history.md
+/atlas.impact "User" --save      # 儲存至 .sourceatlas/impact/user.md
+/atlas.deps "react" --save       # 儲存至 .sourceatlas/deps/react.md
+```
+
+**清空已儲存的分析**：
+
+```bash
+/atlas.clear              # 清空全部
+/atlas.clear patterns     # 只清空 patterns/
+```
+
+**用途**：
+- 📝 保留分析結果供日後參考
+- 👥 新成員可以直接閱讀已有分析
+- 🔄 避免重複執行相同分析
+
+</details>
+
 ---
 
 ## 📜 分析憲法 (Constitution)
@@ -405,7 +457,7 @@ bash scripts/atlas/validate-constitution.sh --check-structure
 
 ## 🗺️ 開發狀態
 
-**v2.8.1 (當前)**：6/6 核心命令完成 + Constitution v1.1 ✅
+**v2.9.2 (當前)**：9 個命令完成 + 持久化功能 v2.0 ✅
 
 - ✅ `/atlas.init` - 專案初始化（自動觸發規則）
 - ✅ `/atlas.overview` - 專案概覽
@@ -413,9 +465,12 @@ bash scripts/atlas/validate-constitution.sh --check-structure
 - ✅ `/atlas.impact` - 影響分析（靜態分析）
 - ✅ `/atlas.history` - 時序分析（Git 歷史）
 - ✅ `/atlas.flow` - 流程追蹤（資料流分析）
-- ✅ **Constitution v1.1** - 分析品質框架 + Handoffs 原則 ⭐ NEW
+- ✅ `/atlas.deps` - 依賴分析（升級規劃）⭐ NEW
+- ✅ `/atlas.list` - 查看已儲存的分析 ⭐ NEW
+- ✅ `/atlas.clear` - 清空快取
+- ✅ **持久化 v2.0** - `--save` 參數、30 天過期警告、告知式快取
 
-**v2.9 (規劃中)**：Go/Rust/Ruby patterns、AST 分析整合、SourceAtlas Monitor
+**v3.0 (規劃中)**：Go/Rust/Ruby patterns、AST 分析整合、SourceAtlas Monitor
 
 ---
 
@@ -428,6 +483,6 @@ bash scripts/atlas/validate-constitution.sh --check-structure
 ---
 
 **SourceAtlas** - Claude Code 的程式分析助手
-v2.8.1 | 最新更新: 2025-12-06 | MIT License
+v2.9.2 | 最新更新: 2025-12-13 | MIT License
 
 Made with ❤️ and 🤖

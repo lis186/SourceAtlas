@@ -14,6 +14,8 @@
 - **v2.8.0** ✅ - Constitution v1.0 + Monorepo 支援（2025-12-05）
 - **v2.8.1** ✅ - Constitution v1.1 + Handoffs 原則（2025-12-06）
 - **v2.9.0** ✅ - Dependency Analysis `/atlas.deps` 完成測試（2025-12-12）
+- **v2.9.1** ✅ - 持久化 v2.0：30 天過期警告、Handoffs 互斥規則（2025-12-13）
+- **v2.9.2** ✅ - `/atlas.list` 過期標記增強、`/atlas.init` 驗證機制（2025-12-13）
 
 ## 架構
 
@@ -158,12 +160,44 @@ cd ~/projects/any-project
 
 **v2.9.0 方式**（Commands）：
 - `/atlas.init` ✅ - 專案初始化，注入自動觸發規則（已實作，2025-11-30）
-- `/atlas.overview` ✅ - Stage 0 專案指紋（已實作，2025-11-20）
-- `/atlas.pattern` ✅ - 學習設計模式（已實作，2025-11-22）
-- `/atlas.impact` ✅ - 影響範圍分析（已實作，2025-11-25）
-- `/atlas.history` ✅ - 時序分析（Git 歷史）（已實作，2025-11-30）
-- `/atlas.flow` ✅ - 流程追蹤與資料流分析（已實作，2025-12-01）
-- `/atlas.deps` ✅ - Dependency 分析（已完成測試，2025-12-12）⭐ NEW
+- `/atlas.overview` ✅ - Stage 0 專案指紋（已實作，2025-11-20）【支援 `--save`】
+- `/atlas.pattern` ✅ - 學習設計模式（已實作，2025-11-22）【支援 `--save`】
+- `/atlas.impact` ✅ - 影響範圍分析（已實作，2025-11-25）【支援 `--save`】
+- `/atlas.history` ✅ - 時序分析（Git 歷史）（已實作，2025-11-30）【支援 `--save`】
+- `/atlas.flow` ✅ - 流程追蹤與資料流分析（已實作，2025-12-01）【支援 `--save`】
+- `/atlas.deps` ✅ - Dependency 分析（已完成測試，2025-12-12）【支援 `--save`】
+- `/atlas.list` ✅ - 列出已儲存的分析結果（2025-12-13）⭐ NEW
+- `/atlas.clear` ✅ - 清空已儲存的分析結果（2025-12-12）
+
+**持久化功能**：
+- 加入 `--save` 參數可將分析結果儲存至 `.sourceatlas/` 目錄
+- 範例：`/atlas.pattern "repository" --save` → 儲存至 `.sourceatlas/patterns/repository.md`
+- 使用 `/atlas.clear` 清空已儲存的分析結果
+- 使用 `/atlas.list` 查看已儲存的分析結果
+- 已儲存的分析會自動作為快取，下次執行相同命令時直接載入
+- 加入 `--force` 參數可跳過快取，強制重新分析
+
+### 使用專案記憶（.sourceatlas/）
+
+**觸發條件**：當使用者問題涉及以下情境時，主動查詢 `.sourceatlas/`：
+- 專案層級問題：「這專案」「這個 codebase」「專案架構」「整體」「全貌」
+- 延續之前分析：「之前分析」「上次」「我們討論過」
+- 明確要求概覽：「overview」「summarize」「給我背景」
+
+**動作**：
+1. 執行 `ls .sourceatlas/ 2>/dev/null` 檢查是否存在
+2. 如果存在，優先讀取 `overview.yaml`（專案全貌）
+3. 根據問題內容，判斷是否需要讀取其他快取：
+   - Pattern 相關 → `.sourceatlas/patterns/`
+   - 依賴相關 → `.sourceatlas/deps/`
+   - 歷史相關 → `.sourceatlas/history.md`
+   - 影響分析 → `.sourceatlas/impact/`
+   - 流程相關 → `.sourceatlas/flows/`
+
+**不觸發**（避免不必要的 token 成本）：
+- 「幫我改這個 bug」→ 直接改，不需要快取
+- 「這個 function 做什麼」→ 直接讀原始碼
+- 「執行測試」→ 直接執行，不需要背景
 
 **完整三階段分析**（罕見場景）：
 針對深度盡職調查（評估開源專案、招聘評估、技術盡調），使用 `PROMPTS.md` 手動執行 Stage 0-1-2
@@ -1006,7 +1040,8 @@ touch test-results.md
 - [x] **validate-constitution.sh** - 自動化合規驗證 ✅ (2025-12-05)
 - [x] **Monorepo 偵測** - lerna/pnpm/nx/turborepo/npm workspaces ✅ (2025-12-05)
 - [x] **Branch-Aware Context** - Git 分支/子目錄/Package 偵測 ✅ (2025-12-06)
-- [x] **--save 參數** - 可選儲存至 `.sourceatlas/` ✅ (2025-12-06)
+- [x] **--save 參數** - 所有分析命令支援儲存至 `.sourceatlas/` ✅ (2025-12-12)
+- [x] **/atlas.clear** - 清空已儲存的分析結果 ✅ (2025-12-12)
 
 ### ✅ 已完成 - Model 效能優化 (2025-12-12)
 
@@ -1021,6 +1056,7 @@ touch test-results.md
 | `/atlas.impact` | Sonnet | 依賴追蹤和風險評估 |
 | `/atlas.deps` | Sonnet | 依賴盤點和規則匹配 |
 | `/atlas.flow` | Opus | 複雜多層邏輯流追蹤（11 種分析模式）|
+| `/atlas.clear` | Haiku | 簡單檔案刪除操作 |
 
 **預期效益**：
 - Haiku 命令：速度提升 50%+，成本降低 70%

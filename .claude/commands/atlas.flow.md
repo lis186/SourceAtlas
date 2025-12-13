@@ -1,8 +1,8 @@
 ---
 description: Extract business logic flow from code, trace execution path from entry point
 model: opus
-allowed-tools: Bash, Glob, Grep, Read
-argument-hint: [flow description or entry point, e.g., "user checkout", "from OrderService.create()"]
+allowed-tools: Bash, Glob, Grep, Read, Write
+argument-hint: [flow description or entry point, e.g., "user checkout", "from OrderService.create()"] [--save] [--force]
 ---
 
 # SourceAtlas: Business Flow Analysis
@@ -20,6 +20,44 @@ argument-hint: [flow description or entry point, e.g., "user checkout", "from Or
 **Analysis Target:** $ARGUMENTS
 
 **Goal:** Extract and visualize business logic flow, tracing execution path step by step.
+
+---
+
+## Cache Check（最高優先）
+
+**如果參數中沒有 `--force`**，先檢查快取：
+
+1. 從 `$ARGUMENTS` 提取 flow 名稱（移除 `--save`、`--force`、`--quick`、`--thorough`、`--verify`）
+2. 轉換為檔名：空格→`-`、小寫、移除特殊字元、**截斷至 50 字元**
+   - 例：`"user checkout"` → `user-checkout.md`
+   - 例：`"from OrderService.create()"` → `orderservice-create.md`
+3. 檢查快取：
+   ```bash
+   ls -la .sourceatlas/flows/{name}.md 2>/dev/null
+   ```
+
+4. **如果快取存在**：
+   - 計算距今天數
+   - 用 Read tool 讀取快取內容
+   - 輸出：
+     ```
+     📁 載入快取：.sourceatlas/flows/{name}.md（N 天前）
+     💡 重新分析請加 --force
+     ```
+   - **如果超過 30 天**，額外顯示：
+     ```
+     ⚠️ 快取已超過 30 天，建議重新分析
+     ```
+   - 然後輸出：
+     ```
+     ---
+     [快取內容]
+     ```
+   - **結束，不執行後續分析**
+
+5. **如果快取不存在**：繼續執行下方的分析流程
+
+**如果參數中有 `--force`**：跳過快取檢查，直接執行分析
 
 ---
 
@@ -2406,19 +2444,25 @@ else:
 💡 輸入數字（如 `1`）或複製命令執行
 ```
 
-### 結束條件（省略 Recommended Next）
+### 結束條件 vs 建議（二擇一，不可同時）
 
-根據 Section 7.2，滿足以下任一條件時省略：
-- **流程很簡單**：無複雜分支或依賴
-- **發現太模糊**：無法給出高信心（>0.7）的具體參數
-- **分析深度足夠**：已執行 4+ 個命令
+**⚠️ 重要：以下兩種輸出互斥，只能選一種**
 
-省略時提供結束提示：
-```
+**情況 A - 結束（省略 Recommended Next）**：
+滿足以下任一條件時，**只輸出結束提示，不輸出表格**：
+- 流程很簡單：無複雜分支或依賴
+- 發現太模糊：無法給出高信心（>0.7）的具體參數
+- 分析深度足夠：已執行 4+ 個命令
+
+輸出：
+```markdown
 ✅ **Flow 分析完成** - 可開始實作或修改
 ```
 
-### 建議選擇（根據發現）
+**情況 B - 建議（輸出 Recommended Next 表格）**：
+流程複雜或有明確後續分析需求時，**只輸出表格，不輸出結束提示**。
+
+### 建議選擇（情況 B 適用）
 
 | 發現 | 建議命令 | 參數來源 |
 |------|---------|---------|
@@ -2481,3 +2525,38 @@ After `/atlas.flow`, users can:
 - "event" / "事件" → Event/Message Tracing
 - "transaction" / "交易" → Transaction Boundary
 - "cache" / "快取" → Cache Flow Analysis
+
+---
+
+## Save Mode (--save)
+
+If `--save` is present in `$ARGUMENTS`:
+
+### Step 1: Parse flow name
+
+Extract flow name from arguments (remove `--save` and other flags):
+- `"checkout flow" --save` → flow name is `checkout-flow`
+- `"from OrderService.create()" --save` → flow name is `orderservice-create`
+
+Convert to filename:
+- Spaces → `-`
+- Lowercase
+- Remove special characters, parentheses
+- Example: `"User Registration"` → `user-registration.md`
+
+### Step 2: Create directory
+
+```bash
+mkdir -p .sourceatlas/flows
+```
+
+### Step 3: Save output
+
+After generating the complete analysis, save the **entire output** to `.sourceatlas/flows/{name}.md`
+
+### Step 4: Confirm
+
+Add at the very end:
+```
+💾 已儲存至 .sourceatlas/flows/{name}.md
+```

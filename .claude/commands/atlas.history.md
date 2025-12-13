@@ -1,8 +1,8 @@
 ---
 description: Smart temporal analysis using git history - Hotspots, Coupling, and Recent Contributors
 model: sonnet
-allowed-tools: Bash, Glob, Grep, Read
-argument-hint: (optional) [path or scope, e.g., "src/", "frontend", "last 6 months"]
+allowed-tools: Bash, Glob, Grep, Read, Write
+argument-hint: (optional) [path or scope, e.g., "src/", "frontend", "last 6 months"] [--save] [--force]
 ---
 
 # SourceAtlas: Smart Temporal Analysis (Git History)
@@ -27,6 +27,41 @@ argument-hint: (optional) [path or scope, e.g., "src/", "frontend", "last 6 mont
 **Time Limit:** Complete in 5-10 minutes.
 
 **Prerequisite:** code-maat must be installed. If not found, **ask user permission** before installing.
+
+---
+
+## Cache Check（最高優先）
+
+**如果參數中沒有 `--force`**，先檢查快取：
+
+1. 快取路徑固定為：`.sourceatlas/history.md`
+2. 檢查快取：
+   ```bash
+   ls -la .sourceatlas/history.md 2>/dev/null
+   ```
+
+3. **如果快取存在**：
+   - 計算距今天數
+   - 用 Read tool 讀取快取內容
+   - 輸出：
+     ```
+     📁 載入快取：.sourceatlas/history.md（N 天前）
+     💡 重新分析請加 --force
+     ```
+   - **如果超過 30 天**，額外顯示：
+     ```
+     ⚠️ 快取已超過 30 天，建議重新分析
+     ```
+   - 然後輸出：
+     ```
+     ---
+     [快取內容]
+     ```
+   - **結束，不執行後續分析**
+
+4. **如果快取不存在**：繼續執行下方的分析流程
+
+**如果參數中有 `--force`**：跳過快取檢查，直接執行分析
 
 ---
 
@@ -415,14 +450,17 @@ This could mean:
 
 > 遵循 **Constitution Article VII: Handoffs 原則**
 
-### 結束條件（省略 Recommended Next）
+### 結束條件 vs 建議（二擇一，不可同時）
 
-根據 Section 7.2，滿足以下任一條件時省略：
-- **歷史太短**：<50 commits 或 <3 個月，數據不足
-- **發現太模糊**：無法給出高信心（>0.7）的具體參數
-- **分析深度足夠**：已執行 4+ 個命令
+**⚠️ 重要：以下兩種輸出互斥，只能選一種**
 
-歷史太短時提供警示：
+**情況 A - 結束（省略 Recommended Next）**：
+滿足以下任一條件時，**只輸出結束/警示提示，不輸出表格**：
+- 歷史太短：<50 commits 或 <3 個月，數據不足
+- 發現太模糊：無法給出高信心（>0.7）的具體參數
+- 分析深度足夠：已執行 4+ 個命令
+
+歷史太短時輸出：
 ```markdown
 ⚠️ **數據不足警示**
 - Commits: N 個（建議 ≥50）
@@ -431,7 +469,10 @@ This could mean:
 建議 3-6 個月後再分析時序模式
 ```
 
-### 建議選擇（根據發現）
+**情況 B - 建議（輸出 Recommended Next 表格）**：
+有明確發現（hotspot、耦合、風險）時，**只輸出表格，不輸出結束提示**。
+
+### 建議選擇（情況 B 適用）
 
 | 發現 | 建議命令 | 參數來源 |
 |------|---------|---------|
@@ -455,3 +496,26 @@ This could mean:
 ## Integration with Other Commands
 
 This command complements `/atlas.impact` (static analysis) with temporal insights.
+
+---
+
+## Save Mode (--save)
+
+If `--save` is present in `$ARGUMENTS`:
+
+### Step 1: Create directory
+
+```bash
+mkdir -p .sourceatlas
+```
+
+### Step 2: Save output
+
+After generating the complete analysis, save the **entire output** (from `=== Smart Temporal Analysis ===` to the end) to `.sourceatlas/history.md`
+
+### Step 3: Confirm
+
+Add at the very end:
+```
+💾 已儲存至 .sourceatlas/history.md
+```
