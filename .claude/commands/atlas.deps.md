@@ -217,36 +217,24 @@ cat .nvmrc .node-version package.json 2>/dev/null | grep -E "node|engines"
 
 **When to use**: ast-grep 提供更精確的使用點搜尋，可排除註解和字串中的誤判。
 
-**Check ast-grep availability**:
-```bash
-if command -v ast-grep &> /dev/null || command -v sg &> /dev/null; then
-    AST_GREP_AVAILABLE=true
-    AST_GREP_CMD=$(command -v ast-grep || command -v sg)
-else
-    AST_GREP_AVAILABLE=false
-fi
-```
+**使用統一腳本** (`scripts/atlas/ast-grep-search.sh`):
 
-**If ast-grep is available**, use it for high-value scenarios:
-
-**For React Hooks (useState, useEffect, etc.)**:
 ```bash
-# 精確匹配 Hook 呼叫，排除 import 和註解
-$AST_GREP_CMD --pattern 'useEffect($$$)' --lang tsx --json . 2>/dev/null | jq 'length'
-$AST_GREP_CMD --pattern 'useState($$$)' --lang tsx --json . 2>/dev/null | jq 'length'
-$AST_GREP_CMD --pattern 'useCallback($$$)' --lang tsx --json . 2>/dev/null | jq 'length'
-```
+# React Hooks 使用盤點
+./scripts/atlas/ast-grep-search.sh usage "useEffect" --path .
+./scripts/atlas/ast-grep-search.sh usage "useState" --path .
 
-**For Swift async/await**:
-```bash
-# 精確匹配 await 表達式
-$AST_GREP_CMD --pattern 'await $EXPR' --lang swift --json . 2>/dev/null
-```
+# Swift async/await 盤點
+./scripts/atlas/ast-grep-search.sh async --lang swift --path .
 
-**For Kotlin Coroutines**:
-```bash
-# 精確匹配 suspend function 定義
-$AST_GREP_CMD --pattern 'suspend fun $NAME' --lang kotlin --json . 2>/dev/null
+# Kotlin suspend function 盤點
+./scripts/atlas/ast-grep-search.sh pattern "suspend" --lang kotlin --path .
+
+# 取得匹配數量
+./scripts/atlas/ast-grep-search.sh usage "useEffect" --count
+
+# 如果 ast-grep 未安裝，取得 grep 替代命令
+./scripts/atlas/ast-grep-search.sh usage "useEffect" --fallback
 ```
 
 **Value**: 根據整合測試，ast-grep 在依賴盤點可達到：
@@ -257,7 +245,7 @@ $AST_GREP_CMD --pattern 'suspend fun $NAME' --lang kotlin --json . 2>/dev/null
 **Best Practices**:
 - 對於專用語法（@available, @Composable）使用 grep 即可
 - 對於常見詞彙（useEffect, useState, ViewModel）優先使用 ast-grep
-- 如果 ast-grep 不可用，自動降級到 Phase 3 的 grep 搜尋
+- 腳本自動處理降級邏輯
 
 ---
 

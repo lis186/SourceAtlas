@@ -141,45 +141,18 @@ fi
 
 **When to use**: ast-grep 提供更精確的依賴搜尋，可排除註解和字串中的誤判。
 
-**Check ast-grep availability**:
+**使用統一腳本** (`scripts/atlas/ast-grep-search.sh`):
+
 ```bash
-if command -v ast-grep &> /dev/null || command -v sg &> /dev/null; then
-    AST_GREP_AVAILABLE=true
-    AST_GREP_CMD=$(command -v ast-grep || command -v sg)
-else
-    AST_GREP_AVAILABLE=false
-fi
-```
+# 類型引用搜尋（MODEL/COMPONENT）
+./scripts/atlas/ast-grep-search.sh type "UserDto" --path .
+./scripts/atlas/ast-grep-search.sh type "ViewModel" --path .
 
-**If ast-grep is available**, use it for high-precision searches:
+# 函數呼叫追蹤（API）
+./scripts/atlas/ast-grep-search.sh call "fetchUser" --path .
 
-**For Type References** (MODEL/COMPONENT):
-```bash
-# Swift - 類型使用（變數宣告、返回類型、泛型）
-$AST_GREP_CMD --pattern '$VAR: UserDto' --lang swift --json . 2>/dev/null
-$AST_GREP_CMD --pattern '-> UserDto' --lang swift --json . 2>/dev/null
-$AST_GREP_CMD --pattern '<UserDto>' --lang swift --json . 2>/dev/null
-
-# TypeScript - 類型引用
-$AST_GREP_CMD --pattern '$VAR: UserDto' --lang tsx --json . 2>/dev/null
-$AST_GREP_CMD --pattern 'as UserDto' --lang tsx --json . 2>/dev/null
-
-# Kotlin - 類型宣告和繼承
-$AST_GREP_CMD --pattern 'class $NAME : $$$ViewModel$$$' --lang kotlin --json . 2>/dev/null
-$AST_GREP_CMD --pattern '$VAR: $$$ViewModel' --lang kotlin --json . 2>/dev/null
-```
-
-**For Function Call Tracing** (API):
-```bash
-# Swift - 方法呼叫
-$AST_GREP_CMD --pattern '$OBJ.fetchUser($$$)' --lang swift --json . 2>/dev/null
-
-# TypeScript - API 呼叫
-$AST_GREP_CMD --pattern 'fetch($$$)' --lang tsx --json . 2>/dev/null
-$AST_GREP_CMD --pattern 'axios.$METHOD($$$)' --lang tsx --json . 2>/dev/null
-
-# Kotlin - Retrofit 呼叫
-$AST_GREP_CMD --pattern '$OBJ.$METHOD($$$)' --lang kotlin --json . 2>/dev/null
+# 如果 ast-grep 未安裝，取得 grep 替代命令
+./scripts/atlas/ast-grep-search.sh type "UserDto" --fallback
 ```
 
 **Value**: 根據整合測試，ast-grep 在依賴分析可達到：
@@ -187,7 +160,7 @@ $AST_GREP_CMD --pattern '$OBJ.$METHOD($$$)' --lang kotlin --json . 2>/dev/null
 - TypeScript useState：15% 誤判消除
 - Kotlin ViewModel：92% 誤判消除
 
-**Graceful Degradation**: 如果 ast-grep 不可用，自動降級到 Step 3 的 grep 搜尋。
+**Graceful Degradation**: 腳本自動處理 ast-grep 不可用情況，使用 `--fallback` 取得 grep 等效命令。
 
 ---
 

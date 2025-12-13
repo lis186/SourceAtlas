@@ -109,72 +109,42 @@ If the script returns an error (unsupported pattern), fall back to manual search
 
 **When to use**: 對於需要「內容分析」的 patterns（Type B），ast-grep 可提供更精確的程式碼結構搜尋。
 
-**Check ast-grep availability**:
+**使用統一腳本** (`scripts/atlas/ast-grep-search.sh`):
+
 ```bash
-if command -v ast-grep &> /dev/null || command -v sg &> /dev/null; then
-    AST_GREP_AVAILABLE=true
-    AST_GREP_CMD=$(command -v ast-grep || command -v sg)
-else
-    AST_GREP_AVAILABLE=false
-fi
+# Swift async function
+./scripts/atlas/ast-grep-search.sh pattern "async" --lang swift --path .
+
+# Kotlin suspend function
+./scripts/atlas/ast-grep-search.sh pattern "suspend" --lang kotlin --path .
+
+# Kotlin data class
+./scripts/atlas/ast-grep-search.sh pattern "data class" --lang kotlin --path .
+
+# TypeScript Custom Hook（use* 開頭）
+./scripts/atlas/ast-grep-search.sh pattern "hook" --lang tsx --path .
+
+# 如果 ast-grep 未安裝，取得 grep 替代命令
+./scripts/atlas/ast-grep-search.sh pattern "async" --fallback
 ```
 
-**If ast-grep is available**, enhance these pattern searches:
-
-**Swift async function**:
-```bash
-# 使用 YAML rule 精確匹配 async function 定義
-cat > /tmp/async-rule.yaml << 'EOF'
-id: swift-async-function
-language: Swift
-rule:
-  kind: function_declaration
-  has:
-    pattern: async
-EOF
-$AST_GREP_CMD scan --rule /tmp/async-rule.yaml --json . 2>/dev/null
-rm /tmp/async-rule.yaml
-```
-
-**Kotlin suspend function**:
-```bash
-# 精確匹配 suspend function 定義
-$AST_GREP_CMD --pattern 'suspend fun $NAME' --lang kotlin --json . 2>/dev/null
-```
-
-**Kotlin data class**:
-```bash
-# 精確匹配 data class 定義
-$AST_GREP_CMD --pattern 'data class $NAME' --lang kotlin --json . 2>/dev/null
-```
-
-**TypeScript Custom Hook**:
-```bash
-# 使用 YAML rule 匹配 use* 開頭的函數
-cat > /tmp/hook-rule.yaml << 'EOF'
-id: ts-custom-hook
-language: tsx
-rule:
-  kind: function_declaration
-  has:
-    kind: identifier
-    regex: "^use[A-Z]"
-EOF
-$AST_GREP_CMD scan --rule /tmp/hook-rule.yaml --json . 2>/dev/null
-rm /tmp/hook-rule.yaml
-```
+**預定義 YAML Rules** (`scripts/atlas/ast-grep-rules/`):
+- `swift/async-function.yaml` - Swift async function 定義
+- `typescript/custom-hook.yaml` - React custom hook 定義
+- `kotlin/suspend-function.yaml` - Kotlin suspend function 定義
+- `kotlin/data-class.yaml` - Kotlin data class 定義
 
 **Value**: 根據整合測試，ast-grep 在 pattern 識別可達到：
 - Swift async function：14% 誤判消除
 - Kotlin suspend function：51% 誤判消除
 - Kotlin data class：15% 誤判消除
-- TypeScript custom hook：93% 誤判消除（需 YAML rule）
+- TypeScript custom hook：93% 誤判消除
 
 **Type A vs Type B Patterns**:
 - **Type A**（檔名即 pattern）：ViewModel, Repository, Service → grep/find 已足夠
 - **Type B**（需內容分析）：async, suspend, custom hook → ast-grep 更精確
 
-**Graceful Degradation**: 如果 ast-grep 不可用或返回 0 結果，自動降級到 Step 2 的檔案分析。
+**Graceful Degradation**: 腳本自動處理 ast-grep 不可用情況，使用 `--fallback` 取得 grep 等效命令。
 
 ---
 
