@@ -41,6 +41,12 @@ SourceAtlas 未來功能的完整設計文檔。
   - **優先級**: 低
   - **功能**: 過期項目顯示 `⚠️ 過期` 標記
 
+- **[智慧 Cache 過期閾值](./smart-cache-expiry/README.md)**
+  - **目標**: 根據分析類型使用不同的過期閾值
+  - **來源**: DX 工程師測試報告建議 (2025-12-13)
+  - **優先級**: 低
+  - **建議閾值**: history/deps 7天、impact 14天、pattern 60天、其他 30天
+
 ### ⚪ 擱置
 
 - **[YAML Pattern Configuration](./yaml-pattern-config/README.md)**
