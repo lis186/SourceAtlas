@@ -138,17 +138,45 @@ All analysis commands support `--save` to persist results:
 
 2. Report that a new CLAUDE.md was created
 
+### Step 4: Verify Injection (Required)
+
+After writing to CLAUDE.md, **you MUST verify** all 8 commands were injected:
+
+Use Grep to check each command exists in CLAUDE.md:
+
+```bash
+grep -c "atlas.overview\|atlas.pattern\|atlas.impact\|atlas.history\|atlas.flow\|atlas.deps\|atlas.list\|atlas.clear" CLAUDE.md
+```
+
+**Expected result**: At least 8 matches (each command appears at least once)
+
+**If verification fails** (count < 8):
+1. Report which commands are missing
+2. Re-inject the missing commands
+3. Verify again
+
+**Verification checklist** (all must be present):
+- [ ] `/atlas.overview`
+- [ ] `/atlas.pattern`
+- [ ] `/atlas.impact`
+- [ ] `/atlas.history`
+- [ ] `/atlas.flow`
+- [ ] `/atlas.deps`
+- [ ] `/atlas.list`
+- [ ] `/atlas.clear`
+
 ---
 
 ## Output
 
-After completion, provide a summary:
+After completion and **successful verification**, provide a summary:
 
 ```
 ✅ SourceAtlas initialized successfully!
 
 Changes made:
 - [Created new CLAUDE.md | Updated existing CLAUDE.md]
+- ✓ Verified: All 8 commands injected
 
 You can now use these 8 commands in this project:
 1. /atlas.overview  - Quick project understanding
