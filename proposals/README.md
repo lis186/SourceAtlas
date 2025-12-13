@@ -4,43 +4,37 @@ SourceAtlas 未來功能的完整設計文檔。
 
 ## 📋 當前提案
 
-### 🟢 已批准待實作（v2.6）
+### ⚫ 已完成（歸檔）
 
-- **[code-maat Integration](./code-maat-integration/SOURCEATLAS_CODEMAAT_INTEGRATION.md)** (v2.6 候選)
-  - **目標**: 為 SourceAtlas v2.6 增加時序分析能力
-  - **命令**: **1 個新命令**（單一命令設計）⭐
-    - `/atlas.history` - 智慧時序分析（Hotspots、Coupling、Recent Contributors）
-  - **狀態**: 設計完成（2025-11-30），待排入 roadmap
-  - **目標用戶**: Legacy Codebase 接手者（最高價值場景）
-  - **設計原則**:
-    - ✅ **零參數優先** - 適合跨 AI 工具移植（Cursor, Copilot, Windsurf）
-    - ✅ **智慧輸出** - 根據輸入自動判斷分析類型
-    - ✅ **政治敏感度** - 用「Recent Contributors」取代「Ownership %」
-    - ✅ 與 v2.5 `/atlas.impact`（靜態分析）互補不衝突
-  - **文檔**:
-    - [完整提案](./code-maat-integration/SOURCEATLAS_CODEMAAT_INTEGRATION.md) (2,500+ 行)
+- **[code-maat Integration](./code-maat-integration/SOURCEATLAS_CODEMAAT_INTEGRATION.md)**
+  - **實作為**: `/atlas.history` (v2.6.0)
+  - **完成日期**: 2025-11-30
+  - **成果**: 智慧時序分析（Hotspots、Coupling、Recent Contributors）
+  - **文檔保留供參考**:
+    - [完整提案](./code-maat-integration/SOURCEATLAS_CODEMAAT_INTEGRATION.md)
     - [快速參考](./code-maat-integration/CODE_MAAT_FORMAT_CHEATSHEET.md)
     - [效能考量](./code-maat-integration/PERFORMANCE_CONSIDERATIONS.md)
-    - [更新歷史](./code-maat-integration/UPDATES_SUMMARY.md)
 
-### 🔵 待評估
+- **[/atlas.flow - 業務流程分析](./atlas-flow/README.md)**
+  - **實作為**: `/atlas.flow` (v2.7.0)
+  - **完成日期**: 2025-12-01
+  - **成果**: 11 種分析模式、語言專屬入口點偵測、漸進式展開
+  - **文檔保留供參考**
 
-- **[/atlas.flow - 業務流程分析](./atlas-flow/README.md)** (v2.7 候選) ⭐ NEW
-  - **目標**: 從程式碼抽取業務邏輯流程
-  - **命令**: `/atlas.flow "功能名稱"`
-  - **狀態**: 草案（2025-12-01）
-  - **問題**: 工程師梳理 flow 花 4-16 小時，每次都重來
-  - **解決**: 即時生成流程分析，5 分鐘搞定
-  - **特色**:
-    - ✅ **ASCII + 顏色** - 終端友好，掃一眼知重點
-    - ✅ **高熵標記** - 標注「不尋常」的地方（資訊理論應用）
-    - ✅ **分層輸出** - 高層概覽 ↔ 完整細節
-    - ✅ **Mermaid 支援** - 用 prompt 控制輸出格式
-    - ✅ **零參數設計** - AI 工具友善
+- **[探索結果持久化](./persistence/README.md)**
+  - **實作為**: `--save` 參數 + `/atlas.clear` (v2.9.1)
+  - **完成日期**: 2025-12-12
+  - **成果**: 所有分析命令支援 `--save`，新增 `/atlas.clear` 清空命令
+  - **文檔保留供參考**
+
+- **[/atlas.list 過期標記](./atlas-list-expiry/README.md)**
+  - **實作為**: `/atlas.list` 增強 (v2.9.2)
+  - **完成日期**: 2025-12-13
+  - **成果**: 過期標記（⚠️）、統計、可複製的 `--force` 命令
 
 ### 🟡 研究中
 
-*（從 ideas/ 升級的提案會出現在這裡）*
+*（目前無研究中的提案）*
 
 ### ⚪ 擱置
 
@@ -50,8 +44,28 @@ SourceAtlas 未來功能的完整設計文檔。
   - **原因**: 經多角色審查後決定暫不實作
     - PM 評估：無使用者需求，ROI 為負
     - 現有發現機制（`find-patterns.sh` 無參數）已足夠
-    - 優先完善現有 4 個 commands 和多語言支援
+    - 優先完善現有 commands 和多語言支援
   - **未來**: 待使用者明確需求時再評估
+
+- **[/atlas.refresh - 批次重新分析過期快取](./atlas-refresh/README.md)**
+  - **目標**: 一鍵刷新所有過期的分析快取
+  - **狀態**: 擱置（2025-12-13）
+  - **原因**: 架構師審查認為過度工程化
+    - 99% 使用者只有 3-5 個快取，手動 `--force` 就夠
+    - 檔名→命令映射太脆弱（截斷檔名無法還原）
+    - 問題未經驗證，持久化功能才剛推出
+  - **替代方案**: `/atlas.list` 提供可複製的 `--force` 命令
+  - **重新評估**: 如果使用者抱怨「我有 20+ 個快取要刷新」
+
+- **[智慧 Cache 過期閾值](./smart-cache-expiry/README.md)**
+  - **目標**: 根據分析類型使用不同的過期閾值（7/14/30/60 天）
+  - **狀態**: 擱置（2025-12-13）
+  - **原因**: 架構師審查認為增加不必要的複雜度
+    - 假設未經驗證（history 真的需要 7 天更新嗎？）
+    - 增加認知負擔（使用者會困惑不同閾值）
+    - 違反 SourceAtlas「簡單、統一介面」哲學
+  - **替代方案**: 保持 30 天統一閾值，使用者自行判斷 `--force`
+  - **重新評估**: 除非有明確證據證明差異化閾值解決真實問題
 
 ---
 

@@ -81,7 +81,9 @@ check_installation() {
     # Check each command
     local all_ok=true
 
-    for cmd in atlas.overview atlas.pattern atlas.impact atlas.init atlas.history atlas.flow; do
+    # Dynamically get all atlas commands from source directory
+    for cmd_file in "$SOURCE_COMMANDS_DIR"/atlas.*.md; do
+        local cmd=$(basename "$cmd_file" .md)
         local file="$GLOBAL_COMMANDS_DIR/$cmd.md"
 
         if [ ! -e "$file" ]; then
@@ -193,8 +195,9 @@ install_commands() {
     # Install each command
     echo ""
 
-    for cmd in atlas.overview atlas.pattern atlas.impact atlas.init atlas.history atlas.flow; do
-        local source="$SOURCE_COMMANDS_DIR/$cmd.md"
+    # Dynamically install all atlas commands from source directory
+    for source in "$SOURCE_COMMANDS_DIR"/atlas.*.md; do
+        local cmd=$(basename "$source" .md)
         local target="$GLOBAL_COMMANDS_DIR/$cmd.md"
 
         if [ ! -f "$source" ]; then
@@ -263,6 +266,19 @@ install_commands() {
     echo "    - Trace code execution flow and data flow"
     echo "    - Examples: \"用戶登入流程\", \"handleSubmit\", \"API 錯誤處理\""
     echo "    - Supports 11 analysis modes (forward, reverse, error, data...)"
+    echo ""
+    echo -e "  ${BLUE}/atlas.deps${NC} [upgrade query]"
+    echo "    - Dependency analysis for library/framework upgrades"
+    echo "    - Examples: \"iOS 18\", \"React 19\", \"Python 3.12\""
+    echo "    - Shows usage patterns and migration checklist"
+    echo ""
+    echo -e "  ${BLUE}/atlas.list${NC}"
+    echo "    - List saved analysis results in .sourceatlas/"
+    echo "    - Shows file type, size, and age"
+    echo ""
+    echo -e "  ${BLUE}/atlas.clear${NC} [target]"
+    echo "    - Clear saved analysis results"
+    echo "    - Examples: /atlas.clear, /atlas.clear patterns"
     echo ""
 
     if [ "$INSTALL_METHOD" = "symlink" ]; then

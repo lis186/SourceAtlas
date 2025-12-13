@@ -49,11 +49,21 @@ dev-notes/YYYY-MM/implementation.md
 
 ### 活躍想法
 
-*（當前沒有活躍探索，歡迎新增！）*
+- **[Claude Code Plugins 學習筆記](./claude-code-plugins-learnings.md)**
+  - **建立日期**: 2025-12-12
+  - **成熟度**: 70%
+  - **內容**: 分析 Claude Code 官方 plugins，提煉可借鑑的設計模式
+  - **探索狀態**:
+    - ✅ **漸進式輸出** - 設計完成，待升級到 proposals/
+    - ✅ **持久化** - 已升級到 [proposals/persistence/](../proposals/persistence/)
+    - 🔲 信心分數 + Threshold 機制
+    - 🔲 輸出格式統一
+  - **下一步**: 將「漸進式輸出」升級到 proposals/
 
 ### 已升級
 
-- [x] **code-maat 整合** → 已升級到 [proposals/code-maat-integration/](../proposals/code-maat-integration/)
+- [x] **code-maat 整合** → 已實作為 `/atlas.history` (v2.6.0)
+- [x] **/atlas.flow** → 已實作 (v2.7.0)
 
 ---
 

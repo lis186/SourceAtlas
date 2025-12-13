@@ -6,6 +6,11 @@ allowed-tools: Read, Write, Edit, Glob
 
 # SourceAtlas: Project Initialization
 
+> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md) v1.0
+>
+> Note: This initialization command injects auto-trigger rules. The injected rules reference
+> the Constitution principles that each triggered command will follow.
+
 ## Purpose
 
 Inject SourceAtlas auto-trigger rules into the project's CLAUDE.md so you (Claude Code)
@@ -19,14 +24,10 @@ know when to automatically suggest using Atlas commands.
 
 First, check if CLAUDE.md exists and if SourceAtlas is already configured:
 
-```bash
-# Check for CLAUDE.md in project root
-ls -la CLAUDE.md 2>/dev/null || echo "CLAUDE.md does not exist"
-```
-
-If CLAUDE.md exists, read it to check for existing SourceAtlas configuration:
-- Look for `## SourceAtlas` or `# SourceAtlas` section
-- If found, inform user that SourceAtlas is already configured and stop
+1. Use `Glob` to check: `CLAUDE.md`
+2. If file exists, use `Read` to read it
+3. Look for `## SourceAtlas` or `# SourceAtlas` section
+4. If found, inform user that SourceAtlas is already configured and stop
 
 ### Step 2: Prepare the Content to Inject
 
@@ -47,6 +48,7 @@ When encountering these situations, automatically execute the corresponding comm
 | "Show me hotspots", "Which files change together", "Who worked on this", "Git history analysis" | `/atlas.history` |
 | "How does X flow work", "Trace the login process", "What happens when user clicks Y", "Data flow of Z" | `/atlas.flow [query]` |
 | "Upgrade to iOS 17", "Update React to v18", "Migration to Python 3.12", "Check library usage" | `/atlas.deps [upgrade query]` |
+| "What have I analyzed", "Show saved analysis", "List cached results" | `/atlas.list` |
 | User just joined project and seems unfamiliar with codebase structure | `/atlas.overview` |
 
 ### When NOT to auto-trigger
@@ -55,14 +57,24 @@ When encountering these situations, automatically execute the corresponding comm
 - User is doing routine coding tasks
 - User explicitly says they don't need overview/analysis
 
-### Available Commands Reference
+### Available Commands Reference (8 commands)
 
-- `/atlas.overview [dir]` - Quick project fingerprint (<5% file scan, 70-80% understanding)
-- `/atlas.pattern [type]` - Learn how this codebase implements specific patterns
-- `/atlas.impact [target]` - Analyze impact scope of code changes
-- `/atlas.history` - Temporal analysis using git history (hotspots, coupling, contributors)
-- `/atlas.flow [query]` - Trace code execution flow (11 analysis modes: forward, reverse, error, data...)
-- `/atlas.deps [upgrade query]` - Dependency analysis for library/framework upgrades (iOS, Android, Python, etc.)
+**IMPORTANT: You MUST include ALL 8 commands below. Do not skip any.**
+
+1. `/atlas.overview [dir]` - Quick project fingerprint (<5% file scan, 70-80% understanding)
+2. `/atlas.pattern [type]` - Learn how this codebase implements specific patterns
+3. `/atlas.impact [target]` - Analyze impact scope of code changes
+4. `/atlas.history` - Temporal analysis using git history (hotspots, coupling, contributors)
+5. `/atlas.flow [query]` - Trace code execution flow (11 analysis modes: forward, reverse, error, data...)
+6. `/atlas.deps [upgrade query]` - Dependency analysis for library/framework upgrades
+7. `/atlas.list` - List saved analysis results in .sourceatlas/
+8. `/atlas.clear [target]` - Clear saved analysis results from .sourceatlas/
+
+### Persistence
+
+All analysis commands support `--save` to persist results:
+- `/atlas.pattern "api" --save` → `.sourceatlas/patterns/api.md`
+- `/atlas.overview --save` → `.sourceatlas/overview.yaml`
 ```
 
 ### Step 3: Apply Changes
@@ -95,6 +107,7 @@ When encountering these situations, automatically execute the corresponding comm
 | "Show me hotspots", "Which files change together", "Who worked on this", "Git history analysis" | `/atlas.history` |
 | "How does X flow work", "Trace the login process", "What happens when user clicks Y", "Data flow of Z" | `/atlas.flow [query]` |
 | "Upgrade to iOS 17", "Update React to v18", "Migration to Python 3.12", "Check library usage" | `/atlas.deps [upgrade query]` |
+| "What have I analyzed", "Show saved analysis", "List cached results" | `/atlas.list` |
 | User just joined project and seems unfamiliar with codebase structure | `/atlas.overview` |
 
 ### When NOT to auto-trigger
@@ -103,37 +116,77 @@ When encountering these situations, automatically execute the corresponding comm
 - User is doing routine coding tasks
 - User explicitly says they don't need overview/analysis
 
-### Available Commands Reference
+### Available Commands Reference (8 commands)
 
-- `/atlas.overview [dir]` - Quick project fingerprint (<5% file scan, 70-80% understanding)
-- `/atlas.pattern [type]` - Learn how this codebase implements specific patterns
-- `/atlas.impact [target]` - Analyze impact scope of code changes
-- `/atlas.history` - Temporal analysis using git history (hotspots, coupling, contributors)
-- `/atlas.flow [query]` - Trace code execution flow (11 analysis modes: forward, reverse, error, data...)
-- `/atlas.deps [upgrade query]` - Dependency analysis for library/framework upgrades (iOS, Android, Python, etc.)
+**IMPORTANT: You MUST include ALL 8 commands below. Do not skip any.**
+
+1. `/atlas.overview [dir]` - Quick project fingerprint (<5% file scan, 70-80% understanding)
+2. `/atlas.pattern [type]` - Learn how this codebase implements specific patterns
+3. `/atlas.impact [target]` - Analyze impact scope of code changes
+4. `/atlas.history` - Temporal analysis using git history (hotspots, coupling, contributors)
+5. `/atlas.flow [query]` - Trace code execution flow (11 analysis modes: forward, reverse, error, data...)
+6. `/atlas.deps [upgrade query]` - Dependency analysis for library/framework upgrades
+7. `/atlas.list` - List saved analysis results in .sourceatlas/
+8. `/atlas.clear [target]` - Clear saved analysis results from .sourceatlas/
+
+### Persistence
+
+All analysis commands support `--save` to persist results:
+- `/atlas.pattern "api" --save` → `.sourceatlas/patterns/api.md`
+- `/atlas.overview --save` → `.sourceatlas/overview.yaml`
 ```
 
 2. Report that a new CLAUDE.md was created
+
+### Step 4: Verify Injection (Required)
+
+After writing to CLAUDE.md, **you MUST verify** all 8 commands were injected:
+
+Use Grep to check each command exists in CLAUDE.md:
+
+```bash
+grep -c "atlas.overview\|atlas.pattern\|atlas.impact\|atlas.history\|atlas.flow\|atlas.deps\|atlas.list\|atlas.clear" CLAUDE.md
+```
+
+**Expected result**: At least 8 matches (each command appears at least once)
+
+**If verification fails** (count < 8):
+1. Report which commands are missing
+2. Re-inject the missing commands
+3. Verify again
+
+**Verification checklist** (all must be present):
+- [ ] `/atlas.overview`
+- [ ] `/atlas.pattern`
+- [ ] `/atlas.impact`
+- [ ] `/atlas.history`
+- [ ] `/atlas.flow`
+- [ ] `/atlas.deps`
+- [ ] `/atlas.list`
+- [ ] `/atlas.clear`
 
 ---
 
 ## Output
 
-After completion, provide a summary:
+After completion and **successful verification**, provide a summary:
 
 ```
 ✅ SourceAtlas initialized successfully!
 
 Changes made:
 - [Created new CLAUDE.md | Updated existing CLAUDE.md]
+- ✓ Verified: All 8 commands injected
 
-You can now use these commands in this project:
-- /atlas.overview  - Quick project understanding
-- /atlas.pattern   - Learn design patterns
-- /atlas.impact    - Analyze change impact
-- /atlas.history   - Git history analysis (hotspots, coupling)
-- /atlas.flow      - Trace code execution flow
-- /atlas.deps      - Dependency analysis for upgrades
+You can now use these 8 commands in this project:
+1. /atlas.overview  - Quick project understanding
+2. /atlas.pattern   - Learn design patterns
+3. /atlas.impact    - Analyze change impact
+4. /atlas.history   - Git history analysis (hotspots, coupling)
+5. /atlas.flow      - Trace code execution flow
+6. /atlas.deps      - Dependency analysis for upgrades
+7. /atlas.list      - List saved analysis results
+8. /atlas.clear     - Clear saved analysis results
 
 Claude Code will now automatically suggest these commands when appropriate.
 ```
