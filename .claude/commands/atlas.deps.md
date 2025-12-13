@@ -217,24 +217,32 @@ cat .nvmrc .node-version package.json 2>/dev/null | grep -E "node|engines"
 
 **When to use**: ast-grep 提供更精確的使用點搜尋，可排除註解和字串中的誤判。
 
-**使用統一腳本** (`scripts/atlas/ast-grep-search.sh`):
+**使用統一腳本** (`ast-grep-search.sh`):
 
 ```bash
+# 設定腳本路徑（全局優先，本地備援）
+AST_SCRIPT=""
+if [ -f ~/.claude/scripts/atlas/ast-grep-search.sh ]; then
+    AST_SCRIPT=~/.claude/scripts/atlas/ast-grep-search.sh
+elif [ -f scripts/atlas/ast-grep-search.sh ]; then
+    AST_SCRIPT=scripts/atlas/ast-grep-search.sh
+fi
+
 # React Hooks 使用盤點
-./scripts/atlas/ast-grep-search.sh usage "useEffect" --path .
-./scripts/atlas/ast-grep-search.sh usage "useState" --path .
+$AST_SCRIPT usage "useEffect" --path .
+$AST_SCRIPT usage "useState" --path .
 
 # Swift async/await 盤點
-./scripts/atlas/ast-grep-search.sh async --lang swift --path .
+$AST_SCRIPT async --lang swift --path .
 
 # Kotlin suspend function 盤點
-./scripts/atlas/ast-grep-search.sh pattern "suspend" --lang kotlin --path .
+$AST_SCRIPT pattern "suspend" --lang kotlin --path .
 
 # 取得匹配數量
-./scripts/atlas/ast-grep-search.sh usage "useEffect" --count
+$AST_SCRIPT usage "useEffect" --count
 
 # 如果 ast-grep 未安裝，取得 grep 替代命令
-./scripts/atlas/ast-grep-search.sh usage "useEffect" --fallback
+$AST_SCRIPT usage "useEffect" --fallback
 ```
 
 **Value**: 根據整合測試，ast-grep 在依賴盤點可達到：
