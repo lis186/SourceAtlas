@@ -1,0 +1,9 @@
+# Swift #available condition
+# Usage: ast-grep scan --rule swift/availability-condition.yaml
+# Note: Matches if #available(...) statements
+id: swift-availability-condition
+language: Swift
+rule:
+  kind: if_statement
+  has:
+    kind: availability_condition

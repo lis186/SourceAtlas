@@ -1,0 +1,8 @@
+# Swift async function declaration
+# Usage: ast-grep scan --rule swift/async-function.yaml
+id: swift-async-function
+language: Swift
+rule:
+  kind: function_declaration
+  has:
+    pattern: async

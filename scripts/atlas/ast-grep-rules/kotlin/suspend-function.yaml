@@ -1,0 +1,10 @@
+# Kotlin suspend function declaration
+# Usage: ast-grep scan --rule kotlin/suspend-function.yaml
+id: kotlin-suspend-function
+language: Kotlin
+rule:
+  kind: function_declaration
+  has:
+    kind: modifiers
+    has:
+      pattern: suspend

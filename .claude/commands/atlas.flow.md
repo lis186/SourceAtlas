@@ -345,33 +345,23 @@ def score_entry_point(match, lang):
 
 **When to use**: ast-grep 提供更精確的程式碼搜尋，可排除註解和字串中的誤判。
 
-**Check ast-grep availability**:
+**使用統一腳本** (`scripts/atlas/ast-grep-search.sh`):
 
 ```bash
-# 檢測 ast-grep 是否安裝
-if command -v ast-grep &> /dev/null || command -v sg &> /dev/null; then
-    AST_GREP_AVAILABLE=true
-    AST_GREP_CMD=$(command -v ast-grep || command -v sg)
-else
-    AST_GREP_AVAILABLE=false
-    # 降級到 grep，繼續執行
-fi
-```
+# 函數呼叫追蹤（自動偵測語言）
+./scripts/atlas/ast-grep-search.sh call "functionName" --path .
 
-**If ast-grep available, use for precise function call tracing**:
+# Async/Await 流程追蹤
+./scripts/atlas/ast-grep-search.sh async --path .
 
-```bash
-# Swift: 追蹤函數呼叫（排除註解和字串）
-$AST_GREP_CMD --pattern '$OBJ.functionName($$$)' --lang swift --json . 2>/dev/null | \
-  jq -r '.[] | "\(.file):\(.range.start.line) - \(.text)"'
+# 邊界偵測（API 呼叫點）
+./scripts/atlas/ast-grep-search.sh boundary api --path .
 
-# TypeScript: 追蹤 hook 呼叫
-$AST_GREP_CMD --pattern 'functionName($$$)' --lang tsx --json . 2>/dev/null | \
-  jq -r '.[] | "\(.file):\(.range.start.line) - \(.text)"'
+# 邊界偵測（DB 操作點）
+./scripts/atlas/ast-grep-search.sh boundary db --path .
 
-# Kotlin: 追蹤 suspend function 呼叫
-$AST_GREP_CMD --pattern 'functionName($$$)' --lang kotlin --json . 2>/dev/null | \
-  jq -r '.[] | "\(.file):\(.range.start.line) - \(.text)"'
+# 如果 ast-grep 未安裝，取得 grep 替代命令
+./scripts/atlas/ast-grep-search.sh call "functionName" --fallback
 ```
 
 **ast-grep 價值（根據測試）**:
@@ -379,7 +369,7 @@ $AST_GREP_CMD --pattern 'functionName($$$)' --lang kotlin --json . 2>/dev/null |
 - 依賴分析：誤判消除 **15-93%**
 - 特別有效場景：ViewModel、Service、Repository 等常見詞彙
 
-**Fallback**: 如果 ast-grep 未安裝或 pattern 不支援，自動降級到 grep。
+**Graceful Degradation**: 腳本自動處理 ast-grep 不可用情況，使用 `--fallback` 取得 grep 等效命令。
 
 ---
 

@@ -1,0 +1,10 @@
+# Kotlin data class declaration
+# Usage: ast-grep scan --rule kotlin/data-class.yaml
+id: kotlin-data-class
+language: Kotlin
+rule:
+  kind: class_declaration
+  has:
+    kind: modifiers
+    has:
+      pattern: data
