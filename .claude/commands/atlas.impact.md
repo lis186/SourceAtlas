@@ -141,18 +141,26 @@ fi
 
 **When to use**: ast-grep 提供更精確的依賴搜尋，可排除註解和字串中的誤判。
 
-**使用統一腳本** (`scripts/atlas/ast-grep-search.sh`):
+**使用統一腳本** (`ast-grep-search.sh`):
 
 ```bash
+# 設定腳本路徑（全局優先，本地備援）
+AST_SCRIPT=""
+if [ -f ~/.claude/scripts/atlas/ast-grep-search.sh ]; then
+    AST_SCRIPT=~/.claude/scripts/atlas/ast-grep-search.sh
+elif [ -f scripts/atlas/ast-grep-search.sh ]; then
+    AST_SCRIPT=scripts/atlas/ast-grep-search.sh
+fi
+
 # 類型引用搜尋（MODEL/COMPONENT）
-./scripts/atlas/ast-grep-search.sh type "UserDto" --path .
-./scripts/atlas/ast-grep-search.sh type "ViewModel" --path .
+$AST_SCRIPT type "UserDto" --path .
+$AST_SCRIPT type "ViewModel" --path .
 
 # 函數呼叫追蹤（API）
-./scripts/atlas/ast-grep-search.sh call "fetchUser" --path .
+$AST_SCRIPT call "fetchUser" --path .
 
 # 如果 ast-grep 未安裝，取得 grep 替代命令
-./scripts/atlas/ast-grep-search.sh type "UserDto" --fallback
+$AST_SCRIPT type "UserDto" --fallback
 ```
 
 **Value**: 根據整合測試，ast-grep 在依賴分析可達到：
