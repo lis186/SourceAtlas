@@ -1,9 +1,0 @@
-# Next.js 'use client' directive
-# Usage: ast-grep scan --rule typescript/use-client.yaml
-id: tsx-use-client
-language: Tsx
-rule:
-  kind: expression_statement
-  has:
-    kind: string
-    regex: "^.use client.$"

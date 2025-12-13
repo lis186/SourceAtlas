@@ -1,9 +1,0 @@
-# TypeScript/React custom hook definition (use* pattern)
-# Usage: ast-grep scan --rule typescript/custom-hook.yaml
-id: tsx-custom-hook
-language: Tsx
-rule:
-  kind: function_declaration
-  has:
-    kind: identifier
-    regex: "^use[A-Z]"
