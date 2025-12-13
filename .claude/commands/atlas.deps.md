@@ -1,8 +1,8 @@
 ---
 description: Analyze dependency usage for library/framework/SDK upgrades
 model: sonnet
-allowed-tools: Bash, Glob, Grep, Read, WebFetch, WebSearch, AskUserQuestion
-argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3.12"]
+allowed-tools: Bash, Glob, Grep, Read, Write, WebFetch, WebSearch, AskUserQuestion
+argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3.12"] [--save] [--force]
 ---
 
 # SourceAtlas: Dependency Analysis
@@ -18,6 +18,45 @@ argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3
 **Arguments**: ${ARGUMENTS}
 
 **Goal**: Analyze how a specific library, framework, or SDK is used in the codebase to facilitate upgrade planning.
+
+---
+
+## Cache Check（最高優先）
+
+**如果參數中沒有 `--force`**，先檢查快取：
+
+1. 從 `$ARGUMENTS` 提取 dependency 名稱（移除 `--save`、`--force`）
+2. 轉換為檔名：空格→`-`、`→`→`to`、小寫、移除特殊字元、**截斷至 50 字元**
+   - 例：`"react"` → `react.md`
+   - 例：`"iOS 16 → 17"` → `ios-16-to-17.md`
+   - 例：`"Python 3.12"` → `python-3-12.md`
+3. 檢查快取：
+   ```bash
+   ls -la .sourceatlas/deps/{name}.md 2>/dev/null
+   ```
+
+4. **如果快取存在**：
+   - 計算距今天數
+   - 用 Read tool 讀取快取內容
+   - 輸出：
+     ```
+     📁 載入快取：.sourceatlas/deps/{name}.md（N 天前）
+     💡 重新分析請加 --force
+     ```
+   - **如果超過 30 天**，額外顯示：
+     ```
+     ⚠️ 快取已超過 30 天，建議重新分析
+     ```
+   - 然後輸出：
+     ```
+     ---
+     [快取內容]
+     ```
+   - **結束，不執行後續分析**
+
+5. **如果快取不存在**：繼續執行下方的分析流程
+
+**如果參數中有 `--force`**：跳過快取檢查，直接執行分析
 
 ---
 
@@ -500,3 +539,39 @@ Phase 0 查詢 React 18 migration guide → 確認規則 → 掃描 ReactDOM.ren
 | 高風險 API 集中在特定檔案 | `/atlas.impact "[file]"` |
 | 需要學習新版本寫法 | `/atlas.pattern "[new pattern]"` |
 | 想了解該模組的歷史變更 | `/atlas.history "[module]"` |
+
+---
+
+## Save Mode (--save)
+
+If `--save` is present in `$ARGUMENTS`:
+
+### Step 1: Parse library/SDK name
+
+Extract name from arguments (remove `--save`):
+- `"react" --save` → name is `react`
+- `"iOS 16 → 17" --save` → name is `ios-16-to-17`
+
+Convert to filename:
+- Spaces → `-`
+- `→` → `to`
+- Remove special characters
+- Lowercase
+- Example: `"Python 3.12"` → `python-3-12.md`
+
+### Step 2: Create directory
+
+```bash
+mkdir -p .sourceatlas/deps
+```
+
+### Step 3: Save output
+
+After generating the complete analysis, save the **entire YAML output** to `.sourceatlas/deps/{name}.md`
+
+### Step 4: Confirm
+
+Add at the very end:
+```
+💾 已儲存至 .sourceatlas/deps/{name}.md
+```
