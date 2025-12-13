@@ -586,6 +586,10 @@ case "$OPERATION" in
 esac
 
 # 輸出結果
-if ! $FALLBACK_MODE; then
+if $FALLBACK_MODE; then
+    # Fallback 模式：直接輸出 grep 命令（result 已經是 grep 命令字串）
+    echo "$result"
+else
+    # 正常模式：處理 JSON 輸出
     process_output "$result"
 fi
