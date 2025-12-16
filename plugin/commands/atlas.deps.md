@@ -213,6 +213,50 @@ cat .python-version pyproject.toml 2>/dev/null | grep -E "python|requires-python
 cat .nvmrc .node-version package.json 2>/dev/null | grep -E "node|engines"
 ```
 
+### Phase 2.5: ast-grep Enhanced Search (Optional, P1 Enhancement)
+
+**When to use**: ast-grep 提供更精確的使用點搜尋，可排除註解和字串中的誤判。
+
+**使用統一腳本** (`ast-grep-search.sh`):
+
+```bash
+# 設定腳本路徑（全局優先，本地備援）
+AST_SCRIPT=""
+if [ -f ~/.claude/scripts/atlas/ast-grep-search.sh ]; then
+    AST_SCRIPT=~/.claude/scripts/atlas/ast-grep-search.sh
+elif [ -f scripts/atlas/ast-grep-search.sh ]; then
+    AST_SCRIPT=scripts/atlas/ast-grep-search.sh
+fi
+
+# React Hooks 使用盤點
+$AST_SCRIPT usage "useEffect" --path .
+$AST_SCRIPT usage "useState" --path .
+
+# Swift async/await 盤點
+$AST_SCRIPT async --lang swift --path .
+
+# Kotlin suspend function 盤點
+$AST_SCRIPT pattern "suspend" --lang kotlin --path .
+
+# 取得匹配數量
+$AST_SCRIPT usage "useEffect" --count
+
+# 如果 ast-grep 未安裝，取得 grep 替代命令
+$AST_SCRIPT usage "useEffect" --fallback
+```
+
+**Value**: 根據整合測試，ast-grep 在依賴盤點可達到：
+- TypeScript useEffect：44% 誤判消除
+- Swift @available：0%（grep 已足夠精確）
+- Kotlin @Composable：0%（grep 已足夠精確）
+
+**Best Practices**:
+- 對於專用語法（@available, @Composable）使用 grep 即可
+- 對於常見詞彙（useEffect, useState, ViewModel）優先使用 ast-grep
+- 腳本自動處理降級邏輯
+
+---
+
 ### Phase 3: Find All Usage Points (3-5 minutes)
 
 **根據 Phase 0 確認的規則執行掃描**

@@ -6,6 +6,32 @@
 
 ## 2025-12（當前月份）
 
+### Week 2 (12/14): v2.9.2 Release - ast-grep Integration ⭐⭐⭐⭐
+
+**ast-grep 整合完成** (12/14):
+- 統一腳本架構：`scripts/atlas/ast-grep-search.sh`（~570 行）
+- 6 種操作：`call`, `type`, `pattern`, `usage`, `async`, `boundary`
+- 4 個命令整合：`/atlas.flow`, `/atlas.impact`, `/atlas.deps`, `/atlas.pattern`
+- 多語言支援：Swift, TypeScript/TSX, Kotlin, Python
+- Graceful degradation：`--fallback` 選項提供 grep 替代命令
+- QA 測試：61 個測試案例，100% 通過率，Grade A (9.5/10)
+- 誤判消除率：14-93%（依 pattern 類型）
+→ [評估報告](./2025-12/2025-12-14-ast-grep-integration-evaluation.md)
+→ [QA 驗證報告](./2025-12/2025-12-14-ast-grep-qa-validation-report.md)
+
+**關鍵改進**:
+| Pattern 類型 | Grep 準確率 | ast-grep 準確率 | 誤判消除 |
+|--------------|------------|-----------------|----------|
+| Swift async | 58% | 94% | 88% |
+| TypeScript hook | 55% | 91% | 93% |
+| Kotlin suspend | 60% | 93% | 51% |
+| Kotlin data class | 85% | 100% | 15% |
+
+**Plugin 同步** (12/14):
+- 更新 4 個命令檔案到 plugin/commands/
+- 版本更新：2.7.0 → 2.9.2
+- CHANGELOG 新增 ast-grep 整合記錄
+
 ### Week 2 (12/12): v2.9.0 Release - Dependency Analysis ⭐⭐⭐⭐⭐
 
 **Model 效能優化完成** (12/12):
