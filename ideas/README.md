@@ -81,11 +81,11 @@ dev-notes/YYYY-MM/implementation.md
   - **成熟度**: 70%
   - **內容**: 分析 Claude Code 官方 plugins，提煉可借鑑的設計模式
   - **探索狀態**:
-    - ✅ **漸進式輸出** - 設計完成，待升級到 proposals/
+    - ✅ **漸進式輸出** - 已升級到 [proposals/progressive-disclosure/](../proposals/progressive-disclosure/)
     - ✅ **持久化** - 已升級到 [proposals/persistence/](../proposals/persistence/)
     - 🔲 信心分數 + Threshold 機制
     - 🔲 輸出格式統一
-  - **下一步**: 將「漸進式輸出」升級到 proposals/
+  - **下一步**: 評估「信心分數 Threshold」可行性
 
 ### 已升級
 
