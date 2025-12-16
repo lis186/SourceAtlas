@@ -38,6 +38,16 @@ SourceAtlas 未來功能的完整設計文檔。
   - **關鍵發現**: @import 非 lazy loading，改採 Delete + Rules 方案
   - **新增**: `.claude/rules/dev-notes-rules.md`
 
+### 🟢 已批准
+
+- **[漸進式輸出 (Progressive Disclosure)](./progressive-disclosure/README.md)**
+  - **目標**: 根據專案規模智慧調整輸出詳細程度
+  - **建立日期**: 2025-12-16
+  - **來源**: Claude Code Plugins 學習筆記
+  - **預期效益**: Token 效率提升 30-50%（小專案可達 90%+）
+  - **工作量**: 約 6-8 小時
+  - **下一步**: 實作 Phase 1（/atlas.overview 漸進式）
+
 ### ⚪ 擱置
 
 - **[YAML Pattern Configuration](./yaml-pattern-config/README.md)**
