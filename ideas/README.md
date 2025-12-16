@@ -49,12 +49,11 @@ dev-notes/YYYY-MM/implementation.md
 
 ### 活躍想法
 
-- **[CLAUDE.md 瘦身計畫](./claude-md-slimming.md)** 🔴 高優先
+- **[CLAUDE.md 瘦身計畫](./claude-md-slimming.md)** ✅ 已升級
   - **建立日期**: 2025-12-16
-  - **成熟度**: 50%
-  - **內容**: 將 CLAUDE.md 從 700+ 行精簡到 500 行以下，符合 Anthropic 最佳實踐
-  - **來源**: Reddit 文章 "Claude Code is a Beast"
-  - **下一步**: 執行 Phase 1 分析
+  - **成熟度**: 已升級到 proposal
+  - **內容**: 將 CLAUDE.md 從 1,108 行精簡到 500 行以下
+  - **Proposal**: [proposals/claude-md-optimization/](../proposals/claude-md-optimization/)
 
 - **[Skills Auto-Activation Hooks](./skills-auto-activation-hooks.md)**
   - **建立日期**: 2025-12-16
