@@ -1,9 +1,10 @@
 # CLAUDE.md 瘦身計畫
 
+> **狀態**: ✅ 已升級到 [proposals/claude-md-optimization/](../proposals/claude-md-optimization/)
 > **來源**: [Claude Code is a Beast – Tips from 6 Months of Hardcore Use](https://dev.to/diet-code103/claude-code-is-a-beast-tips-from-6-months-of-hardcore-use-572n)
 > **建立日期**: 2025-12-16
-> **成熟度**: 50%
-> **優先級**: 🔴 高
+> **升級日期**: 2025-12-16
+> **成熟度**: 50% → 升級為 proposal
 
 ## 問題
 
