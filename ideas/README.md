@@ -49,6 +49,34 @@ dev-notes/YYYY-MM/implementation.md
 
 ### 活躍想法
 
+- **[CLAUDE.md 瘦身計畫](./claude-md-slimming.md)** 🔴 高優先
+  - **建立日期**: 2025-12-16
+  - **成熟度**: 50%
+  - **內容**: 將 CLAUDE.md 從 700+ 行精簡到 500 行以下，符合 Anthropic 最佳實踐
+  - **來源**: Reddit 文章 "Claude Code is a Beast"
+  - **下一步**: 執行 Phase 1 分析
+
+- **[Skills Auto-Activation Hooks](./skills-auto-activation-hooks.md)**
+  - **建立日期**: 2025-12-16
+  - **成熟度**: 30%
+  - **內容**: 使用 Hooks 主動注入 SourceAtlas context，而非被動依賴 CLAUDE.md 規則
+  - **來源**: Reddit 文章 "Claude Code is a Beast"
+  - **下一步**: 研究 Claude Code Hooks API
+
+- **[Dev Docs 任務文檔系統](./dev-docs-task-system.md)**
+  - **建立日期**: 2025-12-16
+  - **成熟度**: 40%
+  - **內容**: 三文件系統（plan/context/tasks）追蹤大型任務進度，防止 Claude 失憶
+  - **來源**: Reddit 文章 "Claude Code is a Beast"
+  - **下一步**: 評估是否需要 `/atlas.task` 命令
+
+- **[Gentle Reminders Hooks](./gentle-reminders-hooks.md)**
+  - **建立日期**: 2025-12-16
+  - **成熟度**: 30%
+  - **內容**: 非阻塞式自我檢查提醒，在每次回應後顯示品質檢查清單
+  - **來源**: Reddit 文章 "Claude Code is a Beast"
+  - **下一步**: 評估 token 成本
+
 - **[Claude Code Plugins 學習筆記](./claude-code-plugins-learnings.md)**
   - **建立日期**: 2025-12-12
   - **成熟度**: 70%
