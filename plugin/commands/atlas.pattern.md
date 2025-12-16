@@ -81,8 +81,18 @@ Use the tested `find-patterns.sh` script to identify relevant files:
 
 ```bash
 # Try global install first, then local
-bash ~/.claude/scripts/atlas/find-patterns.sh "$ARGUMENTS" 2>/dev/null || \
-bash scripts/atlas/find-patterns.sh "$ARGUMENTS"
+SCRIPT_PATH=""
+if [ -f ~/.claude/scripts/atlas/find-patterns.sh ]; then
+    SCRIPT_PATH=~/.claude/scripts/atlas/find-patterns.sh
+elif [ -f scripts/atlas/find-patterns.sh ]; then
+    SCRIPT_PATH=scripts/atlas/find-patterns.sh
+fi
+
+if [ -n "$SCRIPT_PATH" ]; then
+    bash "$SCRIPT_PATH" "$ARGUMENTS"
+    # 如果 exit code 非 0，會輸出錯誤訊息（如 "Unknown pattern"），
+    # 此時應該 fallback 到手動搜尋
+fi
 ```
 
 **What this script does:**
@@ -91,7 +101,7 @@ bash scripts/atlas/find-patterns.sh "$ARGUMENTS"
 - Returns top 10 most relevant files
 - Executes in <20 seconds even on large projects
 
-**Supported patterns:**
+**Supported patterns (predefined):**
 - api endpoint / api / endpoint
 - background job / job / queue
 - file upload / upload / file storage
@@ -101,7 +111,56 @@ bash scripts/atlas/find-patterns.sh "$ARGUMENTS"
 - view controller / viewcontroller
 - networking / network
 
-If the script returns an error (unsupported pattern), fall back to manual search using Glob/Grep.
+**For unsupported or custom patterns** (e.g., "影片與學習進度整合", "checkout flow"):
+- 腳本會輸出 "Unknown pattern" 錯誤
+- **此時必須 fallback 到手動搜尋**：使用 Glob/Grep 根據關鍵字搜尋
+- 從 pattern 名稱提取關鍵字（如 "影片" → video, "進度" → progress）
+- 搜尋檔案名和內容中包含這些關鍵字的檔案
+
+---
+
+### Step 1.5: ast-grep Enhanced Detection (Optional, P1 Enhancement)
+
+**When to use**: 對於需要「內容分析」的 patterns（Type B），ast-grep 可提供更精確的程式碼結構搜尋。
+
+**使用統一腳本** (`ast-grep-search.sh`):
+
+```bash
+# 設定腳本路徑（全局優先，本地備援）
+AST_SCRIPT=""
+if [ -f ~/.claude/scripts/atlas/ast-grep-search.sh ]; then
+    AST_SCRIPT=~/.claude/scripts/atlas/ast-grep-search.sh
+elif [ -f scripts/atlas/ast-grep-search.sh ]; then
+    AST_SCRIPT=scripts/atlas/ast-grep-search.sh
+fi
+
+# Swift async function
+$AST_SCRIPT pattern "async" --lang swift --path .
+
+# Kotlin suspend function
+$AST_SCRIPT pattern "suspend" --lang kotlin --path .
+
+# Kotlin data class
+$AST_SCRIPT pattern "data class" --lang kotlin --path .
+
+# TypeScript Custom Hook（use* 開頭）
+$AST_SCRIPT pattern "hook" --lang tsx --path .
+
+# 如果 ast-grep 未安裝，取得 grep 替代命令
+$AST_SCRIPT pattern "async" --fallback
+```
+
+**Value**: 根據整合測試，ast-grep 在 pattern 識別可達到：
+- Swift async function：14% 誤判消除
+- Kotlin suspend function：51% 誤判消除
+- Kotlin data class：15% 誤判消除
+- TypeScript custom hook：93% 誤判消除
+
+**Type A vs Type B Patterns**:
+- **Type A**（檔名即 pattern）：ViewModel, Repository, Service → grep/find 已足夠
+- **Type B**（需內容分析）：async, suspend, custom hook → ast-grep 更精確
+
+**Graceful Degradation**: 腳本自動處理 ast-grep 不可用情況，使用 `--fallback` 取得 grep 等效命令。
 
 ---
 

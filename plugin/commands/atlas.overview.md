@@ -79,9 +79,14 @@ Execute **Stage 0 Analysis Only** - generate a project overview using informatio
 
 ```bash
 # Run enhanced detection script (RECOMMENDED)
-# Will try global install first, then local
-bash ~/.claude/scripts/atlas/detect-project-enhanced.sh ${ARGUMENTS:-.} 2>/dev/null || \
-bash scripts/atlas/detect-project-enhanced.sh ${ARGUMENTS:-.}
+# Try global install first, then local
+if [ -f ~/.claude/scripts/atlas/detect-project-enhanced.sh ]; then
+    bash ~/.claude/scripts/atlas/detect-project-enhanced.sh ${ARGUMENTS:-.}
+elif [ -f scripts/atlas/detect-project-enhanced.sh ]; then
+    bash scripts/atlas/detect-project-enhanced.sh ${ARGUMENTS:-.}
+else
+    echo "Warning: detect-project-enhanced.sh not found, using manual detection"
+fi
 ```
 
 The script will:
@@ -136,8 +141,13 @@ Apply information theory - **high-entropy files contain disproportionate informa
 
 ```bash
 # Use helper script if available (try global first, then local)
-bash ~/.claude/scripts/atlas/scan-entropy.sh ${ARGUMENTS:-.} 2>/dev/null || \
-bash scripts/atlas/scan-entropy.sh ${ARGUMENTS:-.} 2>/dev/null
+if [ -f ~/.claude/scripts/atlas/scan-entropy.sh ]; then
+    bash ~/.claude/scripts/atlas/scan-entropy.sh ${ARGUMENTS:-.}
+elif [ -f scripts/atlas/scan-entropy.sh ]; then
+    bash scripts/atlas/scan-entropy.sh ${ARGUMENTS:-.}
+else
+    echo "Warning: scan-entropy.sh not found, scanning manually"
+fi
 ```
 
 ### Phase 3: Generate Hypotheses (3-5 minutes)
