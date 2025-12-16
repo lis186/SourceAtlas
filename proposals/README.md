@@ -32,15 +32,11 @@ SourceAtlas 未來功能的完整設計文檔。
   - **完成日期**: 2025-12-13
   - **成果**: 過期標記（⚠️）、統計、可複製的 `--force` 命令
 
-### 🟡 研究中
-
-- **[CLAUDE.md 優化](./claude-md-optimization/README.md)** 🔴 高優先
-  - **目標**: 將 CLAUDE.md 從 1,108 行精簡到 <500 行
-  - **建立日期**: 2025-12-16
-  - **來源**: Reddit "Claude Code is a Beast" + Anthropic 官方最佳實踐
-  - **核心方法**: Progressive Disclosure + @import 語法
-  - **預期效益**: Token 效率提升 40-60%
-  - **下一步**: 執行 Phase 1 拆分
+- **[CLAUDE.md 優化](./claude-md-optimization/README.md)**
+  - **完成日期**: 2025-12-16
+  - **成果**: CLAUDE.md 從 1,108 行精簡到 499 行（-55%）
+  - **關鍵發現**: @import 非 lazy loading，改採 Delete + Rules 方案
+  - **新增**: `.claude/rules/dev-notes-rules.md`
 
 ### ⚪ 擱置
 
