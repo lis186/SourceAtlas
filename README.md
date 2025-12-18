@@ -4,7 +4,7 @@
 
 適用於 Claude Code | 支援 iOS/TypeScript/Android/Python
 
-[![Version](https://img.shields.io/badge/version-v2.9.2-blue)](https://github.com/lis186/SourceAtlas/releases)
+[![Version](https://img.shields.io/badge/version-v2.9.3-blue)](https://github.com/lis186/SourceAtlas/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![Constitution](https://img.shields.io/badge/constitution-v1.1-purple)](./ANALYSIS_CONSTITUTION.md)
 
@@ -457,7 +457,7 @@ bash scripts/atlas/validate-constitution.sh --check-structure
 
 ## 🗺️ 開發狀態
 
-**v2.9.2 (當前)**：9 個命令完成 + 持久化功能 v2.0 ✅
+**v2.9.3 (當前)**：Progressive Disclosure for `/atlas.pattern` ✅
 
 - ✅ `/atlas.init` - 專案初始化（自動觸發規則）
 - ✅ `/atlas.overview` - 專案概覽
@@ -483,6 +483,6 @@ bash scripts/atlas/validate-constitution.sh --check-structure
 ---
 
 **SourceAtlas** - Claude Code 的程式分析助手
-v2.9.2 | 最新更新: 2025-12-13 | MIT License
+v2.9.3 | 最新更新: 2025-12-18 | MIT License
 
 Made with ❤️ and 🤖

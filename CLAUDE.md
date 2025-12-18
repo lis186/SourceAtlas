@@ -16,6 +16,7 @@
 - **v2.9.0** ✅ - Dependency Analysis `/atlas.deps` 完成測試（2025-12-12）
 - **v2.9.1** ✅ - 持久化 v2.0：30 天過期警告、Handoffs 互斥規則（2025-12-13）
 - **v2.9.2** ✅ - `/atlas.list` 過期標記增強、`/atlas.init` 驗證機制（2025-12-13）
+- **v2.9.3** ✅ - `/atlas.pattern` Progressive Disclosure：Smart 模式 + `--brief`/`--full` 參數（2025-12-18）
 
 ## 架構
 
