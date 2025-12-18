@@ -10,10 +10,10 @@ argument-hint: [flow description or entry point, e.g., "user checkout", "from Or
 > **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md) v1.0
 >
 > Key principles enforced:
-> - Article I: 高熵優先（從入口點開始追蹤）
-> - Article II: 強制排除目錄
-> - Article IV: 證據格式（file:line 引用、呼叫鏈）
-> - Article VI: 規模感知（追蹤深度根據模式調整）
+> - Article I: High-entropy first (trace from entry point)
+> - Article II: Mandatory directory exclusions
+> - Article IV: Evidence format (file:line references, call chains)
+> - Article VI: Scale-aware (tracing depth adjusted by pattern)
 
 ## Context
 
@@ -23,54 +23,54 @@ argument-hint: [flow description or entry point, e.g., "user checkout", "from Or
 
 ---
 
-## Cache Check（最高優先）
+## Cache Check (Highest Priority)
 
-**如果參數中沒有 `--force`**，先檢查快取：
+**If `--force` is not in parameters**, check cache first:
 
-1. 從 `$ARGUMENTS` 提取 flow 名稱（移除 `--save`、`--force`、`--quick`、`--thorough`、`--verify`）
-2. 轉換為檔名：空格→`-`、小寫、移除特殊字元、**截斷至 50 字元**
-   - 例：`"user checkout"` → `user-checkout.md`
-   - 例：`"from OrderService.create()"` → `orderservice-create.md`
-3. 檢查快取：
+1. Extract flow name from `$ARGUMENTS` (remove `--save`, `--force`, `--quick`, `--thorough`, `--verify`)
+2. Convert to filename: spaces→`-`, lowercase, remove special chars, **truncate to 50 chars**
+   - Example: `"user checkout"` → `user-checkout.md`
+   - Example: `"from OrderService.create()"` → `orderservice-create.md`
+3. Check cache:
    ```bash
    ls -la .sourceatlas/flows/{name}.md 2>/dev/null
    ```
 
-4. **如果快取存在**：
-   - 計算距今天數
-   - 用 Read tool 讀取快取內容
-   - 輸出：
+4. **If cache exists**:
+   - Calculate days since creation
+   - Use Read tool to load cache content
+   - Output:
      ```
-     📁 載入快取：.sourceatlas/flows/{name}.md（N 天前）
-     💡 重新分析請加 --force
+     📁 Loading from cache: .sourceatlas/flows/{name}.md (N days ago)
+     💡 To re-analyze, add --force
      ```
-   - **如果超過 30 天**，額外顯示：
+   - **If older than 30 days**, additionally show:
      ```
-     ⚠️ 快取已超過 30 天，建議重新分析
+     ⚠️ Cache is older than 30 days, recommend re-analysis
      ```
-   - 然後輸出：
+   - Then output:
      ```
      ---
-     [快取內容]
+     [Cache content]
      ```
-   - **結束，不執行後續分析**
+   - **Stop, do not execute subsequent analysis**
 
-5. **如果快取不存在**：繼續執行下方的分析流程
+5. **If cache does not exist**: Continue with analysis flow below
 
-**如果參數中有 `--force`**：跳過快取檢查，直接執行分析
+**If `--force` is in parameters**: Skip cache check, execute analysis directly
 
 ---
 
-## Analysis Modes (速度 vs 準確度)
+## Analysis Modes (Speed vs Accuracy)
 
 Parse `$ARGUMENTS` for mode flags:
 
 | Mode | Flag | Time | Accuracy | Use Case |
 |------|------|------|----------|----------|
-| **Quick** | `--quick` | 3-5 min | ~75% | 快速了解、會議前準備 |
-| **Standard** | (default) | 10-15 min | ~85% | 日常開發、code review |
-| **Thorough** | `--thorough` | 20-30 min | ~92% | 深入理解、重構規劃 |
-| **Verify** | `--verify` | 25-35 min | ~95% | 關鍵功能、安全審計 |
+| **Quick** | `--quick` | 3-5 min | ~75% | Quick overview, pre-meeting prep |
+| **Standard** | (default) | 10-15 min | ~85% | Daily development, code review |
+| **Thorough** | `--thorough` | 20-30 min | ~92% | Deep understanding, refactoring planning |
+| **Verify** | `--verify` | 25-35 min | ~95% | Critical functions, security audits |
 
 ### Mode Detection
 
@@ -142,9 +142,9 @@ Analyze `$ARGUMENTS` to determine how to start:
 
 User provided specific file, function, or line:
 ```
-"從 src/services/order.ts 開始"
-"從 OrderService.create() 開始"
-"從 src/checkout.ts:45 開始"
+"from src/services/order.ts"
+"from OrderService.create()"
+"from src/checkout.ts:45"
 ```
 
 → **Start tracing immediately**, no questions asked.
@@ -153,7 +153,7 @@ User provided specific file, function, or line:
 
 User described the flow without specific entry:
 ```
-"下單流程"
+"order flow"
 "checkout flow"
 "user registration"
 ```
@@ -168,7 +168,7 @@ grep -r "checkout\|order\|create" --include="*.ts" --include="*.swift" \
 
 Present options:
 ```
-找到 3 個可能的入口點：
+Found 3 possible entry points:
 
 1. OrderService.create()
    📍 src/services/order.ts:45
@@ -179,7 +179,7 @@ Present options:
 3. useCheckout() hook
    📍 src/hooks/useCheckout.ts:30
 
-請選擇要從哪個開始？（或直接說「1」「2」「3」）
+Please choose where to start? (or just say "1" "2" "3")
 ```
 
 **Case 3: Single Match Found**
@@ -324,31 +324,31 @@ def score_entry_point(match, lang):
 
 **Output with Confidence**:
 ```
-找到 3 個可能的入口點：
+Found 3 possible entry points:
 
-1. ⭐ CheckoutController.submit()     [信心: 95%]
+1. ⭐ CheckoutController.submit()     [Confidence: 95%]
    📍 src/controllers/checkout.ts:120
-   💡 名稱匹配 + Controller 類型 + 公開方法
+   💡 Name match + Controller type + Public method
 
-2. OrderService.create()              [信心: 75%]
+2. OrderService.create()              [Confidence: 75%]
    📍 src/services/order.ts:45
-   💡 Service 類型，但不是直接入口
+   💡 Service type, but not direct entry
 
-3. useCheckout() hook                 [信心: 60%]
+3. useCheckout() hook                 [Confidence: 60%]
    📍 src/hooks/useCheckout.ts:30
-   💡 Hook 可能是 UI 入口，需要確認
+   💡 Hook might be UI entry, needs confirmation
 ```
 
 ---
 
 ### Step 1.6: ast-grep Enhanced Search (Optional, P1 Enhancement)
 
-**When to use**: ast-grep 提供更精確的程式碼搜尋，可排除註解和字串中的誤判。
+**When to use**: ast-grep provides more precise code search, eliminating false positives from comments and strings.
 
-**使用統一腳本** (`ast-grep-search.sh`):
+**Use unified script** (`ast-grep-search.sh`):
 
 ```bash
-# 設定腳本路徑（全局優先，本地備援）
+# Set script path (global first, local fallback)
 AST_SCRIPT=""
 if [ -f ~/.claude/scripts/atlas/ast-grep-search.sh ]; then
     AST_SCRIPT=~/.claude/scripts/atlas/ast-grep-search.sh
@@ -356,28 +356,28 @@ elif [ -f scripts/atlas/ast-grep-search.sh ]; then
     AST_SCRIPT=scripts/atlas/ast-grep-search.sh
 fi
 
-# 函數呼叫追蹤（自動偵測語言）
+# Function call tracing (auto-detect language)
 $AST_SCRIPT call "functionName" --path .
 
-# Async/Await 流程追蹤
+# Async/Await flow tracing
 $AST_SCRIPT async --path .
 
-# 邊界偵測（API 呼叫點）
+# Boundary detection (API call points)
 $AST_SCRIPT boundary api --path .
 
-# 邊界偵測（DB 操作點）
+# Boundary detection (DB operation points)
 $AST_SCRIPT boundary db --path .
 
-# 如果 ast-grep 未安裝，取得 grep 替代命令
+# If ast-grep not installed, get grep fallback command
 $AST_SCRIPT call "functionName" --fallback
 ```
 
-**ast-grep 價值（根據測試）**:
-- 函數呼叫追蹤：誤判消除 **51-93%**
-- 依賴分析：誤判消除 **15-93%**
-- 特別有效場景：ViewModel、Service、Repository 等常見詞彙
+**ast-grep value (based on testing)**:
+- Function call tracing: **51-93%** false positive reduction
+- Dependency analysis: **15-93%** false positive reduction
+- Especially effective: ViewModel, Service, Repository and other common terms
 
-**Graceful Degradation**: 腳本自動處理 ast-grep 不可用情況，使用 `--fallback` 取得 grep 等效命令。
+**Graceful Degradation**: Script automatically handles ast-grep unavailability, using `--fallback` to get grep equivalent command.
 
 ---
 
@@ -890,24 +890,24 @@ def calculate_boundary_confidence(match, context):
 
 **Boundary Output with Confidence**:
 ```
-5. PaymentService.process()               → 處理付款
+5. PaymentService.process()               → Process payment
    📍 src/services/payment.ts:200
 
-   🌐 [API] 外部邊界：Stripe API             [信心: 95%]
-   ├── 模式：stripe.charges.create()
-   ├── 證據：URL domain + amount parameter
-   ├── 預期延遲：~500-2000ms
-   ├── 可能失敗：網路超時、API 限流、無效卡號
-   └── ⛔ 追蹤停止（外部服務）
+   🌐 [API] External Boundary: Stripe API    [Confidence: 95%]
+   ├── Pattern: stripe.charges.create()
+   ├── Evidence: URL domain + amount parameter
+   ├── Expected latency: ~500-2000ms
+   ├── Possible failures: Network timeout, API rate limit, invalid card
+   └── ⛔ Stop tracing (external service)
 
-6. CacheService.get()                     → 讀取快取
+6. CacheService.get()                     → Read cache
    📍 src/services/cache.ts:45
 
-   🗄️ [CACHE] Redis 快取                    [信心: 85%]
-   ├── 模式：redis.get(key)
-   ├── TTL：5 分鐘
-   ├── 預期延遲：~1-5ms
-   └── 繼續追蹤（內部快取）
+   🗄️ [CACHE] Redis Cache                    [Confidence: 85%]
+   ├── Pattern: redis.get(key)
+   ├── TTL: 5 minutes
+   ├── Expected latency: ~1-5ms
+   └── Continue tracing (internal cache)
 ```
 
 #### Boundary Output Format
@@ -915,22 +915,22 @@ def calculate_boundary_confidence(match, context):
 When a boundary is reached:
 
 ```
-5. PaymentService.process()               → 處理付款
+5. PaymentService.process()               → Process payment
    📍 src/services/payment.ts:200
 
-   🌐 [API] 外部邊界：Stripe API
-   ├── 呼叫：stripe.charges.create()
-   ├── 預期延遲：~500-2000ms
-   ├── 可能失敗：網路超時、API 限流、無效卡號
-   └── ⛔ 追蹤停止（外部服務）
+   🌐 [API] External Boundary: Stripe API
+   ├── Call: stripe.charges.create()
+   ├── Expected latency: ~500-2000ms
+   ├── Possible failures: Network timeout, API rate limit, invalid card
+   └── ⛔ Stop tracing (external service)
 
-6. OrderRepository.save()                 → 儲存訂單
+6. OrderRepository.save()                 → Save order
    📍 src/repos/order.ts:80
 
-   💾 [DB] 資料庫邊界：PostgreSQL
-   ├── 操作：INSERT INTO orders
-   ├── 預期延遲：~10-50ms
-   └── ⛔ 追蹤停止（持久層）
+   💾 [DB] Database Boundary: PostgreSQL
+   ├── Operation: INSERT INTO orders
+   ├── Expected latency: ~10-50ms
+   └── ⛔ Stop tracing (persistence layer)
 ```
 
 #### Configurable Boundary Behavior
@@ -938,10 +938,10 @@ When a boundary is reached:
 User can control boundary behavior:
 
 ```
-/atlas.flow "下單流程"                    → 預設：停在邊界
-/atlas.flow "下單流程 --cross-boundary"   → 跨越邊界繼續追蹤
-/atlas.flow "下單流程 --only-internal"    → 只追蹤內部程式碼
-/atlas.flow "下單流程 --include-lib"      → 包含第三方庫內部
+/atlas.flow "order flow"                 → Default: stop at boundaries
+/atlas.flow "order flow --cross-boundary" → Cross boundaries, continue tracing
+/atlas.flow "order flow --only-internal"  → Only trace internal code
+/atlas.flow "order flow --include-lib"    → Include third-party library internals
 ```
 
 ---
@@ -954,89 +954,89 @@ User can control boundary behavior:
 
 #### Default Depth Limits
 
-| 場景 | 預設深度 | 原因 |
+| Scenario | Default Depth | Reason |
 |------|---------|------|
-| 主流程 | 無限制 | 追到邊界為止 |
-| 子流程展開 | 3 層 | 避免過深 |
-| 遞迴函數 | 2 次 | 展示模式後停止 |
-| 循環內容 | 1 次 | 展示一次迭代 |
+| Main flow | Unlimited | Trace until boundary |
+| Sub-flow expansion | 3 levels | Avoid too deep |
+| Recursive functions | 2 iterations | Show pattern then stop |
+| Loop content | 1 iteration | Show one iteration |
 
 #### User-Controlled Depth
 
 ```
-/atlas.flow "從 OrderService.create() 開始"           → 預設深度
-/atlas.flow "從 OrderService.create() 開始，追 3 層"   → 限制 3 層
-/atlas.flow "從 OrderService.create() 開始，追 5 層"   → 限制 5 層
-/atlas.flow "從 OrderService.create() 開始，完整追蹤"  → 無限制（警告）
+/atlas.flow "from OrderService.create()"              → Default depth
+/atlas.flow "from OrderService.create(), depth 3"     → Limit to 3 levels
+/atlas.flow "from OrderService.create(), depth 5"     → Limit to 5 levels
+/atlas.flow "from OrderService.create(), full trace"  → Unlimited (warning)
 ```
 
 **Depth Keywords**:
-- `追 N 層`, `depth N`, `--depth=N` → 限制深度為 N
-- `完整追蹤`, `full`, `--no-limit` → 無限制（會警告可能很長）
-- `只看這個檔案內`, `--same-file` → 只追蹤同檔案內的呼叫
+- `depth N`, `--depth=N` → Limit depth to N
+- `full`, `full trace`, `--no-limit` → Unlimited (will warn if very long)
+- `same file only`, `--same-file` → Only trace calls within same file
 
 #### Recursion Detection Algorithm
 
 ```python
-# 追蹤時維護呼叫堆疊
+# Maintain call stack during tracing
 call_stack = []
 
 def trace(function):
-    # 檢查是否已在堆疊中（循環）
+    # Check if already in stack (cycle)
     if function in call_stack:
         mark_as_recursion(function)
-        return  # 停止追蹤
+        return  # Stop tracing
 
     call_stack.append(function)
-    # ... 繼續追蹤 ...
+    # ... continue tracing ...
     call_stack.pop()
 ```
 
 #### Recursion Output Format
 
 ```
-3. TreeNode.traverse()                    → 遍歷節點
+3. TreeNode.traverse()                    → Traverse nodes
    📍 src/utils/tree.ts:45
 
-   🔄 [LOOP] 遞迴檢測
-   ├── 類型：直接遞迴（self.traverse()）
-   ├── 終止條件：node.children.length === 0
-   ├── 已展示：2 次迭代
-   └── ⛔ 追蹤停止（遞迴，輸入「展開遞迴」看更多）
+   🔄 [LOOP] Recursion Detected
+   ├── Type: Direct recursion (self.traverse())
+   ├── Termination condition: node.children.length === 0
+   ├── Shown: 2 iterations
+   └── ⛔ Stop tracing (recursion, enter "expand recursion" for more)
 
-4. EventLoop.process()                    → 處理事件
+4. EventLoop.process()                    → Process events
    📍 src/core/loop.ts:120
 
-   🔄 [LOOP] 循環檢測
-   ├── 類型：無限循環（while true）
-   ├── 跳出條件：this.shouldStop === true
-   ├── 已展示：1 次迭代
-   └── ⛔ 追蹤停止（無限循環）
+   🔄 [LOOP] Loop Detected
+   ├── Type: Infinite loop (while true)
+   ├── Exit condition: this.shouldStop === true
+   ├── Shown: 1 iteration
+   └── ⛔ Stop tracing (infinite loop)
 ```
 
 #### Cycle Detection for Indirect Recursion
 
 ```
-檢測到間接遞迴：
+Indirect recursion detected:
 A() → B() → C() → A()
 
-輸出：
+Output:
 1. ServiceA.process()
    📍 src/services/a.ts:10
-   └─ 呼叫 ServiceB.handle()
+   └─ Calls ServiceB.handle()
 
 2. ServiceB.handle()
    📍 src/services/b.ts:20
-   └─ 呼叫 ServiceC.execute()
+   └─ Calls ServiceC.execute()
 
 3. ServiceC.execute()
    📍 src/services/c.ts:30
-   └─ 呼叫 ServiceA.process()  ← 🔄 循環回到 Step 1
+   └─ Calls ServiceA.process()  ← 🔄 Cycles back to Step 1
 
-   🔄 [CYCLE] 間接遞迴檢測
-   ├── 循環路徑：A → B → C → A
-   ├── 長度：3 個函數
-   └── ⛔ 追蹤停止（循環）
+   🔄 [CYCLE] Indirect Recursion Detected
+   ├── Cycle path: A → B → C → A
+   ├── Length: 3 functions
+   └── ⛔ Stop tracing (cycle)
 ```
 
 ---
@@ -1073,12 +1073,12 @@ Mark items that are **worth attention** - unusual, risky, or important:
 
 | Type | Description | Mark |
 |------|-------------|------|
-| **Unusual Order** | Steps in unexpected sequence | 📌 順序 |
-| **Missing Protection** | No transaction, no rollback | 📌 風險 |
-| **Hidden Side Effect** | Looks like query, actually modifies | 📌 副作用 |
-| **Duplicated Logic** | Same calculation in multiple places | 📌 重複 |
-| **Inconsistency** | Same logic implemented differently | 📌 不一致 |
-| **Magic Number** | Hardcoded business rules | 📌 魔法值 |
+| **Unusual Order** | Steps in unexpected sequence | 📌 Order |
+| **Missing Protection** | No transaction, no rollback | 📌 Risk |
+| **Hidden Side Effect** | Looks like query, actually modifies | 📌 Side Effect |
+| **Duplicated Logic** | Same calculation in multiple places | 📌 Duplication |
+| **Inconsistency** | Same logic implemented differently | 📌 Inconsistency |
+| **Magic Number** | Hardcoded business rules | 📌 Magic Value |
 
 **Principle**:
 > Normal parts: Scan quickly
@@ -1091,7 +1091,7 @@ Mark items that are **worth attention** - unusual, risky, or important:
 ### ASCII + Structure (Terminal Friendly)
 
 ```
-[Flow Name]（主要路徑）
+[Flow Name] (Main Path)
 ========================
 
 1. [ClassName.method()]              → [Business meaning]
@@ -1099,7 +1099,7 @@ Mark items that are **worth attention** - unusual, risky, or important:
 
 2. [ClassName.method()]              → [Business meaning]
    📍 [file/path.ts:line]
-   ⚠️  失敗 → [error handling]
+   ⚠️  Failure → [error handling]
 
 3. [ClassName.method()]              → [Business meaning]
    📍 [file/path.ts:line]
@@ -1107,8 +1107,8 @@ Mark items that are **worth attention** - unusual, risky, or important:
    ├── [SubMethod2()]                → [meaning]     🔍 [3a]
    └── [SubMethod3()]                → [meaning]     🔍 [3b]
 
-   📌 風險：[Notable pattern description]
-      （[Why this matters]）
+   📌 Risk: [Notable pattern description]
+      ([Why this matters])
 
 4. [ClassName.method()]              → [Business meaning]
    📍 [file/path.ts:line]
@@ -1120,15 +1120,15 @@ Mark items that are **worth attention** - unusual, risky, or important:
    📍 [file/path.ts:line]
 
 ──────────────────────────────────
-📊 流程概覽：[N] 個主要步驟，[M] 個可展開
+📊 Flow Overview: [N] main steps, [M] expandable
 
-🔍 展開：3a / 3b / 5 / 全部
-   或直接說「展開 [SubMethod2]」「展開付款」
+🔍 Expand: 3a / 3b / 5 / all
+   or say "expand [SubMethod2]" "expand payment"
 
-💬 下一步可以：
-• 「展開 [specific sub-flow]」    → 深入子流程
-• 「改 step 3 會影響什麼」        → 影響範圍分析
-• 「為什麼這裡常被改」            → 歷史分析
+💬 Next steps:
+• "expand [specific sub-flow]"     → Deep dive into sub-flow
+• "what if I change step 3"        → Impact analysis
+• "why is this changed often"      → History analysis
 ──────────────────────────────────
 ```
 
@@ -1152,7 +1152,7 @@ Mark items that are **worth attention** - unusual, risky, or important:
 ### ASCII Call Graph (Default)
 
 ```
-呼叫圖：
+Call Graph:
 ─────────────────────────────────────────────
                   [Entry Point]
                         │
@@ -1173,7 +1173,7 @@ Mark items that are **worth attention** - unusual, risky, or important:
 
 **Example Output**:
 ```
-呼叫圖：
+Call Graph:
 ─────────────────────────────────────────────
               CheckoutController.submit()
                         │
@@ -1198,42 +1198,42 @@ Mark items that are **worth attention** - unusual, risky, or important:
               ▼         ▼         ▼
            [DB]    [Event]   [Notification]
 ─────────────────────────────────────────────
-圖例：→ 同步呼叫  ⇢ 非同步  ▼ 主要路徑
+Legend: → Sync call  ⇢ Async  ▼ Main path
 ```
 
 ### Mermaid Format (Optional)
 
-When user requests `輸出 mermaid` or `--mermaid`:
+When user requests `mermaid output` or `--mermaid`:
 
 ```
-/atlas.flow "下單流程 --mermaid"
+/atlas.flow "order flow --mermaid"
 ```
 
 Output:
 ````markdown
 ```mermaid
 flowchart TD
-    subgraph Entry["入口"]
+    subgraph Entry["Entry"]
         A[CheckoutController.submit]
     end
 
-    subgraph Validation["驗證階段"]
+    subgraph Validation["Validation Stage"]
         B[CartService.validate]
         C[InventoryService.check]
     end
 
-    subgraph Pricing["計價階段"]
+    subgraph Pricing["Pricing Stage"]
         D[DiscountEngine.apply]
         D1[VIPDiscount]
         D2[CouponService]
         D3[PointsService]
     end
 
-    subgraph Payment["付款階段"]
+    subgraph Payment["Payment Stage"]
         E[PaymentService.process]
     end
 
-    subgraph Completion["完成階段"]
+    subgraph Completion["Completion Stage"]
         F[OrderService.create]
         G[(Database)]
         H{{EVENT: ORDER_CREATED}}
@@ -1269,14 +1269,14 @@ For users new to the codebase or programming concepts.
 ### Trigger Keywords
 
 ```
-新手模式, newbie, 初學者, 解釋, explain, beginner, 看不懂
+newbie, newbie mode, beginner, explain, explain mode, can't understand
 ```
 
 **Example Usage**:
 ```
-/atlas.flow "下單流程 新手模式"
+/atlas.flow "order flow newbie mode"
 /atlas.flow "explain OrderService.create()"
-/atlas.flow "解釋這個流程"
+/atlas.flow "explain this flow"
 ```
 
 ### Newbie Mode Behavior
@@ -1289,82 +1289,82 @@ For users new to the codebase or programming concepts.
 ### Output Format (Newbie Mode)
 
 ```
-下單流程（新手模式 🎓）
+Order Flow (Newbie Mode 🎓)
 =======================
 
-💡 這個流程做什麼？
-   當用戶按下「結帳」按鈕後，系統會執行這個流程來完成訂單。
+💡 What does this flow do?
+   When a user clicks the "Checkout" button, the system executes this flow to complete the order.
 
-📖 你需要知道的術語：
-   • Service = 處理業務邏輯的程式
-   • Controller = 接收用戶請求的入口
-   • Repository = 與資料庫溝通的程式
-   • async/await = 等待某件事完成再繼續（像等外送）
+📖 Terms you need to know:
+   • Service = Programs that handle business logic
+   • Controller = Entry point that receives user requests
+   • Repository = Programs that communicate with the database
+   • async/await = Wait for something to complete before continuing (like waiting for delivery)
 
 ────────────────────────────────────────────
 
 1. 💻 CheckoutController.submit()
    📍 src/controllers/checkout.ts:120
 
-   🎓 這是什麼？
-      這是「入口」，當用戶按下結帳按鈕時，
-      瀏覽器會發送請求到這裡。
+   🎓 What is this?
+      This is the "entry point". When a user clicks the checkout button,
+      the browser sends a request here.
 
-   🔍 它做什麼？
-      接收用戶的購物車資料，然後開始處理訂單。
+   🔍 What does it do?
+      Receives the user's shopping cart data, then starts processing the order.
 
 2. 💻 CartService.validate()
    📍 src/services/cart.ts:45
 
-   🎓 這是什麼？
-      這是「驗證器」，檢查購物車是否有問題。
+   🎓 What is this?
+      This is a "validator" that checks if there are any problems with the cart.
 
-   🔍 它做什麼？
-      • 檢查商品是否還有庫存
-      • 檢查價格是否正確
-      • 檢查是否有無效的商品
+   🔍 What does it do?
+      • Checks if products are still in stock
+      • Checks if prices are correct
+      • Checks for invalid products
 
-   ⚠️ 如果失敗？
-      回傳錯誤訊息給用戶，流程結束。
+   ⚠️ If it fails?
+      Returns error message to user, flow ends.
 
 3. 💻 DiscountEngine.apply()
    📍 src/services/discount.ts:80
 
-   🎓 這是什麼？
-      這是「折扣計算器」。
+   🎓 What is this?
+      This is a "discount calculator".
 
-   🔍 它做什麼？
-      計算用戶可以享受的所有折扣：
-      • VIP 折扣（如果是 VIP 會員）
-      • 優惠券折扣（如果有使用優惠券）
-      • 積分抵扣（如果有使用積分）
+   🔍 What does it do?
+      Calculates all discounts the user can receive:
+      • VIP discount (if user is VIP member)
+      • Coupon discount (if coupon is used)
+      • Points redemption (if points are used)
 
-   💡 想像成...
-      像是超市結帳時，收銀員幫你掃描會員卡、
-      優惠券，計算最終價格。
+   💡 Think of it like...
+      Like a cashier at a supermarket scanning your membership card
+      and coupons to calculate the final price.
 
-[... 後續步驟 ...]
+[... subsequent steps ...]
 
 ────────────────────────────────────────────
-📚 術語表（Glossary）
+📚 Glossary
 ────────────────────────────────────────────
 
-| 術語 | 解釋 | 類比 |
+| Term | Explanation | Analogy |
 |------|------|------|
-| Controller | 接收請求的入口 | 餐廳服務生 |
-| Service | 處理業務邏輯 | 廚師 |
-| Repository | 存取資料庫 | 倉庫管理員 |
-| Model | 資料結構定義 | 食譜 |
-| async/await | 等待操作完成 | 等外送送達 |
-| Transaction | 確保操作全部成功或全部失敗 | 銀行轉帳 |
-| Event | 通知其他程式有事發生 | 發公告 |
-| Cache | 暫存資料加快速度 | 把常用東西放手邊 |
+| Controller | Entry point for requests | Restaurant waiter |
+| Service | Handles business logic | Chef |
+| Repository | Accesses database | Warehouse manager |
+| Model | Data structure definition | Recipe |
+| async/await | Wait for operation to complete | Waiting for delivery |
+| Transaction | Ensures all operations succeed or all fail | Bank transfer |
+| Event | Notifies other programs something happened | Announcement |
+| Cache | Temporarily store data for speed | Keep frequently used items nearby |
 
 ────────────────────────────────────────────
-💬 看不懂？可以問：
-• 「解釋 step 3」 → 更詳細解釋那一步
-• 「什麼是 async」 → 解釋特定術語
-• 「用更簡單的話說」 → 更白話的解釋
+💬 Don't understand? You can ask:
+• "explain step 3" → More detailed explanation of that step
+• "what is async" → Explain specific term
+• "use simpler words" → More plain language explanation
 ────────────────────────────────────────────
 ```
 
@@ -1374,17 +1374,17 @@ For users new to the codebase or programming concepts.
 
 **Explicit Activation**:
 ```
-/atlas.flow "下單流程 新手模式"
+/atlas.flow "order flow newbie mode"
 /atlas.flow "explain checkout flow"
 ```
 
 **Offer Newbie Mode** (not auto-enable) when:
 ```
-# 偵測到困惑時，提供選項而非自動切換
-if 用戶問「這是什麼」「看不懂」「不理解」:
-    → 詢問：「需要切換到新手模式嗎？輸入『新手模式』可以看到術語解釋。」
+# When confusion detected, offer option instead of auto-switching
+if user asks "what is this" "don't understand" "can't understand":
+    → Ask: "Need to switch to newbie mode? Enter 'newbie mode' to see terminology explanations."
 
-# 不主動詢問是否需要新手模式（避免打擾資深使用者）
+# Don't proactively ask if newbie mode is needed (avoid bothering advanced users)
 ```
 
 ---
@@ -1399,70 +1399,70 @@ Show concise output first, let user expand if needed.
 
 **Summary Output**:
 ```
-下單流程（摘要）
+Order Flow (Summary)
 ===============
 
-1. CheckoutController.submit() → 接收請求
-2. CartService.validate() → 驗證購物車
-3. DiscountEngine.apply() → 計算折扣     🔍 [3]
-4. InventoryService.reserve() → 預扣庫存
-5. PaymentService.process() → 處理付款   🔍 [5]
-6. OrderService.create() → 建立訂單
+1. CheckoutController.submit() → Receive request
+2. CartService.validate() → Validate cart
+3. DiscountEngine.apply() → Calculate discounts     🔍 [3]
+4. InventoryService.reserve() → Reserve inventory
+5. PaymentService.process() → Process payment   🔍 [5]
+6. OrderService.create() → Create order
 
 ────────────────────────────────────────────
-📊 6 步驟 | 2 個可展開 | ⏱️ ~2-5 秒
-💬 輸入「詳細」看完整分析，或「展開 3」看特定步驟
+📊 6 steps | 2 expandable | ⏱️ ~2-5 sec
+💬 Enter "detailed" for full analysis, or "expand 3" for specific step
 ────────────────────────────────────────────
 ```
 
 ### Detailed Mode
 
-When user requests `詳細`, `detailed`, `完整`:
+When user requests `detailed`, `full`:
 
 ```
-/atlas.flow "下單流程 詳細"
+/atlas.flow "order flow detailed"
 /atlas.flow "detailed checkout flow"
 ```
 
 **Detailed Output**:
 ```
-下單流程（詳細）
+Order Flow (Detailed)
 ===============
 
-1. CheckoutController.submit()            → 接收結帳請求
+1. CheckoutController.submit()            → Receive checkout request
    📍 src/controllers/checkout.ts:120
    ⏱️ sync
 
-   輸入：{ cartId, userId, paymentMethod }
-   輸出：{ orderId } | Error
+   Input: { cartId, userId, paymentMethod }
+   Output: { orderId } | Error
 
-   內部邏輯：
-   ├── 驗證 session
-   ├── 取得購物車資料
-   └── 呼叫 CartService
+   Internal logic:
+   ├── Validate session
+   ├── Get cart data
+   └── Call CartService
 
-2. CartService.validate()                 → 驗證購物車
+2. CartService.validate()                 → Validate cart
    📍 src/services/cart.ts:45
    ⏱️ async, ⏳ ~50-100ms
 
-   驗證項目：
-   ├── 商品是否存在
-   ├── 商品是否有庫存
-   ├── 價格是否正確（防止前端竄改）
-   └── 商品是否可購買（未下架）
+   Validation items:
+   ├── Product exists
+   ├── Product in stock
+   ├── Price correct (prevent frontend tampering)
+   └── Product purchasable (not delisted)
 
-   失敗處理：
-   ├── CartEmptyError → 400 "購物車是空的"
-   ├── ItemNotFoundError → 404 "商品不存在"
-   └── OutOfStockError → 409 "商品已售完"
+   Failure handling:
+   ├── CartEmptyError → 400 "Cart is empty"
+   ├── ItemNotFoundError → 404 "Product not found"
+   └── OutOfStockError → 409 "Product sold out"
 
-[... 更多詳細步驟 ...]
+[... more detailed steps ...]
 
 ────────────────────────────────────────────
-📊 6 步驟 | 預估總時間 2-5 秒
-📍 涉及檔案：6 個
-📌 風險點：2 個（已標記）
-💬 輸入「摘要」返回簡潔模式
+📊 6 steps | Estimated total time 2-5 sec
+📍 Files involved: 6
+📌 Risk points: 2 (marked)
+💬 Enter "summary" to return to concise mode
 ────────────────────────────────────────────
 ```
 
@@ -1470,19 +1470,19 @@ When user requests `詳細`, `detailed`, `完整`:
 
 | Keyword | Effect |
 |---------|--------|
-| `摘要`, `summary`, `簡潔` | Switch to summary mode |
-| `詳細`, `detailed`, `完整`, `full` | Switch to detailed mode |
-| `新手`, `newbie`, `explain` | Switch to newbie mode |
+| `summary`, `concise` | Switch to summary mode |
+| `detailed`, `full` | Switch to detailed mode |
+| `newbie`, `explain` | Switch to newbie mode |
 
 ### Combined Modes
 
 Modes can be combined:
 
 ```
-/atlas.flow "下單流程 詳細 新手模式"
+/atlas.flow "order flow detailed newbie mode"
 → Detailed output with terminology explanations
 
-/atlas.flow "下單流程 摘要"
+/atlas.flow "order flow summary"
 → Concise summary (default)
 ```
 
@@ -1495,21 +1495,21 @@ Modes can be combined:
 After initial output, respond intelligently to follow-ups:
 
 **If user says**:
-- `3a` or `展開 3a` → Expand that sub-flow
-- `展開 Coupon` → Find and expand CouponService
-- `展開全部` → Expand all marked sub-flows
-- `繼續` → Continue if main path was truncated
+- `3a` or `expand 3a` → Expand that sub-flow
+- `expand Coupon` → Find and expand CouponService
+- `expand all` → Expand all marked sub-flows
+- `continue` → Continue if main path was truncated
 
 **If user asks about impact**:
-- `改這裡會影響什麼` → Suggest `/atlas.impact`
-- `step 3 會影響哪些地方` → Run targeted impact analysis
+- `what if I change this` → Suggest `/atlas.impact`
+- `what does step 3 affect` → Run targeted impact analysis
 
 **If user asks about history**:
-- `為什麼這裡常被改` → Suggest `/atlas.history`
-- `這個檔案的歷史` → Run git history analysis
+- `why is this changed often` → Suggest `/atlas.history`
+- `history of this file` → Run git history analysis
 
 **If user asks about patterns**:
-- `這裡用了什麼 pattern` → Suggest `/atlas.pattern`
+- `what pattern is used here` → Suggest `/atlas.pattern`
 
 ---
 
@@ -1518,7 +1518,7 @@ After initial output, respond intelligently to follow-ups:
 If user requests Mermaid format:
 
 ```
-/atlas.flow "下單流程，輸出 mermaid"
+/atlas.flow "order flow, output mermaid"
 ```
 
 Output:
@@ -1540,9 +1540,9 @@ flowchart TD
 User can control tracing depth via natural language:
 
 ```
-/atlas.flow "從 OrderService.create() 開始，追 3 層"
-/atlas.flow "從 OrderService.create() 開始，只看這個檔案內"
-/atlas.flow "從 OrderService.create() 開始，完整追蹤"
+/atlas.flow "from OrderService.create(), depth 3"
+/atlas.flow "from OrderService.create(), same file only"
+/atlas.flow "from OrderService.create(), full trace"
 ```
 
 **Default Behavior**:
@@ -1587,32 +1587,32 @@ User can control tracing depth via natural language:
 
 ### Mode 1: Reverse Tracing (Who calls this?)
 
-When user asks "who calls this" or "被誰調用":
+When user asks "who calls this":
 
 ```
-/atlas.flow "OrderService.create() 被誰調用"
-/atlas.flow "誰會觸發這個 function"
+/atlas.flow "who calls OrderService.create()"
+/atlas.flow "what triggers this function"
 ```
 
 **Output Format**:
 ```
-誰調用了 OrderService.create()？
+Who calls OrderService.create()?
 ================================
 
-調用者（3 個入口）：
-├── CheckoutController.submit()     → 正常下單
+Callers (3 entry points):
+├── CheckoutController.submit()     → Normal order
 │   📍 src/controllers/checkout.ts:120
 │
-├── AdminController.manualOrder()   → 後台手動建單
+├── AdminController.manualOrder()   → Manual order from admin panel
 │   📍 src/controllers/admin.ts:45
 │
-└── CronJob.retryFailedOrders()     → 重試失敗訂單
+└── CronJob.retryFailedOrders()     → Retry failed orders
     📍 src/jobs/retry.ts:80
 
-💡 修改 OrderService.create() 會影響這 3 個入口
+💡 Modifying OrderService.create() will affect these 3 entry points
 ```
 
-**Trigger Keywords**: `被誰調用`, `誰調用`, `who calls`, `callers`, `反向`
+**Trigger Keywords**: `who calls`, `callers`, `reverse`, `called by`
 
 ---
 
@@ -1621,38 +1621,38 @@ When user asks "who calls this" or "被誰調用":
 When user asks about failure scenarios:
 
 ```
-/atlas.flow "下單失敗會怎樣"
-/atlas.flow "OrderService.create() 失敗路徑"
+/atlas.flow "what if order fails"
+/atlas.flow "OrderService.create() failure path"
 ```
 
 **Output Format**:
 ```
-下單流程（失敗路徑）
+Order Flow (Failure Path)
 ==================
 
 1. CartService.validate()
    📍 src/services/cart.ts:45
-   ⚠️ 失敗 → CartEmptyError
-      └── 回傳 400 + 錯誤訊息
+   ⚠️ Failure → CartEmptyError
+      └── Return 400 + error message
 
 2. InventoryService.check()
    📍 src/services/inventory.ts:78
-   ⚠️ 失敗 → OutOfStockError
-      ├── 記錄 log
-      ├── 發送通知給運營
-      └── 回傳 409 + 缺貨商品清單
+   ⚠️ Failure → OutOfStockError
+      ├── Log error
+      ├── Send notification to operations
+      └── Return 409 + out-of-stock item list
 
 3. PaymentService.process()
    📍 src/services/payment.ts:200
-   ⚠️ 失敗 → PaymentFailedError
-      ├── InventoryService.rollback()  ← 📌 有 rollback
-      ├── 記錄失敗原因
-      └── 回傳 402 + 付款失敗原因
+   ⚠️ Failure → PaymentFailedError
+      ├── InventoryService.rollback()  ← 📌 Has rollback
+      ├── Log failure reason
+      └── Return 402 + payment failure reason
 
-📌 風險：step 4 沒有 rollback，可能有孤兒訂單
+📌 Risk: step 4 has no rollback, may create orphan orders
 ```
 
-**Trigger Keywords**: `失敗`, `錯誤`, `error`, `fail`, `exception`, `失敗路徑`
+**Trigger Keywords**: `failure`, `error`, `fail`, `exception`, `failure path`, `error path`
 
 ---
 
@@ -1661,16 +1661,16 @@ When user asks about failure scenarios:
 When user asks about how data transforms:
 
 ```
-/atlas.flow "price 怎麼計算的"
-/atlas.flow "追蹤 userId 在登入流程"
+/atlas.flow "how is price calculated"
+/atlas.flow "trace userId in login flow"
 ```
 
 **Output Format**:
 ```
-價格計算流程（Data Flow: totalPrice）
+Price Calculation Flow (Data Flow: totalPrice)
 ====================================
 
-[輸入] cart.items[].price × quantity
+[Input] cart.items[].price × quantity
    ↓
 1. CartService.calculateSubtotal()     → subtotal = Σ(price × qty)
    📍 src/services/cart.ts:120
@@ -1683,15 +1683,15 @@ When user asks about how data transforms:
    ↓
 3. TaxService.calculate()              → taxAmount = discountedPrice × taxRate
    📍 src/services/tax.ts:30
-   📌 魔法值：taxRate = 0.05（硬編碼 5%）
+   📌 Magic Value: taxRate = 0.05 (hardcoded 5%)
    ↓
 4. ShippingService.calculate()         → shippingFee = f(weight, distance)
    📍 src/services/shipping.ts:80
    ↓
-[輸出] totalPrice = discountedPrice + taxAmount + shippingFee
+[Output] totalPrice = discountedPrice + taxAmount + shippingFee
 ```
 
-**Trigger Keywords**: `怎麼計算`, `追蹤`, `data flow`, `資料流`, `變數`, `計算`
+**Trigger Keywords**: `how to calculate`, `calculate`, `trace`, `data flow`, `variable`, `track data`
 
 ---
 
@@ -1700,38 +1700,38 @@ When user asks about how data transforms:
 When user asks about state transitions:
 
 ```
-/atlas.flow "訂單狀態機"
-/atlas.flow "訂單狀態怎麼變化"
+/atlas.flow "order state machine"
+/atlas.flow "how does order status change"
 ```
 
 **Output Format**:
 ```
-訂單狀態機
+Order State Machine
 ==========
 
-[PENDING] ──創建──→ [CONFIRMED] ──付款──→ [PAID]
-    │                    │                  │
-    │ 取消               │ 取消              │ 發貨
-    ↓                    ↓                  ↓
-[CANCELLED]          [CANCELLED]        [SHIPPED]
-                                            │
-                                            │ 簽收
-                                            ↓
-                                        [DELIVERED]
-                                            │
-                                            │ 退貨申請
-                                            ↓
-                                        [REFUNDING] ──批准──→ [REFUNDED]
+[PENDING] ──create──→ [CONFIRMED] ──payment──→ [PAID]
+    │                    │                      │
+    │ cancel             │ cancel               │ ship
+    ↓                    ↓                      ↓
+[CANCELLED]          [CANCELLED]            [SHIPPED]
+                                                │
+                                                │ deliver
+                                                ↓
+                                            [DELIVERED]
+                                                │
+                                                │ refund request
+                                                ↓
+                                            [REFUNDING] ──approve──→ [REFUNDED]
 
-狀態定義：📍 src/models/order.ts:15
+State definitions: 📍 src/models/order.ts:15
 
-轉換邏輯：
+Transition logic:
 • PENDING → CONFIRMED: OrderService.confirm()  📍 :45
 • CONFIRMED → PAID: PaymentService.complete()  📍 :120
 • PAID → SHIPPED: ShippingService.ship()       📍 :80
 ```
 
-**Trigger Keywords**: `狀態機`, `state machine`, `狀態`, `status`, `狀態變化`, `lifecycle`
+**Trigger Keywords**: `state machine`, `state`, `status`, `status change`, `lifecycle`, `transitions`
 
 ---
 
@@ -1740,35 +1740,35 @@ When user asks about state transitions:
 When user asks to compare flows:
 
 ```
-/atlas.flow "比較 VIP 下單 vs 一般下單"
-/atlas.flow "比較新舊登入流程"
+/atlas.flow "compare VIP order vs regular order"
+/atlas.flow "compare old vs new login flow"
 ```
 
 **Output Format**:
 ```
-VIP 下單 vs 一般下單（差異）
+VIP Order vs Regular Order (Differences)
 ===========================
 
-相同步驟：
+Same steps:
 1. CartService.validate()
 2. InventoryService.check()
 6. OrderService.create()
 
-差異：
+Differences:
 ┌─────────────────────────────────────────────────┐
-│ Step 3: 折扣計算                                │
+│ Step 3: Discount Calculation                    │
 ├────────────────────┬────────────────────────────┤
-│ 一般會員           │ VIP 會員                   │
+│ Regular Member     │ VIP Member                 │
 ├────────────────────┼────────────────────────────┤
-│ CouponService 只   │ CouponService 優先         │
-│ PointsService 次   │ VIPDiscount.calculate()    │
-│                    │ PointsService（雙倍）      │
+│ CouponService only │ CouponService prioritized  │
+│ PointsService next │ VIPDiscount.calculate()    │
+│                    │ PointsService (double)     │
 └────────────────────┴────────────────────────────┘
 
-📌 注意：VIP 邏輯散落在 3 個不同 Service
+📌 Note: VIP logic scattered across 3 different Services
 ```
 
-**Trigger Keywords**: `比較`, `compare`, `diff`, `vs`, `差異`, `不同`
+**Trigger Keywords**: `compare`, `diff`, `vs`, `difference`, `different`, `contrast`
 
 ---
 
@@ -1777,8 +1777,8 @@ VIP 下單 vs 一般下單（差異）
 When user wants to trace flow through log statements:
 
 ```
-/atlas.flow "從 log 找下單流程"
-/atlas.flow "哪些地方有 log"
+/atlas.flow "find order flow from logs"
+/atlas.flow "where are the logs"
 ```
 
 **Strategy**:
@@ -1797,10 +1797,10 @@ grep -rn "Log\.\|Timber\.\|println" src/  # Android/Kotlin
 
 **Output Format**:
 ```
-下單流程（從 Log 重建）
+Order Flow (Reconstructed from Logs)
 ======================
 
-發現 8 個 log 點，重建流程：
+Found 8 log points, reconstructed flow:
 
 1. [INFO] "Starting checkout process"
    📍 src/controllers/checkout.ts:125
@@ -1813,7 +1813,7 @@ grep -rn "Log\.\|Timber\.\|println" src/  # Android/Kotlin
 3. [INFO] "Applying discounts for user: ${userId}"
    📍 src/services/discount.ts:122
    → DiscountEngine.apply()
-   📌 注意：log 了 userId（PII 風險）
+   📌 Note: logged userId (PII risk)
 
 4. [DEBUG] "Reserving inventory: ${items}"
    📍 src/services/inventory.ts:160
@@ -1822,31 +1822,31 @@ grep -rn "Log\.\|Timber\.\|println" src/  # Android/Kotlin
 5. [INFO] "Processing payment: ${amount}"
    📍 src/services/payment.ts:205
    → PaymentService.process()
-   📌 風險：log 了金額（可能違反 PCI-DSS）
+   📌 Risk: logged amount (may violate PCI-DSS)
 
 6. [INFO] "Order created: ${orderId}"
    📍 src/services/order.ts:210
    → OrderService.create()
 
 ──────────────────────────────────
-📊 Log 覆蓋率：6/8 步驟有 log
-⚠️ 缺少 log 的步驟：
-   • TaxService.calculate() - 無 log
-   • ShippingService.calculate() - 無 log
+📊 Log coverage: 6/8 steps have logs
+⚠️ Missing logs in steps:
+   • TaxService.calculate() - No log
+   • ShippingService.calculate() - No log
 
-💡 建議：
-• 補充關鍵步驟的 log
-• 檢查 PII/敏感資料 log 風險
+💡 Recommendations:
+• Add logs for critical steps
+• Check PII/sensitive data logging risks
 ──────────────────────────────────
 ```
 
 **Value**:
-1. **驗證追蹤正確性** - Log 順序 = 實際執行順序
-2. **發現缺少 log 的地方** - Debug 困難點
-3. **識別敏感資料洩漏** - PII/PCI-DSS 風險
-4. **Production debug 準備** - 知道哪些資訊可以從 log 取得
+1. **Verify tracing correctness** - Log order = actual execution order
+2. **Find places missing logs** - Debug difficulty points
+3. **Identify sensitive data leaks** - PII/PCI-DSS risks
+4. **Production debug preparation** - Know what info can be obtained from logs
 
-**Trigger Keywords**: `log`, `logging`, `從 log`, `debug`, `追蹤 log`
+**Trigger Keywords**: `log`, `logging`, `from logs`, `debug`, `trace logs`
 
 ---
 
@@ -1855,9 +1855,9 @@ grep -rn "Log\.\|Timber\.\|println" src/  # Android/Kotlin
 When user wants to understand flow variations based on feature flags:
 
 ```
-/atlas.flow "下單流程有哪些 feature toggle"
-/atlas.flow "開啟新版付款會怎樣"
-/atlas.flow "比較 feature toggle 開關差異"
+/atlas.flow "what feature toggles affect checkout flow"
+/atlas.flow "what happens if new payment is enabled"
+/atlas.flow "compare feature toggle on/off differences"
 ```
 
 **Strategy**:
@@ -1877,117 +1877,117 @@ grep -rn "BuildConfig\.\|isDebug\|isBeta" src/  # Android
 
 **Output Format - Toggle Discovery**:
 ```
-下單流程 Feature Toggles
-========================
+Checkout Flow Feature Toggles
+==============================
 
-發現 4 個影響此流程的 feature toggle：
+Found 4 feature toggles affecting this flow:
 
 ┌─────────────────────────────────────────────────────────────┐
-│ Toggle                    │ 影響步驟        │ 目前狀態      │
+│ Toggle                    │ Affected Step   │ Current State │
 ├───────────────────────────┼─────────────────┼───────────────┤
-│ NEW_PAYMENT_FLOW          │ Step 5 付款     │ 🟡 50% rollout│
-│ ENABLE_POINTS_REDEMPTION  │ Step 3 折扣     │ 🟢 ON         │
-│ USE_NEW_INVENTORY_API     │ Step 4 庫存     │ 🔴 OFF        │
-│ BETA_CHECKOUT_UI          │ Step 1 前端     │ 🟡 Beta users │
+│ NEW_PAYMENT_FLOW          │ Step 5 Payment  │ 🟡 50% rollout│
+│ ENABLE_POINTS_REDEMPTION  │ Step 3 Discount │ 🟢 ON         │
+│ USE_NEW_INVENTORY_API     │ Step 4 Inventory│ 🔴 OFF        │
+│ BETA_CHECKOUT_UI          │ Step 1 Frontend │ 🟡 Beta users │
 └─────────────────────────────────────────────────────────────┘
 
-📍 Toggle 定義位置：
+📍 Toggle Definitions:
 • src/config/featureFlags.ts:15
 • src/services/launchDarkly.ts:30
 
-💬 想看特定情境？
-• 「NEW_PAYMENT_FLOW = ON 的流程」
-• 「比較新舊付款流程差異」
-• 「全部 toggle 都開的流程」
+💬 Want to see specific scenarios?
+• "flow with NEW_PAYMENT_FLOW = ON"
+• "compare old vs new payment flow"
+• "flow with all toggles enabled"
 ```
 
 **Output Format - Toggle Impact**:
 ```
-/atlas.flow "NEW_PAYMENT_FLOW = ON 的流程"
+/atlas.flow "flow with NEW_PAYMENT_FLOW = ON"
 
-下單流程（NEW_PAYMENT_FLOW = ON）
-================================
+Checkout Flow (NEW_PAYMENT_FLOW = ON)
+======================================
 
-1-4. [相同步驟略...]
+1-4. [Same steps omitted...]
 
-5. PaymentService.process()            → 處理付款
+5. PaymentService.process()            → Process payment
    📍 src/services/payment.ts:200
 
    🚩 NEW_PAYMENT_FLOW = ON:
    ┌─────────────────────────────────────────────┐
-   │ 新版流程（目前 50% 用戶）                    │
+   │ New Flow (currently 50% of users)           │
    ├─────────────────────────────────────────────┤
    │ 5a. PaymentGatewayV2.init()                 │
    │     📍 src/services/payment-v2.ts:45        │
    │                                             │
    │ 5b. PaymentGatewayV2.process()              │
    │     📍 src/services/payment-v2.ts:80        │
-   │     ⏱️ async, ⏳ ~300-800ms（更快）          │
+   │     ⏱️ async, ⏳ ~300-800ms (faster)         │
    │                                             │
    │ 5c. PaymentGatewayV2.confirm()              │
    │     📍 src/services/payment-v2.ts:120       │
-   │     📌 新增：支援 3D Secure                  │
+   │     📌 New: supports 3D Secure              │
    └─────────────────────────────────────────────┘
 
    🚩 NEW_PAYMENT_FLOW = OFF:
    ┌─────────────────────────────────────────────┐
-   │ 舊版流程（目前 50% 用戶）                    │
+   │ Legacy Flow (currently 50% of users)        │
    ├─────────────────────────────────────────────┤
    │ 5a. PaymentGateway.charge()                 │
    │     📍 src/services/payment-legacy.ts:200   │
    │     ⏱️ async, ⏳ ~500-2000ms                 │
    └─────────────────────────────────────────────┘
 
-6. [後續步驟...]
+6. [Subsequent steps...]
 
 ──────────────────────────────────────────────────
-📊 Toggle 影響分析：
-• 改動範圍：1 個步驟（Step 5）
-• 新增檔案：payment-v2.ts（320 行）
-• 效能提升：平均 -40% 延遲
-• 風險：3D Secure 是新功能，需要額外測試
+📊 Toggle Impact Analysis:
+• Change Scope: 1 step (Step 5)
+• New Files: payment-v2.ts (320 lines)
+• Performance: -40% average latency
+• Risk: 3D Secure is new, needs additional testing
 
-💬 下一步可以：
-• 「比較新舊付款的錯誤處理」
-• 「這個 toggle 的歷史」
-• 「全開情境的完整流程」
+💬 Next Steps:
+• "compare error handling between old/new payment"
+• "history of this toggle"
+• "complete flow with all toggles on"
 ──────────────────────────────────────────────────
 ```
 
 **Output Format - All Toggles Comparison**:
 ```
-/atlas.flow "比較所有 toggle 組合"
+/atlas.flow "compare all toggle combinations"
 
-下單流程 Toggle 組合矩陣
-========================
+Checkout Flow Toggle Combination Matrix
+========================================
 
 ┌──────────────────────┬─────────────┬─────────────┬─────────────┐
-│ Toggle 組合          │ 付款步驟    │ 庫存步驟    │ 效能        │
+│ Toggle Combination   │ Payment Step│ Inventory   │ Performance │
 ├──────────────────────┼─────────────┼─────────────┼─────────────┤
-│ 全部 OFF（保守）     │ Legacy      │ Legacy      │ ~3s         │
-│ 全部 ON（激進）      │ V2 + 3DS    │ New API     │ ~1.2s       │
-│ 目前 Production      │ 50/50       │ Legacy      │ ~2.1s avg   │
-│ 建議 Staging         │ V2 + 3DS    │ Legacy      │ ~1.8s       │
+│ All OFF (conservative)│ Legacy     │ Legacy      │ ~3s         │
+│ All ON (aggressive)  │ V2 + 3DS    │ New API     │ ~1.2s       │
+│ Current Production   │ 50/50       │ Legacy      │ ~2.1s avg   │
+│ Recommended Staging  │ V2 + 3DS    │ Legacy      │ ~1.8s       │
 └──────────────────────┴─────────────┴─────────────┴─────────────┘
 
-📌 風險提示：
-• NEW_PAYMENT + NEW_INVENTORY 同時開啟未經測試
-• BETA_CHECKOUT_UI 只在 iOS 測過，Android 未知
+📌 Risk Warnings:
+• NEW_PAYMENT + NEW_INVENTORY together is untested
+• BETA_CHECKOUT_UI only tested on iOS, Android unknown
 
-💡 建議測試情境（優先順序）：
-1. 目前 Production 組合（最多用戶）
-2. 全部 ON（未來目標）
-3. NEW_PAYMENT=ON + 其他 OFF（漸進式）
+💡 Recommended Test Scenarios (priority order):
+1. Current Production combo (most users)
+2. All ON (future target)
+3. NEW_PAYMENT=ON + others OFF (gradual rollout)
 ```
 
 **Value**:
-1. **了解流程變異** - 同一個 API，不同用戶可能走不同路徑
-2. **Debug 困難案例** - 「為什麼我的環境可以，production 不行？」
-3. **規劃 Rollout** - 知道哪些 toggle 影響哪些步驟
-4. **風險評估** - 識別未測試的 toggle 組合
-5. **清理 Tech Debt** - 找出長期 OFF 或 100% ON 的 toggle（可以移除）
+1. **Understand Flow Variations** - Same API, different users may take different paths
+2. **Debug Difficult Cases** - "Why does it work in my env but not production?"
+3. **Plan Rollout** - Know which toggles affect which steps
+4. **Risk Assessment** - Identify untested toggle combinations
+5. **Clean Tech Debt** - Find toggles that are permanently OFF or 100% ON (can be removed)
 
-**Trigger Keywords**: `feature toggle`, `feature flag`, `開關`, `toggle`, `flag`, `rollout`, `A/B`
+**Trigger Keywords**: `feature toggle`, `feature flag`, `switch`, `toggle`, `flag`, `rollout`, `A/B`
 
 ---
 
@@ -1996,9 +1996,9 @@ grep -rn "BuildConfig\.\|isDebug\|isBeta" src/  # Android
 When user wants to trace event-driven or message queue flows:
 
 ```
-/atlas.flow "ORDER_CREATED 事件觸發什麼"
-/atlas.flow "下單後會發什麼 event"
-/atlas.flow "誰在監聽這個 event"
+/atlas.flow "what does ORDER_CREATED event trigger"
+/atlas.flow "what events are emitted after order placement"
+/atlas.flow "who is listening to this event"
 ```
 
 **Strategy**:
@@ -2021,49 +2021,49 @@ grep -rn "@KafkaListener\|consume\|subscribe" src/
 
 **Output Format**:
 ```
-ORDER_CREATED 事件追蹤
-======================
+ORDER_CREATED Event Tracing
+===========================
 
-📤 事件發送：
+📤 Event Emission:
 OrderService.create()
    📍 src/services/order.ts:210
    → emit("ORDER_CREATED", { orderId, userId, items })
 
-📥 事件監聽者（4 個）：
+📥 Event Listeners (4 found):
 
 1. InventoryListener.onOrderCreated()
    📍 src/listeners/inventory.ts:30
-   → 扣減實際庫存
-   ⏱️ async, 優先級: HIGH
+   → Deduct actual inventory
+   ⏱️ async, Priority: HIGH
 
 2. NotificationListener.onOrderCreated()
    📍 src/listeners/notification.ts:45
-   → 發送確認信給用戶
-   ⏱️ async, 優先級: MEDIUM
+   → Send confirmation email to user
+   ⏱️ async, Priority: MEDIUM
 
 3. AnalyticsListener.onOrderCreated()
    📍 src/listeners/analytics.ts:20
-   → 記錄訂單統計
-   ⏱️ async, 優先級: LOW
+   → Record order statistics
+   ⏱️ async, Priority: LOW
 
 4. LoyaltyListener.onOrderCreated()
    📍 src/listeners/loyalty.ts:35
-   → 計算積分
-   ⏱️ async, 優先級: MEDIUM
+   → Calculate loyalty points
+   ⏱️ async, Priority: MEDIUM
 
 ──────────────────────────────────
-📌 注意事項：
-• Listener 執行順序不保證
-• InventoryListener 失敗不會 rollback 訂單
-• 缺少 dead letter queue 處理
+📌 Important Notes:
+• Listener execution order is not guaranteed
+• InventoryListener failure will NOT rollback order
+• Missing dead letter queue handling
 
-💬 下一步可以：
-• 「展開 InventoryListener」 → 追蹤監聽者內部
-• 「如果 Listener 失敗會怎樣」 → 錯誤處理分析
+💬 Next Steps:
+• "expand InventoryListener" → Trace listener internals
+• "what if listener fails" → Error handling analysis
 ──────────────────────────────────
 ```
 
-**Trigger Keywords**: `event`, `事件`, `message`, `queue`, `listener`, `subscriber`, `publish`, `emit`
+**Trigger Keywords**: `event`, `message`, `queue`, `listener`, `subscriber`, `publish`, `emit`
 
 ---
 
@@ -2072,8 +2072,8 @@ OrderService.create()
 When user wants to understand transaction scopes:
 
 ```
-/atlas.flow "下單流程的 transaction"
-/atlas.flow "這個操作在哪個 transaction 裡"
+/atlas.flow "transactions in checkout flow"
+/atlas.flow "which transaction is this operation in"
 ```
 
 **Search Patterns**:
@@ -2087,8 +2087,8 @@ grep -rn "NSManagedObjectContext\|performAndWait" Sources/  # iOS Core Data
 
 **Output Format**:
 ```
-下單流程 Transaction 分析
-=========================
+Checkout Flow Transaction Analysis
+===================================
 
 ┌─ Transaction 1 (@Transactional) ────────────┐
 │                                              │
@@ -2104,15 +2104,15 @@ grep -rn "NSManagedObjectContext\|performAndWait" Sources/  # iOS Core Data
 │    💾 INSERT INTO orders ...                 │
 │                                              │
 └──────────────────────────────────────────────┘
-   📍 Transaction 開始：checkout.ts:120
-   📍 Transaction 結束：checkout.ts:180
+   📍 Transaction Start: checkout.ts:120
+   📍 Transaction End: checkout.ts:180
    🔒 Isolation: READ_COMMITTED
 
-[無 Transaction - 外部呼叫]
+[No Transaction - External Call]
 4. PaymentService.process()
    📍 src/services/payment.ts:200
-   🌐 外部 API 呼叫
-   ⚠️ 無法 rollback
+   🌐 External API call
+   ⚠️ Cannot rollback
 
 ┌─ Transaction 2 ─────────────────────────────┐
 │                                              │
@@ -2127,19 +2127,19 @@ grep -rn "NSManagedObjectContext\|performAndWait" Sources/  # iOS Core Data
 └──────────────────────────────────────────────┘
 
 ──────────────────────────────────
-⚠️ 風險分析：
+⚠️ Risk Analysis:
 
-📌 Gap 風險：Transaction 1 和 2 之間
-   • Step 4 (付款) 失敗時，Transaction 1 已 commit
-   • 庫存已預扣但訂單未完成 → 需要補償機制
+📌 Gap Risk: Between Transaction 1 and 2
+   • If Step 4 (payment) fails, Transaction 1 has already committed
+   • Inventory reserved but order incomplete → needs compensation
 
-📌 建議：
-   • 實作 Saga pattern 處理跨 transaction 一致性
-   • 加入 compensation 邏輯
+📌 Recommendations:
+   • Implement Saga pattern for cross-transaction consistency
+   • Add compensation logic
 ──────────────────────────────────
 ```
 
-**Trigger Keywords**: `transaction`, `交易`, `rollback`, `commit`, `atomicity`, `一致性`
+**Trigger Keywords**: `transaction`, `rollback`, `commit`, `atomicity`, `consistency`
 
 ---
 
@@ -2148,8 +2148,8 @@ grep -rn "NSManagedObjectContext\|performAndWait" Sources/  # iOS Core Data
 When user wants to understand flow variations by role:
 
 ```
-/atlas.flow "刪除訂單，按角色"
-/atlas.flow "不同權限的操作差異"
+/atlas.flow "delete order flow by role"
+/atlas.flow "operation differences by permission"
 ```
 
 **Search Patterns**:
@@ -2163,8 +2163,8 @@ grep -rn "guard\|middleware.*auth\|policy" src/
 
 **Output Format**:
 ```
-刪除訂單流程（按角色）
-=====================
+Delete Order Flow (by Role)
+============================
 
 [ADMIN] ───────────────────────────────────────
 1. OrderController.delete()
@@ -2173,9 +2173,9 @@ grep -rn "guard\|middleware.*auth\|policy" src/
 
 2. OrderService.hardDelete()
    📍 src/services/order.ts:300
-   → 直接刪除，不可恢復
-   → 自動退款處理
-   → 發送通知給用戶
+   → Direct deletion, not recoverable
+   → Auto refund processing
+   → Send notification to user
 
 [SELLER] ──────────────────────────────────────
 1. OrderController.cancel()
@@ -2183,13 +2183,13 @@ grep -rn "guard\|middleware.*auth\|policy" src/
    🔐 @RequireRole("SELLER")
    🔐 @CheckOwnership("order.sellerId")
 
-2. 檢查訂單狀態
-   ⚠️ 只能取消 PENDING, CONFIRMED 狀態
+2. Check order status
+   ⚠️ Can only cancel PENDING, CONFIRMED status
 
 3. OrderService.sellerCancel()
    📍 src/services/order.ts:350
-   → 需要填寫取消原因
-   → 軟刪除（可恢復）
+   → Requires cancellation reason
+   → Soft delete (recoverable)
 
 [BUYER] ───────────────────────────────────────
 1. OrderController.requestCancel()
@@ -2197,32 +2197,32 @@ grep -rn "guard\|middleware.*auth\|policy" src/
    🔐 @RequireRole("BUYER")
    🔐 @CheckOwnership("order.buyerId")
 
-2. 檢查訂單狀態
-   ⚠️ 只能申請取消 PENDING 狀態
-   ⚠️ 已發貨不能取消
+2. Check order status
+   ⚠️ Can only request cancellation for PENDING status
+   ⚠️ Cannot cancel if already shipped
 
 3. CancelRequestService.create()
    📍 src/services/cancel-request.ts:45
-   → 建立取消申請
-   → 等待賣家同意
+   → Create cancellation request
+   → Wait for seller approval
 
 ──────────────────────────────────
-📊 權限矩陣：
+📊 Permission Matrix:
 
-| 操作 | ADMIN | SELLER | BUYER |
-|------|-------|--------|-------|
-| 硬刪除 | ✅ | ❌ | ❌ |
-| 直接取消 | ✅ | ✅ | ❌ |
-| 申請取消 | ✅ | ✅ | ✅ |
-| 查看歷史 | ✅ | ✅ | ✅ |
+| Operation | ADMIN | SELLER | BUYER |
+|-----------|-------|--------|-------|
+| Hard Delete | ✅ | ❌ | ❌ |
+| Direct Cancel | ✅ | ✅ | ❌ |
+| Request Cancel | ✅ | ✅ | ✅ |
+| View History | ✅ | ✅ | ✅ |
 
-📌 權限檢查點：
+📌 Permission Check Points:
 • src/guards/role.guard.ts:20
 • src/guards/ownership.guard.ts:35
 ──────────────────────────────────
 ```
 
-**Trigger Keywords**: `角色`, `權限`, `role`, `permission`, `RBAC`, `授權`, `access control`
+**Trigger Keywords**: `role`, `permission`, `RBAC`, `authorization`, `access control`
 
 ---
 
@@ -2231,8 +2231,8 @@ grep -rn "guard\|middleware.*auth\|policy" src/
 When user wants to understand caching impact:
 
 ```
-/atlas.flow "獲取商品，包含 cache"
-/atlas.flow "這個流程有用 cache 嗎"
+/atlas.flow "get product price with cache"
+/atlas.flow "does this flow use cache"
 ```
 
 **Search Patterns**:
@@ -2246,20 +2246,20 @@ grep -rn "NSCache\|URLCache" Sources/  # iOS
 
 **Output Format**:
 ```
-獲取商品價格（Cache 分析）
-=========================
+Get Product Price (Cache Analysis)
+==================================
 
 1. ProductController.getPrice()
    📍 src/controllers/product.ts:45
 
-2. 檢查 Cache
+2. Check Cache
    📍 src/services/cache.ts:30
    💾 Key: "product:${id}:price"
    💾 Store: Redis
-   💾 TTL: 5 分鐘
+   💾 TTL: 5 minutes
 
    ┌─ [CACHE HIT] ────────────────┐
-   │ → 直接返回 cached 價格       │
+   │ → Return cached price        │
    │ ⏱️ ~5ms                      │
    └──────────────────────────────┘
 
@@ -2276,27 +2276,27 @@ grep -rn "NSCache\|URLCache" Sources/  # iOS
    └──────────────────────────────┘
 
 ──────────────────────────────────
-⚠️ Cache 一致性分析：
+⚠️ Cache Consistency Analysis:
 
-📌 Invalidation 檢查：
+📌 Invalidation Check:
    ✅ ProductService.updatePrice()
-      → 有 @CacheEvict("product:${id}:price")
+      → Has @CacheEvict("product:${id}:price")
 
    ❌ ProductService.bulkUpdate()
-      → 沒有清 cache！
+      → No cache invalidation!
       📍 src/services/product.ts:180
 
-   ❌ 直接 SQL UPDATE
-      → 繞過 ORM，cache 不會更新
+   ❌ Direct SQL UPDATE
+      → Bypasses ORM, cache not updated
 
-📌 建議：
-   • 加入 cache invalidation 到 bulkUpdate()
-   • 考慮使用 cache-aside pattern
-   • 降低 TTL 或改用 write-through
+📌 Recommendations:
+   • Add cache invalidation to bulkUpdate()
+   • Consider cache-aside pattern
+   • Lower TTL or use write-through
 ──────────────────────────────────
 ```
 
-**Trigger Keywords**: `cache`, `快取`, `redis`, `memoize`, `TTL`, `invalidate`
+**Trigger Keywords**: `cache`, `redis`, `memoize`, `TTL`, `invalidate`
 
 ---
 
@@ -2305,21 +2305,21 @@ grep -rn "NSCache\|URLCache" Sources/  # iOS
 For each step, optionally include timing information:
 
 ```
-2. InventoryService.reserve()          → 預扣庫存
+2. InventoryService.reserve()          → Reserve inventory
    📍 src/services/inventory.ts:156
    ⏱️ async (await)
-   ⏳ ~50-200ms（DB 操作）
+   ⏳ ~50-200ms (DB operation)
 
-3. PaymentService.process()            → 處理付款
+3. PaymentService.process()            → Process payment
    📍 src/services/payment.ts:200
    ⏱️ async (await)
-   ⏳ ~500-3000ms（第三方 API）
-   📌 風險：無 timeout 設定
+   ⏳ ~500-3000ms (3rd-party API)
+   📌 Risk: No timeout configured
 
-4. NotificationService.send()          → 發送通知
+4. NotificationService.send()          → Send notification
    📍 src/services/notification.ts:80
    ⏱️ async (fire-and-forget)
-   📌 注意：不等待完成，失敗不影響流程
+   📌 Note: Non-blocking, failure doesn't affect flow
 ```
 
 **Timing Markers**:
@@ -2338,105 +2338,105 @@ Automatically detect mode from user input:
 
 ```
 # ═══════════════════════════════════════════════════════
-# 速度/準確度模式（最高優先）
+# Speed/Accuracy Mode (Highest Priority)
 # ═══════════════════════════════════════════════════════
 
-if 用戶說「--quick」「快速」「quick」「fast」:
+if user says "--quick" "quick" "fast":
     → Quick Mode: 3-5 min, ~75% accuracy, summary only, depth 3
 
-if 用戶說「--thorough」「深入」「thorough」「complete」「完整分析」:
+if user says "--thorough" "thorough" "complete" "full analysis":
     → Thorough Mode: 20-30 min, ~92% accuracy, include alternatives, depth 7
 
-if 用戶說「--verify」「驗證」「verify」「審計」「audit」:
+if user says "--verify" "verify" "audit":
     → Verify Mode: 25-35 min, ~95% accuracy, cross-validation with 3 agents
 
 # (Default: Standard Mode: 10-15 min, ~85% accuracy, depth 5)
 
 # ═══════════════════════════════════════════════════════
-# 輸出控制（P0 - 優先檢測）
+# Output Control (P0 - Priority Detection)
 # ═══════════════════════════════════════════════════════
 
-if 用戶說「新手」「newbie」「初學者」「解釋」「explain」「beginner」「看不懂」:
+if user says "newbie" "beginner" "explain" "I don't understand":
     → Enable Newbie Mode (add terminology explanations + glossary)
 
-if 用戶說「詳細」「detailed」「完整」「full」:
+if user says "detailed" "full" "complete":
     → Enable Detailed Mode (show all details)
 
-if 用戶說「摘要」「summary」「簡潔」:
+if user says "summary" "concise":
     → Enable Summary Mode (concise output, default)
 
-if 用戶說「mermaid」「--mermaid」:
+if user says "mermaid" "--mermaid":
     → Include Mermaid diagram in output
 
 # ═══════════════════════════════════════════════════════
-# 深度和邊界控制（P0）
+# Depth and Boundary Control (P0)
 # ═══════════════════════════════════════════════════════
 
-if 用戶說「追 N 層」「depth N」「--depth=N」:
+if user says "trace N levels" "depth N" "--depth=N":
     → Set max depth to N levels
 
-if 用戶說「完整追蹤」「full trace」「--no-limit」:
+if user says "full trace" "--no-limit":
     → No depth limit (warn: may be long)
 
-if 用戶說「只看這個檔案內」「--same-file」:
+if user says "same file only" "--same-file":
     → Only trace within same file
 
-if 用戶說「--cross-boundary」「跨越邊界」:
+if user says "--cross-boundary" "cross boundary":
     → Continue tracing across external boundaries
 
-if 用戶說「--only-internal」「只追蹤內部」:
+if user says "--only-internal" "internal only":
     → Only trace internal code (skip all boundaries)
 
-if 用戶說「--include-lib」「包含第三方」:
+if user says "--include-lib" "include third-party":
     → Include third-party library internals
 
 # ═══════════════════════════════════════════════════════
-# 核心追蹤模式
+# Core Tracing Modes
 # ═══════════════════════════════════════════════════════
 
-if 用戶問「被誰調用」「who calls」「反向」「callers」:
+if user asks "who calls" "reverse" "callers":
     → Reverse Tracing Mode
 
-if 用戶問「失敗」「錯誤」「error」「fail」「exception」「失敗路徑」:
+if user asks "failure" "error" "fail" "exception" "error path":
     → Error Path Mode
 
-if 用戶問「怎麼計算」「資料流」「追蹤變數」「data flow」「計算」:
+if user asks "how is it calculated" "data flow" "trace variable" "calculation":
     → Data Flow Mode
 
 # ═══════════════════════════════════════════════════════
-# 流程變異模式
+# Flow Variation Modes
 # ═══════════════════════════════════════════════════════
 
-if 用戶問「狀態機」「狀態變化」「lifecycle」「state machine」「status」:
+if user asks "state machine" "state change" "lifecycle" "status":
     → State Machine Mode
 
-if 用戶問「比較」「vs」「差異」「compare」「diff」:
+if user asks "compare" "vs" "difference" "diff":
     → Comparison Mode
 
-if 用戶問「feature toggle」「feature flag」「開關」「toggle」「flag」「rollout」「A/B」:
+if user asks "feature toggle" "feature flag" "toggle" "flag" "rollout" "A/B":
     → Feature Toggle Analysis Mode
 
-if 用戶問「角色」「權限」「role」「permission」「RBAC」「授權」「access control」:
+if user asks "role" "permission" "RBAC" "authorization" "access control":
     → Permission/Role Flow Mode
 
 # ═══════════════════════════════════════════════════════
-# 系統層面模式
+# System-Level Modes
 # ═══════════════════════════════════════════════════════
 
-if 用戶問「log」「logging」「從 log」「debug」「追蹤 log」:
+if user asks "log" "logging" "from logs" "debug" "trace logs":
     → Log Analysis Mode
 
-if 用戶問「event」「事件」「message」「queue」「listener」「subscriber」「publish」「emit」:
+if user asks "event" "message" "queue" "listener" "subscriber" "publish" "emit":
     → Event/Message Tracing Mode
 
-if 用戶問「transaction」「交易」「rollback」「commit」「atomicity」「一致性」:
+if user asks "transaction" "rollback" "commit" "atomicity" "consistency":
     → Transaction Boundary Mode
 
-if 用戶問「cache」「快取」「redis」「memoize」「TTL」「invalidate」:
+if user asks "cache" "redis" "memoize" "TTL" "invalidate":
     → Cache Flow Analysis Mode
 
 # ═══════════════════════════════════════════════════════
-# 預設模式
+# Default Mode
 # ═══════════════════════════════════════════════════════
 
 else:
@@ -2446,22 +2446,22 @@ else:
 ### Mode Combination Examples
 
 ```
-/atlas.flow "下單流程"
+/atlas.flow "checkout flow"
 → Forward Tracing + Summary + Call Graph (default)
 
-/atlas.flow "下單流程 詳細"
+/atlas.flow "checkout flow detailed"
 → Forward Tracing + Detailed + Call Graph
 
-/atlas.flow "下單流程 新手模式"
+/atlas.flow "checkout flow newbie mode"
 → Forward Tracing + Newbie Mode + Call Graph + Glossary
 
-/atlas.flow "下單流程 詳細 新手模式"
+/atlas.flow "checkout flow detailed newbie mode"
 → Forward Tracing + Detailed + Newbie Mode + Call Graph + Glossary
 
-/atlas.flow "下單失敗會怎樣 新手模式"
+/atlas.flow "what happens when checkout fails newbie mode"
 → Error Path + Newbie Mode + Call Graph + Glossary
 
-/atlas.flow "訂單狀態機 --mermaid"
+/atlas.flow "order state machine --mermaid"
 → State Machine + Mermaid Diagram
 ```
 
@@ -2469,57 +2469,57 @@ else:
 
 ## Recommended Next (Handoffs)
 
-> 遵循 **Constitution Article VII: Handoffs 原則**
+> Follows **Constitution Article VII: Handoffs Principle**
 
-**輸出格式**（加在分析結果末尾）：
+**Output Format** (append to analysis results):
 
 ```markdown
 ## Recommended Next
 
-| # | 命令 | 用途 |
-|---|------|------|
-| 1 | `/atlas.impact "[關鍵節點]"` | 發現此節點被 N 處調用，變更風險較高 |
-| 2 | `/atlas.pattern "[pattern]"` | 流程使用此 pattern，需了解實作慣例 |
+| # | Command | Purpose |
+|---|---------|---------|
+| 1 | `/atlas.impact "[key node]"` | Found this node called in N places, higher change risk |
+| 2 | `/atlas.pattern "[pattern]"` | Flow uses this pattern, need to understand implementation conventions |
 
-💡 輸入數字（如 `1`）或複製命令執行
+💡 Enter number (e.g., `1`) or copy command to execute
 ```
 
-### 結束條件 vs 建議（二擇一，不可同時）
+### Termination vs Recommendations (mutually exclusive)
 
-**⚠️ 重要：以下兩種輸出互斥，只能選一種**
+**⚠️ Important: These two outputs are mutually exclusive, choose only one**
 
-**情況 A - 結束（省略 Recommended Next）**：
-滿足以下任一條件時，**只輸出結束提示，不輸出表格**：
-- 流程很簡單：無複雜分支或依賴
-- 發現太模糊：無法給出高信心（>0.7）的具體參數
-- 分析深度足夠：已執行 4+ 個命令
+**Case A - Termination (omit Recommended Next)**:
+When any of these conditions are met, **only output termination message, no table**:
+- Simple flow: No complex branches or dependencies
+- Findings too vague: Cannot provide high-confidence (>0.7) specific parameters
+- Sufficient depth: Already executed 4+ commands
 
-輸出：
+Output:
 ```markdown
-✅ **Flow 分析完成** - 可開始實作或修改
+✅ **Flow analysis complete** - Ready to implement or modify
 ```
 
-**情況 B - 建議（輸出 Recommended Next 表格）**：
-流程複雜或有明確後續分析需求時，**只輸出表格，不輸出結束提示**。
+**Case B - Recommendations (output Recommended Next table)**:
+When flow is complex or has clear follow-up analysis needs, **only output table, no termination message**.
 
-### 建議選擇（情況 B 適用）
+### Recommendation Selection (Case B applies)
 
-| 發現 | 建議命令 | 參數來源 |
-|------|---------|---------|
-| 高耦合節點 | `/atlas.impact` | 節點檔案名 |
-| 涉及複雜 pattern | `/atlas.pattern` | pattern 名稱 |
-| 流程變動頻繁 | `/atlas.history` | 相關目錄 |
-| 發現相關流程 | `/atlas.flow` | 流程入口點 |
+| Finding | Suggested Command | Parameter Source |
+|---------|------------------|------------------|
+| High coupling node | `/atlas.impact` | Node filename |
+| Complex pattern involved | `/atlas.pattern` | Pattern name |
+| Frequent flow changes | `/atlas.history` | Relevant directory |
+| Related flow discovered | `/atlas.flow` | Flow entry point |
 
-### 輸出格式（Section 7.3）
+### Output Format (Section 7.3)
 
-使用編號表格，方便快速選擇。
+Use numbered table for quick selection.
 
-### 品質要求（Section 7.4-7.5）
+### Quality Requirements (Section 7.4-7.5)
 
-- **參數具體**：使用實際的檔案名或節點名
-- **數量限制**：1-2 個建議，不強制填滿
-- **用途欄位**：引用具體發現（調用次數、依賴數、問題）
+- **Specific Parameters**: Use actual filenames or node names
+- **Quantity Limit**: 1-2 recommendations, don't force-fill
+- **Purpose Field**: Reference specific findings (call count, dependency count, issues)
 
 ---
 
@@ -2534,37 +2534,37 @@ After `/atlas.flow`, users can:
 
 ### Output Control (P0)
 
-| 指令 | 效果 |
-|------|------|
-| `詳細` / `detailed` | 顯示完整細節 |
-| `摘要` / `summary` | 顯示精簡摘要（預設） |
-| `新手模式` / `newbie` | 加入術語解釋和類比 |
-| `--mermaid` | 輸出 Mermaid 圖表 |
+| Command | Effect |
+|---------|--------|
+| `detailed` | Show full details |
+| `summary` | Show concise summary (default) |
+| `newbie` | Add terminology explanations and analogies |
+| `--mermaid` | Output Mermaid diagram |
 
-**組合使用**：
+**Combination Usage**:
 ```
-"下單流程 詳細 新手模式"  → 詳細 + 術語解釋
-"下單流程 --mermaid"      → 摘要 + Mermaid 圖
+"checkout flow detailed newbie mode"  → Detailed + terminology explanations
+"checkout flow --mermaid"             → Summary + Mermaid diagram
 ```
 
 ### Analysis Modes
 
-**核心追蹤**:
-- "反向追蹤" / "被誰調用" → Reverse Tracing
-- "失敗路徑" / "錯誤處理" → Error Path
-- "資料流" / "怎麼計算" → Data Flow
+**Core Tracing**:
+- "reverse trace" / "who calls" → Reverse Tracing
+- "failure path" / "error handling" → Error Path
+- "data flow" / "how is it calculated" → Data Flow
 
-**流程變異**:
-- "狀態機" / "lifecycle" → State Machine
-- "比較" / "vs" → Flow Comparison
-- "feature toggle" / "開關" → Feature Toggle
-- "角色" / "權限" → Permission/Role Flow
+**Flow Variations**:
+- "state machine" / "lifecycle" → State Machine
+- "compare" / "vs" → Flow Comparison
+- "feature toggle" / "switch" → Feature Toggle
+- "role" / "permission" → Permission/Role Flow
 
-**系統層面**:
-- "從 log" / "log 追蹤" → Log Analysis
-- "event" / "事件" → Event/Message Tracing
-- "transaction" / "交易" → Transaction Boundary
-- "cache" / "快取" → Cache Flow Analysis
+**System-Level**:
+- "from logs" / "log trace" → Log Analysis
+- "event" → Event/Message Tracing
+- "transaction" → Transaction Boundary
+- "cache" → Cache Flow Analysis
 
 ---
 
@@ -2598,5 +2598,5 @@ After generating the complete analysis, save the **entire output** to `.sourceat
 
 Add at the very end:
 ```
-💾 已儲存至 .sourceatlas/flows/{name}.md
+💾 Saved to .sourceatlas/flows/{name}.md
 ```

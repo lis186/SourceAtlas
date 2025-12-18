@@ -10,10 +10,10 @@ argument-hint: (optional) [path or scope, e.g., "src/", "frontend", "last 6 mont
 > **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md) v1.0
 >
 > Key principles enforced:
-> - Article II: 強制排除目錄（git log 過濾）
-> - Article IV: 證據格式（commit hash、file:line 引用）
-> - Article V: 輸出格式（Markdown 報告）
-> - Article VI: 規模感知（大型專案限制分析範圍）
+> - Article II: Mandatory directory exclusions (git log filtering)
+> - Article IV: Evidence format (commit hash, file:line references)
+> - Article V: Output format (Markdown reports)
+> - Article VI: Scale awareness (limit analysis scope for large projects)
 
 ## Context
 
@@ -30,38 +30,38 @@ argument-hint: (optional) [path or scope, e.g., "src/", "frontend", "last 6 mont
 
 ---
 
-## Cache Check（最高優先）
+## Cache Check (Highest Priority)
 
-**如果參數中沒有 `--force`**，先檢查快取：
+**If `--force` is NOT in arguments**, check cache first:
 
-1. 快取路徑固定為：`.sourceatlas/history.md`
-2. 檢查快取：
+1. Cache path is fixed: `.sourceatlas/history.md`
+2. Check cache:
    ```bash
    ls -la .sourceatlas/history.md 2>/dev/null
    ```
 
-3. **如果快取存在**：
-   - 計算距今天數
-   - 用 Read tool 讀取快取內容
-   - 輸出：
+3. **If cache exists**:
+   - Calculate days since creation
+   - Use Read tool to load cache content
+   - Output:
      ```
-     📁 載入快取：.sourceatlas/history.md（N 天前）
-     💡 重新分析請加 --force
+     📁 Loading cache: .sourceatlas/history.md (N days ago)
+     💡 To re-analyze, add --force
      ```
-   - **如果超過 30 天**，額外顯示：
+   - **If over 30 days old**, additionally display:
      ```
-     ⚠️ 快取已超過 30 天，建議重新分析
+     ⚠️ Cache is over 30 days old, recommend re-analysis
      ```
-   - 然後輸出：
+   - Then output:
      ```
      ---
-     [快取內容]
+     [Cache content]
      ```
-   - **結束，不執行後續分析**
+   - **END - do not execute subsequent analysis**
 
-4. **如果快取不存在**：繼續執行下方的分析流程
+4. **If cache does not exist**: Continue with analysis workflow below
 
-**如果參數中有 `--force`**：跳過快取檢查，直接執行分析
+**If `--force` is in arguments**: Skip cache check, execute analysis directly
 
 ---
 
@@ -382,14 +382,14 @@ Based on temporal analysis:
 
 ## Recommended Next
 
-根據分析發現，動態建議 1-2 個最相關的後續命令：
+Based on analysis findings, dynamically suggest 1-2 most relevant follow-up commands:
 
-| # | 命令 | 用途 |
-|---|------|------|
-| 1 | `/atlas.impact "[hotspot file]"` | [hotspot file] 變動 N 次，需了解依賴關係 |
-| 2 | `/atlas.pattern "[pattern]"` | Hotspot 涉及此 pattern，需了解實作慣例 |
+| # | Command | Purpose |
+|---|---------|---------|
+| 1 | `/atlas.impact "[hotspot file]"` | [hotspot file] changed N times, need to understand dependencies |
+| 2 | `/atlas.pattern "[pattern]"` | Hotspot involves this pattern, need to understand implementation conventions |
 
-💡 輸入數字（如 `1`）或複製命令執行
+💡 Enter a number (e.g., `1`) or copy the command to execute
 ```
 
 ---
@@ -446,50 +446,50 @@ This could mean:
 
 ---
 
-## Handoffs 判斷規則
+## Handoffs Decision Rules
 
-> 遵循 **Constitution Article VII: Handoffs 原則**
+> Follows **Constitution Article VII: Handoffs Principles**
 
-### 結束條件 vs 建議（二擇一，不可同時）
+### Termination vs Recommendation (Mutually Exclusive)
 
-**⚠️ 重要：以下兩種輸出互斥，只能選一種**
+**⚠️ Important: The following two outputs are mutually exclusive - choose only one**
 
-**情況 A - 結束（省略 Recommended Next）**：
-滿足以下任一條件時，**只輸出結束/警示提示，不輸出表格**：
-- 歷史太短：<50 commits 或 <3 個月，數據不足
-- 發現太模糊：無法給出高信心（>0.7）的具體參數
-- 分析深度足夠：已執行 4+ 個命令
+**Case A - Termination (Omit Recommended Next)**:
+When any of the following conditions are met, **only output termination/warning message, do not output table**:
+- History too short: <50 commits or <3 months, insufficient data
+- Findings too vague: Cannot provide high-confidence (>0.7) specific parameters
+- Analysis depth sufficient: Already executed 4+ commands
 
-歷史太短時輸出：
+When history is too short, output:
 ```markdown
-⚠️ **數據不足警示**
-- Commits: N 個（建議 ≥50）
-- 期間: M 天（建議 ≥90 天）
+⚠️ **Insufficient Data Warning**
+- Commits: N (recommend ≥50)
+- Period: M days (recommend ≥90 days)
 
-建議 3-6 個月後再分析時序模式
+Recommend analyzing temporal patterns again in 3-6 months
 ```
 
-**情況 B - 建議（輸出 Recommended Next 表格）**：
-有明確發現（hotspot、耦合、風險）時，**只輸出表格，不輸出結束提示**。
+**Case B - Recommendation (Output Recommended Next Table)**:
+When there are clear findings (hotspots, coupling, risks), **only output table, do not output termination message**.
 
-### 建議選擇（情況 B 適用）
+### Recommendation Selection (Applicable to Case B)
 
-| 發現 | 建議命令 | 參數來源 |
-|------|---------|---------|
-| 高風險 hotspot | `/atlas.impact` | hotspot 檔案名 |
-| 可疑耦合 | `/atlas.flow` | 耦合模組入口 |
-| Hotspot 需重構 | `/atlas.pattern` | 相關 pattern |
-| 需要更廣泛背景 | `/atlas.overview` | 無需參數 |
+| Finding | Recommended Command | Parameter Source |
+|---------|---------------------|------------------|
+| High-risk hotspot | `/atlas.impact` | Hotspot file name |
+| Suspicious coupling | `/atlas.flow` | Coupled module entry point |
+| Hotspot needs refactoring | `/atlas.pattern` | Related pattern |
+| Need broader context | `/atlas.overview` | No parameters needed |
 
-### 輸出格式（Section 7.3）
+### Output Format (Section 7.3)
 
-使用編號表格，方便快速選擇。
+Use numbered table for quick selection.
 
-### 品質要求（Section 7.4-7.5）
+### Quality Requirements (Section 7.4-7.5)
 
-- **參數具體**：使用實際發現的檔案名
-- **數量限制**：1-2 個建議，不強制填滿
-- **用途欄位**：引用具體發現（變動次數、耦合度、貢獻者數）
+- **Specific parameters**: Use actual discovered file names
+- **Quantity limit**: 1-2 recommendations, no need to force-fill
+- **Purpose field**: Reference specific findings (change count, coupling degree, contributor count)
 
 ---
 
@@ -517,5 +517,5 @@ After generating the complete analysis, save the **entire output** (from `=== Sm
 
 Add at the very end:
 ```
-💾 已儲存至 .sourceatlas/history.md
+💾 Saved to .sourceatlas/history.md
 ```
