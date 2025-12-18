@@ -1,10 +1,11 @@
 # 漸進式輸出 (Progressive Disclosure)
 
-> **狀態**: 🟢 已批准
+> **狀態**: ⚪ 部分完成後擱置
 > **建立日期**: 2025-12-16
+> **擱置日期**: 2025-12-18
 > **來源**: [ideas/claude-code-plugins-learnings.md](../../ideas/claude-code-plugins-learnings.md)
-> **優先級**: 🔴 高
-> **預期效益**: Token 效率提升 30-50%（小專案）
+> **已完成**: `/atlas.pattern` Smart 模式 + `--brief`/`--full` (v2.9.3)
+> **擱置原因**: 其他命令已有快取，效益有限，假設未驗證
 
 ## 問題陳述
 
