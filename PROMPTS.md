@@ -1,121 +1,121 @@
-# SourceAtlas - Prompts 完整版
+# SourceAtlas - Complete Prompts
 
-**當前狀態**：
-- **v1.0** ✅ - 方法論已驗證（5 專案測試）
-- **v2.9.3** ✅ - 核心 Commands 全部完成（7 個 commands）
+**Current Status**:
+- **v1.0** ✅ - Methodology validated (5 projects tested)
+- **v2.9.3** ✅ - All core Commands completed (7 commands)
 
-**版本**: v2.9.3
-**更新時間**: 2025-12-18
-**作者**: SourceAtlas Team
-**驗證專案**: trySwiftTokyoApp, taiwan-calendar, monorepo-sample, sample-projects (5 projects)
-
----
-
-## 🚀 v2.9 Commands（推薦日常使用）
-
-v2.9 提供 7 個 Claude Code slash commands，適合日常快速分析：
-
-| Command | 用途 | 時間 |
-|---------|------|------|
-| `/atlas.init` | 初始化專案，注入自動觸發規則 | <1 分鐘 |
-| `/atlas.overview` | 快速專案指紋（Stage 0 精簡版） | 5-10 分鐘 |
-| `/atlas.pattern [type]` | 學習特定設計模式 | 5-10 分鐘 |
-| `/atlas.impact [target]` | 分析程式碼變更影響範圍 | 5-10 分鐘 |
-| `/atlas.history [scope]` | Git 歷史時序分析（Hotspots, Coupling） | 5-10 分鐘 |
-| `/atlas.flow [entry]` | 流程追蹤（11 種分析模式） | 5-10 分鐘 |
-| `/atlas.deps [library]` | 依賴分析（升級影響評估） | 5-10 分鐘 |
-
-**使用時機**：
-- ✅ 日常開發時快速理解 codebase
-- ✅ 學習專案的設計模式
-- ✅ 評估修改影響範圍
-- ✅ 追蹤業務流程和資料流
-- ✅ Library/Framework 升級前評估
-
-**完整文檔**：見 `.claude/commands/` 目錄下的各 command 檔案
+**Version**: v2.9.3
+**Last Updated**: 2025-12-18
+**Author**: SourceAtlas Team
+**Validation Projects**: trySwiftTokyoApp, taiwan-calendar, monorepo-sample, sample-projects (5 projects)
 
 ---
 
-## 📋 手動三階段 Prompts（深度分析用）
+## 🚀 v2.9 Commands (Recommended for Daily Use)
 
-以下是完整的三階段手動 Prompts，適合需要深度分析的場景：
-- 技術盡職調查（Due Diligence）
-- 招聘評估（評估開發者能力）
-- 開源專案深度學習
-- 完整專案審計
+v2.9 provides 7 Claude Code slash commands for quick daily analysis:
 
----
+| Command | Purpose | Time |
+|---------|---------|------|
+| `/atlas.init` | Initialize project, inject auto-trigger rules | <1 min |
+| `/atlas.overview` | Quick project fingerprint (Stage 0 lite) | 5-10 min |
+| `/atlas.pattern [type]` | Learn specific design patterns | 5-10 min |
+| `/atlas.impact [target]` | Analyze code change impact scope | 5-10 min |
+| `/atlas.history [scope]` | Git history temporal analysis (Hotspots, Coupling) | 5-10 min |
+| `/atlas.flow [entry]` | Flow tracing (11 analysis modes) | 5-10 min |
+| `/atlas.deps [library]` | Dependency analysis (upgrade impact assessment) | 5-10 min |
 
-## 📖 總覽
+**When to Use**:
+- ✅ Quick codebase understanding during daily development
+- ✅ Learning project design patterns
+- ✅ Assessing modification impact scope
+- ✅ Tracing business flows and data flows
+- ✅ Pre-upgrade assessment for Library/Framework
 
-SourceAtlas 提供三階段的 codebase 分析 Prompts，基於資訊理論設計，能夠以最少的檔案掃描達到最大的理解深度。
-
-**v2.9 Commands vs 手動 Prompts**：
-- **Commands**（日常用）：快速、自動化、精簡輸出
-- **Prompts**（深度用）：完整三階段、詳細報告、假設驗證
-
-### 三階段設計理念
-
-| Stage | 名稱 | 目標 | Token 使用 | 理解深度 |
-|-------|------|------|-----------|---------|
-| **Stage 0** | 專案指紋 | 快速建立專案輪廓 | ~20k | 70-80% |
-| **Stage 1** | 假設驗證 | 驗證 Stage 0 的推論 | ~30k | 85-95% |
-| **Stage 2** | Git 熱點分析 | 識別開發模式和演進 | ~20k | 95%+ |
-
-**核心優勢**:
-
-- ✅ 掃描 <5% 檔案達到 70-80% 理解
-- ✅ 節省 95%+ 時間和 Token
-- ✅ 系統化的分析流程
-- ✅ 可重複、可驗證的結果
+**Complete Documentation**: See individual command files in `.claude/commands/` directory
 
 ---
 
-## 🎯 Stage 0: Project Fingerprint (專案指紋)
+## 📋 Manual Three-Stage Prompts (For Deep Analysis)
 
-### 目標
+The following complete three-stage manual Prompts are suitable for deep analysis scenarios:
+- Technical Due Diligence
+- Hiring Assessment (evaluating developer capabilities)
+- Deep learning of open source projects
+- Complete project audit
 
-在最短時間內建立專案的完整輪廓，包括：
+---
 
-- 技術棧識別
-- 架構模式推論
-- 業務領域分析
-- 開發者能力初步評估
-- 關鍵假設生成（供 Stage 1 驗證）
+## 📖 Overview
 
-### 核心理念
+SourceAtlas provides three-stage codebase analysis Prompts, designed based on information theory principles to achieve maximum understanding depth with minimal file scanning.
 
-**資訊理論基礎**:
+**v2.9 Commands vs Manual Prompts**:
+- **Commands** (daily use): Fast, automated, concise output
+- **Prompts** (deep analysis): Complete three-stage, detailed reports, hypothesis validation
 
-- 優先掃描高熵（high-entropy）檔案
-- 少量關鍵檔案包含大量資訊
-- 結構性檔案比代碼更有價值
+### Three-Stage Design Philosophy
 
-**高熵檔案優先級**:
+| Stage | Name | Goal | Token Usage | Understanding Depth |
+|-------|------|------|------------|-------------------|
+| **Stage 0** | Project Fingerprint | Quickly establish project outline | ~20k | 70-80% |
+| **Stage 1** | Hypothesis Validation | Validate Stage 0 inferences | ~30k | 85-95% |
+| **Stage 2** | Git Hotspots Analysis | Identify development patterns and evolution | ~20k | 95%+ |
 
-1. **配置檔案** (package.json, composer.json, Cargo.toml, go.mod)
-2. **文檔檔案** (README.md, CLAUDE.md, 架構文檔)
-3. **目錄結構** (ls -R, tree)
-4. **Model/Entity 檔案** (業務領域的核心)
-5. **型別定義** (api.ts, types.ts, interfaces.go)
+**Core Advantages**:
 
-### Prompt 模板
+- ✅ Scan <5% of files to achieve 70-80% understanding
+- ✅ Save 95%+ time and Tokens
+- ✅ Systematic analysis process
+- ✅ Repeatable, verifiable results
+
+---
+
+## 🎯 Stage 0: Project Fingerprint
+
+### Goal
+
+Establish a complete project outline in the shortest time, including:
+
+- Technology stack identification
+- Architecture pattern inference
+- Business domain analysis
+- Initial developer capability assessment
+- Key hypothesis generation (for Stage 1 validation)
+
+### Core Philosophy
+
+**Information Theory Foundation**:
+
+- Prioritize high-entropy files
+- Small number of key files contain large amounts of information
+- Structural files are more valuable than code
+
+**High-Entropy File Priorities**:
+
+1. **Configuration files** (package.json, composer.json, Cargo.toml, go.mod)
+2. **Documentation files** (README.md, CLAUDE.md, architecture docs)
+3. **Directory structure** (ls -R, tree)
+4. **Model/Entity files** (core of business domain)
+5. **Type definitions** (api.ts, types.ts, interfaces.go)
+
+### Prompt Template
 
 ```markdown
-# SourceAtlas Stage 0: 專案指紋分析
+# SourceAtlas Stage 0: Project Fingerprint Analysis
 
-你是一位資深的軟體架構分析師，專精於快速理解大型代碼庫。你的任務是根據資訊理論，通過掃描最少的檔案來建立專案的完整輪廓。
+You are a senior software architecture analyst specializing in quickly understanding large codebases. Your task is to establish a complete project outline by scanning the minimum number of files based on information theory.
 
-## 📋 分析目標
+## 📋 Analysis Goal
 
-請針對目錄 `[PROJECT_PATH]` 執行專案指紋分析，目標是掃描 <5% 的檔案達到 70-80% 的理解深度。
+Please perform project fingerprint analysis on directory `[PROJECT_PATH]`, with the goal of scanning <5% of files to achieve 70-80% understanding depth.
 
-## 🔍 分析流程
+## 🔍 Analysis Process
 
-### Phase 1: 快速掃描 (高熵檔案優先)
+### Phase 1: Quick Scan (High-Entropy Files First)
 
-**Step 1: 識別專案類型和技術棧**
-- 掃描根目錄的配置檔案：
+**Step 1: Identify Project Type and Tech Stack**
+- Scan configuration files in root directory:
   - `package.json` (Node.js/TypeScript)
   - `composer.json` (PHP/Laravel)
   - `Cargo.toml` (Rust)
@@ -124,55 +124,55 @@ SourceAtlas 提供三階段的 codebase 分析 Prompts，基於資訊理論設�
   - `requirements.txt` / `pyproject.toml` (Python)
   - `*.csproj` (C#/.NET)
 
-**Step 2: 讀取專案文檔**
-- `README.md` (專案概覽)
-- `CLAUDE.md` / `.cursor/rules/` (AI 開發規範)
-- 技術文檔 (架構圖、部署指南)
+**Step 2: Read Project Documentation**
+- `README.md` (project overview)
+- `CLAUDE.md` / `.cursor/rules/` (AI development standards)
+- Technical documentation (architecture diagrams, deployment guides)
 
-**Step 3: 掃描專案結構**
+**Step 3: Scan Project Structure**
 ```bash
-# 獲取目錄結構
+# Get directory structure
 ls -R [PROJECT_PATH]
 
-# 或使用 tree (如果可用)
+# Or use tree (if available)
 tree -L 3 [PROJECT_PATH]
 
-# 統計檔案類型
+# Count file types
 find [PROJECT_PATH] -type f | grep -E "\.(ts|tsx|js|jsx|php|go|rs|py|java)$" | wc -l
 ```
 
-**Step 4: 識別業務領域 (掃描 Models/Entities)**
+**Step 4: Identify Business Domain (Scan Models/Entities)**
 
 - Laravel: `app/Models/*.php`
 - Rails: `app/models/*.rb`
-- Go: `**/models/*.go` 或 `**/entities/*.go`
-- TypeScript: `**/types/*.ts` 或 `**/models/*.ts`
+- Go: `**/models/*.go` or `**/entities/*.go`
+- TypeScript: `**/types/*.ts` or `**/models/*.ts`
 
-讀取 3-5 個核心 Model 檔案，理解：
+Read 3-5 core Model files to understand:
 
-- 業務實體（User, Product, Order 等）
-- 關聯關係（hasMany, belongsTo）
-- 業務邏輯（方法、計算欄位）
+- Business entities (User, Product, Order, etc.)
+- Relationships (hasMany, belongsTo)
+- Business logic (methods, calculated fields)
 
-**Step 5: 掃描關鍵架構檔案**
+**Step 5: Scan Key Architecture Files**
 
-- Controllers/Handlers: 讀取 1-2 個範例
-- Services: 檢查是否有 Service Layer
-- Routes/API 定義: 理解 API 架構
+- Controllers/Handlers: Read 1-2 examples
+- Services: Check if there's a Service Layer
+- Routes/API definitions: Understand API architecture
 
-### Phase 2: 推論與假設生成
+### Phase 2: Inference and Hypothesis Generation
 
-基於 Phase 1 的資訊，進行以下推論：
+Based on Phase 1 information, make the following inferences:
 
-**技術棧推論**:
+**Tech Stack Inference**:
 
-- 前端框架（React, Vue, Svelte）
-- 後端框架（Laravel, Rails, Go Gin）
-- 資料庫類型（MySQL, PostgreSQL, MongoDB）
-- 測試框架（Jest, PHPUnit, pytest）
-- 部署方式（Docker, Cloud, 傳統）
+- Frontend framework (React, Vue, Svelte)
+- Backend framework (Laravel, Rails, Go Gin)
+- Database type (MySQL, PostgreSQL, MongoDB)
+- Testing framework (Jest, PHPUnit, pytest)
+- Deployment method (Docker, Cloud, traditional)
 
-**架構模式推論**:
+**Architecture Pattern Inference**:
 
 - MVC, MVVM, MVP, Clean Architecture
 - Repository Pattern, Service Layer
@@ -180,39 +180,39 @@ find [PROJECT_PATH] -type f | grep -E "\.(ts|tsx|js|jsx|php|go|rs|py|java)$" | w
 - Router (API/Navigation), Middleware
 - Policy-based Authorization
 
-**iOS 特定 Patterns** (34 patterns supported):
+**iOS Specific Patterns** (34 patterns supported):
 - **SwiftUI**: ObservableObject, Reducer (TCA), Router
 - **UIKit**: Protocol/Delegate, UICollectionViewLayout, Animation
-- **架構**: Repository, Service Layer, Use Case/Interactor, Factory/DIContainer
-- **狀態管理**: Reducer (TCA), Middleware (Redux), ObservableObject
-- **輔助**: Cache, Theme/Style, Environment/Configuration, Localization, Mock/Stub
-- **現代**: async/await, Combine/Publisher (需內容分析)
+- **Architecture**: Repository, Service Layer, Use Case/Interactor, Factory/DIContainer
+- **State Management**: Reducer (TCA), Middleware (Redux), ObservableObject
+- **Support**: Cache, Theme/Style, Environment/Configuration, Localization, Mock/Stub
+- **Modern**: async/await, Combine/Publisher (requires content analysis)
 
-**代碼品質推論**:
+**Code Quality Inference**:
 
-- 測試覆蓋率（估計）
-- 註解密度
-- 型別安全程度
-- 錯誤處理完整性
+- Test coverage (estimate)
+- Comment density
+- Type safety level
+- Error handling completeness
 
-**開發者能力初步評估**:
+**Initial Developer Capability Assessment**:
 
-- 經驗年資（基於代碼複雜度）
-- Git 習慣（commit 頻率和品質）
-- 文檔能力
-- 架構思維
+- Years of experience (based on code complexity)
+- Git habits (commit frequency and quality)
+- Documentation skills
+- Architecture thinking
 
-**生成 10-15 個假設**（供 Stage 1 驗證）:
+**Generate 10-15 Hypotheses** (for Stage 1 validation):
 
-- 每個假設包含：
-  - 假設陳述
-  - 信心等級 (0.0-1.0)
-  - 驗證方法
-  - 推理依據
+- Each hypothesis includes:
+  - Hypothesis statement
+  - Confidence level (0.0-1.0)
+  - Validation method
+  - Reasoning basis
 
-### Phase 3: 生成 YAML 格式報告
+### Phase 3: Generate YAML Format Report
 
-輸出格式：`[project-name]-stage0-fingerprint.yaml`
+Output format: `[project-name]-stage0-fingerprint.yaml`
 
 ```yaml
 # stage0-fingerprint.yaml - [Project Name]
@@ -221,41 +221,41 @@ metadata:
   project_name: [Name]
   developer: [GitHub Username / Name]
   scan_time: [ISO 8601 timestamp]
-  scanned_files: [數量]
-  total_files_estimate: [估計總數]
-  total_lines_estimate: [估計行數]
-  git_commits: [數量]
-  development_period: [時間跨度]
+  scanned_files: [number]
+  total_files_estimate: [estimated total]
+  total_lines_estimate: [estimated lines]
+  git_commits: [number]
+  development_period: [time span]
 
-## 專案指紋
+## Project Fingerprint
 
 project_type: [WEB_APP | CLI_TOOL | LIBRARY | MOBILE_APP | ...]
-primary_purpose: [一句話描述]
+primary_purpose: [one-sentence description]
 architecture: [MVC | CLEAN_ARCHITECTURE | MICROSERVICES | ...]
 scale: [SMALL <10k | MEDIUM 10-50k | LARGE 50-100k | SUPER_LARGE >100k]
 complexity: [LOW | MEDIUM | HIGH | ENTERPRISE_GRADE]
 maturity: [PROTOTYPE | DEVELOPMENT | PRODUCTION_READY]
 
-## 核心技術棧
+## Core Tech Stack
 
-### 前端 (如果有)
+### Frontend (if any)
 framework: [React | Vue | Svelte | ...]
 language: [TypeScript | JavaScript]
-version: [版本]
+version: [version]
 ui_library: [Material-UI | Tailwind | ...]
 state_management: [Redux | Context API | ...]
 
 key_packages:
-  - [package-name]: [version] (說明)
+  - [package-name]: [version] (description)
   - ...
 
-### 後端
+### Backend
 framework: [Laravel | Rails | Django | ...]
 language: [PHP | Ruby | Python | ...]
-version: [版本]
+version: [version]
 
 key_packages:
-  - [package-name]: [version] (說明)
+  - [package-name]: [version] (description)
   - ...
 
 database:
@@ -264,179 +264,179 @@ database:
 
 authentication: [JWT | Session | OAuth]
 
-## 專案架構推論
+## Project Architecture Inference
 
-architecture_pattern: [具體模式]
+architecture_pattern: [specific pattern]
   layers:
-    - [Layer 1]: [職責]
-    - [Layer 2]: [職責]
+    - [Layer 1]: [responsibility]
+    - [Layer 2]: [responsibility]
     - ...
 
   confidence: [0.0-1.0]
   evidence:
-    - [證據 1]
-    - [證據 2]
+    - [evidence 1]
+    - [evidence 2]
 
   note: |\
-    [詳細說明]
+    [detailed explanation]
 
-[其他架構模式...]
+[other architecture patterns...]
 
-## 業務領域分析
+## Business Domain Analysis
 
-business_domain: [領域名稱]
+business_domain: [domain name]
   core_modules:
-    - [模組 1]
-    - [模組 2]
+    - [module 1]
+    - [module 2]
     - ...
 
-data_models_identified: [數量] 個 Models
+data_models_identified: [number] Models
   complexity: [SIMPLE | MEDIUM | COMPLEX | VERY_HIGH]
   relationships: [SIMPLE | COMPLEX]
 
   key_models:
-    - [Model 1]: [說明]
-    - [Model 2]: [說明]
+    - [Model 1]: [description]
+    - [Model 2]: [description]
     - ...
 
-## 代碼品質初步評估
+## Code Quality Initial Assessment
 
 estimated_test_coverage: [0-100]%
   evidence:
-    - [測試檔案數量]
-    - [測試框架]
+    - [number of test files]
+    - [testing framework]
   confidence: [0.0-1.0]
 
 code_organization: [POOR | FAIR | GOOD | EXCELLENT]
   evidence:
-    - [清晰的目錄結構]
-    - [分層架構]
+    - [clear directory structure]
+    - [layered architecture]
 
 comment_density: [0-100]%
-  style: [無 | 簡潔 | 詳細 | 教學式]
+  style: [none | concise | detailed | tutorial]
 
 type_safety: [NONE | PARTIAL | STRONG | STRICT]
   evidence:
-    - [TypeScript 使用]
-    - [型別標註覆蓋率]
+    - [TypeScript usage]
+    - [type annotation coverage]
 
-## AI 輔助開發證據 (如果有)
+## AI-Assisted Development Evidence (if any)
 
 ai_assisted_development: [NONE | SUSPECTED | CONFIRMED]
   confidence: [0.0-1.0]
   evidence:
-    - file: [AI 配置檔案路徑]
-    - [其他證據]
+    - file: [AI config file path]
+    - [other evidence]
 
   key_characteristics:
-    - [特徵 1]: [說明]
-    - [特徵 2]: [說明]
+    - [characteristic 1]: [description]
+    - [characteristic 2]: [description]
 
-## 開發者能力初步評估
+## Developer Capability Initial Assessment
 
 developer_profile:
   skill_level: [BEGINNER | INTERMEDIATE | SENIOR | EXPERT]
-  estimated_experience: [時間範圍]
+  estimated_experience: [time range]
 
   strengths:
-    - [優勢 1]
-    - [優勢 2]
+    - [strength 1]
+    - [strength 2]
 
   weaknesses:
-    - [弱點 1]
-    - [弱點 2]
+    - [weakness 1]
+    - [weakness 2]
 
-## 重要檔案推論 (按資訊價值排序)
+## Important Files Inference (sorted by information value)
 
 high_priority_files:
   tier_0_critical:
-    - file: [路徑]
-      lines: [行數]
-      reason: [為什麼重要]
+    - file: [path]
+      lines: [line count]
+      reason: [why important]
       information_density: [LOW | MEDIUM | HIGH | VERY_HIGH | EXTREME]
 
   tier_1_architecture:
-    - file: [路徑]
+    - file: [path]
       ...
 
-  [其他層級...]
+  [other tiers...]
 
-## 假設清單 (待 Stage 1 驗證)
+## Hypothesis List (for Stage 1 validation)
 
 hypotheses:
   [category_1]:
-    - hypothesis: [假設陳述]
+    - hypothesis: [hypothesis statement]
       confidence: [0.0-1.0]
-      validation_method: [如何驗證]
-      reasoning: [推理依據]
+      validation_method: [how to validate]
+      reasoning: [reasoning basis]
 
-    - hypothesis: [下一個假設]
+    - hypothesis: [next hypothesis]
       ...
 
   [category_2]:
     ...
 
-## 下一步驗證計畫
+## Next Step Validation Plan
 
 stage1_focus_areas:
   priority_1:
-    - [驗證項目 1]
-    - [驗證項目 2]
+    - [validation item 1]
+    - [validation item 2]
 
   priority_2:
     ...
 
 estimated_understanding: [0-100]%
   note: |\
-    [說明理解程度和不確定性]
+    [explain understanding level and uncertainties]
 
-## 資訊理論評估
+## Information Theory Assessment
 
-total_files: [總數]
-scanned_files: [掃描數]
-scan_ratio: [百分比]
+total_files: [total]
+scanned_files: [scanned]
+scan_ratio: [percentage]
 
 information_gained: [0-100]%
   reasoning: |\
-    [說明為什麼掃描這些檔案能獲得這麼多資訊]
+    [explain why scanning these files gains so much information]
 
-time_saved: [百分比]
-  traditional_approach: [傳統方法所需時間]
-  this_approach: [此方法所需時間]
-  saved_time: [節省百分比]
+time_saved: [percentage]
+  traditional_approach: [time needed for traditional approach]
+  this_approach: [time needed for this approach]
+  saved_time: [percentage saved]
 
 confidence_score: [0.0-1.0]
   note: |\
-    [對分析結果的信心評估]
+    [confidence assessment of analysis results]
 
 next_stage_preparation: [READY | NEED_MORE_INFO]
-  [說明]
+  [explanation]
 ```
 
-## ⚠️ 重要原則
+## ⚠️ Important Principles
 
-1. **高熵優先**: 永遠先掃描配置檔案、README、Models
-2. **避免深入代碼**: 不要陷入讀取大量業務邏輯代碼
-3. **結構勝於內容**: 目錄結構比單個檔案內容更重要
-4. **推論要大膽**: 基於有限資訊進行合理推論
-5. **假設要明確**: 為 Stage 1 生成可驗證的假設
-6. **節省 Token**: 目標是掃描 <5% 檔案達到 70-80% 理解
+1. **High-Entropy First**: Always scan config files, README, Models first
+2. **Avoid Deep Code**: Don't get stuck reading lots of business logic code
+3. **Structure Over Content**: Directory structure more important than individual file content
+4. **Bold Inferences**: Make reasonable inferences based on limited information
+5. **Explicit Hypotheses**: Generate verifiable hypotheses for Stage 1
+6. **Save Tokens**: Goal is to scan <5% of files to achieve 70-80% understanding
 
-## 📊 驗證標準
+## 📊 Validation Criteria
 
-一個好的 Stage 0 分析應該：
+A good Stage 0 analysis should:
 
-- ✅ 掃描檔案 <5% 總數
-- ✅ 達到 70-80% 理解深度
-- ✅ 生成 10-15 個可驗證假設
-- ✅ 明確識別技術棧
-- ✅ 推論出架構模式
-- ✅ 評估開發者能力
-- ✅ 使用 <20k tokens
+- ✅ Scan <5% of total files
+- ✅ Achieve 70-80% understanding depth
+- ✅ Generate 10-15 verifiable hypotheses
+- ✅ Clearly identify tech stack
+- ✅ Infer architecture patterns
+- ✅ Assess developer capabilities
+- ✅ Use <20k tokens
 
-## 🎓 範例參考
+## 🎓 Example References
 
-查看以下實際分析範例：
+Check these actual analysis examples:
 
 - `test_results/trySwift-stage0-fingerprint.yaml`
 - `test_results/taiwan-calendar-stage0-fingerprint.yaml`
@@ -446,319 +446,319 @@ next_stage_preparation: [READY | NEED_MORE_INFO]
 
 ---
 
-## 🔬 Stage 1: Hypothesis Validation (假設驗證)
+## 🔬 Stage 1: Hypothesis Validation
 
-### 目標
+### Goal
 
-系統化地驗證 Stage 0 生成的假設，透過精準的檔案讀取和代碼搜尋，將理解深度從 70-80% 提升到 85-95%。
+Systematically validate hypotheses generated in Stage 0, through precise file reading and code searching, to elevate understanding depth from 70-80% to 85-95%.
 
-### 核心理念
+### Core Philosophy
 
-**貝葉斯推理**:
-- Stage 0 給出先驗機率（prior probability）
-- Stage 1 提供證據（evidence）
-- 更新後驗機率（posterior probability）
+**Bayesian Reasoning**:
+- Stage 0 provides prior probability
+- Stage 1 provides evidence
+- Update posterior probability
 
-**精準驗證**:
-- 每個假設都要找到明確的證據
-- 證據可以是：檔案存在、代碼片段、統計數據
-- 記錄驗證過程和結果
+**Precise Validation**:
+- Each hypothesis must find clear evidence
+- Evidence can be: file existence, code snippets, statistical data
+- Record validation process and results
 
-### Prompt 模板
+### Prompt Template
 
 ```markdown
-# SourceAtlas Stage 1: 假設驗證
+# SourceAtlas Stage 1: Hypothesis Validation
 
-你是一位嚴謹的軟體分析師，專精於驗證技術假設。你的任務是系統化地驗證 Stage 0 生成的假設。
+You are a rigorous software analyst specializing in validating technical hypotheses. Your task is to systematically validate hypotheses generated in Stage 0.
 
-## 📋 驗證目標
+## 📋 Validation Goal
 
-針對 Stage 0 報告 `[STAGE0_REPORT_PATH]` 中的假設進行系統化驗證。
+Systematically validate hypotheses in Stage 0 report `[STAGE0_REPORT_PATH]`.
 
-## 🔍 驗證流程
+## 🔍 Validation Process
 
-### Phase 1: 讀取 Stage 0 報告
+### Phase 1: Read Stage 0 Report
 
 ```bash
-# 讀取 Stage 0 報告
+# Read Stage 0 report
 cat [STAGE0_REPORT_PATH]
 ```
 
-提取所有假設（hypotheses 部分），建立驗證清單。
+Extract all hypotheses (hypotheses section), establish validation checklist.
 
-### Phase 2: 系統化驗證
+### Phase 2: Systematic Validation
 
-針對每個假設，執行以下驗證步驟：
+For each hypothesis, execute the following validation steps:
 
-**驗證模板**:
+**Validation Template**:
 
 ```
-假設: [假設陳述]
-初始信心: [0.0-1.0]
-驗證方法: [具體方法]
+Hypothesis: [hypothesis statement]
+Initial confidence: [0.0-1.0]
+Validation method: [specific method]
 
-執行驗證:
-[具體命令或操作]
+Execute validation:
+[specific commands or operations]
 
-證據:
-[找到的證據]
+Evidence:
+[found evidence]
 
-結果: [✅ 確認 | ⚠️ 部分確認 | ❌ 推翻]
-更新信心: [0.0-1.0]
+Result: [✅ Confirmed | ⚠️ Partially confirmed | ❌ Refuted]
+Updated confidence: [0.0-1.0]
 
-說明:
-[詳細解釋為什麼確認或推翻]
+Explanation:
+[detailed explanation of why confirmed or refuted]
 ```
 
-### Phase 3: 驗證方法指南
+### Phase 3: Validation Method Guide
 
-**架構驗證**:
+**Architecture Validation**:
 
 ```bash
-# 檢查目錄是否存在
+# Check if directory exists
 test -d [PATH] && echo "EXISTS" || echo "NOT_FOUND"
 
-# 列出目錄內容
+# List directory contents
 ls -la [PATH]
 
-# 統計檔案數量
+# Count files
 find [PATH] -name "*.php" | wc -l
 ```
 
-**代碼模式驗證**:
+**Code Pattern Validation**:
 
 ```bash
-# 搜尋特定模式
+# Search for specific pattern
 grep -r "[PATTERN]" [PATH] --include="*.ts"
 
-# 統計出現次數
+# Count occurrences
 grep -r "[PATTERN]" [PATH] | wc -l
 
-# 找到使用該模式的檔案
+# Find files using this pattern
 grep -rl "[PATTERN]" [PATH]
 ```
 
-**型別安全驗證**:
+**Type Safety Validation**:
 
 ```bash
-# 搜尋 'any' 型別
+# Search for 'any' type
 grep -r ": any\|as any" src/ --include="*.ts" | wc -l
 
-# 搜尋 @ts-ignore
+# Search for @ts-ignore
 grep -r "@ts-ignore" src/ --include="*.ts"
 ```
 
-**測試驗證**:
+**Test Validation**:
 
 ```bash
-# 統計測試檔案
+# Count test files
 find . -name "*.test.*" -o -name "*.spec.*" | wc -l
 
-# 檢查測試配置
+# Check test configuration
 ls jest.config.* vitest.config.* phpunit.xml
 ```
 
-**Git 驗證**:
+**Git Validation**:
 
 ```bash
-# 檢查 commit 格式
+# Check commit format
 git log --oneline -30
 
-# 統計 Conventional Commits
+# Count Conventional Commits
 git log --format="%s" | grep -E "^(feat|fix|docs|style|refactor|test|chore):" | wc -l
 
-# 分析提交頻率
+# Analyze commit frequency
 git log --format="%ad" --date=short | sort | uniq -c
 ```
 
-### Phase 4: 生成驗證報告
+### Phase 4: Generate Validation Report
 
-輸出格式：`[project-name]-stage1-validation.md`
+Output format: `[project-name]-stage1-validation.md`
 
 ```markdown
-# Stage 1: 假設驗證報告 - [Project Name]
+# Stage 1: Hypothesis Validation Report - [Project Name]
 
-**驗證時間**: [ISO 8601]
-**專案**: [名稱]
-**原始假設數量**: [數量]
-
----
-
-## 📊 驗證結果總覽
-
-| 類別 | 假設數量 | ✅ 確認 | ⚠️ 部分確認 | ❌ 推翻 | 準確率 |
-|------|---------|--------|-----------|--------|-------|
-| [類別1] | [數量] | [數量] | [數量] | [數量] | [%] |
-| [類別2] | [數量] | [數量] | [數量] | [數量] | [%] |
-| **總計** | [數量] | [數量] | [數量] | [數量] | [%] |
+**Validation Time**: [ISO 8601]
+**Project**: [name]
+**Original Hypothesis Count**: [number]
 
 ---
 
-## ✅ 已確認的假設 ([數量]/[總數])
+## 📊 Validation Results Summary
 
-### [類別名稱]
+| Category | Hypothesis Count | ✅ Confirmed | ⚠️ Partially Confirmed | ❌ Refuted | Accuracy |
+|----------|-----------------|-------------|----------------------|-----------|----------|
+| [Category1] | [count] | [count] | [count] | [count] | [%] |
+| [Category2] | [count] | [count] | [count] | [count] | [%] |
+| **Total** | [count] | [count] | [count] | [count] | [%] |
 
-#### ✅ H1: [假設陳述]
-- **初始信心**: [0.0-1.0]
-- **驗證結果**: ✅ **確認**
-- **證據**:
-  - [證據1]
-  - [證據2]
-- **驗證方法**:
+---
+
+## ✅ Confirmed Hypotheses ([count]/[total])
+
+### [Category Name]
+
+#### ✅ H1: [hypothesis statement]
+- **Initial confidence**: [0.0-1.0]
+- **Validation result**: ✅ **Confirmed**
+- **Evidence**:
+  - [evidence1]
+  - [evidence2]
+- **Validation method**:
   ```bash
-  [使用的命令]
+  [commands used]
   ```
 
-- **發現**: [詳細說明]
+- **Findings**: [detailed explanation]
 
-#### ✅ H2: [下一個假設]
-
-...
-
----
-
-## ⚠️ 部分確認的假設 ([數量]/[總數])
-
-#### ⚠️ H3: [假設陳述]
-
-- **初始信心**: [0.0-1.0]
-- **驗證結果**: ⚠️ **部分確認**
-- **證據**:
-  - [支持的證據]
-  - [反對的證據]
-- **更新信心**: [0.0-1.0]
-- **說明**: [為什麼只是部分確認]
-
----
-
-## ❌ 被推翻的假設 ([數量]/[總數])
-
-#### ❌ H4: [假設陳述]
-
-- **初始信心**: [0.0-1.0]
-- **驗證結果**: ❌ **推翻**
-- **反證**:
-  - [反證1]
-  - [反證2]
-- **實際情況**: [真實的狀況是什麼]
-- **為何推翻**: [詳細解釋]
-
----
-
-## 🔍 關鍵發現
-
-### 1. [重要發現1]
-
-- **影響**: [HIGH | MEDIUM | LOW]
-- **說明**: [詳細描述]
-
-### 2. [重要發現2]
+#### ✅ H2: [next hypothesis]
 
 ...
 
 ---
 
-## 📈 驗證準確率分析
+## ⚠️ Partially Confirmed Hypotheses ([count]/[total])
 
-### 整體準確率: [%] ([確認數]/[總數])
+#### ⚠️ H3: [hypothesis statement]
 
-### 分類準確率
+- **Initial confidence**: [0.0-1.0]
+- **Validation result**: ⚠️ **Partially confirmed**
+- **Evidence**:
+  - [supporting evidence]
+  - [contradicting evidence]
+- **Updated confidence**: [0.0-1.0]
+- **Explanation**: [why only partially confirmed]
 
-1. **[類別1]**: [%] ([確認數]/[類別數])
-2. **[類別2]**: [%]
+---
+
+## ❌ Refuted Hypotheses ([count]/[total])
+
+#### ❌ H4: [hypothesis statement]
+
+- **Initial confidence**: [0.0-1.0]
+- **Validation result**: ❌ **Refuted**
+- **Counter-evidence**:
+  - [counter-evidence1]
+  - [counter-evidence2]
+- **Actual situation**: [what's the real situation]
+- **Why refuted**: [detailed explanation]
+
+---
+
+## 🔍 Key Findings
+
+### 1. [Important finding1]
+
+- **Impact**: [HIGH | MEDIUM | LOW]
+- **Description**: [detailed description]
+
+### 2. [Important finding2]
+
 ...
 
-### 為什麼某些假設被推翻？
+---
 
-**原因分析**:
+## 📈 Validation Accuracy Analysis
 
-### 驗證方法的改進
+### Overall Accuracy: [%] ([confirmed count]/[total])
 
-**成功的方法**:
+### Category Accuracy
 
-- ✅ [方法1]
-- ✅ [方法2]
+1. **[Category1]**: [%] ([confirmed count]/[category count])
+2. **[Category2]**: [%]
+...
 
-**失敗的方法**:
+### Why were some hypotheses refuted?
 
-- ❌ [方法1]: [為什麼失敗]
-- ❌ [方法2]: [為什麼失敗]
+**Reason analysis**:
+
+### Improvements to Validation Methods
+
+**Successful methods**:
+
+- ✅ [method1]
+- ✅ [method2]
+
+**Failed methods**:
+
+- ❌ [method1]: [why it failed]
+- ❌ [method2]: [why it failed]
 
 ---
 
-## 💡 對 Stage 0 的改進建議
+## 💡 Improvement Suggestions for Stage 0
 
-基於驗證結果，建議 Stage 0 改進：
+Based on validation results, suggest Stage 0 improvements:
 
-1. [改進建議1]
-2. [改進建議2]
+1. [improvement suggestion1]
+2. [improvement suggestion2]
 ...
 
 ---
 
-## 🎯 更新後的專案理解
+## 🎯 Updated Project Understanding
 
-基於驗證結果，更新對專案的理解：
+Based on validation results, update project understanding:
 
-### 技術棧 (更新)
+### Tech Stack (updated)
 
-- [更正或補充]
+- [corrections or additions]
 
-### 架構模式 (更新)
+### Architecture Patterns (updated)
 
-- [更正或補充]
+- [corrections or additions]
 
-### 代碼品質 (更新)
+### Code Quality (updated)
 
-- [更正或補充]
+- [corrections or additions]
 
-### 開發者能力 (更新)
+### Developer Capabilities (updated)
 
-- [更正或補充]
+- [corrections or additions]
 
 ---
 
-## 📋 附錄: 驗證命令清單
+## 📋 Appendix: Validation Command List
 
 ```bash
-# [類別1] 驗證
-[命令1]
-[命令2]
+# [Category1] validation
+[command1]
+[command2]
 
-# [類別2] 驗證
-[命令3]
-[命令4]
+# [Category2] validation
+[command3]
+[command4]
 ```
 
 ---
 
-**報告完成時間**: [ISO 8601]
-**理解深度**: [85-95]%
-**信心等級**: [0.0-1.0]
+**Report Completion Time**: [ISO 8601]
+**Understanding Depth**: [85-95]%
+**Confidence Level**: [0.0-1.0]
 
 ```
 
-## ⚠️ 重要原則
+## ⚠️ Important Principles
 
-1. **證據必須明確**: 每個結論都要有具體證據
-2. **承認不確定性**: 無法驗證的假設標記為"需要更多資訊"
-3. **記錄驗證過程**: 寫下使用的命令，便於重現
-4. **客觀評估**: 不要因為想確認而忽略反證
-5. **更新理解**: 基於驗證結果更新對專案的理解
+1. **Evidence must be clear**: Every conclusion needs concrete evidence
+2. **Admit uncertainty**: Mark hypotheses that can't be validated as "need more information"
+3. **Record validation process**: Write down commands used for reproducibility
+4. **Objective assessment**: Don't ignore counter-evidence just to confirm
+5. **Update understanding**: Update project understanding based on validation results
 
-## 📊 驗證標準
+## 📊 Validation Criteria
 
-一個好的 Stage 1 驗證應該：
-- ✅ 驗證所有 Stage 0 假設
-- ✅ 每個結論有明確證據
-- ✅ 準確率 >80%
-- ✅ 識別 Stage 0 的錯誤推論
-- ✅ 更新理解深度到 85-95%
-- ✅ 使用 <30k tokens
+A good Stage 1 validation should:
+- ✅ Validate all Stage 0 hypotheses
+- ✅ Each conclusion has clear evidence
+- ✅ Accuracy >80%
+- ✅ Identify incorrect Stage 0 inferences
+- ✅ Update understanding depth to 85-95%
+- ✅ Use <30k tokens
 
-## 🎓 範例參考
+## 🎓 Example References
 
-查看以下實際驗證範例：
+Check these actual validation examples:
 - `test_results/trySwift-stage1-validation.md`
 - `test_results/taiwan-calendar-stage1-validation.md`
 - `test_results/sample-project-stage1-validation.md`
@@ -766,265 +766,265 @@ git log --format="%ad" --date=short | sort | uniq -c
 
 ---
 
-## 📊 Stage 2: Git Hotspots Analysis (Git 熱點分析)
+## 📊 Stage 2: Git Hotspots Analysis
 
-### 目標
+### Goal
 
-通過分析 Git 歷史，識別：
+Through Git history analysis, identify:
 
-- 開發模式和節奏
-- 代碼熱點（最常修改的檔案）
-- 開發者能力和習慣
-- AI 協作證據
-- 技術債務管理模式
-- 專案演進時間線
+- Development patterns and rhythm
+- Code hotspots (most frequently modified files)
+- Developer capabilities and habits
+- AI collaboration evidence
+- Technical debt management patterns
+- Project evolution timeline
 
-### 核心理念
+### Core Philosophy
 
-**Git 是開發歷史的時間膠囊**:
+**Git is a time capsule of development history**:
 
-- Commit 模式反映開發習慣
-- 檔案修改頻率反映架構熱點
-- Commit message 反映思維方式
-- 時間分布反映開發節奏
+- Commit patterns reflect development habits
+- File modification frequency reflects architecture hotspots
+- Commit messages reflect thinking patterns
+- Time distribution reflects development rhythm
 
-### Prompt 模板
+### Prompt Template
 
 ```markdown
-# SourceAtlas Stage 2: Git 熱點分析
+# SourceAtlas Stage 2: Git Hotspots Analysis
 
-你是一位專精於軟體考古學的分析師，擅長從 Git 歷史中挖掘洞察。你的任務是分析專案的 Git 歷史，識別開發模式和演進。
+You are an analyst specializing in software archaeology, skilled at mining insights from Git history. Your task is to analyze the project's Git history to identify development patterns and evolution.
 
-## 📋 分析目標
+## 📋 Analysis Goal
 
-分析專案 `[PROJECT_PATH]` 的 Git 歷史，識別開發熱點和模式。
+Analyze Git history of project `[PROJECT_PATH]` to identify development hotspots and patterns.
 
-## 🔍 分析流程
+## 🔍 Analysis Process
 
-### Phase 1: Git 歷史統計
+### Phase 1: Git History Statistics
 
-**基本統計**:
+**Basic Statistics**:
 ```bash
-# 總 commit 數
+# Total commit count
 git log --all --oneline | wc -l
 
-# 開發時間跨度
+# Development time span
 git log --all --format="%ad" --date=short | sort | uniq | head -1
 git log --all --format="%ad" --date=short | sort | uniq | tail -1
 
-# 作者統計
+# Author statistics
 git log --all --format="%an <%ae>" | sort | uniq
 
-# 每位作者的 commit 數
+# Commit count per author
 git log --all --format="%an" | sort | uniq -c | sort -rn
 
-# 每月 commit 統計
+# Monthly commit statistics
 git log --all --format="%ad" --date=format:"%Y-%m" | sort | uniq -c
 ```
 
-**Commit 時間分析**:
+**Commit Time Analysis**:
 
 ```bash
-# 最近 30 天的 commits
+# Commits in last 30 days
 git log --all --since="30 days ago" --oneline | wc -l
 
-# 每日 commit 分布
+# Daily commit distribution
 git log --all --format="%ad" --date=short | sort | uniq -c | tail -20
 
-# 每小時 commit 分布（識別工作時段）
+# Hourly commit distribution (identify work hours)
 git log --all --format="%ad" --date=format:"%H" | sort | uniq -c
 ```
 
-### Phase 2: 檔案熱點分析
+### Phase 2: File Hotspot Analysis
 
-**最常修改的檔案**:
+**Most Frequently Modified Files**:
 
 ```bash
-# Top 20 最常修改的檔案
+# Top 20 most modified files
 git log --all --name-only --format="" | sort | uniq -c | sort -rn | head -20
 
-# 特定目錄的修改頻率
+# Modification frequency for specific directory
 git log --all --name-only --format="" -- [PATH]/ | sort | uniq -c | sort -rn
 ```
 
-**代碼變更量分析**:
+**Code Change Volume Analysis**:
 
 ```bash
-# 總代碼變更統計
+# Total code change statistics
 git log --all --numstat --format="" | awk 'NF==3 {plus+=$1; minus+=$2} END {
   printf "Total added: %d\nTotal removed: %d\nNet change: %d\n", plus, minus, plus-minus
 }'
 
-# 最大的單次變更
+# Largest single changes
 git log --all --numstat --format="%H %s" |
   awk 'NF==3 {files++; added+=$1; deleted+=$2}
        NF!=3 && files>0 {printf "%d files, +%d -%d | %s\n", files, added, deleted, $0; files=added=deleted=0}'|
   sort -rn | head -10
 ```
 
-### Phase 3: Commit Message 分析
+### Phase 3: Commit Message Analysis
 
-**Commit 格式分析**:
+**Commit Format Analysis**:
 
 ```bash
-# Conventional Commits 統計
+# Conventional Commits statistics
 git log --all --format="%s" | grep -E "^(feat|fix|docs|style|refactor|test|chore|perf):" | wc -l
 
-# Commit message 長度分布
+# Commit message length distribution
 git log --all --format="%s" | awk '{print length}' | sort -n | uniq -c
 
-# 最常見的 commit 前綴
+# Most common commit prefixes
 git log --all --format="%s" | grep -oE "^[a-z]+:" | sort | uniq -c | sort -rn
 ```
 
-**開發模式識別**:
+**Development Pattern Identification**:
 
 ```bash
-# 尋找重構 commits
+# Find refactor commits
 git log --all --grep="refactor" --oneline | wc -l
 
-# 尋找 bug 修復
+# Find bug fixes
 git log --all --grep="fix\|bug\|Fix\|Bug" --oneline | wc -l
 
-# 尋找新功能
+# Find new features
 git log --all --grep="feat\|feature\|add" --oneline | wc -l
 
-# 尋找技術債務相關
+# Find technical debt related
 git log --all --grep="debt\|todo\|cleanup" --oneline
 ```
 
-### Phase 4: 開發者行為分析
+### Phase 4: Developer Behavior Analysis
 
-**多作者專案**:
+**Multi-Author Projects**:
 
 ```bash
-# 每位作者的代碼貢獻
+# Code contribution per author
 git log --all --numstat --format="%an" |
   awk '{if (NF==1) author=$0; else {files[author]++; added[author]+=$1; deleted[author]+=$2}}
        END {for (a in files) printf "%s: %d files, +%d -%d\n", a, files[a], added[a], deleted[a]}' |
   sort -t: -k2 -rn
 
-# 每位作者的活躍時段
+# Active period per author
 for author in $(git log --all --format="%an" | sort -u); do
   echo "=== $author ==="
   git log --all --author="$author" --format="%ad" --date=short | sort | uniq -c | tail -10
 done
 ```
 
-**單作者多環境檢測**:
+**Single Author Multi-Environment Detection**:
 
 ```bash
-# 檢查是否同一人使用多個郵箱/環境
+# Check if same person uses multiple emails/environments
 git log --all --format="%an|%ae|%cn|%ce" | sort -u
 ```
 
-### Phase 5: AI 協作證據分析
+### Phase 5: AI Collaboration Evidence Analysis
 
-**AI 代碼特徵**:
+**AI Code Characteristics**:
 
 ```bash
-# 搜尋 AI 配置檔案修改
+# Search for AI config file modifications
 git log --all --name-only --format="" | grep -E "(\.claude|\.cursor|CLAUDE\.md|\.ai)"
 
-# 分析 commit message 的一致性（AI 通常非常一致）
+# Analyze commit message consistency (AI is usually very consistent)
 git log --all --format="%s" | head -50
 
-# 搜尋可能的 AI 生成代碼標記
+# Search for possible AI-generated code markers
 git log --all --grep="AI\|Claude\|GPT\|generated" --oneline
 
-# 檢查 commit message 的繁體中文使用
+# Check Traditional Chinese usage in commit messages
 git log --all --format="%s" | grep -E "[\u4e00-\u9fff]" | wc -l
 ```
 
-### Phase 6: 生成分析報告
+### Phase 6: Generate Analysis Report
 
-輸出格式：`[project-name]-stage2-git-hotspots.md`
+Output format: `[project-name]-stage2-git-hotspots.md`
 
 ```markdown
-# Stage 2: Git 熱點分析報告 - [Project Name]
+# Stage 2: Git Hotspots Analysis Report - [Project Name]
 
-**分析時間**: [ISO 8601]
-**專案**: [名稱]
-**總 Commits**: [數量]
-**分析範圍**: [時間跨度]
+**Analysis Time**: [ISO 8601]
+**Project**: [name]
+**Total Commits**: [count]
+**Analysis Scope**: [time span]
 
 ---
 
-## 📊 總體統計
+## 📊 Overall Statistics
 
-### 開發時間線
+### Development Timeline
 ```
 
-開始日期: [YYYY-MM-DD]
-結束日期: [YYYY-MM-DD]
-總開發時間: [X 個月/週]
-總 Commits: [數量]
-平均每日 Commits: [數量]
-
-```
-
-### 代碼變更量
-```
-
-總新增行: [數量]
-總刪除行: [數量]
-淨增長: [數量]
-效率比: [新增/刪除比例]
+Start date: [YYYY-MM-DD]
+End date: [YYYY-MM-DD]
+Total development time: [X months/weeks]
+Total Commits: [count]
+Average daily Commits: [count]
 
 ```
 
-### 開發者統計
+### Code Change Volume
 ```
 
-[作者1]: [X] commits ([Y]%)
-[作者2]: [X] commits ([Y]%)
+Total lines added: [count]
+Total lines removed: [count]
+Net growth: [count]
+Efficiency ratio: [add/delete ratio]
+
+```
+
+### Developer Statistics
+```
+
+[Author1]: [X] commits ([Y]%)
+[Author2]: [X] commits ([Y]%)
 ...
 
 ```
 
 ---
 
-## 🔥 檔案熱點分析
+## 🔥 File Hotspot Analysis
 
-### Top 20 最常修改的檔案
+### Top 20 Most Modified Files
 
-| 排名 | 檔案 | 修改次數 | 類型 | 說明 |
-|------|------|---------|------|------|
-| 1 | [路徑] | [數量] | [配置/業務/測試] | [說明] |
+| Rank | File | Modifications | Type | Description |
+|------|------|--------------|------|-------------|
+| 1 | [path] | [count] | [config/business/test] | [description] |
 | 2 | ... | ... | ... | ... |
 
-### 熱點分類
+### Hotspot Categories
 
-#### 🚀 部署與 DevOps 熱點 ([X]% of changes)
-- [檔案1]: [說明]
-- [檔案2]: [說明]
+#### 🚀 Deployment & DevOps Hotspots ([X]% of changes)
+- [file1]: [description]
+- [file2]: [description]
 
-#### 📦 依賴管理熱點 ([X]% of changes)
-- [檔案1]: [說明]
+#### 📦 Dependency Management Hotspots ([X]% of changes)
+- [file1]: [description]
 
-#### 🛠️ 業務邏輯熱點 ([X]% of changes)
-- [檔案1]: [說明]
+#### 🛠️ Business Logic Hotspots ([X]% of changes)
+- [file1]: [description]
 
-#### 📝 文檔與配置熱點 ([X]% of changes)
-- [檔案1]: [說明]
+#### 📝 Documentation & Config Hotspots ([X]% of changes)
+- [file1]: [description]
 
 ---
 
-## 📅 時間線分析
+## 📅 Timeline Analysis
 
-### Phase 1: [階段名稱] ([開始] ~ [結束])
+### Phase 1: [phase name] ([start] ~ [end])
 
-**時間跨度**: [X] 天
-**Commits**: [數量]
-**主要活動**:
-- [活動1]
-- [活動2]
+**Time span**: [X] days
+**Commits**: [count]
+**Main activities**:
+- [activity1]
+- [activity2]
 
-**高峰日**:
-- [日期]: [X] commits
-- [日期]: [X] commits
+**Peak days**:
+- [date]: [X] commits
+- [date]: [X] commits
 
-**代表性 Commits**:
+**Representative Commits**:
 ```
 
 [hash] [message]
@@ -1032,21 +1032,21 @@ git log --all --format="%s" | grep -E "[\u4e00-\u9fff]" | wc -l
 
 ```
 
-### Phase 2: [下一階段]
+### Phase 2: [next phase]
 ...
 
 ---
 
-## 🎯 開發模式分析
+## 🎯 Development Pattern Analysis
 
-### Commit Message 規範
+### Commit Message Standards
 
-**格式統計**:
-- Conventional Commits: [X]% ([數量]/[總數])
-- 傳統格式: [X]%
-- 無規範: [X]%
+**Format statistics**:
+- Conventional Commits: [X]% ([count]/[total])
+- Traditional format: [X]%
+- No standard: [X]%
 
-**常見前綴**:
+**Common prefixes**:
 ```
 
 feat:     [X] commits ([Y]%)
@@ -1056,138 +1056,138 @@ refactor: [X] commits ([Y]%)
 
 ```
 
-### 開發節奏
+### Development Rhythm
 
-**平均開發模式**:
-- 平日: [X] commits/天
-- 週末: [X] commits/天
-- 高峰時段: [時間範圍]
+**Average development pattern**:
+- Weekdays: [X] commits/day
+- Weekends: [X] commits/day
+- Peak hours: [time range]
 
-**工作時間分析**:
+**Work hours analysis**:
 ```
 
-[分析開發者的工作時間偏好]
+[analyze developer's work time preferences]
 
 ```
 
-### 重構頻率
+### Refactoring Frequency
 
-**重構統計**:
-- 明確的重構 commits: [數量]
-- 重構佔比: [X]%
-- 平均每 [X] 個 commits 有 1 次重構
+**Refactoring statistics**:
+- Explicit refactor commits: [count]
+- Refactor ratio: [X]%
+- Average 1 refactor per [X] commits
 
-**重構類型**:
-- [類型1]: [數量]
-- [類型2]: [數量]
+**Refactoring types**:
+- [type1]: [count]
+- [type2]: [count]
 
 ---
 
-## 🤖 AI 協作證據
+## 🤖 AI Collaboration Evidence
 
-### AI 配置檔案
+### AI Configuration Files
 
-**發現的 AI 相關檔案**:
-- [檔案1]: [首次出現日期]
-- [檔案2]: [首次出現日期]
+**Discovered AI-related files**:
+- [file1]: [first appearance date]
+- [file2]: [first appearance date]
 
-**AI 協作時間線**:
+**AI collaboration timeline**:
 ```
 
-[描述 AI 協作的引入和演進]
+[describe introduction and evolution of AI collaboration]
 
 ```
 
-### AI 代碼特徵
+### AI Code Characteristics
 
-**Commit Message 特徵**:
-- 一致性: [HIGH | MEDIUM | LOW]
-- 詳細程度: [詳細 | 中等 | 簡潔]
-- 格式規範: [X]% 遵循 Conventional Commits
+**Commit Message Characteristics**:
+- Consistency: [HIGH | MEDIUM | LOW]
+- Detail level: [detailed | medium | concise]
+- Format compliance: [X]% follow Conventional Commits
 
-**代碼特徵**:
-- [特徵1]: [證據]
-- [特徵2]: [證據]
+**Code characteristics**:
+- [characteristic1]: [evidence]
+- [characteristic2]: [evidence]
 
-**AI 協作成熟度**: [Level 0-4]
-- [評估依據]
+**AI Collaboration Maturity**: [Level 0-4]
+- [assessment basis]
 
 ---
 
-## 💡 關鍵洞察
+## 💡 Key Insights
 
-### 1. [洞察1]
-- **發現**: [描述]
-- **證據**: [數據或 commits]
-- **影響**: [說明影響]
+### 1. [Insight1]
+- **Finding**: [description]
+- **Evidence**: [data or commits]
+- **Impact**: [explain impact]
 
-### 2. [洞察2]
+### 2. [Insight2]
 ...
 
 ---
 
-## 📈 開發者能力評估 (基於 Git 歷史)
+## 📈 Developer Capability Assessment (Based on Git History)
 
-### Commit 品質
-- **訊息品質**: [優秀 | 良好 | 普通 | 差]
-- **Commit 粒度**: [適當 | 過大 | 過小]
-- **規範遵循**: [X]%
+### Commit Quality
+- **Message quality**: [excellent | good | fair | poor]
+- **Commit granularity**: [appropriate | too large | too small]
+- **Standard compliance**: [X]%
 
-### 開發習慣
-- **Commit 頻率**: [高 | 中 | 低]
-- **重構意識**: [強 | 中 | 弱]
-- **技術債務管理**: [優秀 | 良好 | 普通 | 缺乏]
+### Development Habits
+- **Commit frequency**: [high | medium | low]
+- **Refactoring awareness**: [strong | medium | weak]
+- **Technical debt management**: [excellent | good | fair | lacking]
 
-### 問題解決能力
-- **Bug 修復模式**: [描述]
-- **除錯效率**: [高 | 中 | 低]
-- **持續時間**: [能否持續專注]
-
----
-
-## 📋 Stage 2 總結
-
-### 核心發現
-
-1. [發現1]
-2. [發現2]
-3. [發現3]
-
-### 對 SourceAtlas 的驗證
-
-- ✅ **Git 熱點分析有效性**: [評估]
-- ✅ **開發模式識別**: [評估]
-- ✅ **AI 協作識別**: [評估]
+### Problem-Solving Ability
+- **Bug fix patterns**: [description]
+- **Debugging efficiency**: [high | medium | low]
+- **Sustained focus**: [able to sustain focus]
 
 ---
 
-**報告完成時間**: [ISO 8601]
-**分析深度**: [95]%+
-**信心等級**: [0.0-1.0]
+## 📋 Stage 2 Summary
+
+### Core Findings
+
+1. [Finding1]
+2. [Finding2]
+3. [Finding3]
+
+### SourceAtlas Validation
+
+- ✅ **Git hotspot analysis effectiveness**: [assessment]
+- ✅ **Development pattern identification**: [assessment]
+- ✅ **AI collaboration identification**: [assessment]
+
+---
+
+**Report Completion Time**: [ISO 8601]
+**Analysis Depth**: [95]%+
+**Confidence Level**: [0.0-1.0]
 ```
 
-## ⚠️ 重要原則
+## ⚠️ Important Principles
 
-1. **時間線重建**: 理解專案如何演進
-2. **模式識別**: 找出重複的開發模式
-3. **客觀分析**: 基於數據，不做主觀評判
-4. **完整性**: 分析整個 Git 歷史，不只是最近
-5. **上下文**: 結合 Stage 0-1 的結果理解 Git 歷史
+1. **Timeline reconstruction**: Understand how the project evolved
+2. **Pattern recognition**: Find repeated development patterns
+3. **Objective analysis**: Based on data, not subjective judgments
+4. **Completeness**: Analyze entire Git history, not just recent
+5. **Context**: Understand Git history combined with Stage 0-1 results
 
-## 📊 分析標準
+## 📊 Analysis Criteria
 
-一個好的 Stage 2 分析應該：
+A good Stage 2 analysis should:
 
-- ✅ 完整的時間線重建
-- ✅ 識別所有關鍵階段
-- ✅ 找出檔案熱點
-- ✅ 分析開發模式
-- ✅ 評估 AI 協作證據
-- ✅ 使用 <20k tokens
+- ✅ Complete timeline reconstruction
+- ✅ Identify all key phases
+- ✅ Find file hotspots
+- ✅ Analyze development patterns
+- ✅ Assess AI collaboration evidence
+- ✅ Use <20k tokens
 
-## 🎓 範例參考
+## 🎓 Example References
 
-查看以下實際分析範例：
+Check these actual analysis examples:
 
 - `test_results/trySwift-stage2-git-hotspots.md`
 - `test_results/taiwan-calendar-stage2-git-hotspots.md`
@@ -1197,105 +1197,105 @@ refactor: [X] commits ([Y]%)
 
 ---
 
-## 📚 完整工作流程
+## 📚 Complete Workflow
 
-### 標準分析流程
+### Standard Analysis Process
 
 ```
 
 1. Stage 0: Project Fingerprint
-   ↓ (生成 10-15 個假設)
+   ↓ (generate 10-15 hypotheses)
 
 2. Stage 1: Hypothesis Validation
-   ↓ (驗證假設，更新理解)
+   ↓ (validate hypotheses, update understanding)
 
 3. Stage 2: Git Hotspots Analysis
-   ↓ (識別開發模式)
+   ↓ (identify development patterns)
 
-4. 綜合報告
-   (整合三階段結果)
+4. Comprehensive Report
+   (integrate three-stage results)
 
 ```
 
-### 何時跳過某個 Stage？
+### When to Skip a Stage?
 
-**可以跳過 Stage 2**:
-- 專案沒有 Git 歷史
-- 專案只有 1-2 個 commits
-- Git 歷史不重要（如 fork 的專案）
+**Can skip Stage 2**:
+- Project has no Git history
+- Project has only 1-2 commits
+- Git history not important (e.g., forked projects)
 
-**可以簡化 Stage 1**:
-- Stage 0 信心度 >90%
-- 專案極簡單 (<500 行)
+**Can simplify Stage 1**:
+- Stage 0 confidence >90%
+- Project extremely simple (<500 lines)
 
-**不能跳過 Stage 0**:
-- Stage 0 是必須的基礎
+**Cannot skip Stage 0**:
+- Stage 0 is the necessary foundation
 
-### 適用場景
+### Applicable Scenarios
 
-| 代碼規模 | 建議 Stage | 理由 |
-|---------|-----------|------|
-| <500 行 | Stage 0 only | 直接讀完整專案更快 |
-| 500-2000 行 | Stage 0-1 | Stage 2 價值不大 |
-| 2000-10k 行 | Stage 0-2 | 完整三階段 |
-| 10k-100k 行 | Stage 0-2 | 完整三階段 |
-| >100k 行 | Stage 0-2 | 必須使用，節省大量時間 |
-
----
-
-## 🎯 效果評估
-
-基於實際測試（trySwift, taiwan-calendar, monorepo-sample, sample-projects）:
-
-| 指標 | 目標 | 實際 | 達成 |
-|------|------|------|------|
-| **Stage 0 準確度** | >70% | 75-95% | ✅ |
-| **Stage 1 驗證率** | >80% | 87-100% | ✅ |
-| **Token 節省** | >80% | 95%+ | ✅ |
-| **時間節省** | >90% | 95%+ | ✅ |
-| **理解深度** | >85% | 85-95% | ✅ |
-
-### 成功案例
-
-1. **monorepo-sample** (156k 行)
-   - 掃描 <5% 檔案達到 75% 理解
-   - Stage 1 驗證率 87%
-   - 識別出 Level 3 AI 協作
-
-2. **taiwan-calendar** (15k 行)
-   - Stage 0 準確度 100%
-   - 完整識別架構和測試文化
-
-3. **sample-projects** (5 專案)
-   - 快速識別能力弱點（數據持久化）
-   - 準確評估經驗年資
+| Code Scale | Recommended Stages | Reason |
+|------------|-------------------|--------|
+| <500 lines | Stage 0 only | Faster to read entire project |
+| 500-2000 lines | Stage 0-1 | Stage 2 provides little value |
+| 2000-10k lines | Stage 0-2 | Complete three-stage |
+| 10k-100k lines | Stage 0-2 | Complete three-stage |
+| >100k lines | Stage 0-2 | Must use, saves significant time |
 
 ---
 
-## 📖 延伸閱讀
+## 🎯 Effectiveness Evaluation
 
-- `USAGE_GUIDE.md` - 詳細使用指南
-- `EVALUATION_STANDARDS.md` - 評估標準體系
-- `test_results/` - 實際分析案例
-- `THREE-WAY-DEVELOPER-COMPARISON.md` - 開發者對比研究
+Based on actual testing (trySwift, taiwan-calendar, monorepo-sample, sample-projects):
+
+| Metric | Target | Actual | Achieved |
+|--------|--------|--------|----------|
+| **Stage 0 Accuracy** | >70% | 75-95% | ✅ |
+| **Stage 1 Validation Rate** | >80% | 87-100% | ✅ |
+| **Token Savings** | >80% | 95%+ | ✅ |
+| **Time Savings** | >90% | 95%+ | ✅ |
+| **Understanding Depth** | >85% | 85-95% | ✅ |
+
+### Success Stories
+
+1. **monorepo-sample** (156k lines)
+   - Scanned <5% of files to achieve 75% understanding
+   - Stage 1 validation rate 87%
+   - Identified Level 3 AI collaboration
+
+2. **taiwan-calendar** (15k lines)
+   - Stage 0 accuracy 100%
+   - Completely identified architecture and test culture
+
+3. **sample-projects** (5 projects)
+   - Quickly identified capability weaknesses (data persistence)
+   - Accurately assessed years of experience
 
 ---
 
-## 🔄 何時使用哪種方式？
+## 📖 Further Reading
 
-| 場景 | 推薦方式 | 原因 |
-|------|---------|------|
-| 日常開發理解 codebase | `/atlas.overview` | 快速、自動化 |
-| 學習設計模式 | `/atlas.pattern` | 精準、actionable |
-| 評估變更影響 | `/atlas.impact` | 靜態依賴分析 |
-| 追蹤業務流程 | `/atlas.flow` | 11 種分析模式 |
-| Library 升級評估 | `/atlas.deps` | Breaking change 對照 |
-| 技術盡職調查 | 手動 Stage 0-1-2 | 完整假設驗證 |
-| 招聘評估 | 手動 Stage 0-1-2 | 需要 Git 分析 |
-| 開源專案深度學習 | 手動 Stage 0-1-2 | 完整三階段報告 |
+- `USAGE_GUIDE.md` - Detailed usage guide
+- `EVALUATION_STANDARDS.md` - Evaluation standards system
+- `test_results/` - Actual analysis case studies
+- `THREE-WAY-DEVELOPER-COMPARISON.md` - Developer comparison study
 
 ---
 
-**文檔版本**: v2.9.3
-**最後更新**: 2025-12-18
-**維護者**: SourceAtlas Team
+## 🔄 When to Use Which Approach?
+
+| Scenario | Recommended Approach | Reason |
+|----------|---------------------|--------|
+| Daily codebase understanding | `/atlas.overview` | Fast, automated |
+| Learning design patterns | `/atlas.pattern` | Precise, actionable |
+| Assessing change impact | `/atlas.impact` | Static dependency analysis |
+| Tracing business flows | `/atlas.flow` | 11 analysis modes |
+| Library upgrade assessment | `/atlas.deps` | Breaking change comparison |
+| Technical due diligence | Manual Stage 0-1-2 | Complete hypothesis validation |
+| Hiring assessment | Manual Stage 0-1-2 | Need Git analysis |
+| Deep learning open source projects | Manual Stage 0-1-2 | Complete three-stage report |
+
+---
+
+**Documentation Version**: v2.9.3
+**Last Updated**: 2025-12-18
+**Maintainer**: SourceAtlas Team
