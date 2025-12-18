@@ -2,7 +2,7 @@
 description: Learn design patterns from the current codebase
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--save] [--force]
+argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--save] [--force] [--brief|--full]
 ---
 
 # SourceAtlas: Pattern Learning Mode
@@ -59,6 +59,39 @@ argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--save] [
 5. **如果快取不存在**：繼續執行下方的分析流程
 
 **如果參數中有 `--force`**：跳過快取檢查，直接執行分析
+
+---
+
+## Output Mode（Progressive Disclosure）
+
+**解析 `$ARGUMENTS` 中的輸出模式參數**：
+
+| 參數 | 行為 | 適用場景 |
+|------|------|---------|
+| `--brief` | 僅列出檔案清單，不進行完整分析 | 快速瀏覽、選擇檔案 |
+| `--full` | 強制完整分析所有找到的檔案 | 深度學習 |
+| （無參數） | **Smart 模式**：≤5 檔案→完整分析；>5 檔案→顯示選擇介面 | 預設 |
+
+**Smart 模式判斷邏輯**：
+```
+FILE_COUNT = Step 1 回傳的檔案數
+
+if FILE_COUNT == 0:
+    → 輸出「未找到符合的檔案」
+    → 結束
+
+elif FILE_COUNT <= 5:
+    → 直接進入 Step 2，完整分析
+
+else (FILE_COUNT > 5):
+    → 顯示選擇介面：
+      找到 {N} 個相關檔案，請選擇要分析的檔案：
+      | # | 檔案路徑 | 相關性 |
+      |---|----------|--------|
+      | 1 | path/to/file1.py | ⭐⭐⭐ |
+      ...
+      輸入數字選擇（如 1,2,3），或輸入 all 分析全部。
+```
 
 ---
 

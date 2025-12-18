@@ -6,6 +6,16 @@
 
 ## 2025-12（當前月份）
 
+### Week 3 (12/18): Progressive Disclosure for /atlas.pattern ⭐⭐⭐
+
+**Progressive Disclosure 實作完成** (12/18):
+- 智慧輸出模式：≤5 檔案直接分析，>5 檔案顯示選擇介面
+- 新增參數：`--brief`（僅列清單）、`--full`（強制完整分析）
+- 多方案驗證：5 個方案比較，選擇 Parameter-Based（加權分數 4.15/5）
+- 測試通過：4/4 測試案例（model, router, config, unknown）
+- GitButler 保留備選方案：`pd-v2-minimal`, `pd-v2-script`, `pd-v2-hybrid`, `pd-v2-config`
+→ [實作報告](./2025-12/2025-12-18-progressive-disclosure-implementation.md)
+
 ### Week 2 (12/14): v2.9.2 Release - ast-grep Integration ⭐⭐⭐⭐
 
 **ast-grep 整合完成** (12/14):
