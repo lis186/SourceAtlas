@@ -1,233 +1,233 @@
-# SourceAtlas 分析憲法 (Analysis Constitution)
+# SourceAtlas Analysis Constitution
 
-**版本**: 1.1 | **生效日期**: 2025-12-05 | **狀態**: 生效中
+**Version**: 1.1 | **Effective Date**: 2025-12-05 | **Status**: Active
 
-> 本文件定義 SourceAtlas 分析的**不可變原則**。
-> 所有分析命令（/atlas.*）必須遵守這些原則。
-> 違反原則的分析結果應被視為不完整。
+> This document defines the **immutable principles** of SourceAtlas analysis.
+> All analysis commands (/atlas.*) must adhere to these principles.
+> Analysis results that violate these principles should be considered incomplete.
 
 ---
 
-## Article I: 資訊理論原則 (Information Theory)
+## Article I: Information Theory Principles
 
-### Section 1.1: 高熵優先
-> **不可變**: 永遠優先掃描高熵檔案，而非線性遍歷。
+### Section 1.1: High-Entropy Priority
+> **Immutable**: Always prioritize scanning high-entropy files over linear traversal.
 
-高熵檔案的掃描順序：
-1. **配置檔案**（package.json, go.mod, Cargo.toml, pyproject.toml）
-2. **專案文檔**（README.md, CLAUDE.md, ARCHITECTURE.md）
-3. **核心模型**（models/, entities/, domain/）
-4. **入口點**（main.*, index.*, app.*）
-5. **測試範例**（1-2 個代表性測試）
+High-entropy file scanning order:
+1. **Configuration files** (package.json, go.mod, Cargo.toml, pyproject.toml)
+2. **Project documentation** (README.md, CLAUDE.md, ARCHITECTURE.md)
+3. **Core models** (models/, entities/, domain/)
+4. **Entry points** (main.*, index.*, app.*)
+5. **Test samples** (1-2 representative tests)
 
-**驗證**: 每次分析必須記錄「掃描的高熵檔案」清單。
+**Validation**: Each analysis must record the list of "high-entropy files scanned".
 
-### Section 1.2: 掃描比例上限
-> **不可變**: 掃描檔案數不得超過專案總檔案數的規定比例。
+### Section 1.2: Scan Ratio Limits
+> **Immutable**: The number of scanned files must not exceed the specified ratio of total project files.
 
-| 專案規模 | 檔案數 | 最大掃描比例 | 最大掃描數 |
-|---------|--------|-------------|-----------|
+| Project Scale | File Count | Max Scan Ratio | Max Scan Count |
+|---------------|------------|----------------|----------------|
 | TINY | <20 | 50% | 10 |
 | SMALL | 20-50 | 20% | 10 |
 | MEDIUM | 50-150 | 10% | 15 |
 | LARGE | 150-500 | 5% | 25 |
 | VERY_LARGE | >500 | 3% | 30 |
 
-**驗證**: 分析報告必須包含 `scan_ratio` 欄位，違反上限應發出警告。
+**Validation**: Analysis reports must include a `scan_ratio` field; violations should trigger a warning.
 
-### Section 1.3: 結構優於細節
-> **指導**: 理解專案結構比閱讀實作細節更重要。
+### Section 1.3: Structure Over Details
+> **Guidance**: Understanding project structure is more important than reading implementation details.
 
-優先順序：
-1. 目錄結構和命名慣例
-2. 模組間的依賴關係
-3. API 契約和介面定義
-4. 實作細節（僅在必要時）
+Priority order:
+1. Directory structure and naming conventions
+2. Module dependencies
+3. API contracts and interface definitions
+4. Implementation details (only when necessary)
 
 ---
 
-## Article II: 排除原則 (Exclusion Policy)
+## Article II: Exclusion Policy
 
-### Section 2.1: 強制排除目錄
-> **不可變**: 以下目錄在任何情況下都必須排除於檔案計數和掃描。
+### Section 2.1: Mandatory Directory Exclusions
+> **Immutable**: The following directories must be excluded from file counting and scanning under all circumstances.
 
 ```
-.venv/           # Python 虛擬環境
-node_modules/    # Node.js 依賴
-vendor/          # PHP/Go 依賴
-__pycache__/     # Python 快取
-.git/            # Git 內部
+.venv/           # Python virtual environment
+node_modules/    # Node.js dependencies
+vendor/          # PHP/Go dependencies
+__pycache__/     # Python cache
+.git/            # Git internals
 Pods/            # iOS CocoaPods
-DerivedData/     # Xcode 建置產物
-build/           # 通用建置目錄
-dist/            # 通用發布目錄
-target/          # Rust/Maven 建置
-.next/           # Next.js 建置
-.nuxt/           # Nuxt.js 建置
+DerivedData/     # Xcode build artifacts
+build/           # Generic build directory
+dist/            # Generic distribution directory
+target/          # Rust/Maven build
+.next/           # Next.js build
+.nuxt/           # Nuxt.js build
 ```
 
-**驗證**: 偵測腳本必須在檔案計數前排除這些目錄。
+**Validation**: Detection scripts must exclude these directories before counting files.
 
-### Section 2.2: 條件排除
-> **可配置**: 以下目錄預設包含，但可由使用者排除。
+### Section 2.2: Conditional Exclusions
+> **Configurable**: The following directories are included by default but can be excluded by users.
 
 ```
-tests/           # 測試目錄
-docs/            # 文檔目錄
-examples/        # 範例目錄
+tests/           # Test directory
+docs/            # Documentation directory
+examples/        # Examples directory
 ```
 
 ---
 
-## Article III: 假設原則 (Hypothesis Policy)
+## Article III: Hypothesis Policy
 
-### Section 3.1: 假設數量限制
-> **不可變**: 假設數量必須根據專案規模調整。
+### Section 3.1: Hypothesis Count Limits
+> **Immutable**: Hypothesis count must be adjusted based on project scale.
 
-| 專案規模 | 假設數量目標 | 低信心假設上限 |
-|---------|-------------|---------------|
+| Project Scale | Target Hypothesis Count | Low-Confidence Hypothesis Limit |
+|---------------|-------------------------|--------------------------------|
 | TINY | 5-8 | 2 |
 | SMALL | 7-10 | 3 |
 | MEDIUM | 10-15 | 4 |
 | LARGE | 12-18 | 5 |
 | VERY_LARGE | 15-20 | 6 |
 
-**定義**: 低信心假設 = confidence < 0.5
+**Definition**: Low-confidence hypothesis = confidence < 0.5
 
-**驗證**: 超過低信心假設上限時，必須優先將最弱的假設轉為「需要驗證」標記，或透過額外掃描提升信心。
+**Validation**: When exceeding the low-confidence limit, prioritize marking the weakest hypotheses as "needs validation" or improve confidence through additional scanning.
 
-### Section 3.2: 假設必要元素
-> **不可變**: 每個假設必須包含以下欄位。
+### Section 3.2: Required Hypothesis Elements
+> **Immutable**: Each hypothesis must include the following fields.
 
 ```yaml
-hypothesis: "陳述句，描述推論內容"
-confidence: 0.0-1.0  # 信心等級
-evidence: "file:line 格式的證據引用"
-validation_method: "如何在後續階段驗證"
+hypothesis: "Declarative statement describing the inference"
+confidence: 0.0-1.0  # Confidence level
+evidence: "Evidence reference in file:line format"
+validation_method: "How to validate in subsequent stages"
 ```
 
-**驗證**: 缺少任何欄位的假設應被視為不完整。
+**Validation**: Hypotheses missing any field should be considered incomplete.
 
-### Section 3.3: 信心等級校準
-> **指導**: 信心等級應遵循以下標準。
+### Section 3.3: Confidence Level Calibration
+> **Guidance**: Confidence levels should follow these standards.
 
-| 信心區間 | 含義 | 證據要求 |
-|---------|------|---------|
-| 0.85-1.0 | 幾乎確定 | 配置檔案明確聲明 |
-| 0.7-0.85 | 高度可能 | 多個間接證據支持 |
-| 0.5-0.7 | 中等可能 | 單一間接證據 |
-| 0.0-0.5 | 需要驗證 | 推測，缺乏直接證據 |
+| Confidence Range | Meaning | Evidence Requirement |
+|------------------|---------|---------------------|
+| 0.85-1.0 | Almost certain | Explicit declaration in config file |
+| 0.7-0.85 | Highly likely | Multiple indirect evidence |
+| 0.5-0.7 | Moderately likely | Single indirect evidence |
+| 0.0-0.5 | Needs validation | Speculation, lacks direct evidence |
 
-### Section 3.4: 假設優先級
-> **指導**: 當需要取捨時，優先保留以下類型的假設。
+### Section 3.4: Hypothesis Priority
+> **Guidance**: When trade-offs are needed, prioritize retaining these hypothesis types.
 
-優先順序（高 → 低）：
-1. **架構假設**（整體結構、設計模式）
-2. **技術棧假設**（語言、框架、資料庫）
-3. **業務領域假設**（專案做什麼）
-4. **開發實踐假設**（測試、CI/CD）
-5. **AI 協作假設**（Level 0-4）
+Priority order (high → low):
+1. **Architecture hypotheses** (overall structure, design patterns)
+2. **Tech stack hypotheses** (languages, frameworks, databases)
+3. **Business domain hypotheses** (what the project does)
+4. **Development practice hypotheses** (testing, CI/CD)
+5. **AI collaboration hypotheses** (Level 0-4)
 
 ---
 
-## Article IV: 證據原則 (Evidence Policy)
+## Article IV: Evidence Policy
 
-### Section 4.1: 證據格式
-> **不可變**: 所有論點必須有證據支持，使用標準格式。
+### Section 4.1: Evidence Format
+> **Immutable**: All assertions must be supported by evidence using standard format.
 
 ```
-file_path:line_number  # 精確引用
+file_path:line_number  # Precise reference
 ```
 
-範例：
-- `src/models/User.php:42` - 精確行號
-- `README.md:15-30` - 範圍引用
-- `package.json` - 整檔引用（僅用於配置檔）
+Examples:
+- `src/models/User.php:42` - Exact line number
+- `README.md:15-30` - Range reference
+- `package.json` - Whole file reference (only for config files)
 
-### Section 4.2: 證據類型層級
-> **指導**: 不同類型的證據有不同的可信度。
+### Section 4.2: Evidence Type Hierarchy
+> **Guidance**: Different types of evidence have different credibility levels.
 
-| 證據類型 | 可信度 | 範例 |
-|---------|--------|------|
-| 配置宣告 | 最高 | package.json 中的 dependencies |
-| 文檔陳述 | 高 | README.md 的專案描述 |
-| 程式碼結構 | 中高 | 目錄命名、檔案組織 |
-| 程式碼內容 | 中 | import 語句、類別定義 |
-| 推論 | 低 | 基於模式的猜測 |
+| Evidence Type | Credibility | Example |
+|---------------|-------------|---------|
+| Config declaration | Highest | dependencies in package.json |
+| Documentation statement | High | Project description in README.md |
+| Code structure | Medium-high | Directory naming, file organization |
+| Code content | Medium | import statements, class definitions |
+| Inference | Low | Guesses based on patterns |
 
-### Section 4.3: 禁止無證據論點
-> **不可變**: 禁止在分析報告中出現無證據的結論性陳述。
+### Section 4.3: No Unsupported Assertions
+> **Immutable**: Conclusive statements without evidence are prohibited in analysis reports.
 
-❌ 錯誤：「這是一個高品質的專案」
-✅ 正確：「這是一個高品質的專案（證據：測試覆蓋率配置 `.github/workflows/ci.yml:45`，lint 規則 `.eslintrc.js`）」
+❌ Wrong: "This is a high-quality project"
+✅ Correct: "This is a high-quality project (evidence: test coverage config `.github/workflows/ci.yml:45`, lint rules `.eslintrc.js`)"
 
 ---
 
-## Article V: 輸出原則 (Output Policy)
+## Article V: Output Policy
 
-### Section 5.1: 格式標準
-> **不可變**: 輸出格式必須遵循以下標準。
+### Section 5.1: Format Standards
+> **Immutable**: Output format must follow these standards.
 
-| 分析類型 | 格式 | 原因 |
-|---------|------|------|
-| Stage 0 指紋 | YAML | 結構化、機器可讀 |
-| Stage 1 驗證 | Markdown | 人類可讀報告 |
-| Stage 2 歷史 | Markdown | 敘事性分析 |
-| 快速命令 | Markdown | 即時回饋 |
+| Analysis Type | Format | Reason |
+|---------------|--------|--------|
+| Stage 0 Fingerprint | YAML | Structured, machine-readable |
+| Stage 1 Validation | Markdown | Human-readable report |
+| Stage 2 History | Markdown | Narrative analysis |
+| Quick Commands | Markdown | Immediate feedback |
 
-### Section 5.2: 必要元資料
-> **不可變**: 所有分析輸出必須包含以下元資料。
+### Section 5.2: Required Metadata
+> **Immutable**: All analysis output must include the following metadata.
 
 ```yaml
 metadata:
-  analysis_time: "ISO 8601 時間戳"
-  total_files: N        # 專案總檔案數（排除後）
-  scanned_files: M      # 實際掃描檔案數
-  scan_ratio: "X.X%"    # M/N 的百分比
+  analysis_time: "ISO 8601 timestamp"
+  total_files: N        # Total project files (after exclusions)
+  scanned_files: M      # Actual scanned file count
+  scan_ratio: "X.X%"    # M/N percentage
   project_scale: "TINY|SMALL|MEDIUM|LARGE|VERY_LARGE"
   constitution_version: "1.0"
 ```
 
-### Section 5.3: 語言規範
-> **指導**: 輸出語言應匹配使用者偏好或專案主要語言。
+### Section 5.3: Language Standards
+> **Guidance**: Output language should match user preference or the project's primary language.
 
-- 預設：繁體中文（台灣用語）
-- 技術術語：保留英文原文
-- 專有名詞：不翻譯（如 React, Django, Kubernetes）
+- Default: Traditional Chinese (Taiwan terminology)
+- Technical terms: Keep English originals
+- Proper nouns: Do not translate (e.g., React, Django, Kubernetes)
 
-### Section 5.4: 內建品質檢查
-> **指導**: 每個命令應在輸出前自動驗證品質，發現問題時內嵌警告。
+### Section 5.4: Built-in Quality Checks
+> **Guidance**: Each command should auto-validate quality before output, embedding warnings when issues are found.
 
-**檢查項目**（按優先序）：
+**Check Items** (by priority):
 
-| 檢查 | 嚴重性 | 警告訊息範例 |
-|------|--------|-------------|
-| scan_ratio 超出上限 | ⚠️ HIGH | `⚠️ scan_ratio 12% 超出 MEDIUM 專案上限 10%` |
-| 假設缺少必要欄位 | ⚠️ HIGH | `⚠️ 假設 #3 缺少 evidence 欄位` |
-| 證據格式不正確 | ⚠️ MEDIUM | `⚠️ 證據格式應為 file:line，發現 "src/app.ts"` |
-| 缺少必要元資料 | ⚠️ MEDIUM | `⚠️ 缺少 project_scale 元資料` |
-| 低信心假設過多 | ℹ️ INFO | `ℹ️ 5 個低信心假設，建議進一步驗證` |
+| Check | Severity | Example Warning |
+|-------|----------|-----------------|
+| scan_ratio exceeds limit | ⚠️ HIGH | `⚠️ scan_ratio 12% exceeds MEDIUM project limit of 10%` |
+| Hypothesis missing required fields | ⚠️ HIGH | `⚠️ Hypothesis #3 missing evidence field` |
+| Incorrect evidence format | ⚠️ MEDIUM | `⚠️ Evidence format should be file:line, found "src/app.ts"` |
+| Missing required metadata | ⚠️ MEDIUM | `⚠️ Missing project_scale metadata` |
+| Too many low-confidence hypotheses | ℹ️ INFO | `ℹ️ 5 low-confidence hypotheses, recommend further validation` |
 
-**警告格式**：
+**Warning Format**:
 ```markdown
 ---
-⚠️ **品質警告**
-- scan_ratio 12% 超出上限
-- 假設 #3 缺少 evidence 欄位
+⚠️ **Quality Warning**
+- scan_ratio 12% exceeds limit
+- Hypothesis #3 missing evidence field
 ---
 ```
 
-**原則**：
-- 警告應內嵌於輸出中，不阻斷流程
-- 優先顯示 HIGH 嚴重性問題
-- 保持簡潔，每個警告一行
+**Principles**:
+- Warnings should be embedded in output, not blocking the flow
+- Display HIGH severity issues first
+- Keep concise, one line per warning
 
 ---
 
-## Article VI: 規模感知原則 (Scale-Aware Policy)
+## Article VI: Scale-Aware Policy
 
-### Section 6.1: 規模判定
-> **不可變**: 專案規模根據排除後的程式碼檔案數判定。
+### Section 6.1: Scale Determination
+> **Immutable**: Project scale is determined by the number of code files after exclusions.
 
 ```
 TINY:       < 20 files
@@ -237,183 +237,183 @@ LARGE:      150 - 500 files
 VERY_LARGE: > 500 files
 ```
 
-### Section 6.2: 規模感知行為
-> **不可變**: 不同規模的專案需要不同的分析策略。
+### Section 6.2: Scale-Aware Behavior
+> **Immutable**: Projects of different scales require different analysis strategies.
 
-| 行為 | TINY | SMALL | MEDIUM | LARGE | VERY_LARGE |
-|------|------|-------|--------|-------|------------|
-| 掃描深度 | 深 | 中深 | 中 | 淺 | 很淺 |
-| 假設數量 | 5-8 | 7-10 | 10-15 | 12-18 | 15-20 |
-| 模型掃描 | 全部 | 全部 | 3-5 | 3-5 | 5-7 |
-| 測試掃描 | 全部 | 2-3 | 1-2 | 1-2 | 2-3 |
+| Behavior | TINY | SMALL | MEDIUM | LARGE | VERY_LARGE |
+|----------|------|-------|--------|-------|------------|
+| Scan depth | Deep | Medium-deep | Medium | Shallow | Very shallow |
+| Hypothesis count | 5-8 | 7-10 | 10-15 | 12-18 | 15-20 |
+| Model scanning | All | All | 3-5 | 3-5 | 5-7 |
+| Test scanning | All | 2-3 | 1-2 | 1-2 | 2-3 |
 
-### Section 6.3: 微型專案特例
-> **指導**: TINY 專案（<20 files）可能不需要完整的 SourceAtlas 分析。
+### Section 6.3: Tiny Project Exception
+> **Guidance**: TINY projects (<20 files) may not need full SourceAtlas analysis.
 
-建議：
-- <10 files：直接閱讀，無需系統化分析
-- 10-20 files：使用 `/atlas.overview` 快速掃描即可
-- >20 files：正常 SourceAtlas 流程
+Recommendations:
+- <10 files: Read directly, no systematic analysis needed
+- 10-20 files: Use `/atlas.overview` for quick scan only
+- >20 files: Normal SourceAtlas workflow
 
 ---
 
-## Article VII: Handoffs 原則 (Handoffs Policy)
+## Article VII: Handoffs Policy
 
-### Section 7.1: 發現驅動
-> **不可變**: Handoffs 必須基於實際分析發現，非靜態列表。
+### Section 7.1: Discovery-Driven
+> **Immutable**: Handoffs must be based on actual analysis findings, not static lists.
 
-每個 handoff 建議必須：
-- 引用當前分析的具體發現
-- 解釋為什麼這個建議與發現相關
-- 提供具體可執行的參數
+Each handoff suggestion must:
+- Reference specific findings from the current analysis
+- Explain why this suggestion relates to the findings
+- Provide specific executable parameters
 
-❌ 禁止：「可以用 /atlas.pattern 了解更多」
-✅ 正確：「`/atlas.pattern "repository"` - 發現 Repository 模式被 15 處使用，需了解實作慣例」
+❌ Forbidden: "You can use /atlas.pattern to learn more"
+✅ Correct: "`/atlas.pattern "repository"` - Found Repository pattern used in 15 places, need to understand implementation conventions"
 
-### Section 7.2: 結束條件
-> **不可變**: 當滿足以下任一條件時，應省略 `recommended_next` 區塊。
+### Section 7.2: End Conditions
+> **Immutable**: When any of the following conditions are met, the `recommended_next` section should be omitted.
 
-| 條件 | 說明 |
-|------|------|
-| **分析深度足夠** | 已執行 4+ 個命令涵蓋多維度（overview + pattern + flow + history/impact） |
-| **專案規模太小** | TINY 專案（<10 files）可直接閱讀全部檔案 |
-| **發現太模糊** | 無法給出高信心（>0.7）的建議參數 |
-| **目標已達成** | 使用者的問題已獲解答 |
+| Condition | Description |
+|-----------|-------------|
+| **Sufficient analysis depth** | 4+ commands executed covering multiple dimensions (overview + pattern + flow + history/impact) |
+| **Project too small** | TINY project (<10 files) can read all files directly |
+| **Findings too vague** | Cannot give high-confidence (>0.7) parameter suggestions |
+| **Goal achieved** | User's question has been answered |
 
-當省略 handoffs 時，應提供結束提示：
+When omitting handoffs, provide an end prompt:
 ```markdown
-✅ **分析已足夠** - 可以開始實作
+✅ **Analysis sufficient** - Ready to start implementation
 
-基於以上發現，建議優先處理：
-1. [具體行動項目]
-2. [具體行動項目]
+Based on the above findings, recommend prioritizing:
+1. [Specific action item]
+2. [Specific action item]
 ```
 
-### Section 7.3: 建議數量與格式
-> **不可變**: Handoffs 建議遵循以下規則。
+### Section 7.3: Suggestion Count and Format
+> **Immutable**: Handoffs suggestions follow these rules.
 
-- **Primary**: 必須提供（除非滿足結束條件）
-- **Secondary**: 可選（僅在有明確相關的第二選項時提供）
+- **Primary**: Must be provided (unless end conditions are met)
+- **Secondary**: Optional (only when there's a clear relevant second option)
 
-**禁止**為了格式一致而強行提供 Secondary 建議。
-當只有一個明確方向時，只提供 Primary。
+**Forbidden** to force a Secondary suggestion just for format consistency.
+When there's only one clear direction, provide only Primary.
 
-**輸出格式**：使用編號表格，方便用戶快速選擇：
+**Output Format**: Use numbered table for quick user selection:
 
 ```markdown
 ## Recommended Next
 
-| # | 命令 | 用途 |
-|---|------|------|
-| 1 | `/atlas.pattern "repository"` | 發現 Repository 模式被 15 處使用，需了解實作慣例 |
-| 2 | `/atlas.flow "checkout"` | 追蹤結帳流程的完整執行路徑 |
+| # | Command | Purpose |
+|---|---------|---------|
+| 1 | `/atlas.pattern "repository"` | Found Repository pattern used in 15 places, need to understand implementation conventions |
+| 2 | `/atlas.flow "checkout"` | Trace the complete execution path of checkout flow |
 
-💡 輸入數字（如 `1`）或複製命令執行
+💡 Enter a number (e.g., `1`) or copy the command to execute
 ```
 
-用戶可直接輸入 `1` 快速執行，也可複製完整命令。
+Users can enter `1` for quick execution or copy the full command.
 
-### Section 7.4: 參數品質
-> **不可變**: Handoffs 參數必須滿足以下品質標準。
+### Section 7.4: Parameter Quality
+> **Immutable**: Handoffs parameters must meet the following quality standards.
 
-| 要求 | 說明 | 範例 |
-|------|------|------|
-| **具體** | 包含可執行的參數 | ✅ `/atlas.pattern "repository"` |
-| **非泛泛** | 避免抽象描述 | ❌ `/atlas.pattern "相關 pattern"` |
-| **可驗證** | 參數對應實際存在的目標 | 檔案路徑存在、pattern 名稱有效 |
-| **基於發現** | 參數來自當前分析結果 | ✅ 使用分析中發現的實際檔案名 |
+| Requirement | Description | Example |
+|-------------|-------------|---------|
+| **Specific** | Include executable parameters | ✅ `/atlas.pattern "repository"` |
+| **Not generic** | Avoid abstract descriptions | ❌ `/atlas.pattern "relevant pattern"` |
+| **Verifiable** | Parameters correspond to actual existing targets | File paths exist, pattern names are valid |
+| **Finding-based** | Parameters come from current analysis results | ✅ Use actual file names discovered in analysis |
 
-### Section 7.5: 理由品質
-> **不可變**: 每個建議的 `why` 欄位必須：
+### Section 7.5: Rationale Quality
+> **Immutable**: The `why` field for each suggestion must:
 
-1. 引用當前分析的**具體發現**（數字、檔案名、問題）
-2. 解釋發現與建議的**因果關係**
-3. 使用 **1-2 句話**簡潔表達
+1. Reference **specific findings** from the current analysis (numbers, file names, issues)
+2. Explain the **causal relationship** between finding and suggestion
+3. Express concisely in **1-2 sentences**
 
-❌ 禁止：「了解更多細節」
-✅ 正確：「發現 setSQL.py 被 3 個模組依賴且無測試，需評估修改風險」
-
----
-
-## Article VIII: 修訂原則 (Amendment Policy)
-
-### Section 8.1: 修訂流程
-> 本憲法的修訂需要：
-
-1. 在 `ideas/` 提出修訂建議
-2. 在 3+ 個專案驗證新原則
-3. 更新 `dev-notes/` 記錄決策理由
-4. 遞增版本號
-5. 更新生效日期
-
-### Section 8.2: 版本號規則
-
-- **MAJOR**（如 1.0 → 2.0）：不向後相容的原則變更
-- **MINOR**（如 1.0 → 1.1）：新增原則或澄清
-- **PATCH**（如 1.0.0 → 1.0.1）：錯字修正、格式調整
-
-### Section 8.3: 向後相容
-> **指導**: 修訂應盡量保持向後相容，使先前有效的分析結果仍然有效。
+❌ Forbidden: "To learn more details"
+✅ Correct: "Found setSQL.py is depended on by 3 modules with no tests, need to assess modification risk"
 
 ---
 
-## Appendix A: 快速檢查清單
+## Article VIII: Amendment Policy
 
-### 分析前檢查
-- [ ] 確認專案路徑正確
-- [ ] 排除目錄已配置（.venv, node_modules 等）
-- [ ] 確定專案規模（TINY/SMALL/MEDIUM/LARGE/VERY_LARGE）
+### Section 8.1: Amendment Process
+> Amendments to this Constitution require:
 
-### 分析中檢查
-- [ ] 優先掃描高熵檔案
-- [ ] 掃描比例在規定上限內
-- [ ] 假設數量符合專案規模
-- [ ] 每個假設有完整四要素
+1. Propose amendment suggestion in `ideas/`
+2. Validate new principles on 3+ projects
+3. Update `dev-notes/` to record decision rationale
+4. Increment version number
+5. Update effective date
 
-### 分析後檢查
-- [ ] 輸出包含必要元資料
-- [ ] 每個論點有證據支持
-- [ ] 低信心假設不超過上限
-- [ ] 格式符合規定（YAML/Markdown）
+### Section 8.2: Version Number Rules
 
-### 內建品質檢查（Section 5.4）
-- [ ] 輸出前執行自動驗證
-- [ ] HIGH 嚴重性問題以 `⚠️` 警告顯示
-- [ ] 警告內嵌於輸出中，不阻斷流程
-- [ ] 警告格式正確（每個一行，優先 HIGH）
+- **MAJOR** (e.g., 1.0 → 2.0): Non-backward-compatible principle changes
+- **MINOR** (e.g., 1.0 → 1.1): New principles or clarifications
+- **PATCH** (e.g., 1.0.0 → 1.0.1): Typo fixes, formatting adjustments
 
-### Handoffs 檢查（Article VII）
-- [ ] 是否滿足結束條件？若是，省略 `recommended_next`
-- [ ] Primary 建議有具體參數（非泛泛描述）
-- [ ] Secondary 只在有明確第二選項時提供
-- [ ] 理由引用當前分析的具體發現
-- [ ] 參數基於實際發現（檔案名、pattern 名稱）
+### Section 8.3: Backward Compatibility
+> **Guidance**: Amendments should maintain backward compatibility as much as possible, keeping previously valid analysis results still valid.
 
 ---
 
-## Appendix B: 術語表
+## Appendix A: Quick Checklist
 
-| 術語 | 定義 |
-|------|------|
-| **高熵檔案** | 包含大量專案資訊的檔案（配置、文檔、模型） |
-| **掃描比例** | 實際掃描檔案數 / 專案總檔案數 |
-| **假設** | 基於掃描結果的推論，待後續驗證 |
-| **信心等級** | 對假設正確性的主觀估計（0.0-1.0） |
-| **證據** | 支持論點的具體檔案引用 |
+### Pre-Analysis Checks
+- [ ] Confirm correct project path
+- [ ] Exclusion directories configured (.venv, node_modules, etc.)
+- [ ] Determine project scale (TINY/SMALL/MEDIUM/LARGE/VERY_LARGE)
+
+### During Analysis Checks
+- [ ] Prioritize scanning high-entropy files
+- [ ] Scan ratio within specified limits
+- [ ] Hypothesis count matches project scale
+- [ ] Each hypothesis has complete four elements
+
+### Post-Analysis Checks
+- [ ] Output includes required metadata
+- [ ] Each assertion has supporting evidence
+- [ ] Low-confidence hypotheses don't exceed limit
+- [ ] Format complies with standards (YAML/Markdown)
+
+### Built-in Quality Checks (Section 5.4)
+- [ ] Auto-validate before output
+- [ ] HIGH severity issues shown with `⚠️` warning
+- [ ] Warnings embedded in output, not blocking flow
+- [ ] Warning format correct (one per line, HIGH priority first)
+
+### Handoffs Checks (Article VII)
+- [ ] End conditions met? If yes, omit `recommended_next`
+- [ ] Primary suggestion has specific parameters (not generic)
+- [ ] Secondary only provided when clear second option exists
+- [ ] Rationale references specific findings from current analysis
+- [ ] Parameters based on actual findings (file names, pattern names)
 
 ---
 
-## Appendix C: 與其他文件的關係
+## Appendix B: Glossary
 
-| 文件 | 關係 |
-|------|------|
-| `CLAUDE.md` | 開發指南（如何開發 SourceAtlas），本憲法聚焦分析行為 |
-| `PROMPTS.md` | 完整 prompt 模板，應遵循本憲法原則 |
-| `.claude/commands/atlas.*.md` | 命令實作，必須引用本憲法 |
-| `scripts/atlas/*.sh` | 輔助腳本，應實作本憲法的排除和計數邏輯 |
+| Term | Definition |
+|------|------------|
+| **High-entropy file** | Files containing large amounts of project information (configs, docs, models) |
+| **Scan ratio** | Actual scanned file count / Total project file count |
+| **Hypothesis** | Inference based on scan results, pending later validation |
+| **Confidence level** | Subjective estimate of hypothesis correctness (0.0-1.0) |
+| **Evidence** | Specific file references supporting assertions |
 
 ---
 
-**文件結束**
+## Appendix C: Relationship with Other Documents
 
-*此憲法由 SourceAtlas 團隊維護。如有疑問或建議，請在 `ideas/` 目錄提出。*
+| Document | Relationship |
+|----------|--------------|
+| `CLAUDE.md` | Development guide (how to develop SourceAtlas); this Constitution focuses on analysis behavior |
+| `PROMPTS.md` | Complete prompt templates, should follow this Constitution's principles |
+| `.claude/commands/atlas.*.md` | Command implementations, must reference this Constitution |
+| `scripts/atlas/*.sh` | Helper scripts, should implement this Constitution's exclusion and counting logic |
+
+---
+
+**End of Document**
+
+*This Constitution is maintained by the SourceAtlas team. For questions or suggestions, please submit them in the `ideas/` directory.*
