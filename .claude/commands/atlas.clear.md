@@ -28,7 +28,7 @@ Also check subdirectories:
 for dir in patterns flows impact deps; do
     if [ -d ".sourceatlas/$dir" ]; then
         count=$(ls -1 ".sourceatlas/$dir" 2>/dev/null | wc -l)
-        echo "$dir/: $count 個檔案"
+        echo "$dir/: $count files"
     fi
 done
 ```
@@ -41,12 +41,12 @@ List what will be deleted based on target:
 
 Example output:
 ```
-找到以下已儲存的分析：
+Found the following saved analyses:
 - overview.yaml (2025-12-12)
-- patterns/ (3 個檔案)
+- patterns/ (3 files)
 - history.md (2025-12-11)
 
-確定要刪除嗎？
+Are you sure you want to delete?
 ```
 
 ### Step 3: Wait for confirmation
@@ -54,12 +54,11 @@ Example output:
 Ask user to confirm. Do NOT proceed without explicit confirmation.
 
 Acceptable confirmations:
-- "好"
-- "是"
-- "確定"
 - "yes"
 - "ok"
-- "刪除"
+- "confirm"
+- "delete"
+- "sure"
 - etc.
 
 ### Step 4: Delete if confirmed
@@ -82,7 +81,7 @@ rm -rf .sourceatlas/deps/           # for "deps"
 ### Step 5: Confirm deletion
 
 ```
-✅ 已清空 [target or ".sourceatlas/"]
+✅ Cleared [target or ".sourceatlas/"]
 ```
 
 ---
@@ -90,7 +89,7 @@ rm -rf .sourceatlas/deps/           # for "deps"
 ## If nothing to clear
 
 ```
-.sourceatlas/ 目錄不存在或已經是空的
+.sourceatlas/ directory does not exist or is already empty
 ```
 
 ---
@@ -99,10 +98,10 @@ rm -rf .sourceatlas/deps/           # for "deps"
 
 | Target | Path | Description |
 |--------|------|-------------|
-| `overview` | `.sourceatlas/overview.yaml` | 專案概覽 |
-| `patterns` | `.sourceatlas/patterns/` | Pattern 分析 |
-| `flows` | `.sourceatlas/flows/` | 流程分析 |
-| `history` | `.sourceatlas/history.md` | 時序分析 |
-| `impact` | `.sourceatlas/impact/` | 影響分析 |
-| `deps` | `.sourceatlas/deps/` | 依賴分析 |
-| (no argument) | `.sourceatlas/*` | 全部清空 |
+| `overview` | `.sourceatlas/overview.yaml` | Project overview |
+| `patterns` | `.sourceatlas/patterns/` | Pattern analysis |
+| `flows` | `.sourceatlas/flows/` | Flow analysis |
+| `history` | `.sourceatlas/history.md` | Temporal analysis |
+| `impact` | `.sourceatlas/impact/` | Impact analysis |
+| `deps` | `.sourceatlas/deps/` | Dependency analysis |
+| (no argument) | `.sourceatlas/*` | Clear all |

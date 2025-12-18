@@ -10,8 +10,8 @@ argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3
 > **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md) v1.1
 >
 > Key principles enforced:
-> - Article IV: 證據格式要求 (file:line references)
-> - Article V: 輸出格式 (YAML)
+> - Article IV: Evidence Format Requirements (file:line references)
+> - Article V: Output Format (YAML)
 
 ## Context
 
@@ -21,65 +21,65 @@ argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3
 
 ---
 
-## Cache Check（最高優先）
+## Cache Check (Highest Priority)
 
-**如果參數中沒有 `--force`**，先檢查快取：
+**If `--force` is NOT in arguments**, check cache first:
 
-1. 從 `$ARGUMENTS` 提取 dependency 名稱（移除 `--save`、`--force`）
-2. 轉換為檔名：空格→`-`、`→`→`to`、小寫、移除特殊字元、**截斷至 50 字元**
-   - 例：`"react"` → `react.md`
-   - 例：`"iOS 16 → 17"` → `ios-16-to-17.md`
-   - 例：`"Python 3.12"` → `python-3-12.md`
-3. 檢查快取：
+1. Extract dependency name from `$ARGUMENTS` (remove `--save`, `--force`)
+2. Convert to filename: spaces→`-`, `→`→`to`, lowercase, remove special chars, **truncate to 50 chars**
+   - Example: `"react"` → `react.md`
+   - Example: `"iOS 16 → 17"` → `ios-16-to-17.md`
+   - Example: `"Python 3.12"` → `python-3-12.md`
+3. Check cache:
    ```bash
    ls -la .sourceatlas/deps/{name}.md 2>/dev/null
    ```
 
-4. **如果快取存在**：
-   - 計算距今天數
-   - 用 Read tool 讀取快取內容
-   - 輸出：
+4. **If cache exists**:
+   - Calculate days since creation
+   - Read cache content with Read tool
+   - Output:
      ```
-     📁 載入快取：.sourceatlas/deps/{name}.md（N 天前）
-     💡 重新分析請加 --force
+     📁 Loaded from cache: .sourceatlas/deps/{name}.md (N days ago)
+     💡 To re-analyze, add --force
      ```
-   - **如果超過 30 天**，額外顯示：
+   - **If older than 30 days**, also show:
      ```
-     ⚠️ 快取已超過 30 天，建議重新分析
+     ⚠️ Cache is older than 30 days, recommend re-analysis
      ```
-   - 然後輸出：
+   - Then output:
      ```
      ---
-     [快取內容]
+     [Cache content]
      ```
-   - **結束，不執行後續分析**
+   - **Stop here, do not proceed with analysis**
 
-5. **如果快取不存在**：繼續執行下方的分析流程
+5. **If cache does not exist**: Continue with analysis below
 
-**如果參數中有 `--force`**：跳過快取檢查，直接執行分析
+**If `--force` is in arguments**: Skip cache check, proceed directly to analysis
 
 ---
 
 ## Your Task
 
-### Phase 0: 規則確認 (Rule Confirmation) ⭐ NEW
+### Phase 0: Rule Confirmation ⭐ NEW
 
-**IMPORTANT**: 在開始盤點前，先確認分析規則。這確保分析結果符合使用者需求。
+**IMPORTANT**: Before starting inventory, confirm analysis rules. This ensures results meet user needs.
 
-#### Step 0.1: 識別升級類型
+#### Step 0.1: Identify Upgrade Type
 
-根據 `${ARGUMENTS}` 判斷：
+Based on `${ARGUMENTS}`:
 
-| 輸入模式 | 類型 | 需確認的規則 |
-|---------|------|-------------|
-| `iOS 17`, `iOS 16 → 17` | **iOS 最低版本升級** | 可移除的 #available、deprecated APIs、新 API 機會 |
-| `iOS SDK 26`, `Xcode 16` | **SDK/編譯器升級** | 編譯警告、Swift 版本變化、新語法 |
-| `react 17 → 18`, `pandas 1.x → 2.x` | **Major 版本升級** | Breaking changes、deprecated APIs、新 patterns |
-| `react`, `pandas` (無版本) | **使用點盤點** | 純粹列出使用點，不做升級分析 |
+| Input Pattern | Type | Rules to Confirm |
+|---------------|------|------------------|
+| `iOS 17`, `iOS 16 → 17` | **iOS Minimum Version Upgrade** | Removable #available, deprecated APIs, new API opportunities |
+| `iOS SDK 26`, `Xcode 16` | **SDK/Compiler Upgrade** | Compilation warnings, Swift version changes, new syntax |
+| `react 17 → 18`, `pandas 1.x → 2.x` | **Major Version Upgrade** | Breaking changes, deprecated APIs, new patterns |
+| `react`, `pandas` (no version) | **Usage Inventory** | Simply list usage points, no upgrade analysis |
 
-#### Step 0.2: 生成規則預覽
+#### Step 0.2: Generate Rules Preview
 
-輸出以下 YAML 讓使用者確認：
+Output the following YAML for user confirmation:
 
 ```yaml
 upgrade_rules_preview:
@@ -88,80 +88,80 @@ upgrade_rules_preview:
   to_version: "[target version from arguments]"
 
   planned_checks:
-    # === 對於 iOS 最低版本升級 ===
+    # === For iOS Minimum Version Upgrade ===
     removable_availability_checks:
-      description: "升級後可移除的版本檢查"
+      description: "Version checks that can be removed after upgrade"
       patterns:
-        - "#available(iOS [版本低於目標]"
-        - "@available(iOS [版本低於目標]"
-      action: "掃描並列出可移除的程式碼"
+        - "#available(iOS [version below target]"
+        - "@available(iOS [version below target]"
+      action: "Scan and list removable code"
 
     deprecated_apis:
-      description: "在目標版本中 deprecated 的 API"
+      description: "APIs deprecated in target version"
       known_items:
-        # 根據目標版本填入已知項目
-        - api: "[API 名稱]"
-          replacement: "[新 API]"
-          source: "[官方文檔 URL]"
-      action: "掃描使用點並標記"
+        # Fill based on target version
+        - api: "[API name]"
+          replacement: "[new API]"
+          source: "[official docs URL]"
+      action: "Scan usage points and flag"
 
     new_api_opportunities:
-      description: "升級後可採用的新 API"
+      description: "New APIs available after upgrade"
       known_items:
-        - api: "[新 API]"
-          benefit: "[好處]"
-          requires: "[最低版本]"
-      action: "識別可現代化的程式碼"
+        - api: "[new API]"
+          benefit: "[benefits]"
+          requires: "[minimum version]"
+      action: "Identify code that can be modernized"
 
-    # === 對於第三方 Library 升級 ===
+    # === For Third-party Library Upgrade ===
     breaking_changes:
-      description: "已知的 Breaking Changes"
+      description: "Known breaking changes"
       known_items:
-        - change: "[變更描述]"
-          affected_api: "[API 名稱]"
-          migration: "[遷移方式]"
+        - change: "[change description]"
+          affected_api: "[API name]"
+          migration: "[migration approach]"
       source: "[Changelog/Migration Guide URL]"
 
     third_party_compatibility:
-      description: "相關第三方依賴的相容性"
+      description: "Compatibility of related third-party dependencies"
       items_to_check:
         - "[dependency 1]"
         - "[dependency 2]"
 
   questions_for_user:
-    - "以上規則是否完整？"
-    - "是否有專案特定的注意事項需要加入？"
-    - "需要我查詢最新的官方文檔嗎？"
+    - "Are the above rules complete?"
+    - "Are there any project-specific considerations to add?"
+    - "Should I query the latest official documentation?"
 ```
 
-#### Step 0.3: 使用者確認
+#### Step 0.3: User Confirmation
 
-使用 `AskUserQuestion` 工具詢問使用者：
+Use `AskUserQuestion` tool to ask user:
 
 ```
 questions:
-  - header: "規則確認"
-    question: "以上升級規則是否足夠？"
+  - header: "Rule Confirmation"
+    question: "Are the above upgrade rules sufficient?"
     multiSelect: false
     options:
-      - label: "足夠，開始盤點"
-        description: "使用以上規則進行分析"
-      - label: "幫我查最新資訊"
-        description: "使用 WebSearch 查詢官方 Release Notes"
-      - label: "我有補充"
-        description: "我會提供額外的規則或注意事項"
+      - label: "Sufficient, start inventory"
+        description: "Use the above rules for analysis"
+      - label: "Help me check latest info"
+        description: "Use WebSearch to query official Release Notes"
+      - label: "I have additions"
+        description: "I will provide additional rules or considerations"
 ```
 
-#### Step 0.4: 補充規則（如需要）
+#### Step 0.4: Supplement Rules (If Needed)
 
-如果使用者選擇「幫我查最新資訊」：
-- 使用 `WebSearch` 查詢 "[target] release notes migration guide"
-- 使用 `WebFetch` 取得官方文檔內容
-- 整合新發現的規則到 `planned_checks`
+If user selects "Help me check latest info":
+- Use `WebSearch` to query "[target] release notes migration guide"
+- Use `WebFetch` to retrieve official documentation content
+- Integrate newly discovered rules into `planned_checks`
 
-如果使用者選擇「我有補充」：
-- 等待使用者輸入
-- 將補充內容加入 `planned_checks.user_provided`
+If user selects "I have additions":
+- Wait for user input
+- Add supplemental content to `planned_checks.user_provided`
 
 ---
 
@@ -215,12 +215,12 @@ cat .nvmrc .node-version package.json 2>/dev/null | grep -E "node|engines"
 
 ### Phase 2.5: ast-grep Enhanced Search (Optional, P1 Enhancement)
 
-**When to use**: ast-grep 提供更精確的使用點搜尋，可排除註解和字串中的誤判。
+**When to use**: ast-grep provides more precise usage point search, excluding false positives in comments and strings.
 
-**使用統一腳本** (`ast-grep-search.sh`):
+**Use unified script** (`ast-grep-search.sh`):
 
 ```bash
-# 設定腳本路徑（全局優先，本地備援）
+# Set script path (global priority, local fallback)
 AST_SCRIPT=""
 if [ -f ~/.claude/scripts/atlas/ast-grep-search.sh ]; then
     AST_SCRIPT=~/.claude/scripts/atlas/ast-grep-search.sh
@@ -228,49 +228,49 @@ elif [ -f scripts/atlas/ast-grep-search.sh ]; then
     AST_SCRIPT=scripts/atlas/ast-grep-search.sh
 fi
 
-# React Hooks 使用盤點
+# React Hooks usage inventory
 $AST_SCRIPT usage "useEffect" --path .
 $AST_SCRIPT usage "useState" --path .
 
-# Swift async/await 盤點
+# Swift async/await inventory
 $AST_SCRIPT async --lang swift --path .
 
-# Kotlin suspend function 盤點
+# Kotlin suspend function inventory
 $AST_SCRIPT pattern "suspend" --lang kotlin --path .
 
-# 取得匹配數量
+# Get match count
 $AST_SCRIPT usage "useEffect" --count
 
-# 如果 ast-grep 未安裝，取得 grep 替代命令
+# If ast-grep not installed, get grep fallback command
 $AST_SCRIPT usage "useEffect" --fallback
 ```
 
-**Value**: 根據整合測試，ast-grep 在依賴盤點可達到：
-- TypeScript useEffect：44% 誤判消除
-- Swift @available：0%（grep 已足夠精確）
-- Kotlin @Composable：0%（grep 已足夠精確）
+**Value**: Based on integration testing, ast-grep achieves in dependency inventory:
+- TypeScript useEffect: 44% false positive elimination
+- Swift @available: 0% (grep already sufficiently precise)
+- Kotlin @Composable: 0% (grep already sufficiently precise)
 
 **Best Practices**:
-- 對於專用語法（@available, @Composable）使用 grep 即可
-- 對於常見詞彙（useEffect, useState, ViewModel）優先使用 ast-grep
-- 腳本自動處理降級邏輯
+- For dedicated syntax (@available, @Composable), grep is sufficient
+- For common terms (useEffect, useState, ViewModel), prefer ast-grep
+- Script automatically handles fallback logic
 
 ---
 
 ### Phase 3: Find All Usage Points (3-5 minutes)
 
-**根據 Phase 0 確認的規則執行掃描**
+**Execute scans based on Phase 0 confirmed rules**
 
-**For iOS SDK Upgrade** (基於規則):
+**For iOS SDK Upgrade** (rule-based):
 ```bash
-# 可移除的版本檢查
+# Removable version checks
 grep -rn "#available(iOS" --include="*.swift" . | grep -v Pods | grep -v .build
 
-# Deprecated APIs (根據 planned_checks.deprecated_apis)
-# 動態生成搜尋模式
+# Deprecated APIs (based on planned_checks.deprecated_apis)
+# Dynamically generate search patterns
 
-# 新 API 採用機會 (根據 planned_checks.new_api_opportunities)
-# 搜尋可被替換的舊 API
+# New API adoption opportunities (based on planned_checks.new_api_opportunities)
+# Search for old APIs that can be replaced
 ```
 
 **For JavaScript/TypeScript Libraries**:
@@ -346,19 +346,19 @@ rules_applied:
   # Reference to Phase 0 confirmed rules
 
 # ============================================
-# SECTION 1: 可移除/需修改的程式碼 (升級必做)
+# SECTION 1: Removable/Modifiable Code (Required for Upgrade)
 # ============================================
 required_changes:
   removable_availability_checks:
-    description: "升級後可移除的版本檢查"
+    description: "Version checks that can be removed after upgrade"
     total: [number]
     items:
       - file: "[path:line]"
         code: "[#available(...)]"
-        action: "可移除"
+        action: "Can be removed"
 
   deprecated_api_usages:
-    description: "使用了 deprecated API 的程式碼"
+    description: "Code using deprecated APIs"
     total: [number]
     items:
       - file: "[path:line]"
@@ -367,7 +367,7 @@ required_changes:
         migration_effort: "[low|medium|high]"
 
   breaking_change_impacts:
-    description: "受 breaking changes 影響的程式碼"
+    description: "Code affected by breaking changes"
     total: [number]
     items:
       - file: "[path:line]"
@@ -375,22 +375,22 @@ required_changes:
         action: "[required action]"
 
 # ============================================
-# SECTION 2: 現代化機會 (升級可選)
+# SECTION 2: Modernization Opportunities (Optional for Upgrade)
 # ============================================
 modernization_opportunities:
-  description: "升級後可採用的新 API/Pattern"
+  description: "New APIs/Patterns available after upgrade"
   items:
     - category: "[e.g., Observation Framework]"
       current_pattern: "[e.g., ObservableObject + @Published]"
       new_pattern: "[e.g., @Observable]"
       affected_files: [number]
-      benefit: "[e.g., 減少樣板程式碼]"
+      benefit: "[e.g., Reduce boilerplate code]"
       effort: "[low|medium|high]"
       files:
         - "[path:line]"
 
 # ============================================
-# SECTION 3: 完整使用點盤點
+# SECTION 3: Complete Usage Point Inventory
 # ============================================
 usage_summary:
   total_imports: [number]
@@ -413,7 +413,7 @@ api_usage:
         - "[path:line]"
 
 # ============================================
-# SECTION 4: 第三方依賴
+# SECTION 4: Third-party Dependencies
 # ============================================
 third_party_dependencies:
   config_file: "[Podfile|package.json|etc.]"
@@ -424,7 +424,7 @@ third_party_dependencies:
       note: "[any notes]"
 
 # ============================================
-# SECTION 5: 總結與檢查清單
+# SECTION 5: Summary and Checklist
 # ============================================
 summary:
   key_findings:
@@ -441,36 +441,36 @@ summary:
       - "[ ] [modernization 1]"
       - "[ ] [modernization 2]"
     phase3_verification:
-      - "[ ] 編譯測試"
-      - "[ ] 執行測試"
+      - "[ ] Compile test"
+      - "[ ] Run tests"
 
 ## Next Steps
 
-建議對照官方文檔：
-- [官方文檔 URL]
+Recommended to cross-reference with official documentation:
+- [Official documentation URL]
 
-如需進一步分析：
-- `/atlas.impact "[specific API]"` - 評估特定 API 影響範圍
-- `/atlas.pattern "[new pattern]"` - 學習新版本寫法
+For further analysis:
+- `/atlas.impact "[specific API]"` - Assess impact scope of specific API
+- `/atlas.pattern "[new pattern]"` - Learn new version patterns
 ```
 
 ---
 
 ## Critical Rules
 
-1. **Phase 0 必須執行**: 除非使用者只要「純粹盤點」，否則必須先確認規則
+1. **Phase 0 must be executed**: Unless user only wants "pure inventory", must confirm rules first
 2. **Focus on USED APIs**: List what the project actually uses, not all available APIs
 3. **Provide file:line references**: Every usage must have specific location (Constitution Article IV)
-4. **No guessing breaking changes**: 只分析使用點，使用已確認的規則來標記
+4. **No guessing breaking changes**: Only analyze usage points, use confirmed rules to flag
 5. **Exclude dependencies**: Skip node_modules/, Pods/, .venv/, vendor/, build/
 6. **Reasonable limits**: Cap at 50 usages per category to avoid overwhelming output
 7. **Categorize meaningfully**: Group APIs by function (hooks, components, utilities)
 
 ---
 
-## 內建規則庫 (Built-in Rules)
+## Built-in Rules Library
 
-### iOS 版本升級規則
+### iOS Version Upgrade Rules
 
 #### iOS 16 → 17
 ```yaml
@@ -483,13 +483,13 @@ removable_checks:
 deprecated_apis:
   - api: "onChange(of:) { newValue in }"
     replacement: "onChange(of:) { oldValue, newValue in }"
-    reason: "iOS 17 新簽名"
+    reason: "iOS 17 new signature"
   - api: "@ObservedObject"
     replacement: "@Observable (macro)"
     reason: "Observation framework"
   - api: "presentationMode"
     replacement: "@Environment(\\.dismiss)"
-    reason: "簡化 API"
+    reason: "Simplified API"
 
 new_features:
   - feature: "@Observable"
@@ -504,10 +504,10 @@ new_features:
 
 #### iOS 17 → 18
 ```yaml
-# 待 iOS 18 正式發布後補充
+# To be supplemented after iOS 18 official release
 ```
 
-### React 版本升級規則
+### React Version Upgrade Rules
 
 #### React 17 → 18
 ```yaml
@@ -526,7 +526,7 @@ new_features:
   - feature: "Automatic batching"
 ```
 
-### Python 版本升級規則
+### Python Version Upgrade Rules
 
 #### Python 3.11 → 3.12
 ```yaml
@@ -556,33 +556,33 @@ new_features:
 /atlas.deps "iOS 16 → 17"
 ```
 
-Phase 0 輸出規則預覽 → 使用者確認 → 掃描 #available, deprecated APIs → 生成 migration checklist
+Phase 0 outputs rules preview → User confirms → Scan #available, deprecated APIs → Generate migration checklist
 
 ### Example 2: Library Major Upgrade
 ```bash
 /atlas.deps "react 17 → 18"
 ```
 
-Phase 0 查詢 React 18 migration guide → 確認規則 → 掃描 ReactDOM.render 等 → 生成報告
+Phase 0 queries React 18 migration guide → Confirm rules → Scan ReactDOM.render etc. → Generate report
 
 ### Example 3: Pure Usage Inventory
 ```bash
 /atlas.deps "pandas"
 ```
 
-跳過 Phase 0 規則確認 → 直接掃描使用點 → 輸出 API 使用統計
+Skip Phase 0 rule confirmation → Directly scan usage points → Output API usage statistics
 
 ---
 
 ## Handoffs
 
-根據分析結果，可能建議：
+Based on analysis results, may suggest:
 
-| 發現 | 建議命令 |
-|------|---------|
-| 高風險 API 集中在特定檔案 | `/atlas.impact "[file]"` |
-| 需要學習新版本寫法 | `/atlas.pattern "[new pattern]"` |
-| 想了解該模組的歷史變更 | `/atlas.history "[module]"` |
+| Finding | Suggested Command |
+|---------|-------------------|
+| High-risk APIs concentrated in specific files | `/atlas.impact "[file]"` |
+| Need to learn new version patterns | `/atlas.pattern "[new pattern]"` |
+| Want to understand module's historical changes | `/atlas.history "[module]"` |
 
 ---
 
@@ -617,5 +617,5 @@ After generating the complete analysis, save the **entire YAML output** to `.sou
 
 Add at the very end:
 ```
-💾 已儲存至 .sourceatlas/deps/{name}.md
+💾 Saved to .sourceatlas/deps/{name}.md
 ```
