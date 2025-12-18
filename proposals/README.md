@@ -32,9 +32,21 @@ SourceAtlas 未來功能的完整設計文檔。
   - **完成日期**: 2025-12-13
   - **成果**: 過期標記（⚠️）、統計、可複製的 `--force` 命令
 
-### 🟡 研究中
+- **[CLAUDE.md 優化](./claude-md-optimization/README.md)**
+  - **完成日期**: 2025-12-16
+  - **成果**: CLAUDE.md 從 1,108 行精簡到 499 行（-55%）
+  - **關鍵發現**: @import 非 lazy loading，改採 Delete + Rules 方案
+  - **新增**: `.claude/rules/dev-notes-rules.md`
 
-*（目前無研究中的提案）*
+### 🟢 已批准
+
+- **[漸進式輸出 (Progressive Disclosure)](./progressive-disclosure/README.md)**
+  - **目標**: 根據專案規模智慧調整輸出詳細程度
+  - **建立日期**: 2025-12-16
+  - **來源**: Claude Code Plugins 學習筆記
+  - **預期效益**: Token 效率提升 30-50%（小專案可達 90%+）
+  - **工作量**: 約 6-8 小時
+  - **下一步**: 實作 Phase 1（/atlas.overview 漸進式）
 
 ### ⚪ 擱置
 
