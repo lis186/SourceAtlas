@@ -1,55 +1,57 @@
-# SourceAtlas 全局安裝指南
+# SourceAtlas Global Installation Guide
 
-**一次安裝，在任何專案使用 4 個 SourceAtlas 命令**
+> 🌐 **English** | [繁體中文](./GLOBAL_INSTALLATION.zh-TW.md)
 
-v2.5 | 更新時間: 2025-11-30
+**Install once, use 4 SourceAtlas commands in any project**
+
+v2.5 | Updated: 2025-11-30
 
 ---
 
-## 系統需求
+## System Requirements
 
-在開始前，請確認系統符合以下需求：
+Before starting, ensure your system meets these requirements:
 
-| 需求 | 最低版本 | 檢查方式 |
-|------|---------|---------|
-| **Claude Code** | 0.3+ | 在 Claude Code 執行 `/help` |
+| Requirement | Minimum Version | How to Check |
+|-------------|-----------------|--------------|
+| **Claude Code** | 0.3+ | Run `/help` in Claude Code |
 | **Git** | 2.0+ | `git --version` |
 | **Bash** | 3.2+ | `bash --version` |
-| **作業系統** | macOS 11+ / Ubuntu 20.04+ | `uname -a` |
+| **OS** | macOS 11+ / Ubuntu 20.04+ | `uname -a` |
 
-**快速驗證**：
+**Quick Verification**:
 
 ```bash
-# 一鍵檢查所有依賴
-echo "Claude Code: 需手動檢查（執行 /help）"
+# One-click check all dependencies
+echo "Claude Code: Manual check required (run /help)"
 echo "Git: $(git --version 2>&1 | head -1)"
 echo "Bash: $(bash --version 2>&1 | head -1)"
 echo "OS: $(uname -s) $(uname -r)"
 ```
 
-⚠️ **不符合需求？** 見[疑難排解](#疑難排解)章節
+⚠️ **Don't meet requirements?** See [Troubleshooting](#troubleshooting) section
 
 ---
 
-## 快速開始
+## Quick Start
 
-### 1. 安裝
+### 1. Install
 
-在 SourceAtlas 專案根目錄執行：
+Run in the SourceAtlas project root directory:
 
 ```bash
 ./install-global.sh
 ```
 
-這會將 4 個命令安裝到 `~/.claude/commands/`。
+This installs 4 commands to `~/.claude/commands/`.
 
-### 2. 驗證安裝
+### 2. Verify Installation
 
 ```bash
 ./install-global.sh --check
 ```
 
-你應該會看到：
+You should see:
 
 ```
 ✓ atlas.init.md → [path] (symlink OK)
@@ -60,15 +62,15 @@ echo "OS: $(uname -s) $(uname -r)"
 ✓ All commands installed and working
 ```
 
-### 3. 開始使用
+### 3. Start Using
 
-現在你可以在 **任何專案** 中使用：
+Now you can use in **any project**:
 
 ```bash
 cd ~/projects/any-project
 
-# 在 Claude Code 中執行
-/atlas.init                        # 首次使用：注入自動觸發規則
+# Run in Claude Code
+/atlas.init                        # First use: inject auto-trigger rules
 /atlas.overview
 /atlas.pattern "api endpoint"
 /atlas.impact "src/api/users.ts"
@@ -76,102 +78,102 @@ cd ~/projects/any-project
 
 ---
 
-## 可用命令
+## Available Commands
 
 ### `/atlas.init`
 
-專案初始化（首次使用時執行）
+Project initialization (run on first use)
 
-- **時間**: <1 分鐘
-- **功能**: 注入 SourceAtlas 自動觸發規則到專案的 CLAUDE.md
-- **效果**: 之後 Claude 會自動建議適合的 Atlas 命令
+- **Time**: <1 minute
+- **Function**: Injects SourceAtlas auto-trigger rules into project's CLAUDE.md
+- **Effect**: Claude will automatically suggest appropriate Atlas commands afterwards
 
 ### `/atlas.overview`
 
-快速理解專案全貌
+Quick project understanding
 
-- **時間**: 10-15 分鐘
-- **得到**: 技術棧、架構模式、程式碼品質、專案規模
+- **Time**: 10-15 minutes
+- **Output**: Tech stack, architecture patterns, code quality, project scale
 
 ### `/atlas.pattern [pattern]`
 
-學習設計模式
+Learn design patterns
 
-- **時間**: 0.1-30 秒
-- **得到**: 最佳範例檔案 + 實作指南
-- **支援**: 71 個 patterns (iOS/TypeScript/Android)
+- **Time**: 0.1-30 seconds
+- **Output**: Best example files + implementation guide
+- **Supports**: 71 patterns (iOS/TypeScript/Android)
 
 ### `/atlas.impact [target]`
 
-分析程式碼變更影響
+Analyze code change impact
 
-- **時間**: 1-2 分鐘
-- **得到**: 依賴追蹤、Breaking Changes、Migration Checklist
-- **iOS 特別**: Swift/ObjC interop 風險分析
+- **Time**: 1-2 minutes
+- **Output**: Dependency tracking, Breaking Changes, Migration Checklist
+- **iOS Special**: Swift/ObjC interop risk analysis
 
 ---
 
-## 安裝選項
+## Installation Options
 
-### 預設：符號連結（Symlink）
+### Default: Symlink
 
 ```bash
 ./install-global.sh
 ```
 
-**優點**:
-- ✅ 自動同步更新
-- ✅ 節省磁碟空間
-- ✅ 單一真實來源
+**Pros**:
+- ✅ Auto-sync updates
+- ✅ Saves disk space
+- ✅ Single source of truth
 
-**適合**: 經常使用、希望自動更新
+**Best for**: Frequent use, want automatic updates
 
-### 複製方式（Copy）
+### Copy Method
 
 ```bash
 INSTALL_METHOD=copy ./install-global.sh
 ```
 
-**優點**:
-- ✅ 獨立副本
-- ✅ 版本固定
-- ✅ 可以自訂修改
+**Pros**:
+- ✅ Independent copy
+- ✅ Version locked
+- ✅ Can customize modifications
 
-**適合**: 需要穩定版本、想要客製化
+**Best for**: Need stable version, want customization
 
 ---
 
-## 管理命令
+## Management Commands
 
-### 檢查安裝狀態
+### Check Installation Status
 
 ```bash
 ./install-global.sh --check
 ```
 
-### 更新命令
+### Update Commands
 
-**Symlink 方式**（自動）:
+**Symlink method** (automatic):
 ```bash
 cd ~/dev/sourceatlas2
 git pull
-# 所有專案自動使用最新版本
+# All projects automatically use latest version
 ```
 
-**Copy 方式**（手動）:
+**Copy method** (manual):
 ```bash
 cd ~/dev/sourceatlas2
 git pull
 ./install-global.sh
 ```
 
-### 解除安裝
+### Uninstall
 
 ```bash
 ./install-global.sh --remove
 ```
 
-這會刪除：
+This removes:
 - `~/.claude/commands/atlas.init.md`
 - `~/.claude/commands/atlas.overview.md`
 - `~/.claude/commands/atlas.pattern.md`
@@ -180,9 +182,9 @@ git pull
 
 ---
 
-## 目錄結構
+## Directory Structure
 
-### 安裝後的全局配置
+### Global Configuration After Installation
 
 ```
 ~/.claude/
@@ -191,120 +193,120 @@ git pull
 │   ├── atlas.overview.md        # → sourceatlas2/.claude/commands/
 │   ├── atlas.pattern.md         # → sourceatlas2/.claude/commands/
 │   ├── atlas.impact.md          # → sourceatlas2/.claude/commands/
-│   └── [你的其他全局命令]
+│   └── [your other global commands]
 │
 └── scripts/
     └── atlas/                    # → sourceatlas2/scripts/atlas/
 ```
 
-### 與專案級命令共存
+### Coexistence with Project-Level Commands
 
-全局命令與專案特定命令不衝突：
+Global commands don't conflict with project-specific commands:
 
 ```
-你的專案/
+your-project/
 ├── .claude/
 │   └── commands/
-│       ├── deploy.md            # 專案特定命令
-│       └── test.md              # 專案特定命令
+│       ├── deploy.md            # Project-specific command
+│       └── test.md              # Project-specific command
 
-# Claude Code 會同時看到：
-# - 全局: /atlas.init, /atlas.overview, /atlas.pattern, /atlas.impact
-# - 專案: /deploy, /test
+# Claude Code sees both:
+# - Global: /atlas.init, /atlas.overview, /atlas.pattern, /atlas.impact
+# - Project: /deploy, /test
 ```
 
-**注意**: 確保專案命令不使用 `atlas.*` 名稱，避免衝突。
+**Note**: Ensure project commands don't use `atlas.*` names to avoid conflicts.
 
 ---
 
-## 常見問題
+## FAQ
 
-### Q: 全局命令會影響性能嗎？
+### Q: Will global commands affect performance?
 
-A: 不會。Claude Code 只在你使用時才執行命令。
+A: No. Claude Code only executes commands when you use them.
 
-### Q: 我可以客製化全局命令嗎？
+### Q: Can I customize global commands?
 
-A: 可以！
+A: Yes!
 
-**Symlink 方式**: 修改 `sourceatlas2/.claude/commands/` 源文件（影響所有專案）
+**Symlink method**: Modify `sourceatlas2/.claude/commands/` source files (affects all projects)
 
-**Copy 方式**: 修改 `~/.claude/commands/atlas.*.md`（只影響本地）
+**Copy method**: Modify `~/.claude/commands/atlas.*.md` (affects local only)
 
-### Q: 如果我移動或刪除 SourceAtlas 專案會怎樣？
+### Q: What happens if I move or delete the SourceAtlas project?
 
-**Symlink 方式**: 命令會損壞
+**Symlink method**: Commands will break
 ```bash
-# 修復：重新克隆到相同位置或解除安裝後重裝
+# Fix: Re-clone to same location or uninstall and reinstall
 ./install-global.sh --remove
 cd /new/location/sourceatlas2
 ./install-global.sh
 ```
 
-**Copy 方式**: 不受影響
+**Copy method**: Unaffected
 
-### Q: 我可以創建自己的全局命令嗎？
+### Q: Can I create my own global commands?
 
-A: 可以！參考 SourceAtlas 命令結構：
+A: Yes! Reference the SourceAtlas command structure:
 
 ```bash
-# 創建你的命令
+# Create your command
 cat > ~/.claude/commands/my-command.md << 'EOF'
 ---
 description: My custom command
 ---
 
 # My Command Prompt
-[你的 prompt 內容...]
+[Your prompt content...]
 EOF
 
-# 在任何專案使用
+# Use in any project
 /my-command
 ```
 
 ---
 
-## 疑難排解
+## Troubleshooting
 
-### 問題：命令不可用
+### Issue: Commands Not Available
 
-**症狀**: 執行 `/atlas.overview` 時 Claude Code 找不到命令
+**Symptom**: Claude Code can't find command when running `/atlas.overview`
 
-**解決方式**:
+**Solution**:
 ```bash
-# 1. 檢查安裝
+# 1. Check installation
 ./install-global.sh --check
 
-# 2. 重新安裝
+# 2. Reinstall
 ./install-global.sh --remove
 ./install-global.sh
 ```
 
-### 問題：Symlink 損壞
+### Issue: Broken Symlink
 
-**症狀**: `--check` 顯示 broken symlink
+**Symptom**: `--check` shows broken symlink
 
-**解決方式**:
+**Solution**:
 ```bash
-# 確認 SourceAtlas 專案存在
+# Confirm SourceAtlas project exists
 ls ~/dev/sourceatlas2
 
-# 如果不存在，重新克隆
+# If not exists, re-clone
 git clone https://github.com/lis186/SourceAtlas.git ~/dev/sourceatlas2
 
-# 重新安裝
+# Reinstall
 cd ~/dev/sourceatlas2
 ./install-global.sh
 ```
 
 ---
 
-## 更多資源
+## More Resources
 
-- **主要文檔**: [README.md](./README.md)
-- **使用指南**: [USAGE_GUIDE.md](./USAGE_GUIDE.md)
-- **回報問題**: [GitHub Issues](https://github.com/lis186/SourceAtlas/issues)
+- **Main Documentation**: [README.md](./README.md)
+- **Usage Guide**: [USAGE_GUIDE.md](./USAGE_GUIDE.md)
+- **Report Issues**: [GitHub Issues](https://github.com/lis186/SourceAtlas/issues)
 
 ---
 
-**享受在任何專案中使用 SourceAtlas！** 🚀
+**Enjoy using SourceAtlas in any project!** 🚀

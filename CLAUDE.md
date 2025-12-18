@@ -1,240 +1,240 @@
 # CLAUDE.md
 
-本檔案為 Claude Code (claude.ai/code) 在此 codebase 工作時提供指導。
+This file provides guidance for Claude Code (claude.ai/code) when working in this codebase.
 
-## 專案總覽
+## Project Overview
 
-**SourceAtlas** 是一個專為 AI 優化的 codebase 分析工具，設計用於快速理解任何 codebase，通過掃描少於 5% 的檔案即可達到 70-95% 的理解深度。它使用資訊理論原則，優先處理高熵檔案（配置、文檔、模型）而非實作細節。
+**SourceAtlas** is an AI-optimized codebase analysis tool designed to rapidly understand any codebase by scanning less than 5% of files to achieve 70-95% comprehension depth. It uses information theory principles, prioritizing high-entropy files (configs, docs, models) over implementation details.
 
-**核心創新**：三階段分析框架，相比傳統程式碼審查方法節省 95%+ 的時間和 token。
+**Core Innovation**: A three-stage analysis framework that saves 95%+ time and tokens compared to traditional code review methods.
 
-**當前狀態**：
-- **v1.0** ✅ - 方法論驗證完成（2025-11-22）
-- **v2.7.0** ✅ - Commands 架構完成，含流程追蹤（2025-12-01）
-- **v2.8.0** ✅ - Constitution v1.0 + Monorepo 支援（2025-12-05）
-- **v2.8.1** ✅ - Constitution v1.1 + Handoffs 原則（2025-12-06）
-- **v2.9.0** ✅ - Dependency Analysis `/atlas.deps` 完成測試（2025-12-12）
-- **v2.9.1** ✅ - 持久化 v2.0：30 天過期警告、Handoffs 互斥規則（2025-12-13）
-- **v2.9.2** ✅ - `/atlas.list` 過期標記增強、`/atlas.init` 驗證機制（2025-12-13）
-- **v2.9.3** ✅ - `/atlas.pattern` Progressive Disclosure：Smart 模式 + `--brief`/`--full` 參數（2025-12-18）
+**Current Status**:
+- **v1.0** ✅ - Methodology validation complete (2025-11-22)
+- **v2.7.0** ✅ - Commands architecture complete with flow tracing (2025-12-01)
+- **v2.8.0** ✅ - Constitution v1.0 + Monorepo support (2025-12-05)
+- **v2.8.1** ✅ - Constitution v1.1 + Handoffs principles (2025-12-06)
+- **v2.9.0** ✅ - Dependency Analysis `/atlas.deps` testing complete (2025-12-12)
+- **v2.9.1** ✅ - Persistence v2.0: 30-day expiry warnings, Handoffs exclusivity rules (2025-12-13)
+- **v2.9.2** ✅ - `/atlas.list` expiry marking enhanced, `/atlas.init` validation mechanism (2025-12-13)
+- **v2.9.3** ✅ - `/atlas.pattern` Progressive Disclosure: Smart mode + `--brief`/`--full` parameters (2025-12-18)
 
-## 架構
+## Architecture
 
-### 三階段分析流程
+### Three-Stage Analysis Process
 
-系統使用漸進式分析方法：
+The system uses a progressive analysis approach:
 
-1. **Stage 0: 專案指紋** (~10-15 分鐘, ~20k tokens)
-   - 掃描 <5% 檔案達到 70-80% 理解
-   - 識別技術棧、架構模式、業務領域
-   - 生成 10-15 個待驗證假設
-   - 輸出格式：`.yaml` (v1.0 決策：YAML > TOON，生態系統優先)
+1. **Stage 0: Project Fingerprint** (~10-15 minutes, ~20k tokens)
+   - Scan <5% of files to achieve 70-80% understanding
+   - Identify tech stack, architecture patterns, business domain
+   - Generate 10-15 hypotheses for validation
+   - Output format: `.yaml` (v1.0 decision: YAML > TOON, ecosystem priority)
 
-2. **Stage 1: 假設驗證** (~20-30 分鐘, ~30k tokens)
-   - 系統化驗證 Stage 0 的假設
-   - 達到 85-95% 理解深度
-   - 為每個假設記錄證據
-   - 輸出格式：`.md`
+2. **Stage 1: Hypothesis Validation** (~20-30 minutes, ~30k tokens)
+   - Systematically validate Stage 0 hypotheses
+   - Achieve 85-95% understanding depth
+   - Record evidence for each hypothesis
+   - Output format: `.md`
 
-3. **Stage 2: Git 熱點分析** (~15-20 分鐘, ~20k tokens)
-   - 分析 commit 歷史和檔案變動頻率
-   - 識別開發模式和 AI 協作程度
-   - 重建專案時間線
-   - 輸出格式：`.md`
+3. **Stage 2: Git Hotspot Analysis** (~15-20 minutes, ~20k tokens)
+   - Analyze commit history and file change frequency
+   - Identify development patterns and AI collaboration levels
+   - Reconstruct project timeline
+   - Output format: `.md`
 
-### 核心設計原則
+### Core Design Principles
 
-> ⚠️ **重要**：分析行為的完整原則定義在 [ANALYSIS_CONSTITUTION.md](./ANALYSIS_CONSTITUTION.md)。
-> 本節僅為摘要，Constitution 為權威來源。
+> ⚠️ **Important**: The complete principles for analysis behavior are defined in [ANALYSIS_CONSTITUTION.md](./ANALYSIS_CONSTITUTION.md).
+> This section is only a summary; the Constitution is the authoritative source.
 
-**資訊理論基礎**（詳見 Constitution Article I）：
+**Information Theory Foundation** (see Constitution Article I):
 
-- 高熵檔案（configs、READMEs、models）包含不成比例的大量資訊
-- 結構 > 實作細節，更適合快速理解
-- 漸進式精煉勝過窮舉式掃描
-- 掃描比例上限：TINY 50%, SMALL 20%, MEDIUM 10%, LARGE 5%, VERY_LARGE 3%
+- High-entropy files (configs, READMEs, models) contain disproportionately large amounts of information
+- Structure > implementation details, better for rapid understanding
+- Progressive refinement beats exhaustive scanning
+- Scan ratio limits: TINY 50%, SMALL 20%, MEDIUM 10%, LARGE 5%, VERY_LARGE 3%
 
-**格式選擇** (v1.0 決策)：
+**Format Selection** (v1.0 decision):
 
-- **YAML** 為主要格式（標準生態系統 > 14% token 優化）
-- TOON 格式已評估但未採用（詳見 `dev-notes/toon-vs-yaml-analysis.md`）
-- 用於 Stage 0 輸出：`.yaml`
-- 用於 Stage 1-2 輸出：`.md`
+- **YAML** as primary format (standard ecosystem > 14% token optimization)
+- TOON format evaluated but not adopted (see `dev-notes/toon-vs-yaml-analysis.md`)
+- Used for Stage 0 output: `.yaml`
+- Used for Stage 1-2 output: `.md`
 
-## 目錄結構
+## Directory Structure
 
 ```
 sourceatlas2/
-├── README.md               # 使用者文檔（中文）
-├── CLAUDE.md               # 本檔案 - AI 協作指南（開發 SourceAtlas）
-├── ANALYSIS_CONSTITUTION.md # ⭐ 分析憲法 - 分析行為的不可變原則
-├── PROMPTS.md              # 所有 3 個階段的完整 prompt 模板
-├── PRD.md                  # 產品需求（v2.7 Commands 架構）
-├── USAGE_GUIDE.md          # 詳細使用說明
-├── GLOBAL_INSTALLATION.md  # 全局安裝指南
+├── README.md               # User documentation (Chinese)
+├── CLAUDE.md               # This file - AI collaboration guide (developing SourceAtlas)
+├── ANALYSIS_CONSTITUTION.md # ⭐ Analysis constitution - immutable principles for analysis behavior
+├── PROMPTS.md              # Complete prompt templates for all 3 stages
+├── PRD.md                  # Product requirements (v2.7 Commands architecture)
+├── USAGE_GUIDE.md          # Detailed usage instructions
+├── GLOBAL_INSTALLATION.md  # Global installation guide
 │
-├── .claude/commands/       # Claude Code 斜線命令
+├── .claude/commands/       # Claude Code slash commands
 │   ├── atlas.overview.md   # ✅ /atlas.overview (Stage 0)
 │   └── atlas.pattern.md    # ✅ /atlas.pattern (Pattern Learning)
 │
-├── scripts/                # 分析腳本
-│   ├── atlas/              # ⭐ Atlas 命令核心腳本
-│   └── install-global.sh   # ⭐ 全局安裝腳本
+├── scripts/                # Analysis scripts
+│   ├── atlas/              # ⭐ Atlas command core scripts
+│   └── install-global.sh   # ⭐ Global installation script
 │
-├── proposals/              # ✅ 功能提案（未實作功能）⭐
-│   ├── README.md           # 提案索引
-│   └── code-maat-integration/  # code-maat 整合設計 (已實作於 v2.6)
+├── proposals/              # ✅ Feature proposals (unimplemented features) ⭐
+│   ├── README.md           # Proposal index
+│   └── code-maat-integration/  # code-maat integration design (implemented in v2.6)
 │       ├── SOURCEATLAS_CODEMAAT_INTEGRATION.md
 │       ├── CODE_MAAT_FORMAT_CHEATSHEET.md
 │       ├── PERFORMANCE_CONSIDERATIONS.md
 │       └── UPDATES_SUMMARY.md
 │
-├── examples/               # ✅ 外部參考專案（學習用）⭐
-│   └── README.md           # 說明和推薦專案（專案本身被 git ignore）
+├── examples/               # ✅ External reference projects (for learning) ⭐
+│   └── README.md           # Instructions and recommended projects (projects themselves git ignored)
 │
-├── dev-notes/              # ✅ 開發記錄與方法論 ⭐
-│   ├── README.md           # SourceAtlas 知識庫索引
-│   ├── HISTORY.md          # 按時間線查看專案演進
-│   ├── KEY_LEARNINGS.md    # 核心學習與發現
-│   ├── METHODOLOGY.md      # 開發方法論
-│   ├── ROADMAP.md          # 未來規劃
-│   ├── 2025-11/            # 月度實作記錄
-│   └── archives/           # 歷史存檔
+├── dev-notes/              # ✅ Development records and methodology ⭐
+│   ├── README.md           # SourceAtlas knowledge base index
+│   ├── HISTORY.md          # View project evolution by timeline
+│   ├── KEY_LEARNINGS.md    # Core learnings and discoveries
+│   ├── METHODOLOGY.md      # Development methodology
+│   ├── ROADMAP.md          # Future plans
+│   ├── 2025-11/            # Monthly implementation records
+│   └── archives/           # Historical archives
 │
-├── ideas/                  # ✅ 實驗性想法（草稿筆記）⭐
-│   └── README.md           # 使用說明和當前探索
+├── ideas/                  # ✅ Experimental ideas (draft notes) ⭐
+│   └── README.md           # Usage instructions and current explorations
 │
-├── test_targets/           # 測試專案（git ignore）
-└── test_results/           # 分析輸出（git ignore）
+├── test_targets/           # Test projects (git ignore)
+└── test_results/           # Analysis outputs (git ignore)
 ```
 
-## 安裝與使用
+## Installation and Usage
 
-### 全局安裝（推薦）⭐
+### Global Installation (Recommended) ⭐
 
-**一次安裝，隨處可用**：
+**Install once, use anywhere**:
 
 ```bash
-# 從 SourceAtlas 專案根目錄執行
+# Run from SourceAtlas project root
 ./install-global.sh
 
-# 現在可以在任何專案使用
+# Now available in any project
 cd ~/projects/any-project
 /atlas.overview
 /atlas.pattern "api endpoint"
 ```
 
-**安裝方式**：
-- **預設（Symlink）**：自動同步更新，推薦日常使用
-- **Copy 方式**：`INSTALL_METHOD=copy ./install-global.sh`，適合需要穩定版本
+**Installation Methods**:
+- **Default (Symlink)**: Auto-syncs updates, recommended for daily use
+- **Copy Method**: `INSTALL_METHOD=copy ./install-global.sh`, suitable for stable versions
 
-**管理命令**：
-- `./install-global.sh --check` - 檢查安裝狀態
-- `./install-global.sh --remove` - 解除安裝
+**Management Commands**:
+- `./install-global.sh --check` - Check installation status
+- `./install-global.sh --remove` - Uninstall
 
-📚 **完整指南**：見 [GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
+📚 **Complete Guide**: See [GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
 
-### 使用分析 Prompts
+### Using Analysis Prompts
 
-#### 何時執行分析
+#### When to Run Analysis
 
-在以下情況執行 SourceAtlas 分析：
+Run SourceAtlas analysis in the following situations:
 
-- 接手新的 codebase
-- 進行程式碼審查或技術盡職調查
-- 評估開發者候選人的 GitHub 專案
-- 學習開源專案
-- 評估 AI 協作成熟度
+- Taking over a new codebase
+- Conducting code review or technical due diligence
+- Evaluating developer candidate's GitHub projects
+- Learning open-source projects
+- Assessing AI collaboration maturity
 
-### Stage 選擇指南
+### Stage Selection Guide
 
-- **<500 LOC**：跳過 SourceAtlas，直接閱讀
-- **500-2000 LOC**：使用 Stage 0-1
-- **>2000 LOC 且有 Git 歷史**：使用全部 3 個階段
+- **<500 LOC**: Skip SourceAtlas, read directly
+- **500-2000 LOC**: Use Stage 0-1
+- **>2000 LOC with Git history**: Use all 3 stages
 
-### 執行分析
+### Running Analysis
 
-**v1.0 方式**（手動 Prompts）：
-1. 從 `PROMPTS.md` 複製相關階段的 prompt
-2. 將 `[PROJECT_PATH]` 替換為實際路徑
-3. 以指定格式生成輸出（Stage 0 用 .yaml，Stage 1-2 用 .md）
+**v1.0 Method** (Manual Prompts):
+1. Copy the relevant stage prompt from `PROMPTS.md`
+2. Replace `[PROJECT_PATH]` with actual path
+3. Generate output in specified format (Stage 0 uses .yaml, Stage 1-2 use .md)
 
-**v2.9.0 方式**（Commands）：
-- `/atlas.init` ✅ - 專案初始化，注入自動觸發規則（已實作，2025-11-30）
-- `/atlas.overview` ✅ - Stage 0 專案指紋（已實作，2025-11-20）【支援 `--save`】
-- `/atlas.pattern` ✅ - 學習設計模式（已實作，2025-11-22）【支援 `--save`】
-- `/atlas.impact` ✅ - 影響範圍分析（已實作，2025-11-25）【支援 `--save`】
-- `/atlas.history` ✅ - 時序分析（Git 歷史）（已實作，2025-11-30）【支援 `--save`】
-- `/atlas.flow` ✅ - 流程追蹤與資料流分析（已實作，2025-12-01）【支援 `--save`】
-- `/atlas.deps` ✅ - Dependency 分析（已完成測試，2025-12-12）【支援 `--save`】
-- `/atlas.list` ✅ - 列出已儲存的分析結果（2025-12-13）⭐ NEW
-- `/atlas.clear` ✅ - 清空已儲存的分析結果（2025-12-12）
+**v2.9.0 Method** (Commands):
+- `/atlas.init` ✅ - Project initialization, inject auto-trigger rules (implemented, 2025-11-30)
+- `/atlas.overview` ✅ - Stage 0 project fingerprint (implemented, 2025-11-20) [supports `--save`]
+- `/atlas.pattern` ✅ - Learn design patterns (implemented, 2025-11-22) [supports `--save`]
+- `/atlas.impact` ✅ - Impact scope analysis (implemented, 2025-11-25) [supports `--save`]
+- `/atlas.history` ✅ - Temporal analysis (Git history) (implemented, 2025-11-30) [supports `--save`]
+- `/atlas.flow` ✅ - Flow tracing and data flow analysis (implemented, 2025-12-01) [supports `--save`]
+- `/atlas.deps` ✅ - Dependency analysis (testing complete, 2025-12-12) [supports `--save`]
+- `/atlas.list` ✅ - List saved analysis results (2025-12-13) ⭐ NEW
+- `/atlas.clear` ✅ - Clear saved analysis results (2025-12-12)
 
-**持久化功能**：
-- 加入 `--save` 參數可將分析結果儲存至 `.sourceatlas/` 目錄
-- 範例：`/atlas.pattern "repository" --save` → 儲存至 `.sourceatlas/patterns/repository.md`
-- 使用 `/atlas.clear` 清空已儲存的分析結果
-- 使用 `/atlas.list` 查看已儲存的分析結果
-- 已儲存的分析會自動作為快取，下次執行相同命令時直接載入
-- 加入 `--force` 參數可跳過快取，強制重新分析
+**Persistence Features**:
+- Add `--save` parameter to save analysis results to `.sourceatlas/` directory
+- Example: `/atlas.pattern "repository" --save` → saves to `.sourceatlas/patterns/repository.md`
+- Use `/atlas.clear` to clear saved analysis results
+- Use `/atlas.list` to view saved analysis results
+- Saved analyses automatically serve as cache, directly loaded on next identical command execution
+- Add `--force` parameter to skip cache and force re-analysis
 
-### 使用專案記憶（.sourceatlas/）
+### Using Project Memory (.sourceatlas/)
 
-**觸發條件**：當使用者問題涉及以下情境時，主動查詢 `.sourceatlas/`：
-- 專案層級問題：「這專案」「這個 codebase」「專案架構」「整體」「全貌」
-- 延續之前分析：「之前分析」「上次」「我們討論過」
-- 明確要求概覽：「overview」「summarize」「給我背景」
+**Trigger Conditions**: When user questions involve the following scenarios, proactively query `.sourceatlas/`:
+- Project-level questions: "this project", "this codebase", "project architecture", "overall", "big picture"
+- Continuing previous analysis: "previous analysis", "last time", "we discussed"
+- Explicit overview requests: "overview", "summarize", "give me background"
 
-**動作**：
-1. 執行 `ls .sourceatlas/ 2>/dev/null` 檢查是否存在
-2. 如果存在，優先讀取 `overview.yaml`（專案全貌）
-3. 根據問題內容，判斷是否需要讀取其他快取：
-   - Pattern 相關 → `.sourceatlas/patterns/`
-   - 依賴相關 → `.sourceatlas/deps/`
-   - 歷史相關 → `.sourceatlas/history.md`
-   - 影響分析 → `.sourceatlas/impact/`
-   - 流程相關 → `.sourceatlas/flows/`
+**Actions**:
+1. Execute `ls .sourceatlas/ 2>/dev/null` to check if it exists
+2. If exists, prioritize reading `overview.yaml` (project big picture)
+3. Based on question content, determine if other cache needs reading:
+   - Pattern-related → `.sourceatlas/patterns/`
+   - Dependency-related → `.sourceatlas/deps/`
+   - History-related → `.sourceatlas/history.md`
+   - Impact analysis → `.sourceatlas/impact/`
+   - Flow-related → `.sourceatlas/flows/`
 
-**不觸發**（避免不必要的 token 成本）：
-- 「幫我改這個 bug」→ 直接改，不需要快取
-- 「這個 function 做什麼」→ 直接讀原始碼
-- 「執行測試」→ 直接執行，不需要背景
+**Don't Trigger** (avoid unnecessary token costs):
+- "Help me fix this bug" → Fix directly, no cache needed
+- "What does this function do" → Read source code directly
+- "Run tests" → Execute directly, no background needed
 
-**完整三階段分析**（罕見場景）：
-針對深度盡職調查（評估開源專案、招聘評估、技術盡調），使用 `PROMPTS.md` 手動執行 Stage 0-1-2
+**Complete Three-Stage Analysis** (rare scenarios):
+For in-depth due diligence (evaluating open-source projects, hiring assessment, technical DD), use `PROMPTS.md` to manually execute Stage 0-1-2
 
-**重要**：Stage prompts 彼此依賴。務必先完成 Stage 0 再做 Stage 1，先完成 Stage 1 再做 Stage 2。
+**Important**: Stage prompts depend on each other. Must complete Stage 0 before Stage 1, complete Stage 1 before Stage 2.
 
-## AI 協作檢測
+## AI Collaboration Detection
 
-SourceAtlas 的獨特能力之一是識別 AI 輔助開發模式：
+One of SourceAtlas's unique capabilities is identifying AI-assisted development patterns:
 
-### AI 協作成熟度模型
+### AI Collaboration Maturity Model
 
-- **Level 0**：無 AI（傳統開發）
-- **Level 1-2**：基礎 AI 使用（偶爾使用工具）
-- **Level 3**：系統化 AI 協作 ⭐
-  - 有 `CLAUDE.md` 或類似的 AI 配置
-  - 15-20% 註解密度（相比人工的 5-8%）
-  - 98%+ 程式碼一致性
+- **Level 0**: No AI (traditional development)
+- **Level 1-2**: Basic AI usage (occasional tool use)
+- **Level 3**: Systematic AI collaboration ⭐
+  - Has `CLAUDE.md` or similar AI configuration
+  - 15-20% comment density (vs. manual 5-8%)
+  - 98%+ code consistency
   - 100% Conventional Commits
-  - 文檔/程式碼比 >1:1
-- **Level 4**：生態級別（團隊級 AI 整合）
+  - Docs/code ratio >1:1
+- **Level 4**: Ecosystem level (team-level AI integration)
 
-**關鍵指標**：尋找 CLAUDE.md、.cursor/rules/、高註解密度、完美的 commit 訊息一致性和豐富的文檔。
+**Key Indicators**: Look for CLAUDE.md, .cursor/rules/, high comment density, perfect commit message consistency, and rich documentation.
 
-## 檔案格式
+## File Formats
 
-### YAML 格式 (.yaml)
+### YAML Format (.yaml)
 
-用於 Stage 0 輸出（v1.0 決策）。主要特性：
+Used for Stage 0 output (v1.0 decision). Key features:
 
-- 標準 YAML 語法（廣泛生態系統支援）
-- 結構化區段：專案指紋、假設、掃描檔案
-- 所有推論的信心等級（0.0-1.0）
-- 相比 TOON 僅多 14% tokens，但換取標準工具支援
+- Standard YAML syntax (broad ecosystem support)
+- Structured sections: project fingerprint, hypotheses, scanned files
+- Confidence levels for all inferences (0.0-1.0)
+- Only 14% more tokens vs. TOON, but gains standard tooling support
 
-範例結構：
+Example structure:
 
 ```yaml
 metadata:
@@ -256,50 +256,50 @@ hypotheses:
       evidence: "Found jwt dependency, auth middleware present"
 ```
 
-**為什麼選擇 YAML 而非 TOON？**
-- 標準格式 > 自訂格式（極簡哲學）
-- 14% token 差異屬於邊際效益
-- 完整分析見 `dev-notes/toon-vs-yaml-analysis.md`
+**Why YAML over TOON?**
+- Standard format > custom format (minimalist philosophy)
+- 14% token difference is marginal benefit
+- Complete analysis in `dev-notes/toon-vs-yaml-analysis.md`
 
-### Markdown 報告 (.md)
+### Markdown Reports (.md)
 
-用於 Stage 1-2 輸出：
+Used for Stage 1-2 output:
 
-- 標準 GitHub-flavored markdown
-- 用表格呈現結構化資料
-- 用程式碼區塊呈現證據
-- 清晰的章節標題
+- Standard GitHub-flavored markdown
+- Use tables to present structured data
+- Use code blocks to present evidence
+- Clear section headings
 
-## 輸出要求
+## Output Requirements
 
-### 信心等級
+### Confidence Levels
 
-始終包含推論的信心等級：
+Always include confidence levels for inferences:
 
-- **0.0-0.5**：低信心（需要驗證）
-- **0.5-0.7**：中等信心
-- **0.7-0.85**：高信心
-- **0.85-1.0**：非常高信心（幾乎確定）
+- **0.0-0.5**: Low confidence (needs validation)
+- **0.5-0.7**: Medium confidence
+- **0.7-0.85**: High confidence
+- **0.85-1.0**: Very high confidence (almost certain)
 
-### 基於證據的分析
+### Evidence-Based Analysis
 
-每個論點都必須有證據支持：
+Every argument must be supported by evidence:
 
-- 相關時包含行號的檔案路徑
-- Shell 命令輸出
-- 文檔的直接引用
-- 統計分析（檔案數量、commit 模式等）
+- File paths with line numbers when relevant
+- Shell command outputs
+- Direct quotes from documentation
+- Statistical analysis (file counts, commit patterns, etc.)
 
-## 需要識別的常見模式
+## Common Patterns to Identify
 
-### 架構模式
+### Architecture Patterns
 
-- **MVC/MVVM**：尋找 models/、views/、controllers/ 或 viewmodels/
-- **微服務**：多個服務目錄、docker-compose.yml、API gateway
-- **Monorepo**：package.json 中的 workspaces、多個 package.json 檔案
-- **Clean Architecture**：分層分離（domain/、infrastructure/、application/）
+- **MVC/MVVM**: Look for models/, views/, controllers/ or viewmodels/
+- **Microservices**: Multiple service directories, docker-compose.yml, API gateway
+- **Monorepo**: workspaces in package.json, multiple package.json files
+- **Clean Architecture**: Layered separation (domain/, infrastructure/, application/)
 
-### 技術棧指標
+### Tech Stack Indicators
 
 - `package.json` → Node.js/TypeScript/JavaScript
 - `composer.json` → PHP/Laravel
@@ -308,193 +308,183 @@ hypotheses:
 - `*.csproj` → C#/.NET
 - `requirements.txt`/`pyproject.toml` → Python
 
-### 開發者能力信號
+### Developer Capability Signals
 
-- **測試覆蓋率 >90%**：專業/專家級別
-- **無測試**：初學者或快速原型
-- **有 CLAUDE.md**：系統化 AI 協作
-- **只有 1-2 個 commits**：糟糕的 Git 習慣（初學者）
-- **Conventional Commits**：良好的開發實踐
+- **Test coverage >90%**: Professional/expert level
+- **No tests**: Beginner or rapid prototype
+- **Has CLAUDE.md**: Systematic AI collaboration
+- **Only 1-2 commits**: Poor Git habits (beginner)
+- **Conventional Commits**: Good development practices
 
-## 語言和本地化
+## Language and Localization
 
-### 核心原則：台灣用語優先 ⭐
+### Core Principle: English for All Documentation ⭐
 
-**重要**：所有文檔必須使用**台灣繁體中文**術語，避免中國大陸用語。
+**Important**: All documentation uses English terminology.
 
-| 正確（台灣） | 錯誤（中國） | 英文替代 |
-|------------|------------|---------|
-| 程式碼 | 代碼 | code |
-| 軟體 | 软件 | software |
-| 資料庫 | 数据库 | database |
-| 網路 | 网络 | network |
-| 伺服器 | 服务器 | server |
-| codebase | 代碼庫 | codebase |
+**Language Usage Guidelines**:
+- Primary documentation uses English
+- Code and technical terms use English
+- Generated reports match the project's primary language
+- User documentation (README, USAGE_GUIDE) uses project's language
+- Technical specs (PRD, PROMPTS) may mix languages as needed
 
-**語言使用規範**：
-- 主要文檔使用繁體中文（zh-TW，**台灣用語**）
-- 程式碼和技術術語使用英文
-- **當不確定台灣用語時，直接使用英文原文**（如：codebase, commit, repository）
-- 生成報告時，匹配專案的主要語言
-- 使用者文檔（README、USAGE_GUIDE）使用台灣繁體中文
-- 技術規格（PRD、PROMPTS）混合使用中英文
+## Version Control
 
-## 版本控制
+**Version Number Explanation**:
+- **SourceAtlas Product Version** (e.g., v2.6.0): Tracks overall product development stages
+- **Proposal Document Version** (e.g., v3.0 under proposals/): Tracks individual proposal design changes
 
-**版本號說明**：
-- **SourceAtlas 產品版本**（如 v2.6.0）：追蹤整個產品的開發階段
-- **提案文檔版本**（如 proposals/ 下的 v3.0）：追蹤個別提案的設計變更
+**Current Product Version**:
+- **v1.0** ✅ - Methodology validation complete (2025-11-22)
+- **v2.7.0** ✅ - Flow analysis complete (2025-12-01)
 
-**當前產品版本**：
-- **v1.0** ✅ - 方法論驗證完成（2025-11-22）
-- **v2.7.0** ✅ - Flow 分析完成（2025-12-01）
+**Version History** (see `dev-notes/HISTORY.md`):
+- v2.7.0 (2025-12-01): `/atlas.flow` - Flow tracing
+- v2.6.0 (2025-11-30): `/atlas.history` - Temporal analysis
+- v2.5.x (2025-11-30): Multi-language Patterns (141 patterns)
+- v1.0 (2025-11-22): Methodology validation complete
 
-**版本歷程**（詳見 `dev-notes/HISTORY.md`）：
-- v2.7.0 (2025-12-01): `/atlas.flow` - 流程追蹤
-- v2.6.0 (2025-11-30): `/atlas.history` - 時序分析
-- v2.5.x (2025-11-30): 多語言 Patterns（141 patterns）
-- v1.0 (2025-11-22): 方法論驗證完成
+### Ignored Directories
 
-### 忽略的目錄
+- `test_targets/` - Cloned codebases for validation (large, not tracked in git)
+- `test_results/` - Generated analysis outputs (can be regenerated)
+- `examples/*` - Cloned reference projects (only README.md tracked)
 
-- `test_targets/` - 用於驗證的克隆 codebase（大型，不追蹤到 git）
-- `test_results/` - 生成的分析輸出（可以重新生成）
-- `examples/*` - clone 的參考專案（僅追蹤 README.md）
+These are git-ignored to keep the codebase lean while protecting test project privacy.
 
-這些被 git 忽略以保持 codebase 精簡，同時保護測試專案的隱私。
+## Development Workflow
 
-## 開發工作流程
+### Git and Version Control
 
-### Git 和版本控制
+- **Never use `git commit` command** - GitButler is using its internal processes and `but` CLI hooks to automatically manage all commits and branches
+- **Focus on writing clean code and tests** - Don't worry about commits or branches
+- **When task is complete, stop working** and allow GitButler hooks to execute post-processing commands
 
-- **絕對不要使用 `git commit` 命令** - GitButler 正在使用其內部流程和 `but` CLI hooks 自動管理所有 commits 和分支
-- **專注於編寫乾淨的程式碼和測試** - 不要擔心 commits 或分支
-- **當任務完成時，停止工作**並允許 GitButler hooks 執行後處理命令
+This workflow ensures clear feature separation and allows GitButler to automatically organize commits and branches without manual intervention.
 
-此工作流程確保功能的清晰分離，並允許 GitButler 自動組織 commits 和分支，無需手動介入。
+## v1.0 Key Learnings (Must Read!)
 
-## v1.0 關鍵學習（必讀！）
+**v1.0 validation completed on 2025-11-22 revealed 6 key insights**:
 
-**2025-11-22 完成的 v1.0 驗證揭示了 6 個關鍵洞察**：
+1. ✅ **Information theory actually works** - <5% scan achieves 70-80% understanding (5/5 project validation)
+2. ⭐ **Scale-awareness is critical** - TINY/SMALL/MEDIUM/LARGE/VERY_LARGE need different strategies
+3. ⭐ **YAML > TOON** - Standard ecosystem > 14% token savings
+4. ✅ **Must exclude .venv/node_modules** - Avoid inflating file counts
+5. ✅ **Benchmarking reveals truth** - Test on real projects, not just theory
+6. ✅ **AI collaboration patterns are detectable** - Level 0-4 maturity model
 
-1. ✅ **資訊理論確實有效** - <5% 掃描達 70-80% 理解（5/5 專案驗證）
-2. ⭐ **規模感知至關重要** - TINY/SMALL/MEDIUM/LARGE/VERY_LARGE 需要不同策略
-3. ⭐ **YAML > TOON** - 標準生態系統 > 14% token 節省
-4. ✅ **必須排除 .venv/node_modules** - 避免虛增檔案數量
-5. ✅ **基準測試揭示真相** - 在真實專案測試，不只是理論
-6. ✅ **AI 協作模式可檢測** - Level 0-4 成熟度模型
+> **Detailed analysis and evidence**: See [dev-notes/KEY_LEARNINGS.md](./dev-notes/KEY_LEARNINGS.md) and [dev-notes/HISTORY.md](./dev-notes/HISTORY.md)
 
-> **詳細分析與證據**：見 [dev-notes/KEY_LEARNINGS.md](./dev-notes/KEY_LEARNINGS.md) 和 [dev-notes/HISTORY.md](./dev-notes/HISTORY.md)
-
-**實作任何新功能時，謹記這些學習！**
+**Remember these learnings when implementing any new features!**
 
 ---
 
-## 多語言 Pattern 支援
+## Multi-Language Pattern Support
 
-**總計 141 patterns**，涵蓋主流技術棧：
+**Total 141 patterns**, covering mainstream tech stacks:
 
-| 語言/框架 | Patterns | 詳細報告 |
+| Language/Framework | Patterns | Detailed Report |
 |-----------|----------|----------|
 | iOS/Swift | 34 | `dev-notes/2025-11/` |
 | Kotlin/Android | 31 | `dev-notes/2025-11/2025-11-30-kotlin-patterns-implementation-report.md` |
 | Python | 26 | `dev-notes/2025-11/` |
 | TypeScript/React/Vue | 50 | `dev-notes/2025-11/` |
 
-**方法論**：見 `dev-notes/archives/lessons/new-language-support-methodology.md`
+**Methodology**: See `dev-notes/archives/lessons/new-language-support-methodology.md`
 
 ---
 
-## 當前狀態（v2.9.0）
+## Current Status (v2.9.0)
 
-基於 PRD v2.9.0、v1.0 學習和 Constitution v1.1：
+Based on PRD v2.9.0, v1.0 learnings, and Constitution v1.1:
 
-### ✅ 已完成 - 核心 6 Commands
-- [x] `/atlas.init` - 專案初始化（自動觸發規則）✅ (2025-11-30)
-- [x] `/atlas.overview` - Stage 0 專案指紋 ✅ (2025-11-20)
-- [x] `/atlas.pattern` - 學習設計模式 ✅ (2025-11-22) ⭐⭐⭐⭐⭐
-- [x] `/atlas.impact` - 影響範圍分析（靜態）✅ (2025-11-25) ⭐⭐⭐⭐
-- [x] `/atlas.history` - 時序分析（Git 歷史）✅ (2025-11-30) ⭐⭐⭐⭐⭐
-- [x] `/atlas.flow` - 流程追蹤（11 種分析模式）✅ (2025-12-01) ⭐⭐⭐⭐⭐
+### ✅ Completed - Core 6 Commands
+- [x] `/atlas.init` - Project initialization (auto-trigger rules) ✅ (2025-11-30)
+- [x] `/atlas.overview` - Stage 0 project fingerprint ✅ (2025-11-20)
+- [x] `/atlas.pattern` - Learn design patterns ✅ (2025-11-22) ⭐⭐⭐⭐⭐
+- [x] `/atlas.impact` - Impact scope analysis (static) ✅ (2025-11-25) ⭐⭐⭐⭐
+- [x] `/atlas.history` - Temporal analysis (Git history) ✅ (2025-11-30) ⭐⭐⭐⭐⭐
+- [x] `/atlas.flow` - Flow tracing (11 analysis modes) ✅ (2025-12-01) ⭐⭐⭐⭐⭐
 
-### ✅ 已完成 - v2.9.0 Dependency Analysis
-- [x] `/atlas.deps` - Dependency 分析 ✅ (2025-12-12) ⭐⭐⭐⭐⭐
-  - Phase 0 規則確認機制
+### ✅ Completed - v2.9.0 Dependency Analysis
+- [x] `/atlas.deps` - Dependency analysis ✅ (2025-12-12) ⭐⭐⭐⭐⭐
+  - Phase 0 rule confirmation mechanism
   - Built-in rules (iOS, Android, Python)
-  - WebSearch 動態規則生成
-  - 純粹盤點 vs 升級模式識別
-  - 4 場景測試，100% 準確率 (42/42 樣本)
+  - WebSearch dynamic rule generation
+  - Pure inventory vs. upgrade mode identification
+  - 4 scenario tests, 100% accuracy (42/42 samples)
   - Production Ready (Grade A+ 9.7/10)
 
-### ✅ 已完成 - 品質框架
-- [x] **Constitution v1.1** - 分析行為的不可變原則 + Handoffs 原則 ✅ (2025-12-06)
-- [x] **Article VII: Handoffs 原則** - 發現驅動的動態下一步建議 ✅ (2025-12-06)
-- [x] **validate-constitution.sh** - 自動化合規驗證 ✅ (2025-12-05)
-- [x] **Monorepo 偵測** - lerna/pnpm/nx/turborepo/npm workspaces ✅ (2025-12-05)
-- [x] **Branch-Aware Context** - Git 分支/子目錄/Package 偵測 ✅ (2025-12-06)
-- [x] **--save 參數** - 所有分析命令支援儲存至 `.sourceatlas/` ✅ (2025-12-12)
-- [x] **/atlas.clear** - 清空已儲存的分析結果 ✅ (2025-12-12)
+### ✅ Completed - Quality Framework
+- [x] **Constitution v1.1** - Immutable principles for analysis behavior + Handoffs principles ✅ (2025-12-06)
+- [x] **Article VII: Handoffs Principles** - Discovery-driven dynamic next-step suggestions ✅ (2025-12-06)
+- [x] **validate-constitution.sh** - Automated compliance validation ✅ (2025-12-05)
+- [x] **Monorepo Detection** - lerna/pnpm/nx/turborepo/npm workspaces ✅ (2025-12-05)
+- [x] **Branch-Aware Context** - Git branch/subdirectory/Package detection ✅ (2025-12-06)
+- [x] **--save Parameter** - All analysis commands support saving to `.sourceatlas/` ✅ (2025-12-12)
+- [x] **/atlas.clear** - Clear saved analysis results ✅ (2025-12-12)
 
-### ✅ 已完成 - Model 效能優化 (2025-12-12)
+### ✅ Completed - Model Performance Optimization (2025-12-12)
 
-各命令根據任務複雜度使用不同 Claude 模型，平衡速度與品質：
+Each command uses different Claude models based on task complexity, balancing speed and quality:
 
-| 命令 | Model | 原因 |
+| Command | Model | Reason |
 |------|-------|------|
-| `/atlas.init` | Haiku | 簡單文字注入，無需推理 |
-| `/atlas.overview` | Sonnet | 假設生成需要中等推理能力 |
-| `/atlas.pattern` | Sonnet | 模式匹配和實作指南生成 |
-| `/atlas.history` | Sonnet | Git 分析和洞察生成 |
-| `/atlas.impact` | Sonnet | 依賴追蹤和風險評估 |
-| `/atlas.deps` | Sonnet | 依賴盤點和規則匹配 |
-| `/atlas.flow` | Opus | 複雜多層邏輯流追蹤（11 種分析模式）|
-| `/atlas.clear` | Haiku | 簡單檔案刪除操作 |
+| `/atlas.init` | Haiku | Simple text injection, no reasoning needed |
+| `/atlas.overview` | Sonnet | Hypothesis generation requires medium reasoning |
+| `/atlas.pattern` | Sonnet | Pattern matching and implementation guide generation |
+| `/atlas.history` | Sonnet | Git analysis and insight generation |
+| `/atlas.impact` | Sonnet | Dependency tracking and risk assessment |
+| `/atlas.deps` | Sonnet | Dependency inventory and rule matching |
+| `/atlas.flow` | Opus | Complex multi-layer logic flow tracing (11 analysis modes) |
+| `/atlas.clear` | Haiku | Simple file deletion operations |
 
-**預期效益**：
-- Haiku 命令：速度提升 50%+，成本降低 70%
-- Sonnet 命令：速度提升 20-30%，成本降低 40%
-- 整體品質維持高標準（E2E 測試 100% 通過）
+**Expected Benefits**:
+- Haiku commands: 50%+ speed increase, 70% cost reduction
+- Sonnet commands: 20-30% speed increase, 40% cost reduction
+- Overall quality maintained at high standards (E2E tests 100% pass)
 
-### ✅ 已完成 - 多語言支援
+### ✅ Completed - Multi-Language Support
 - [x] iOS/Swift - 34 patterns
 - [x] Kotlin/Android - 31 patterns
 - [x] Python - 26 patterns
 - [x] TypeScript/React/Vue - 50 patterns
-- **總計：141 patterns**
+- **Total: 141 patterns**
 
-### 🔮 未來（v3.0）
+### 🔮 Future (v3.0)
 - Go/Rust/Ruby patterns
-- SourceAtlas Monitor - 持續追蹤和趨勢分析
-- 技術債務量化
-- 健康度儀表板
-- `/atlas.standup` - 整合 GitLab MR 工具（cycle-time, branch-health）
+- SourceAtlas Monitor - Continuous tracking and trend analysis
+- Technical debt quantification
+- Health dashboard
+- `/atlas.standup` - Integrate GitLab MR tools (cycle-time, branch-health)
 
-**決策記錄**:
-- (2025-12-12): **Model 效能優化** - 各命令指定最適 Model（Haiku/Sonnet/Opus），E2E 測試 100% 通過
-- (2025-12-08): `/atlas.deps` 設計開始 - 專為 Library/Framework 升級場景（情境 8）
-- (2025-11-25): `/atlas.find` 已取消 - 功能由現有 commands 涵蓋
-- (2025-11-30): `/atlas.history` 實作完成 - 單一命令 + 零參數 + 智慧輸出 + 自動安裝 code-maat
-- (2025-12-01): `/atlas.flow` 實作完成 - 11 種分析模式 + 語言專屬入口點 + 增強邊界識別
-- (2025-12-05): **Constitution v1.0** 實作完成 - 7 Articles + 驗證腳本 + Monorepo 偵測
-- (2025-12-06): **Constitution v1.1** 實作完成 - 新增 Article VII: Handoffs 原則（5 Sections）
-- (2025-12-06): `/atlas.validate` 已取消 - 改為內建品質檢查（獨立命令過度工程化）
-- (2025-12-06): **Branch-Aware Context** 實作完成 - Git 分支/子目錄/Package 偵測
-- (2025-12-06): **--save 參數** 實作完成 - 可選儲存至 `.sourceatlas/overview.yaml`
+**Decision Log**:
+- (2025-12-12): **Model Performance Optimization** - Each command specifies optimal Model (Haiku/Sonnet/Opus), E2E tests 100% pass
+- (2025-12-08): `/atlas.deps` design started - Dedicated for Library/Framework upgrade scenarios (Scenario 8)
+- (2025-11-25): `/atlas.find` canceled - Functionality covered by existing commands
+- (2025-11-30): `/atlas.history` implementation complete - Single command + zero parameters + smart output + auto-install code-maat
+- (2025-12-01): `/atlas.flow` implementation complete - 11 analysis modes + language-specific entry points + enhanced boundary identification
+- (2025-12-05): **Constitution v1.0** implementation complete - 7 Articles + validation script + Monorepo detection
+- (2025-12-06): **Constitution v1.1** implementation complete - Added Article VII: Handoffs Principles (5 Sections)
+- (2025-12-06): `/atlas.validate` canceled - Changed to built-in quality checks (independent command over-engineered)
+- (2025-12-06): **Branch-Aware Context** implementation complete - Git branch/subdirectory/Package detection
+- (2025-12-06): **--save Parameter** implementation complete - Optional save to `.sourceatlas/overview.yaml`
 
-**詳細路線圖**：見 [dev-notes/implementation-roadmap.md](./dev-notes/implementation-roadmap.md) 和 [PRD.md](./PRD.md)
+**Detailed Roadmap**: See [dev-notes/implementation-roadmap.md](./dev-notes/implementation-roadmap.md) and [PRD.md](./PRD.md)
 
 ---
 
-## 實作核心原則（基於 v1.0 經驗 + Constitution v1.1）
+## Implementation Core Principles (Based on v1.0 Experience + Constitution v1.1)
 
-實作任何新功能時，**必須遵循**：
+When implementing any new features, **must follow**:
 
-1. **規模感知設計** - 不要一刀切，根據專案大小調整（Constitution Article VI）
-2. **標準優於自訂** - 用 YAML、Markdown，不發明格式（Constitution Article V）
-3. **測試先行** - 在 3+ 真實專案測試，不只是理論
-4. **文檔同步** - 邊開發邊寫文檔，不要事後補
-5. **基準測量** - 建立指標，持續追蹤
-6. **排除目錄** - 永遠排除 .venv、node_modules、__pycache__（Constitution Article II）
-7. **資訊理論** - 高熵優先，結構 > 實作細節（Constitution Article I）
-8. **證據為本** - 每個論點需要 `file:line` 證據（Constitution Article IV）
-9. **驗證合規** - 使用 `validate-constitution.sh` 驗證分析輸出
+1. **Scale-Aware Design** - Don't one-size-fits-all, adjust based on project size (Constitution Article VI)
+2. **Standards Over Custom** - Use YAML, Markdown, don't invent formats (Constitution Article V)
+3. **Test First** - Test on 3+ real projects, not just theory
+4. **Documentation Sync** - Write docs while developing, don't backfill
+5. **Benchmark Measurement** - Establish metrics, track continuously
+6. **Exclude Directories** - Always exclude .venv, node_modules, __pycache__ (Constitution Article II)
+7. **Information Theory** - High entropy priority, structure > implementation details (Constitution Article I)
+8. **Evidence-Based** - Every argument needs `file:line` evidence (Constitution Article IV)
+9. **Validate Compliance** - Use `validate-constitution.sh` to validate analysis output
