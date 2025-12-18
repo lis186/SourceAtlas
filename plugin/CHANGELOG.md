@@ -5,6 +5,20 @@ All notable changes to SourceAtlas Plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.3] - 2025-12-18
+
+### Added
+- **Progressive Disclosure for `/atlas.pattern`** - Smart output mode based on file count ⭐
+  - **Smart Mode (default)**: ≤5 files → full analysis; >5 files → selection interface
+  - **`--brief` parameter**: List files only, skip full analysis
+  - **`--full` parameter**: Force full analysis for all files
+  - **Selection Interface**: Interactive file picker when >5 matches found
+  - Reduces token usage for large result sets
+  - Improves user experience with progressive information disclosure
+
+### Changed
+- Bumped version to 2.9.3
+
 ## [2.9.2] - 2025-12-14
 
 ### Added
