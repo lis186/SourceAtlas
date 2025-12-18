@@ -40,15 +40,19 @@ SourceAtlas 未來功能的完整設計文檔。
 
 ### 🟢 已批准
 
-- **[漸進式輸出 (Progressive Disclosure)](./progressive-disclosure/README.md)**
-  - **目標**: 根據專案規模智慧調整輸出詳細程度
-  - **建立日期**: 2025-12-16
-  - **來源**: Claude Code Plugins 學習筆記
-  - **預期效益**: Token 效率提升 30-50%（小專案可達 90%+）
-  - **工作量**: 約 6-8 小時
-  - **下一步**: 實作 Phase 1（/atlas.overview 漸進式）
+（目前無）
 
 ### ⚪ 擱置
+
+- **[漸進式輸出 (Progressive Disclosure)](./progressive-disclosure/README.md)**
+  - **目標**: 根據專案規模智慧調整輸出詳細程度
+  - **狀態**: 部分完成後擱置（2025-12-18）
+  - **已完成**: `/atlas.pattern` Smart 模式 + `--brief`/`--full` (v2.9.3)
+  - **擱置原因**:
+    - `/atlas.overview` 等命令通常只執行一次，已有快取機制
+    - 增加維護複雜度，效益有限
+    - 假設未經驗證，無使用者反饋需求
+  - **重新評估**: 若有使用者抱怨「輸出太多」或 token 成本問題
 
 - **[YAML Pattern Configuration](./yaml-pattern-config/README.md)**
   - **目標**: 將 patterns 從 shell script 硬編碼改為 YAML 配置檔
