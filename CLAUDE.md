@@ -514,3 +514,39 @@ When implementing any new features, **must follow**:
 7. **Information Theory** - High entropy priority, structure > implementation details (Constitution Article I)
 8. **Evidence-Based** - Every argument needs `file:line` evidence (Constitution Article IV)
 9. **Validate Compliance** - Use `validate-constitution.sh` to validate analysis output
+
+---
+
+## Pre-Release Checklist
+
+**Trigger**: Before asking user "Should we update the version?", complete all checks below
+
+After completing feature implementation, check and update before asking about version bump:
+
+| # | Check Item | File Location | Description |
+|---|-----------|---------------|-------------|
+| 1 | **README version badge** | `README.md`, `README.zh-TW.md` | Update version badge |
+| 2 | **CLAUDE.md Current Status** | `CLAUDE.md` | Version list + section title |
+| 3 | **Plugin version** | `plugin/.claude-plugin/plugin.json` | "version" field |
+| 4 | **Plugin CHANGELOG** | `plugin/CHANGELOG.md` | New version section |
+| 5 | **Dev history** | `dev-notes/HISTORY.md` | Current week entry |
+| 6 | **Implementation notes** | `dev-notes/YYYY-MM/YYYY-MM-DD-*.md` | Detailed implementation doc |
+| 7 | **Command files sync** | `.claude/commands/` ↔ `plugin/commands/` | Ensure consistency |
+| 8 | **New scripts** | `scripts/atlas/*.sh` | Verify existence and executable |
+| 9 | **install-global.sh** | If new scripts added, verify inclusion | Symlink includes automatically |
+
+### Checklist Flow
+
+```
+1. Feature implementation complete
+2. Execute all 9 checks above
+3. Fix any missing items
+4. Ask user: "Should we update the version to vX.Y.Z?"
+5. Only execute version changes after user confirmation
+```
+
+### Version Number Rules
+
+- **PATCH** (x.y.Z): Bug fixes, minor improvements, doc updates
+- **MINOR** (x.Y.0): New features, new commands, significant improvements
+- **MAJOR** (X.0.0): Breaking changes, architecture refactoring
