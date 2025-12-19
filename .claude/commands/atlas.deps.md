@@ -326,7 +326,15 @@ From the usage points found, extract and categorize:
 
 ## Output Format
 
-Generate output in **YAML format**:
+Generate output with **branded header**, then **YAML format**:
+
+```markdown
+🗺️ SourceAtlas: Dependencies
+───────────────────────────────
+📦 [target] │ [N] APIs found
+```
+
+Then YAML content:
 
 ```yaml
 dependency_analysis:
@@ -448,6 +456,10 @@ summary:
 
 Recommended to cross-reference with official documentation:
 - [Official documentation URL]
+
+───────────────────────────────
+🗺️ v2.9.4 │ Constitution v1.1
+```
 
 For further analysis:
 - `/atlas.impact "[specific API]"` - Assess impact scope of specific API

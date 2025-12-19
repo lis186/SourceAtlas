@@ -239,7 +239,15 @@ Each hypothesis must include:
 
 ## Output Format
 
-Generate output in **YAML format** (standard, ecosystem-supported):
+Generate output with **branded header**, then **YAML format** (standard, ecosystem-supported):
+
+```markdown
+🗺️ SourceAtlas: Overview
+───────────────────────────────
+🔭 [project_name] │ [SCALE] ([file count] files)
+```
+
+Then YAML content:
 
 ```yaml
 metadata:
@@ -343,6 +351,9 @@ summary:
 | 2 | `/atlas.flow "[entry point]"` | [reason based on findings] |
 
 💡 Enter a number (e.g., `1`) or copy the command to execute
+
+───────────────────────────────
+🗺️ v2.9.4 │ Constitution v1.1
 ```
 
 ---

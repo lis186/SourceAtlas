@@ -368,9 +368,9 @@ Evaluate impact level based on findings:
 ### For API Impact
 
 ```markdown
-=== API Impact Analysis ===
-
-📍 **API Endpoint**: $API_PATH
+🗺️ SourceAtlas: Impact
+───────────────────────────────
+💥 $API_PATH │ [total dependents] dependents
 
 📊 **Impact Summary**:
 - Backend files: [count]
@@ -522,9 +522,9 @@ interface UserResponse {
 ### For Model Impact
 
 ```markdown
-=== Model Change Impact Analysis ===
-
-📍 **Model**: $MODEL_NAME
+🗺️ SourceAtlas: Impact
+───────────────────────────────
+💥 $MODEL_NAME │ [total dependents] dependents
 
 📊 **Impact Summary**:
 - Controllers: [count]
@@ -678,6 +678,9 @@ Add at the end of output:
 | 2 | `/atlas.history "[directory]"` | This area changes frequently, need to understand historical patterns |
 
 💡 Enter number (e.g., `1`) or copy command to execute
+
+───────────────────────────────
+🗺️ v2.9.4 │ Constitution v1.1
 ```
 
 ### End Conditions vs Recommendations (choose one, mutually exclusive)
@@ -744,7 +747,7 @@ mkdir -p .sourceatlas/impact
 
 ### Step 3: Save output
 
-After generating the complete analysis, save the **entire output** (from `=== ... Impact Analysis ===` to the end) to `.sourceatlas/impact/{name}.md`
+After generating the complete analysis, save the **entire output** (from `🗺️ SourceAtlas: Impact` to the end) to `.sourceatlas/impact/{name}.md`
 
 ### Step 4: Confirm
 

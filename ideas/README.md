@@ -76,16 +76,16 @@ dev-notes/YYYY-MM/implementation.md
   - **來源**: Reddit 文章 "Claude Code is a Beast"
   - **下一步**: 評估 token 成本
 
-- **[Claude Code Plugins 學習筆記](./claude-code-plugins-learnings.md)**
+- **[Claude Code Plugins 學習筆記](./claude-code-plugins-learnings.md)** ✅ 完成
   - **建立日期**: 2025-12-12
-  - **成熟度**: 70%
+  - **成熟度**: 100% (所有方向已處理)
   - **內容**: 分析 Claude Code 官方 plugins，提煉可借鑑的設計模式
   - **探索狀態**:
-    - ✅ **漸進式輸出** - 已升級到 [proposals/progressive-disclosure/](../proposals/progressive-disclosure/)
-    - ✅ **持久化** - 已升級到 [proposals/persistence/](../proposals/persistence/)
-    - 🔲 信心分數 + Threshold 機制
-    - 🔲 輸出格式統一
-  - **下一步**: 評估「信心分數 Threshold」可行性
+    - ✅ **漸進式輸出** - `/atlas.pattern` 完成 (v2.9.3)，其他擱置
+    - ✅ **持久化** - `--save` + `/atlas.clear` 完成 (v2.9.1)
+    - ⏸️ **信心 Threshold** - 擱置（無用戶需求）
+    - ✅ **輸出格式統一** - 已實作品牌識別 Header/Footer (v2.9.5)
+  - **狀態**: 此 idea 已完成，可歸檔
 
 ### 已升級
 
