@@ -1091,6 +1091,10 @@ Mark items that are **worth attention** - unusual, risky, or important:
 ### ASCII + Structure (Terminal Friendly)
 
 ```
+🗺️ SourceAtlas: Flow
+───────────────────────────────
+🔀 [Flow Name] │ [N] steps
+
 [Flow Name] (Main Path)
 ========================
 
@@ -1129,7 +1133,9 @@ Mark items that are **worth attention** - unusual, risky, or important:
 • "expand [specific sub-flow]"     → Deep dive into sub-flow
 • "what if I change step 3"        → Impact analysis
 • "why is this changed often"      → History analysis
-──────────────────────────────────
+
+───────────────────────────────
+🗺️ v2.9.4 │ Constitution v1.1
 ```
 
 ### Color Semantics
