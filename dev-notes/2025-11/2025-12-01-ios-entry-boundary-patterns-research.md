@@ -1,6 +1,6 @@
 # Swift/iOS 入口點和邊界模式研究報告
 
-基於 4 個真實 iOS 專案的分析：Signal-iOS、WordPress-iOS、Swiftfin、***REMOVED***
+基於 4 個真實 iOS 專案的分析：Signal-iOS、WordPress-iOS、Swiftfin、匿名商業 App
 
 ## 1. 入口點模式（Entry Points）
 
