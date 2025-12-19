@@ -5,6 +5,20 @@ All notable changes to SourceAtlas Plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.5] - 2025-12-19
+
+### Added
+- **Branded Output Format** - Unified Header/Footer for all 6 analysis commands ⭐
+  - **Unified Header**: `🗺️ SourceAtlas: [Command Name]` + separator line + emoji + target + key metric
+  - **Command-Specific Emojis**: 🔭 overview, 🧩 pattern, 📜 history, 💥 impact, 🔀 flow, 📦 deps
+  - **Unified Footer**: `🗺️ v2.9.5 │ Constitution v1.1`
+  - **Design Decisions**: 30-char separator (narrow terminal friendly), `│` delimiter (aesthetics)
+  - **Implementation**: ~1.5 hours across 6 command files
+
+### Changed
+- Updated all 6 analysis command files with new branded format
+- Bumped version to 2.9.5
+
 ## [2.9.4] - 2025-12-19
 
 ### Added

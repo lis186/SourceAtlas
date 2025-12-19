@@ -18,6 +18,7 @@ This file provides guidance for Claude Code (claude.ai/code) when working in thi
 - **v2.9.2** ✅ - `/atlas.list` expiry marking enhanced, `/atlas.init` validation mechanism (2025-12-13)
 - **v2.9.3** ✅ - `/atlas.pattern` Progressive Disclosure: Smart mode + `--brief`/`--full` parameters (2025-12-18)
 - **v2.9.4** ✅ - AI Collaboration Detection: Support 12+ AI tools detection (2025-12-19)
+- **v2.9.5** ✅ - Branded Output Format: Unified Header/Footer for all commands (2025-12-19)
 
 ## Architecture
 
