@@ -207,21 +207,47 @@ For in-depth due diligence (evaluating open-source projects, hiring assessment, 
 
 ## AI Collaboration Detection
 
-One of SourceAtlas's unique capabilities is identifying AI-assisted development patterns:
+One of SourceAtlas's unique capabilities is identifying AI-assisted development patterns across **12+ AI coding tools**.
+
+### Supported AI Tools Detection (v2.9.4)
+
+| Tool | Config Files | Confidence |
+|------|--------------|------------|
+| **Claude Code** | `CLAUDE.md`, `.claude/` | High |
+| **Cursor** | `.cursorrules`, `.cursor/rules/*.mdc` | High |
+| **Windsurf** | `.windsurfrules`, `.windsurf/rules/` | High |
+| **GitHub Copilot** | `.github/copilot-instructions.md` | High |
+| **Cline/Roo** | `.clinerules`, `.clinerules/`, `.roo/` | High |
+| **Aider** | `CONVENTIONS.md`, `.aider.conf.yml` | High |
+| **Continue.dev** | `.continuerules`, `.continue/rules/` | High |
+| **JetBrains AI** | `.aiignore` | Medium |
+| **AGENTS.md** | `AGENTS.md` (Linux Foundation standard) | Medium |
+| **Sourcegraph Cody** | `.vscode/cody.json` | Medium |
+| **Replit** | `replit.nix` + `.replit` | Low |
+| **Ruler** | `.ruler/` (multi-tool manager) | High |
 
 ### AI Collaboration Maturity Model
 
 - **Level 0**: No AI (traditional development)
-- **Level 1-2**: Basic AI usage (occasional tool use)
+  - No config files detected
+  - Low comment density (5-8%)
+  - Inconsistent code style
+- **Level 1**: Occasional use
+  - 1 tool config with minimal content
+- **Level 2**: Frequent use
+  - 1-2 tool configs + some indirect indicators
 - **Level 3**: Systematic AI collaboration ⭐
-  - Has `CLAUDE.md` or similar AI configuration
+  - Complete AI config (CLAUDE.md, .cursorrules, etc.)
   - 15-20% comment density (vs. manual 5-8%)
   - 98%+ code consistency
   - 100% Conventional Commits
   - Docs/code ratio >1:1
 - **Level 4**: Ecosystem level (team-level AI integration)
+  - Multiple tool configs or Ruler/.ruler/
+  - AGENTS.md (cross-tool standard)
+  - Team-wide AI coding standards
 
-**Key Indicators**: Look for CLAUDE.md, .cursor/rules/, high comment density, perfect commit message consistency, and rich documentation.
+**Indirect Indicators**: High comment density, perfect commit message consistency, rich documentation, consistent code style across files.
 
 ## File Formats
 

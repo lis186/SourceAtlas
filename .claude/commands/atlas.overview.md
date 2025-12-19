@@ -173,10 +173,49 @@ Based on scanned files, generate **scale-appropriate hypotheses** (use targets f
 - Git workflow patterns
 
 **AI Collaboration** (SourceAtlas Signature Analysis):
-- Level 0-4 detection:
-  - Level 0: Traditional development (5-8% comments, inconsistent style)
-  - Level 3: Systematic AI collaboration (CLAUDE.md present, 15-20% comments, 98%+ consistency)
-- Look for: CLAUDE.md, .cursor/rules/, high comment density, conventional commits
+
+Detect AI tool usage by scanning for tool-specific configuration files:
+
+**Tier 1: High-Confidence Indicators (Tool-Specific Config Files)**
+
+| Tool | Files to Check | Confidence Boost |
+|------|----------------|------------------|
+| **Claude Code** | `CLAUDE.md`, `.claude/` | +0.30 |
+| **Cursor** | `.cursorrules`, `.cursor/rules/*.mdc` | +0.25 |
+| **Windsurf** | `.windsurfrules`, `.windsurf/rules/` | +0.25 |
+| **GitHub Copilot** | `.github/copilot-instructions.md`, `**/.instructions.md` | +0.20 |
+| **Cline/Roo** | `.clinerules`, `.clinerules/`, `.roo/` | +0.25 |
+| **Aider** | `CONVENTIONS.md`, `.aider.conf.yml`, `.aider.input.history` | +0.25 |
+| **Continue.dev** | `.continuerules`, `.continue/rules/` | +0.25 |
+| **JetBrains AI** | `.aiignore` | +0.20 |
+| **AGENTS.md** | `AGENTS.md` (Linux Foundation standard, 60K+ projects) | +0.20 |
+| **Sourcegraph Cody** | `.vscode/cody.json` | +0.15 |
+| **Replit** | `replit.nix` + `.replit` (may indicate Replit Agent) | +0.15 |
+| **Ruler** | `.ruler/` (multi-tool manager) | +0.20 |
+
+**Tier 2: Indirect Indicators**
+
+| Indicator | Threshold | Interpretation |
+|-----------|-----------|----------------|
+| Comment density | >15% | AI-generated code (vs 5-8% manual) |
+| Code consistency | >98% | Systematic AI assistance |
+| Conventional Commits | 100% | AI tool integration |
+| Docs-to-code ratio | >1:1 | AI documentation generation |
+
+**Level Definitions**:
+- **Level 0**: No AI - No config files, low comment density (5-8%), inconsistent style
+- **Level 1**: Occasional use - 1 tool config with minimal content
+- **Level 2**: Frequent use - 1-2 tool configs + some indirect indicators
+- **Level 3**: Systematic collaboration - Complete AI config + high comment density + consistent style
+- **Level 4**: Ecosystem-level - Multiple tool configs (Ruler/.ruler/) or AGENTS.md + team-wide standards
+
+**Detection Commands** (run during Phase 2):
+```bash
+# Check for AI tool config files
+ls -la CLAUDE.md .cursorrules .windsurfrules CONVENTIONS.md AGENTS.md .aiignore 2>/dev/null
+ls -la .claude/ .cursor/rules/ .windsurf/rules/ .clinerules/ .roo/ .continue/rules/ .ruler/ 2>/dev/null
+ls -la .github/copilot-instructions.md .vscode/cody.json .aider.conf.yml 2>/dev/null
+```
 
 **Business Domain**:
 - What does this project do?
@@ -254,10 +293,19 @@ hypotheses:
   ai_collaboration:
     level: 0-4
     confidence: 0.0-1.0
-    evidence: "[specific indicators]"
+    tools_detected:
+      - tool: "[tool name]"
+        config_file: "[file path]"
+        content_quality: "[minimal|basic|comprehensive]"
     indicators:
       - "[indicator 1]"
       - "[indicator 2]"
+    # Level interpretation:
+    # 0: No AI (no config files, 5-8% comments)
+    # 1: Occasional (1 config, minimal content)
+    # 2: Frequent (1-2 configs + indirect indicators)
+    # 3: Systematic (complete config + high comments + consistent style)
+    # 4: Ecosystem (multiple tools/AGENTS.md + team standards)
 
   business:
     - hypothesis: "[business domain insight]"
