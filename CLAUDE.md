@@ -17,6 +17,7 @@ This file provides guidance for Claude Code (claude.ai/code) when working in thi
 - **v2.9.1** ✅ - Persistence v2.0: 30-day expiry warnings, Handoffs exclusivity rules (2025-12-13)
 - **v2.9.2** ✅ - `/atlas.list` expiry marking enhanced, `/atlas.init` validation mechanism (2025-12-13)
 - **v2.9.3** ✅ - `/atlas.pattern` Progressive Disclosure: Smart mode + `--brief`/`--full` parameters (2025-12-18)
+- **v2.9.4** ✅ - AI Collaboration Detection: Support 12+ AI tools detection (2025-12-19)
 
 ## Architecture
 
@@ -207,21 +208,47 @@ For in-depth due diligence (evaluating open-source projects, hiring assessment, 
 
 ## AI Collaboration Detection
 
-One of SourceAtlas's unique capabilities is identifying AI-assisted development patterns:
+One of SourceAtlas's unique capabilities is identifying AI-assisted development patterns across **12+ AI coding tools**.
+
+### Supported AI Tools Detection (v2.9.4)
+
+| Tool | Config Files | Confidence |
+|------|--------------|------------|
+| **Claude Code** | `CLAUDE.md`, `.claude/` | High |
+| **Cursor** | `.cursorrules`, `.cursor/rules/*.mdc` | High |
+| **Windsurf** | `.windsurfrules`, `.windsurf/rules/` | High |
+| **GitHub Copilot** | `.github/copilot-instructions.md` | High |
+| **Cline/Roo** | `.clinerules`, `.clinerules/`, `.roo/` | High |
+| **Aider** | `CONVENTIONS.md`, `.aider.conf.yml` | High |
+| **Continue.dev** | `.continuerules`, `.continue/rules/` | High |
+| **JetBrains AI** | `.aiignore` | Medium |
+| **AGENTS.md** | `AGENTS.md` (Linux Foundation standard) | Medium |
+| **Sourcegraph Cody** | `.vscode/cody.json` | Medium |
+| **Replit** | `replit.nix` + `.replit` | Low |
+| **Ruler** | `.ruler/` (multi-tool manager) | High |
 
 ### AI Collaboration Maturity Model
 
 - **Level 0**: No AI (traditional development)
-- **Level 1-2**: Basic AI usage (occasional tool use)
+  - No config files detected
+  - Low comment density (5-8%)
+  - Inconsistent code style
+- **Level 1**: Occasional use
+  - 1 tool config with minimal content
+- **Level 2**: Frequent use
+  - 1-2 tool configs + some indirect indicators
 - **Level 3**: Systematic AI collaboration ⭐
-  - Has `CLAUDE.md` or similar AI configuration
+  - Complete AI config (CLAUDE.md, .cursorrules, etc.)
   - 15-20% comment density (vs. manual 5-8%)
   - 98%+ code consistency
   - 100% Conventional Commits
   - Docs/code ratio >1:1
 - **Level 4**: Ecosystem level (team-level AI integration)
+  - Multiple tool configs or Ruler/.ruler/
+  - AGENTS.md (cross-tool standard)
+  - Team-wide AI coding standards
 
-**Key Indicators**: Look for CLAUDE.md, .cursor/rules/, high comment density, perfect commit message consistency, and rich documentation.
+**Indirect Indicators**: High comment density, perfect commit message consistency, rich documentation, consistent code style across files.
 
 ## File Formats
 
@@ -395,7 +422,7 @@ This workflow ensures clear feature separation and allows GitButler to automatic
 
 ---
 
-## Current Status (v2.9.0)
+## Current Status (v2.9.4)
 
 Based on PRD v2.9.0, v1.0 learnings, and Constitution v1.1:
 
@@ -488,3 +515,39 @@ When implementing any new features, **must follow**:
 7. **Information Theory** - High entropy priority, structure > implementation details (Constitution Article I)
 8. **Evidence-Based** - Every argument needs `file:line` evidence (Constitution Article IV)
 9. **Validate Compliance** - Use `validate-constitution.sh` to validate analysis output
+
+---
+
+## Pre-Release Checklist
+
+**Trigger**: Before asking user "Should we update the version?", complete all checks below
+
+After completing feature implementation, check and update before asking about version bump:
+
+| # | Check Item | File Location | Description |
+|---|-----------|---------------|-------------|
+| 1 | **README version badge** | `README.md`, `README.zh-TW.md` | Update version badge |
+| 2 | **CLAUDE.md Current Status** | `CLAUDE.md` | Version list + section title |
+| 3 | **Plugin version** | `plugin/.claude-plugin/plugin.json` | "version" field |
+| 4 | **Plugin CHANGELOG** | `plugin/CHANGELOG.md` | New version section |
+| 5 | **Dev history** | `dev-notes/HISTORY.md` | Current week entry |
+| 6 | **Implementation notes** | `dev-notes/YYYY-MM/YYYY-MM-DD-*.md` | Detailed implementation doc |
+| 7 | **Command files sync** | `.claude/commands/` ↔ `plugin/commands/` | Ensure consistency |
+| 8 | **New scripts** | `scripts/atlas/*.sh` | Verify existence and executable |
+| 9 | **install-global.sh** | If new scripts added, verify inclusion | Symlink includes automatically |
+
+### Checklist Flow
+
+```
+1. Feature implementation complete
+2. Execute all 9 checks above
+3. Fix any missing items
+4. Ask user: "Should we update the version to vX.Y.Z?"
+5. Only execute version changes after user confirmation
+```
+
+### Version Number Rules
+
+- **PATCH** (x.y.Z): Bug fixes, minor improvements, doc updates
+- **MINOR** (x.Y.0): New features, new commands, significant improvements
+- **MAJOR** (X.0.0): Breaking changes, architecture refactoring
