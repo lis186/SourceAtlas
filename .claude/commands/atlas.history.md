@@ -282,9 +282,10 @@ git log --pretty=format:'%an|%ad|%s' --date=short -- "src/components/" | head -1
 ## Output Format
 
 ```markdown
-=== Smart Temporal Analysis ===
+🗺️ SourceAtlas: History
+───────────────────────────────
+📜 [repo name] │ [N] months
 
-**Repository**: [repo name]
 **Analysis Period**: [date range]
 **Commits Analyzed**: [count]
 **Files Analyzed**: [count]
@@ -390,6 +391,9 @@ Based on analysis findings, dynamically suggest 1-2 most relevant follow-up comm
 | 2 | `/atlas.pattern "[pattern]"` | Hotspot involves this pattern, need to understand implementation conventions |
 
 💡 Enter a number (e.g., `1`) or copy the command to execute
+
+───────────────────────────────
+🗺️ v2.9.4 │ Constitution v1.1
 ```
 
 ---
@@ -511,7 +515,7 @@ mkdir -p .sourceatlas
 
 ### Step 2: Save output
 
-After generating the complete analysis, save the **entire output** (from `=== Smart Temporal Analysis ===` to the end) to `.sourceatlas/history.md`
+After generating the complete analysis, save the **entire output** (from `🗺️ SourceAtlas: History` to the end) to `.sourceatlas/history.md`
 
 ### Step 3: Confirm
 

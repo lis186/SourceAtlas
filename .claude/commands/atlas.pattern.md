@@ -247,7 +247,9 @@ Then use Grep to search for relevant test patterns in those files.
 Provide your analysis in this **exact structure**:
 
 ```markdown
-# Pattern: [Pattern Name]
+🗺️ SourceAtlas: Pattern
+───────────────────────────────
+🧩 [Pattern Name] │ [N] files found
 
 ## Overview
 
@@ -339,6 +341,9 @@ To implement similar functionality following this codebase's pattern:
 | 2 | `/atlas.impact "[file]"` | [reason based on findings] |
 
 💡 Enter a number (e.g., `1`) or copy the command to execute
+
+───────────────────────────────
+🗺️ v2.9.4 │ Constitution v1.1
 
 ---
 
@@ -461,7 +466,7 @@ mkdir -p .sourceatlas/patterns
 
 ### Step 3: Save output
 
-After generating the complete analysis, save the **entire output** (from `# Pattern:` to the end) to `.sourceatlas/patterns/{name}.md`
+After generating the complete analysis, save the **entire output** (from `🗺️ SourceAtlas: Pattern` to the end) to `.sourceatlas/patterns/{name}.md`
 
 ### Step 4: Confirm
 
