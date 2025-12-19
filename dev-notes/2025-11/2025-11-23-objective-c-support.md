@@ -225,7 +225,7 @@ Script found (top 10): 10 total, 0 Objective-C ✅
 
 ### 5.1 File Modified
 
-**File**: `/Users/justinlee/dev/sourceatlas2/scripts/atlas/find-patterns.sh`
+**File**: `<project-root>/scripts/atlas/find-patterns.sh`
 
 **Lines Modified**: ~300 lines across:
 - File patterns (lines 217-312): Extended all 29 patterns

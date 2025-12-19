@@ -287,9 +287,9 @@ NEXT STEPS
 DOCUMENT LOCATIONS
 ================================================================================
 
-/Users/justinlee/dev/sourceatlas2/SENIOR_DEV_EXERCISE_INDEX.md
-/Users/justinlee/dev/sourceatlas2/QUICK_REFERENCE_SENIOR_DEV_QUERIES.md
-/Users/justinlee/dev/sourceatlas2/ios-senior-dev-atlas-find-queries.md
-/Users/justinlee/dev/sourceatlas2/SENIOR_DEV_QUERY_PATTERNS.md
+SENIOR_DEV_EXERCISE_INDEX.md
+QUICK_REFERENCE_SENIOR_DEV_QUERIES.md
+ios-senior-dev-atlas-find-queries.md
+SENIOR_DEV_QUERY_PATTERNS.md
 
 ================================================================================

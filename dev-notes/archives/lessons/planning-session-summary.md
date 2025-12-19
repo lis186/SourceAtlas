@@ -96,7 +96,7 @@
 
 **快速開始**:
 ```bash
-cd /Users/justinlee/dev/sourceatlas2
+cd <project-root>
 touch .claude/commands/atlas.pattern.md
 touch scripts/atlas/find-patterns.sh
 # 然後根據路線圖中的規格實作
@@ -249,7 +249,7 @@ touch scripts/atlas/find-patterns.sh
 
 ```bash
 # 1. 導航到專案
-cd /Users/justinlee/dev/sourceatlas2
+cd <project-root>
 
 # 2. 創建 Phase 1 檔案
 touch .claude/commands/atlas.pattern.md
@@ -260,11 +260,11 @@ chmod +x scripts/atlas/find-patterns.sh
 # 詳細規格見 implementation-roadmap.md
 
 # 4. 在樣本專案上測試
-cd /Users/justinlee/dev/cursor-talk-to-figma-mcp
+cd ~/dev/<your-test-project>
 # 使用: /atlas.pattern "websocket integration"
 
 # 5. 記錄結果
-cd /Users/justinlee/dev/sourceatlas2
+cd <project-root>
 # 以範例更新 USAGE_GUIDE.md
 ```
 

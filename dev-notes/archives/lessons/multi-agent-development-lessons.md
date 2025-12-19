@@ -228,7 +228,7 @@ WordPress-iOS "api endpoint"
 
 1. **完整執行命令**：
    ```
-   cd /Users/justinlee/dev/sourceatlas2/test_targets/WordPress-iOS
+   cd <project-root>/test_targets/WordPress-iOS
    time bash ../../scripts/atlas/find-patterns.sh "api endpoint" .
    ```
 
@@ -813,7 +813,7 @@ git log --name-only --format="%at %H" --all > /tmp/git-cache.txt
 
 ### 執行命令
 ```bash
-cd /Users/justinlee/dev/sourceatlas2/test_targets/WordPress-iOS
+cd <project-root>/test_targets/WordPress-iOS
 time bash ../../scripts/atlas/find-patterns.sh "api endpoint" .
 ```
 

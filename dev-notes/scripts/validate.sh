@@ -3,7 +3,7 @@
 
 set -e
 
-NOTES_DIR="/Users/justinlee/dev/sourceatlas2/.dev-notes"
+NOTES_DIR="${NOTES_DIR:-$(dirname "$0")/..}"
 ERRORS=0
 
 echo "🔍 驗證 .dev-notes/ 結構..."
