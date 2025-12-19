@@ -10,10 +10,10 @@ argument-hint: [path] [--save] [--force] (e.g., "src/api" or ". --save")
 > **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md) v1.0
 >
 > Key principles enforced:
-> - Article I: 高熵優先、掃描比例上限
-> - Article II: 強制排除目錄
-> - Article III: 假設數量限制、必要元素
-> - Article IV: 證據格式要求
+> - Article I: High-entropy priority, scan ratio limits
+> - Article II: Mandatory directory exclusions
+> - Article III: Hypothesis count limits, required elements
+> - Article IV: Evidence format requirements
 
 ## Context
 
@@ -30,42 +30,42 @@ argument-hint: [path] [--save] [--force] (e.g., "src/api" or ". --save")
 
 ---
 
-## Cache Check（最高優先）
+## Cache Check (Highest Priority)
 
-**如果參數中沒有 `--force`**，先檢查快取：
+**If `--force` is NOT in arguments**, check cache first:
 
-1. 計算快取路徑：
-   - 無路徑參數或 `.`：`.sourceatlas/overview.yaml`
-   - 有路徑參數（如 `src/api`）：`.sourceatlas/overview-src-api.yaml`（斜線換成 `-`）
+1. Calculate cache path:
+   - No path argument or `.`: `.sourceatlas/overview.yaml`
+   - With path argument (e.g., `src/api`): `.sourceatlas/overview-src-api.yaml` (slashes to `-`)
 
-2. 檢查快取是否存在：
+2. Check if cache exists:
    ```bash
    ls -la .sourceatlas/overview.yaml 2>/dev/null
    ```
 
-3. **如果快取存在**：
-   - 從 `ls` 輸出讀取修改日期
-   - 計算距今天數
-   - 用 Read tool 讀取快取內容
-   - 輸出：
+3. **If cache exists**:
+   - Read modification date from `ls` output
+   - Calculate days since modification
+   - Use Read tool to read cache content
+   - Output:
      ```
-     📁 載入快取：.sourceatlas/overview.yaml（N 天前）
-     💡 重新分析請加 --force
+     📁 Loading cache: .sourceatlas/overview.yaml (N days ago)
+     💡 Add --force to re-analyze
      ```
-   - **如果超過 30 天**，額外顯示：
+   - **If over 30 days**, also show:
      ```
-     ⚠️ 快取已超過 30 天，建議重新分析
+     ⚠️ Cache is over 30 days old, recommend re-analysis
      ```
-   - 然後輸出：
+   - Then output:
      ```
      ---
-     [快取內容]
+     [cache content]
      ```
-   - **結束，不執行後續分析**
+   - **End, do not execute subsequent analysis**
 
-4. **如果快取不存在**：繼續執行下方的分析流程
+4. **If cache does not exist**: Continue with the analysis flow below
 
-**如果參數中有 `--force`**：跳過快取檢查，直接執行分析
+**If `--force` is in arguments**: Skip cache check, execute analysis directly
 
 ---
 
@@ -173,10 +173,57 @@ Based on scanned files, generate **scale-appropriate hypotheses** (use targets f
 - Git workflow patterns
 
 **AI Collaboration** (SourceAtlas Signature Analysis):
-- Level 0-4 detection:
-  - Level 0: Traditional development (5-8% comments, inconsistent style)
-  - Level 3: Systematic AI collaboration (CLAUDE.md present, 15-20% comments, 98%+ consistency)
-- Look for: CLAUDE.md, .cursor/rules/, high comment density, conventional commits
+
+Detect AI tool usage by scanning for tool-specific configuration files:
+
+**Tier 1: High-Confidence Indicators (Tool-Specific Config Files)**
+
+| Tool | Files to Check | Confidence Boost |
+|------|----------------|------------------|
+| **Claude Code** | `CLAUDE.md`, `.claude/` | +0.30 |
+| **Cursor** | `.cursorrules`, `.cursor/rules/*.mdc` | +0.25 |
+| **Windsurf** | `.windsurfrules`, `.windsurf/rules/` | +0.25 |
+| **GitHub Copilot** | `.github/copilot-instructions.md`, `**/.instructions.md` | +0.20 |
+| **Cline/Roo** | `.clinerules`, `.clinerules/`, `.roo/` | +0.25 |
+| **Aider** | `CONVENTIONS.md`, `.aider.conf.yml`, `.aider.input.history` | +0.25 |
+| **Continue.dev** | `.continuerules`, `.continue/rules/` | +0.25 |
+| **JetBrains AI** | `.aiignore` | +0.20 |
+| **AGENTS.md** | `AGENTS.md` (Linux Foundation standard, 60K+ projects) | +0.20 |
+| **Sourcegraph Cody** | `.vscode/cody.json` | +0.15 |
+| **Replit** | `replit.nix` + `.replit` (may indicate Replit Agent) | +0.15 |
+| **Ruler** | `.ruler/` (multi-tool manager) | +0.20 |
+
+**Tier 2: Indirect Indicators**
+
+| Indicator | Threshold | Interpretation |
+|-----------|-----------|----------------|
+| Comment density | >15% | AI-generated code (vs 5-8% manual) |
+| Code consistency | >98% | Systematic AI assistance |
+| Conventional Commits | 100% | AI tool integration |
+| Docs-to-code ratio | >1:1 | AI documentation generation |
+
+**Level Definitions**:
+- **Level 0**: No AI - No config files, low comment density (5-8%), inconsistent style
+- **Level 1**: Occasional use - 1 tool config with minimal content
+- **Level 2**: Frequent use - 1-2 tool configs + some indirect indicators
+- **Level 3**: Systematic collaboration - Complete AI config + high comment density + consistent style
+- **Level 4**: Ecosystem-level - Multiple tool configs (Ruler/.ruler/) or AGENTS.md + team-wide standards
+
+**Detection Script** (run during Phase 2):
+```bash
+# Use helper script for comprehensive AI tool detection
+if [ -f ~/.claude/scripts/atlas/detect-ai-tools.sh ]; then
+    bash ~/.claude/scripts/atlas/detect-ai-tools.sh ${ARGUMENTS:-.}
+elif [ -f scripts/atlas/detect-ai-tools.sh ]; then
+    bash scripts/atlas/detect-ai-tools.sh ${ARGUMENTS:-.}
+else
+    # Fallback: manual checks
+    echo "Warning: detect-ai-tools.sh not found, checking manually"
+    ls -la CLAUDE.md .cursorrules .windsurfrules CONVENTIONS.md AGENTS.md .aiignore 2>/dev/null
+    ls -la .claude/ .cursor/rules/ .windsurf/rules/ .clinerules/ .roo/ .continue/rules/ .ruler/ 2>/dev/null
+    ls -la .github/copilot-instructions.md .vscode/cody.json .aider.conf.yml 2>/dev/null
+fi
+```
 
 **Business Domain**:
 - What does this project do?
@@ -254,10 +301,19 @@ hypotheses:
   ai_collaboration:
     level: 0-4
     confidence: 0.0-1.0
-    evidence: "[specific indicators]"
+    tools_detected:
+      - tool: "[tool name]"
+        config_file: "[file path]"
+        content_quality: "[minimal|basic|comprehensive]"
     indicators:
       - "[indicator 1]"
       - "[indicator 2]"
+    # Level interpretation:
+    # 0: No AI (no config files, 5-8% comments)
+    # 1: Occasional (1 config, minimal content)
+    # 2: Frequent (1-2 configs + indirect indicators)
+    # 3: Systematic (complete config + high comments + consistent style)
+    # 4: Ecosystem (multiple tools/AGENTS.md + team standards)
 
   business:
     - hypothesis: "[business domain insight]"
@@ -279,14 +335,14 @@ summary:
 
 ## Recommended Next
 
-<!-- 根據分析發現動態建議，省略此區塊若滿足結束條件 -->
+<!-- Dynamic suggestions based on findings, omit this section if end condition is met -->
 
-| # | 命令 | 用途 |
-|---|------|------|
-| 1 | `/atlas.pattern "[pattern名稱]"` | [基於發現的理由] |
-| 2 | `/atlas.flow "[入口點]"` | [基於發現的理由] |
+| # | Command | Purpose |
+|---|---------|---------|
+| 1 | `/atlas.pattern "[pattern name]"` | [reason based on findings] |
+| 2 | `/atlas.flow "[entry point]"` | [reason based on findings] |
 
-💡 輸入數字（如 `1`）或複製命令執行
+💡 Enter a number (e.g., `1`) or copy the command to execute
 ```
 
 ---
@@ -313,51 +369,51 @@ summary:
 
 ---
 
-## Handoffs 判斷規則
+## Handoffs Decision Rules
 
-> 遵循 **Constitution Article VII: Handoffs 原則**
+> Follow **Constitution Article VII: Handoffs Principles**
 
-### 結束條件 vs 建議（二擇一，不可同時）
+### End Condition vs Suggestions (Choose One, Not Both)
 
-**⚠️ 重要：以下兩種輸出互斥，只能選一種**
+**⚠️ Important: The following two outputs are mutually exclusive, choose only one**
 
-**情況 A - 結束（省略 Recommended Next）**：
-滿足以下任一條件時，**只輸出結束提示，不輸出表格**：
-- 專案太小：TINY（<10 files）可直接閱讀
-- 發現太模糊：無法給出高信心（>0.7）的具體參數
-- 目標已達成：AI 協作 Level ≥3 且規模 TINY/SMALL（可直接開發）
+**Case A - End (Omit Recommended Next)**:
+When any of the following conditions are met, **only output end message, no table**:
+- Project too small: TINY (<10 files) can be read directly
+- Findings too vague: Cannot provide high confidence (>0.7) specific parameters
+- Goal achieved: AI collaboration Level ≥3 and scale TINY/SMALL (can start development directly)
 
-輸出：
+Output:
 ```markdown
-✅ **分析已足夠** - 專案規模小，可直接閱讀全部檔案開始開發
+✅ **Analysis sufficient** - Project is small, can read all files directly to start development
 ```
 
-**情況 B - 建議（輸出 Recommended Next 表格）**：
-專案規模夠大或有明確後續時，**只輸出表格，不輸出結束提示**。
+**Case B - Suggestions (Output Recommended Next Table)**:
+When project scale is large enough or there are clear next steps, **only output table, no end message**.
 
-### 建議選擇（情況 B 適用）
+### Suggestion Selection (For Case B)
 
-| 發現 | 建議命令 | 參數來源 |
-|------|---------|---------|
-| 明確設計 patterns | `/atlas.pattern` | 發現的 pattern 名稱 |
-| 架構複雜（多層/微服務） | `/atlas.flow` | 主要入口點檔案 |
-| 規模 ≥ LARGE | `/atlas.history` | 無需參數 |
-| 高風險區域 | `/atlas.impact` | 風險檔案/模組名 |
+| Finding | Suggested Command | Parameter Source |
+|---------|-------------------|------------------|
+| Clear design patterns | `/atlas.pattern` | Discovered pattern name |
+| Complex architecture (multi-layer/microservices) | `/atlas.flow` | Main entry point file |
+| Scale ≥ LARGE | `/atlas.history` | No parameters needed |
+| High risk areas | `/atlas.impact` | Risk file/module name |
 
-### 輸出格式（Section 7.3）
+### Output Format (Section 7.3)
 
-使用編號表格：
+Use numbered table:
 ```markdown
-| # | 命令 | 用途 |
-|---|------|------|
-| 1 | `/atlas.pattern "repository"` | 發現 Repository 模式被 15 處使用 |
+| # | Command | Purpose |
+|---|---------|---------|
+| 1 | `/atlas.pattern "repository"` | Found Repository pattern used in 15 places |
 ```
 
-### 品質要求（Section 7.4-7.5）
+### Quality Requirements (Section 7.4-7.5)
 
-- **參數具體**：如 `"repository"` 非 `"相關 pattern"`
-- **數量限制**：1-2 個建議，不強制填滿
-- **用途欄位**：引用具體發現（數字、檔案名）
+- **Specific parameters**: e.g., `"repository"` not `"related pattern"`
+- **Quantity limit**: 1-2 suggestions, don't force fill
+- **Purpose column**: Reference specific findings (numbers, file names)
 
 ---
 
@@ -374,7 +430,7 @@ mkdir -p .sourceatlas
 
 3. **Confirm save**:
 ```
-💾 已儲存至 .sourceatlas/overview.yaml
+💾 Saved to .sourceatlas/overview.yaml
 ```
 
 **File naming for subdirectory analysis**:

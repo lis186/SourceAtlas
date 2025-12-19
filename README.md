@@ -6,7 +6,7 @@
 
 For Claude Code | Supports iOS/TypeScript/Android/Python
 
-[![Version](https://img.shields.io/badge/version-v2.9.3-blue)](https://github.com/lis186/SourceAtlas/releases)
+[![Version](https://img.shields.io/badge/version-v2.9.4-blue)](https://github.com/lis186/SourceAtlas/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![Constitution](https://img.shields.io/badge/constitution-v1.1-purple)](./ANALYSIS_CONSTITUTION.md)
 
@@ -459,7 +459,7 @@ bash scripts/atlas/validate-constitution.sh --check-structure
 
 ## 🗺️ Development Status
 
-**v2.9.3 (Current)**: Progressive Disclosure for `/atlas.pattern` ✅
+**v2.9.4 (Current)**: AI Collaboration Detection - Support 12+ AI tools ✅
 
 - ✅ `/atlas.init` - Project initialization (auto-trigger rules)
 - ✅ `/atlas.overview` - Project overview
@@ -485,6 +485,6 @@ bash scripts/atlas/validate-constitution.sh --check-structure
 ---
 
 **SourceAtlas** - Code Analysis Assistant for Claude Code
-v2.9.3 | Last Updated: 2025-12-18 | MIT License
+v2.9.4 | Last Updated: 2025-12-19 | MIT License
 
 Made with ❤️ and 🤖
