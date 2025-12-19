@@ -17,6 +17,7 @@ This file provides guidance for Claude Code (claude.ai/code) when working in thi
 - **v2.9.1** ✅ - Persistence v2.0: 30-day expiry warnings, Handoffs exclusivity rules (2025-12-13)
 - **v2.9.2** ✅ - `/atlas.list` expiry marking enhanced, `/atlas.init` validation mechanism (2025-12-13)
 - **v2.9.3** ✅ - `/atlas.pattern` Progressive Disclosure: Smart mode + `--brief`/`--full` parameters (2025-12-18)
+- **v2.9.4** ✅ - AI Collaboration Detection: Support 12+ AI tools detection (2025-12-19)
 
 ## Architecture
 
@@ -421,7 +422,7 @@ This workflow ensures clear feature separation and allows GitButler to automatic
 
 ---
 
-## Current Status (v2.9.0)
+## Current Status (v2.9.4)
 
 Based on PRD v2.9.0, v1.0 learnings, and Constitution v1.1:
 
