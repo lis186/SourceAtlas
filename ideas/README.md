@@ -78,14 +78,14 @@ dev-notes/YYYY-MM/implementation.md
 
 - **[Claude Code Plugins 學習筆記](./claude-code-plugins-learnings.md)**
   - **建立日期**: 2025-12-12
-  - **成熟度**: 70%
+  - **成熟度**: 85% (大部分已升級或擱置)
   - **內容**: 分析 Claude Code 官方 plugins，提煉可借鑑的設計模式
   - **探索狀態**:
-    - ✅ **漸進式輸出** - 已升級到 [proposals/progressive-disclosure/](../proposals/progressive-disclosure/)
-    - ✅ **持久化** - 已升級到 [proposals/persistence/](../proposals/persistence/)
+    - ✅ **漸進式輸出** - `/atlas.pattern` 完成 (v2.9.3)，其他擱置
+    - ✅ **持久化** - `--save` + `/atlas.clear` 完成 (v2.9.1)
     - 🔲 信心分數 + Threshold 機制
     - 🔲 輸出格式統一
-  - **下一步**: 評估「信心分數 Threshold」可行性
+  - **下一步**: 評估「信心分數 Threshold」可行性（低優先）
 
 ### 已升級
 
