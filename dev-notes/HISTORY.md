@@ -6,6 +6,18 @@
 
 ## 2025-12（當前月份）
 
+### Week 3 (12/19): AI Collaboration Detection v2.9.4 ⭐⭐⭐⭐
+
+**AI 協作偵測增強** (12/19):
+- 支援 12+ AI 開發工具偵測（原本僅 Claude Code + Cursor）
+- Tier 1 高信心度：Claude Code, Cursor, Windsurf, GitHub Copilot, Cline/Roo, Aider, Continue.dev, JetBrains AI, AGENTS.md, Sourcegraph Cody, Replit, Ruler
+- Tier 2 間接指標：註解密度 >15%, 程式碼一致性 >98%, Conventional Commits, 文件比例
+- Level 0-4 定義更新：更精確的分級標準
+- 輸出格式增強：新增 `tools_detected` 區塊
+- **新增腳本**: `scripts/atlas/detect-ai-tools.sh` (~250 行)
+- **測試驗證**: 5 個 GitHub 專案測試，100% 準確率
+→ [實作記錄](./2025-12/2025-12-19-ai-collaboration-detection-enhancement.md)
+
 ### Week 3 (12/18): Progressive Disclosure for /atlas.pattern ⭐⭐⭐
 
 **Progressive Disclosure 實作完成** (12/18):
