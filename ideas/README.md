@@ -78,14 +78,14 @@ dev-notes/YYYY-MM/implementation.md
 
 - **[Claude Code Plugins 學習筆記](./claude-code-plugins-learnings.md)**
   - **建立日期**: 2025-12-12
-  - **成熟度**: 85% (大部分已升級或擱置)
+  - **成熟度**: 90% (剩「輸出格式統一」待探索)
   - **內容**: 分析 Claude Code 官方 plugins，提煉可借鑑的設計模式
   - **探索狀態**:
     - ✅ **漸進式輸出** - `/atlas.pattern` 完成 (v2.9.3)，其他擱置
     - ✅ **持久化** - `--save` + `/atlas.clear` 完成 (v2.9.1)
-    - 🔲 信心分數 + Threshold 機制
-    - 🔲 輸出格式統一
-  - **下一步**: 評估「信心分數 Threshold」可行性（低優先）
+    - ⏸️ **信心 Threshold** - 擱置（無用戶需求）
+    - 🔲 **輸出格式統一** - 待探索
+  - **下一步**: 審視各命令輸出格式，評估統一成本
 
 ### 已升級
 
