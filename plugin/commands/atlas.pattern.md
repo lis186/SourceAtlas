@@ -2,7 +2,7 @@
 description: Learn design patterns from the current codebase
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--save] [--force]
+argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--save] [--force] [--brief|--full]
 ---
 
 # SourceAtlas: Pattern Learning Mode
@@ -10,9 +10,9 @@ argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--save] [
 > **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md) v1.0
 >
 > Key principles enforced:
-> - Article I: 高熵優先（掃描 2-3 個最佳範例，非全部）
-> - Article II: 強制排除目錄
-> - Article IV: 證據格式（file:line 引用）
+> - Article I: High-entropy priority (scan 2-3 best examples, not all)
+> - Article II: Mandatory directory exclusions
+> - Article IV: Evidence format (file:line references)
 
 ## Context
 
@@ -24,41 +24,74 @@ argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--save] [
 
 ---
 
-## Cache Check（最高優先）
+## Cache Check (Highest Priority)
 
-**如果參數中沒有 `--force`**，先檢查快取：
+**If `--force` is NOT in arguments**, check cache first:
 
-1. 從 `$ARGUMENTS` 提取 pattern 名稱（移除 `--save`、`--force`）
-2. 轉換為檔名：空格→`-`、小寫、移除特殊字元、**截斷至 50 字元**
-   - 例：`"api endpoint"` → `api-endpoint.md`
-   - 例：`"very long pattern name that exceeds limit"` → `very-long-pattern-name-that-exceeds-limit.md`（截斷）
-3. 檢查快取：
+1. Extract pattern name from `$ARGUMENTS` (remove `--save`, `--force`)
+2. Convert to filename: spaces→`-`, lowercase, remove special characters, **truncate to 50 characters**
+   - Example: `"api endpoint"` → `api-endpoint.md`
+   - Example: `"very long pattern name that exceeds limit"` → `very-long-pattern-name-that-exceeds-limit.md` (truncated)
+3. Check cache:
    ```bash
    ls -la .sourceatlas/patterns/{name}.md 2>/dev/null
    ```
 
-4. **如果快取存在**：
-   - 計算距今天數
-   - 用 Read tool 讀取快取內容
-   - 輸出：
+4. **If cache exists**:
+   - Calculate days since modification
+   - Use Read tool to read cache content
+   - Output:
      ```
-     📁 載入快取：.sourceatlas/patterns/{name}.md（N 天前）
-     💡 重新分析請加 --force
+     📁 Loading cache: .sourceatlas/patterns/{name}.md (N days ago)
+     💡 Add --force to re-analyze
      ```
-   - **如果超過 30 天**，額外顯示：
+   - **If over 30 days**, also show:
      ```
-     ⚠️ 快取已超過 30 天，建議重新分析
+     ⚠️ Cache is over 30 days old, recommend re-analysis
      ```
-   - 然後輸出：
+   - Then output:
      ```
      ---
-     [快取內容]
+     [cache content]
      ```
-   - **結束，不執行後續分析**
+   - **End, do not execute subsequent analysis**
 
-5. **如果快取不存在**：繼續執行下方的分析流程
+5. **If cache does not exist**: Continue with the analysis flow below
 
-**如果參數中有 `--force`**：跳過快取檢查，直接執行分析
+**If `--force` is in arguments**: Skip cache check, execute analysis directly
+
+---
+
+## Output Mode (Progressive Disclosure)
+
+**Parse output mode parameters from `$ARGUMENTS`**:
+
+| Parameter | Behavior | Use Case |
+|-----------|----------|----------|
+| `--brief` | Only list files, no full analysis | Quick browse, file selection |
+| `--full` | Force full analysis of all found files | Deep learning |
+| (no parameter) | **Smart mode**: ≤5 files→full analysis; >5 files→show selection interface | Default |
+
+**Smart mode decision logic**:
+```
+FILE_COUNT = files returned from Step 1
+
+if FILE_COUNT == 0:
+    → Output "No matching files found"
+    → End
+
+elif FILE_COUNT <= 5:
+    → Proceed to Step 2, full analysis
+
+else (FILE_COUNT > 5):
+    → Show selection interface:
+      Found {N} related files, please select files to analyze:
+      | # | File Path | Relevance |
+      |---|-----------|-----------|
+      | 1 | path/to/file1.py | ⭐⭐⭐ |
+      ...
+      Enter numbers to select (e.g., 1,2,3), or enter "all" to analyze all.
+```
 
 ---
 
@@ -90,8 +123,8 @@ fi
 
 if [ -n "$SCRIPT_PATH" ]; then
     bash "$SCRIPT_PATH" "$ARGUMENTS"
-    # 如果 exit code 非 0，會輸出錯誤訊息（如 "Unknown pattern"），
-    # 此時應該 fallback 到手動搜尋
+    # If exit code is non-0, error message will be output (e.g., "Unknown pattern"),
+    # should fallback to manual search
 fi
 ```
 
@@ -111,22 +144,22 @@ fi
 - view controller / viewcontroller
 - networking / network
 
-**For unsupported or custom patterns** (e.g., "影片與學習進度整合", "checkout flow"):
-- 腳本會輸出 "Unknown pattern" 錯誤
-- **此時必須 fallback 到手動搜尋**：使用 Glob/Grep 根據關鍵字搜尋
-- 從 pattern 名稱提取關鍵字（如 "影片" → video, "進度" → progress）
-- 搜尋檔案名和內容中包含這些關鍵字的檔案
+**For unsupported or custom patterns** (e.g., "video learning progress integration", "checkout flow"):
+- Script will output "Unknown pattern" error
+- **Must fallback to manual search**: Use Glob/Grep to search by keywords
+- Extract keywords from pattern name (e.g., "video" → video, "progress" → progress)
+- Search for files containing these keywords in filename and content
 
 ---
 
 ### Step 1.5: ast-grep Enhanced Detection (Optional, P1 Enhancement)
 
-**When to use**: 對於需要「內容分析」的 patterns（Type B），ast-grep 可提供更精確的程式碼結構搜尋。
+**When to use**: For patterns requiring "content analysis" (Type B), ast-grep provides more precise code structure search.
 
-**使用統一腳本** (`ast-grep-search.sh`):
+**Use unified script** (`ast-grep-search.sh`):
 
 ```bash
-# 設定腳本路徑（全局優先，本地備援）
+# Set script path (global first, local fallback)
 AST_SCRIPT=""
 if [ -f ~/.claude/scripts/atlas/ast-grep-search.sh ]; then
     AST_SCRIPT=~/.claude/scripts/atlas/ast-grep-search.sh
@@ -143,24 +176,24 @@ $AST_SCRIPT pattern "suspend" --lang kotlin --path .
 # Kotlin data class
 $AST_SCRIPT pattern "data class" --lang kotlin --path .
 
-# TypeScript Custom Hook（use* 開頭）
+# TypeScript Custom Hook (use* prefix)
 $AST_SCRIPT pattern "hook" --lang tsx --path .
 
-# 如果 ast-grep 未安裝，取得 grep 替代命令
+# If ast-grep not installed, get grep fallback command
 $AST_SCRIPT pattern "async" --fallback
 ```
 
-**Value**: 根據整合測試，ast-grep 在 pattern 識別可達到：
-- Swift async function：14% 誤判消除
-- Kotlin suspend function：51% 誤判消除
-- Kotlin data class：15% 誤判消除
-- TypeScript custom hook：93% 誤判消除
+**Value**: Based on integration tests, ast-grep achieves in pattern recognition:
+- Swift async function: 14% false positive elimination
+- Kotlin suspend function: 51% false positive elimination
+- Kotlin data class: 15% false positive elimination
+- TypeScript custom hook: 93% false positive elimination
 
 **Type A vs Type B Patterns**:
-- **Type A**（檔名即 pattern）：ViewModel, Repository, Service → grep/find 已足夠
-- **Type B**（需內容分析）：async, suspend, custom hook → ast-grep 更精確
+- **Type A** (filename is pattern): ViewModel, Repository, Service → grep/find is sufficient
+- **Type B** (requires content analysis): async, suspend, custom hook → ast-grep is more precise
 
-**Graceful Degradation**: 腳本自動處理 ast-grep 不可用情況，使用 `--fallback` 取得 grep 等效命令。
+**Graceful Degradation**: Script auto-handles ast-grep unavailability, use `--fallback` to get grep equivalent command.
 
 ---
 
@@ -214,7 +247,9 @@ Then use Grep to search for relevant test patterns in those files.
 Provide your analysis in this **exact structure**:
 
 ```markdown
-# Pattern: [Pattern Name]
+🗺️ SourceAtlas: Pattern
+───────────────────────────────
+🧩 [Pattern Name] │ [N] files found
 
 ## Overview
 
@@ -298,14 +333,17 @@ To implement similar functionality following this codebase's pattern:
 
 ## Recommended Next
 
-<!-- 根據分析發現動態建議，省略此區塊若滿足結束條件 -->
+<!-- Dynamic suggestions based on findings, omit this section if end condition is met -->
 
-| # | 命令 | 用途 |
-|---|------|------|
-| 1 | `/atlas.flow "[入口點]"` | [基於發現的理由] |
-| 2 | `/atlas.impact "[檔案]"` | [基於發現的理由] |
+| # | Command | Purpose |
+|---|---------|---------|
+| 1 | `/atlas.flow "[entry point]"` | [reason based on findings] |
+| 2 | `/atlas.impact "[file]"` | [reason based on findings] |
 
-💡 輸入數字（如 `1`）或複製命令執行
+💡 Enter a number (e.g., `1`) or copy the command to execute
+
+───────────────────────────────
+🗺️ v2.9.4 │ Constitution v1.1
 
 ---
 
@@ -356,51 +394,51 @@ To implement similar functionality following this codebase's pattern:
 
 ---
 
-## Handoffs 判斷規則
+## Handoffs Decision Rules
 
-> 遵循 **Constitution Article VII: Handoffs 原則**
+> Follow **Constitution Article VII: Handoffs Principles**
 
-### 結束條件 vs 建議（二擇一，不可同時）
+### End Condition vs Suggestions (Choose One, Not Both)
 
-**⚠️ 重要：以下兩種輸出互斥，只能選一種**
+**⚠️ Important: The following two outputs are mutually exclusive, choose only one**
 
-**情況 A - 結束（省略 Recommended Next）**：
-滿足以下任一條件時，**只輸出結束提示，不輸出表格**：
-- Pattern 很簡單：無複雜流程或依賴
-- 發現太模糊：無法給出高信心（>0.7）的具體參數
-- 分析深度足夠：已執行 4+ 個命令
+**Case A - End (Omit Recommended Next)**:
+When any of the following conditions are met, **only output end message, no table**:
+- Pattern is simple: No complex flow or dependencies
+- Findings too vague: Cannot provide high confidence (>0.7) specific parameters
+- Analysis depth sufficient: Already executed 4+ commands
 
-輸出：
+Output:
 ```markdown
-✅ **Pattern 分析完成** - 可按照上述 Step-by-Step Guide 開始實作
+✅ **Pattern analysis complete** - Can start implementation following the Step-by-Step Guide above
 ```
 
-**情況 B - 建議（輸出 Recommended Next 表格）**：
-Pattern 涉及複雜流程或有明確後續時，**只輸出表格，不輸出結束提示**。
+**Case B - Suggestions (Output Recommended Next Table)**:
+When pattern involves complex flows or has clear next steps, **only output table, no end message**.
 
-### 建議選擇（情況 B 適用）
+### Suggestion Selection (For Case B)
 
-| 發現 | 建議命令 | 參數來源 |
-|------|---------|---------|
-| 與其他 patterns 高度相關 | `/atlas.pattern` | 相關 pattern 名稱 |
-| Pattern 涉及複雜流程 | `/atlas.flow` | 入口點檔案 |
-| 在多處使用，有風險 | `/atlas.impact` | 核心檔案名 |
-| 需了解變動歷史 | `/atlas.history` | 可選：相關目錄 |
+| Finding | Suggested Command | Parameter Source |
+|---------|-------------------|------------------|
+| Highly related to other patterns | `/atlas.pattern` | Related pattern name |
+| Pattern involves complex flow | `/atlas.flow` | Entry point file |
+| Used in many places, has risks | `/atlas.impact` | Core file name |
+| Need to understand change history | `/atlas.history` | Optional: related directory |
 
-### 輸出格式（Section 7.3）
+### Output Format (Section 7.3)
 
-使用編號表格：
+Use numbered table:
 ```markdown
-| # | 命令 | 用途 |
-|---|------|------|
-| 1 | `/atlas.flow "LoginService"` | Pattern 涉及 3 層調用，需追蹤完整流程 |
+| # | Command | Purpose |
+|---|---------|---------|
+| 1 | `/atlas.flow "LoginService"` | Pattern involves 3-layer calls, need to trace full flow |
 ```
 
-### 品質要求（Section 7.4-7.5）
+### Quality Requirements (Section 7.4-7.5)
 
-- **參數具體**：如 `"repository"` 非 `"相關 pattern"`
-- **數量限制**：1-2 個建議，不強制填滿
-- **用途欄位**：引用具體發現（使用次數、檔案名、問題）
+- **Specific parameters**: e.g., `"repository"` not `"related pattern"`
+- **Quantity limit**: 1-2 suggestions, don't force fill
+- **Purpose column**: Reference specific findings (usage count, file names, issues)
 
 ---
 
@@ -428,13 +466,13 @@ mkdir -p .sourceatlas/patterns
 
 ### Step 3: Save output
 
-After generating the complete analysis, save the **entire output** (from `# Pattern:` to the end) to `.sourceatlas/patterns/{name}.md`
+After generating the complete analysis, save the **entire output** (from `🗺️ SourceAtlas: Pattern` to the end) to `.sourceatlas/patterns/{name}.md`
 
 ### Step 4: Confirm
 
 Add at the very end:
 ```
-💾 已儲存至 .sourceatlas/patterns/{name}.md
+💾 Saved to .sourceatlas/patterns/{name}.md
 ```
 
 ---
