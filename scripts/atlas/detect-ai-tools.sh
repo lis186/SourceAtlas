@@ -201,7 +201,7 @@ fi
 LEVEL=0
 CONFIDENCE="0.5"
 
-if [[ $TIER1_COUNT -eq 0 && $TIER2_SCORE -eq 0 ]]; then
+if [[ $TIER1_COUNT -eq 0 ]]; then
     LEVEL=0
     CONFIDENCE="0.9"
     DESCRIPTION="No AI - Traditional development"
@@ -209,14 +209,19 @@ elif [[ $TIER1_COUNT -eq 1 && $TIER2_SCORE -eq 0 && $COMPREHENSIVE_CONFIG -eq 0 
     LEVEL=1
     CONFIDENCE="0.7"
     DESCRIPTION="Occasional use - Single tool, minimal integration"
-elif [[ $TIER1_COUNT -ge 1 && $TIER2_SCORE -ge 1 && $COMPREHENSIVE_CONFIG -eq 0 ]]; then
+elif [[ $TIER1_COUNT -ge 1 && $COMPREHENSIVE_CONFIG -eq 0 ]]; then
     LEVEL=2
     CONFIDENCE="0.75"
     DESCRIPTION="Frequent use - Active AI assistance"
-elif [[ $COMPREHENSIVE_CONFIG -eq 1 || ($TIER1_COUNT -ge 2 && $TIER2_SCORE -ge 2) ]]; then
+elif [[ $COMPREHENSIVE_CONFIG -eq 1 || $TIER1_COUNT -ge 2 ]]; then
     LEVEL=3
     CONFIDENCE="0.85"
     DESCRIPTION="Systematic collaboration - Comprehensive AI config or multi-tool"
+else
+    # Fallback
+    LEVEL=0
+    CONFIDENCE="0.5"
+    DESCRIPTION="Unknown - Unable to determine"
 fi
 
 # Check for Level 4 indicators
