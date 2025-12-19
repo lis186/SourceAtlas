@@ -79,7 +79,7 @@ git clone https://github.com/GoogleCloudPlatform/microservices-demo
 ### 1. Clone 專案到這裡
 
 ```bash
-cd ***REMOVED***/examples
+cd examples/
 git clone <repository-url>
 ```
 

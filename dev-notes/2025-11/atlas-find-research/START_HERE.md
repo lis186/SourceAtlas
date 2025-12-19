@@ -97,7 +97,7 @@ The tool should support:
 ## Document Locations
 
 ```
-***REMOVED***/
+dev-notes/2025-11/atlas-find-research/
 ├── START_HERE.md (you are here)
 ├── EXERCISE_SUMMARY.txt (start here for quick overview)
 ├── QUICK_REFERENCE_SENIOR_DEV_QUERIES.md (cheat sheet)
@@ -178,5 +178,5 @@ With:
 
 ---
 
-**Ready?** Start with: `***REMOVED***/EXERCISE_SUMMARY.txt`
+**Ready?** Start with: `EXERCISE_SUMMARY.txt` in this directory
 

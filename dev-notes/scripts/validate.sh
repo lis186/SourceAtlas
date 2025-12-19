@@ -3,7 +3,8 @@
 
 set -e
 
-NOTES_DIR="***REMOVED***/.dev-notes"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+NOTES_DIR="${SCRIPT_DIR}/.."
 ERRORS=0
 
 echo "🔍 驗證 .dev-notes/ 結構..."

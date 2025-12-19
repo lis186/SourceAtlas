@@ -15,8 +15,8 @@ How to test the SourceAtlas Plugin locally before publishing.
 # Create a temporary marketplace directory
 mkdir -p ~/sourceatlas-test-marketplace
 
-# Copy the plugin to the marketplace
-cp -r ***REMOVED***/plugin ~/sourceatlas-test-marketplace/sourceatlas-plugin
+# Copy the plugin to the marketplace (run from project root)
+cp -r ./plugin ~/sourceatlas-test-marketplace/sourceatlas-plugin
 
 # Verify structure
 ls -la ~/sourceatlas-test-marketplace/sourceatlas-plugin/
@@ -33,7 +33,7 @@ ls -la ~/sourceatlas-test-marketplace/sourceatlas-plugin/
 Open Claude Code and run:
 
 ```
-/plugin marketplace add file://***REMOVED***/sourceatlas-test-marketplace
+/plugin marketplace add file://$HOME/sourceatlas-test-marketplace
 ```
 
 Expected output: Marketplace added successfully
@@ -119,8 +119,8 @@ When you make changes to the plugin:
 # 2. Update files
 # Edit plugin/commands/atlas.pattern.md or other files
 
-# 3. Copy updated plugin to test marketplace
-cp -r ***REMOVED***/plugin ~/sourceatlas-test-marketplace/sourceatlas-plugin
+# 3. Copy updated plugin to test marketplace (run from project root)
+cp -r ./plugin ~/sourceatlas-test-marketplace/sourceatlas-plugin
 
 # 4. Reinstall
 /plugin install sourceatlas-plugin@sourceatlas-test-marketplace
