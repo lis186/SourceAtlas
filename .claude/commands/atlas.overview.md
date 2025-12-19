@@ -209,12 +209,20 @@ Detect AI tool usage by scanning for tool-specific configuration files:
 - **Level 3**: Systematic collaboration - Complete AI config + high comment density + consistent style
 - **Level 4**: Ecosystem-level - Multiple tool configs (Ruler/.ruler/) or AGENTS.md + team-wide standards
 
-**Detection Commands** (run during Phase 2):
+**Detection Script** (run during Phase 2):
 ```bash
-# Check for AI tool config files
-ls -la CLAUDE.md .cursorrules .windsurfrules CONVENTIONS.md AGENTS.md .aiignore 2>/dev/null
-ls -la .claude/ .cursor/rules/ .windsurf/rules/ .clinerules/ .roo/ .continue/rules/ .ruler/ 2>/dev/null
-ls -la .github/copilot-instructions.md .vscode/cody.json .aider.conf.yml 2>/dev/null
+# Use helper script for comprehensive AI tool detection
+if [ -f ~/.claude/scripts/atlas/detect-ai-tools.sh ]; then
+    bash ~/.claude/scripts/atlas/detect-ai-tools.sh ${ARGUMENTS:-.}
+elif [ -f scripts/atlas/detect-ai-tools.sh ]; then
+    bash scripts/atlas/detect-ai-tools.sh ${ARGUMENTS:-.}
+else
+    # Fallback: manual checks
+    echo "Warning: detect-ai-tools.sh not found, checking manually"
+    ls -la CLAUDE.md .cursorrules .windsurfrules CONVENTIONS.md AGENTS.md .aiignore 2>/dev/null
+    ls -la .claude/ .cursor/rules/ .windsurf/rules/ .clinerules/ .roo/ .continue/rules/ .ruler/ 2>/dev/null
+    ls -la .github/copilot-instructions.md .vscode/cody.json .aider.conf.yml 2>/dev/null
+fi
 ```
 
 **Business Domain**:
