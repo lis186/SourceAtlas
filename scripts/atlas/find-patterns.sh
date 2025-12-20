@@ -1,6 +1,6 @@
 #!/bin/bash
 # SourceAtlas - Pattern Detection Script (Ultra-Fast Version)
-# Multi-Language Support: Swift/iOS, TypeScript/React, Android/Kotlin, Python, Ruby, and Go
+# Multi-Language Support: Swift/iOS, TypeScript/React, Android/Kotlin, Python, Ruby, Go, and Rust
 #
 # Purpose: Identify files matching a given pattern type using filename/directory matching only
 # Philosophy: Scripts collect data quickly, AI does deep interpretation
@@ -58,6 +58,12 @@ detect_project_type() {
     # Check for Go indicators (go.mod is definitive)
     if [ -f "$path/go.mod" ] || [ -f "$path/go.sum" ]; then
         echo "go"
+        return
+    fi
+
+    # Check for Rust indicators (Cargo.toml is definitive)
+    if [ -f "$path/Cargo.toml" ]; then
+        echo "rust"
         return
     fi
 
@@ -466,6 +472,100 @@ get_file_patterns() {
             "pkg")
                 echo "*.go"
                 # Package code, rely on directory matching
+                ;;
+            *)
+                echo ""
+                ;;
+        esac
+    elif [ "$proj_type" = "rust" ]; then
+        # Rust patterns (based on actix-web, axum, ripgrep, tokio analysis)
+        case "$pattern" in
+            # Tier 1 - Core Patterns (14)
+            "lib"|"library")
+                echo "lib.rs"
+                ;;
+            "main"|"bin"|"entrypoint"|"binary")
+                echo "main.rs"
+                ;;
+            "mod"|"module")
+                echo "mod.rs"
+                ;;
+            "error"|"errors")
+                echo "error.rs errors.rs *_error.rs *error*.rs"
+                ;;
+            "config"|"configuration"|"settings"|"cfg")
+                echo "config.rs settings.rs *config*.rs *_config.rs"
+                ;;
+            "handler"|"handlers")
+                echo "handler.rs handlers.rs *handler*.rs *_handler.rs"
+                ;;
+            "service"|"services"|"svc")
+                echo "service.rs services.rs *service*.rs *_service.rs app_service.rs"
+                ;;
+            "middleware"|"middlewares"|"mw")
+                echo "middleware.rs *middleware*.rs"
+                ;;
+            "router"|"routes"|"routing")
+                echo "router.rs routes.rs routing.rs route.rs *route*.rs"
+                ;;
+            "client"|"clients")
+                echo "client.rs *client*.rs *_client.rs"
+                ;;
+            "server"|"servers")
+                echo "server.rs *server*.rs *_server.rs"
+                ;;
+            "response"|"responses")
+                echo "response.rs responses.rs *response*.rs"
+                ;;
+            "state"|"context"|"app_state")
+                echo "state.rs context.rs app_state.rs *state*.rs *context*.rs"
+                ;;
+            "builder"|"builders")
+                echo "builder.rs *builder*.rs *_builder.rs"
+                ;;
+            # Tier 2 - Supplementary Patterns (14)
+            "test"|"tests"|"testing")
+                echo "*_test.rs *test*.rs test.rs tests.rs testutil.rs"
+                ;;
+            "bench"|"benchmark"|"benches")
+                echo "*_bench.rs *bench*.rs benchmark.rs"
+                ;;
+            "example"|"examples")
+                echo "*.rs"
+                # Rely on examples/ directory matching
+                ;;
+            "extract"|"extractor"|"extractors")
+                echo "extract.rs *extract*.rs"
+                ;;
+            "util"|"utils"|"helper"|"helpers")
+                echo "util.rs utils.rs *util*.rs *_util.rs helper.rs helpers.rs"
+                ;;
+            "macro"|"macros")
+                echo "macros.rs macro.rs *macro*.rs *_macro.rs"
+                ;;
+            "codec"|"codecs"|"encoding")
+                echo "codec.rs *codec*.rs *_codec.rs"
+                ;;
+            "runtime"|"executor")
+                echo "runtime.rs executor.rs *runtime*.rs"
+                ;;
+            "sync"|"synchronization")
+                echo "sync.rs *sync*.rs"
+                ;;
+            "task"|"tasks"|"spawn")
+                echo "task.rs tasks.rs *task*.rs *_task.rs spawn.rs"
+                ;;
+            "io"|"async_io")
+                echo "io.rs *io*.rs async_io.rs"
+                ;;
+            "body"|"payload")
+                echo "body.rs payload.rs *body*.rs any_body.rs"
+                ;;
+            "header"|"headers"|"http_header")
+                echo "header.rs headers.rs *header*.rs"
+                ;;
+            "types"|"type_defs")
+                echo "types.rs type.rs *types*.rs *_types.rs"
                 ;;
             *)
                 echo ""
@@ -1106,6 +1206,99 @@ get_dir_patterns() {
                 ;;
             "pkg")
                 echo "pkg"
+                ;;
+            *)
+                echo ""
+                ;;
+        esac
+    elif [ "$proj_type" = "rust" ]; then
+        # Rust directory patterns (based on actix-web, axum, ripgrep, tokio analysis)
+        case "$pattern" in
+            # Tier 1 - Core Patterns (14)
+            "lib"|"library")
+                echo "src"
+                ;;
+            "main"|"bin"|"entrypoint"|"binary")
+                echo "src/bin bin"
+                ;;
+            "mod"|"module")
+                echo "src"
+                ;;
+            "error"|"errors")
+                echo "error errors src/error"
+                ;;
+            "config"|"configuration"|"settings"|"cfg")
+                echo "config settings src/config"
+                ;;
+            "handler"|"handlers")
+                echo "handlers handler src/handlers"
+                ;;
+            "service"|"services"|"svc")
+                echo "services service src/services"
+                ;;
+            "middleware"|"middlewares"|"mw")
+                echo "middleware middlewares src/middleware"
+                ;;
+            "router"|"routes"|"routing")
+                echo "routing routes router src/routing"
+                ;;
+            "client"|"clients")
+                echo "client clients src/client"
+                ;;
+            "server"|"servers")
+                echo "server servers src/server"
+                ;;
+            "response"|"responses")
+                echo "response responses src/response"
+                ;;
+            "state"|"context"|"app_state")
+                echo "state context src/state"
+                ;;
+            "builder"|"builders")
+                echo "builder builders"
+                ;;
+            # Tier 2 - Supplementary Patterns (14)
+            "test"|"tests"|"testing")
+                echo "tests src/tests test"
+                ;;
+            "bench"|"benchmark"|"benches")
+                echo "benches bench benchmarks"
+                ;;
+            "example"|"examples")
+                echo "examples example"
+                ;;
+            "extract"|"extractor"|"extractors")
+                echo "extract extractors src/extract"
+                ;;
+            "util"|"utils"|"helper"|"helpers")
+                echo "util utils helpers src/util"
+                ;;
+            "macro"|"macros")
+                echo "macros macro src/macros"
+                ;;
+            "codec"|"codecs"|"encoding")
+                echo "codec codecs encoding src/codec"
+                ;;
+            "runtime"|"executor")
+                echo "runtime executor src/runtime"
+                ;;
+            "sync"|"synchronization")
+                echo "sync src/sync"
+                ;;
+            "task"|"tasks"|"spawn")
+                echo "task tasks src/task"
+                ;;
+            "io"|"async_io")
+                echo "io src/io"
+                ;;
+            "body"|"payload")
+                echo "body payload src/body"
+                ;;
+            "header"|"headers"|"http_header")
+                echo "header headers src/header"
+                ;;
+            "types"|"type_defs")
+                echo "types src/types"
                 ;;
             *)
                 echo ""

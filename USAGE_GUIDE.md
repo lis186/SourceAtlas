@@ -726,6 +726,7 @@ cp scripts/atlas/patterns/ios/networking.sh scripts/atlas/patterns/ios/custom-pa
 - ✅ Python (26 patterns)
 - ✅ Ruby (26 patterns)
 - ✅ Go (26 patterns)
+- ✅ Rust (28 patterns)
 
 ### Q: Where are analysis results saved?
 
