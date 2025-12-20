@@ -195,7 +195,9 @@
 - ✅ **TypeScript/React/Vue**: 完整支援（50 patterns）
 - ✅ **Android/Kotlin**: 完整支援（31 patterns）
 - ✅ **Python**: 完整支援（26 patterns）
-- 🔵 **Go/Rust**: 規劃中（v2.6）
+- ✅ **Ruby/Rails**: 完整支援（26 patterns）
+- ✅ **Go**: 完整支援（26 patterns）
+- ✅ **Rust**: 完整支援（28 patterns）
 
 </details>
 
@@ -321,8 +323,11 @@ Claude Code + 2 分鐘安裝
 - **TypeScript/React/Vue**: 50 patterns (Hooks, Next.js, Zustand, Pinia...)
 - **Android/Kotlin**: 31 patterns (ViewModel, Room, Compose, Hilt, MVI...)
 - **Python**: 26 patterns (Django, FastAPI, Flask, Celery...)
+- **Ruby/Rails**: 26 patterns (ActiveRecord, Controller, Service, Job...)
+- **Go**: 26 patterns (Handler, Service, Middleware, Transport...)
+- **Rust**: 28 patterns (Handler, Service, Middleware, Runtime...)
 
-完整列表見 [USAGE_GUIDE.md](./USAGE_GUIDE.md#支援的-patterns-141-個)
+完整列表見 [USAGE_GUIDE.md](./USAGE_GUIDE.md#支援的-patterns)
 
 </details>
 

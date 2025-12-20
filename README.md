@@ -195,7 +195,9 @@ For Claude Code | Supports iOS/TypeScript/Android/Python
 - ✅ **TypeScript/React/Vue**: Full support (50 patterns)
 - ✅ **Android/Kotlin**: Full support (31 patterns)
 - ✅ **Python**: Full support (26 patterns)
-- 🔵 **Go/Rust**: Planned (v2.6)
+- ✅ **Ruby/Rails**: Full support (26 patterns)
+- ✅ **Go**: Full support (26 patterns)
+- ✅ **Rust**: Full support (28 patterns)
 
 </details>
 
@@ -321,8 +323,11 @@ Claude Code + 2 minutes installation
 - **TypeScript/React/Vue**: 50 patterns (Hooks, Next.js, Zustand, Pinia...)
 - **Android/Kotlin**: 31 patterns (ViewModel, Room, Compose, Hilt, MVI...)
 - **Python**: 26 patterns (Django, FastAPI, Flask, Celery...)
+- **Ruby/Rails**: 26 patterns (ActiveRecord, Controller, Service, Job...)
+- **Go**: 26 patterns (Handler, Service, Middleware, Transport...)
+- **Rust**: 28 patterns (Handler, Service, Middleware, Runtime...)
 
-Complete list in [USAGE_GUIDE.md](./USAGE_GUIDE.md#supported-patterns-141)
+Complete list in [USAGE_GUIDE.md](./USAGE_GUIDE.md#supported-patterns)
 
 </details>
 
