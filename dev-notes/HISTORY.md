@@ -16,6 +16,19 @@
 - 驗證方法論學習：Ground Truth 本身需要驗證
 → [驗證報告](./2025-12/2025-12-20-ast-grep-definition-import-validation.md)
 
+**Ruby op_definition UX 增強** (12/20):
+- 新增 `category` 欄位：primary / library / concern / nested（基於 Rails 慣例）
+- 新增 `--primary` 參數：只返回主要定義
+- **關鍵修正**：Ruby class reopening 是合法語法，ast-grep 精確度 = 100%
+- 原始框架錯誤：誤將 6 個結果當成 False Positives（實際是 UX 問題）
+→ [驗證報告](./2025-12/2025-12-20-ast-grep-definition-import-validation.md)
+
+**語言偵測 Glob 修復** (12/20):
+- **問題**：`[[ -d "$path/"*.xcodeproj ]]` 的 glob 在 bash `[[ ]]` 中不展開
+- **影響**：Swift 專案有 Gemfile 時被誤判為 Ruby
+- **修復**：改用 `ls -d` 分開檢查 xcodeproj 和 xcworkspace
+- 測試通過：Swiftfin（有 Gemfile）正確偵測為 swift
+
 **Ruby/Rails 語言支援完成** (12/20):
 - 26 個模式（model, controller, job, mailer, concern, spec 等）
 - 測試專案：ruby-spree（~2000 個 Ruby 檔案）
