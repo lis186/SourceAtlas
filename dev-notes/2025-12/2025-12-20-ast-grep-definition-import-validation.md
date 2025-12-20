@@ -145,15 +145,18 @@ class Product < Spree.base_class
 
 ## 建議改進
 
-### P0: 必要修復
-1. Ruby: 過濾 module 嵌套的 class 重複匹配
+### P0: 必要修復 ✅ 已完成 (2025-12-20)
+1. ~~Ruby: 過濾 module 嵌套的 class 重複匹配~~
+   - 新增 `ruby_rank_definitions()` 函數進行分類排序
+   - 新增 `--primary` 參數過濾只保留主要定義
+   - 新增 `category` 欄位（primary/library/concern/nested）
 
 ### P1: 增強功能
 1. 去重: 同一檔案同一位置只保留一個匹配
 2. 信心分數: 根據匹配類型給予信心等級
 
 ### P2: 進階功能
-1. 上下文感知: 判斷是 top-level 還是 nested 定義
+1. ~~上下文感知: 判斷是 top-level 還是 nested 定義~~ ✅ 已透過 category 實作
 2. 跨檔案關聯: 結合 op_import 追蹤定義來源
 
 ---
@@ -191,4 +194,7 @@ class Product < Spree.base_class
 ---
 
 **更新日期**: 2025-12-20
-**更新內容**: 加入驗證方法論反思，修正精確度評估
+**更新內容**:
+- 加入驗證方法論反思，修正精確度評估
+- P0 修復完成：Ruby module 嵌套分類 + `--primary` 參數 + category 欄位
+- 測試通過：TC1-TC4 全部 ✅

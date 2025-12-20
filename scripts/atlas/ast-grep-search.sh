@@ -25,6 +25,7 @@
 #   --fallback             - 輸出 grep fallback 命令（不執行 ast-grep）
 #   --json                 - JSON 輸出格式
 #   --count                - 只輸出匹配數量
+#   --primary              - 只返回主要定義（Ruby: 過濾 concern 嵌套）
 #
 # Exit codes:
 #   0 - 成功
@@ -45,6 +46,7 @@ LANG=""
 OUTPUT_JSON=false
 OUTPUT_COUNT=false
 FALLBACK_MODE=false
+PRIMARY_ONLY=false
 
 # ============================================================
 # ast-grep 偵測（快取結果）
@@ -680,6 +682,40 @@ op_boundary() {
 }
 
 # ============================================================
+# Ruby 定義排序 - 區分主要定義 vs concern 嵌套
+# ============================================================
+ruby_rank_definitions() {
+    local json="$1"
+    local name="$2"
+    local name_lower
+    name_lower=$(echo "$name" | tr '[:upper:]' '[:lower:]')
+
+    # 分類邏輯：
+    # 1. primary: app/models/.../name.rb (檔名 = 類名，不在子目錄)
+    # 2. library: lib/.../name.rb
+    # 3. concern: name/*.rb (子目錄，通常是 concerns)
+    # 4. nested: 其他（如 promotion/rules/product.rb 是不同的類）
+    echo "$json" | jq --arg name "$name_lower" '
+        def categorize:
+            # 檢查是否為 concern 子目錄 (例如 product/webhooks.rb)
+            if (.file | test("/" + $name + "/[^/]+\\.rb$"; "i")) then "concern"
+            # 檢查是否為主要定義 (例如 app/models/spree/product.rb，不是 promotion/rules/product.rb)
+            elif (.file | test("/app/models/[^/]+/" + $name + "\\.rb$"; "i")) then "primary"
+            # 檢查是否為 library 定義
+            elif (.file | test("/lib/.*/" + $name + "\\.rb$"; "i")) then "library"
+            else "nested" end;
+
+        def priority:
+            if .category == "primary" then 1
+            elif .category == "library" then 2
+            elif .category == "nested" then 3
+            else 4 end;
+
+        [.[] | . + {category: categorize}] | sort_by(priority)
+    '
+}
+
+# ============================================================
 # 定義搜尋 (definition) - 找 top-level 定義
 # ============================================================
 op_definition() {
@@ -753,11 +789,22 @@ op_definition() {
             } | jq -s 'add // []'
             ;;
         ruby)
-            {
+            local ruby_result
+            ruby_result=$({
                 $AST_GREP_CMD --pattern "def $name" --lang ruby --json "$PROJECT_PATH" 2>/dev/null
                 $AST_GREP_CMD --pattern "class $name" --lang ruby --json "$PROJECT_PATH" 2>/dev/null
                 $AST_GREP_CMD --pattern "module $name" --lang ruby --json "$PROJECT_PATH" 2>/dev/null
-            } | jq -s 'add // []'
+            } | jq -s 'add // []')
+
+            # Ruby 專用後處理：分類 + 排序
+            ruby_result=$(ruby_rank_definitions "$ruby_result" "$name")
+
+            # --primary 過濾
+            if $PRIMARY_ONLY; then
+                ruby_result=$(echo "$ruby_result" | jq '[.[] | select(.category == "primary" or .category == "library")]')
+            fi
+
+            echo "$ruby_result"
             ;;
         *)
             echo "[]"
