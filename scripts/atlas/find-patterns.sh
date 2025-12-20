@@ -1,6 +1,6 @@
 #!/bin/bash
 # SourceAtlas - Pattern Detection Script (Ultra-Fast Version)
-# Multi-Language Support: Swift/iOS, TypeScript/React, Android/Kotlin, Python, and Ruby
+# Multi-Language Support: Swift/iOS, TypeScript/React, Android/Kotlin, Python, Ruby, and Go
 #
 # Purpose: Identify files matching a given pattern type using filename/directory matching only
 # Philosophy: Scripts collect data quickly, AI does deep interpretation
@@ -52,6 +52,12 @@ detect_project_type() {
     if [ -f "$path/Gemfile" ] || [ -f "$path/config.ru" ] || \
        [ -f "$path/Rakefile" ] || [ -f "$path/.ruby-version" ]; then
         echo "ruby"
+        return
+    fi
+
+    # Check for Go indicators (go.mod is definitive)
+    if [ -f "$path/go.mod" ] || [ -f "$path/go.sum" ]; then
+        echo "go"
         return
     fi
 
@@ -361,6 +367,105 @@ get_file_patterns() {
                 ;;
             "interactor"|"interactors"|"use case"|"operation")
                 echo "*_interactor.rb *Interactor.rb *_operation.rb *Operation.rb"
+                ;;
+            *)
+                echo ""
+                ;;
+        esac
+    elif [ "$proj_type" = "go" ]; then
+        # Go patterns (based on gin, go-kit, cobra, kratos analysis)
+        case "$pattern" in
+            # Tier 1 - Core Patterns (12)
+            "handler"|"handlers")
+                echo "*handler*.go *Handler*.go"
+                ;;
+            "service"|"services"|"svc")
+                echo "*service*.go *Service*.go *svc*.go"
+                ;;
+            "middleware"|"middlewares"|"mw")
+                echo "*middleware*.go *Middleware*.go"
+                ;;
+            "transport"|"transports")
+                echo "*transport*.go *Transport*.go"
+                ;;
+            "endpoint"|"endpoints")
+                echo "*endpoint*.go *Endpoint*.go"
+                ;;
+            "client"|"clients")
+                echo "*client*.go *Client*.go"
+                ;;
+            "server"|"servers")
+                echo "*server*.go *Server*.go"
+                ;;
+            "config"|"configuration"|"cfg")
+                echo "*config*.go *Config*.go config.go"
+                ;;
+            "router"|"routes"|"routing")
+                echo "*router*.go *route*.go *Router*.go routes.go"
+                ;;
+            "cmd"|"main"|"entrypoint")
+                echo "main.go"
+                ;;
+            "internal")
+                echo "*.go"
+                # Internal packages, rely on directory matching
+                ;;
+            "errors"|"error")
+                echo "*error*.go *Error*.go errors.go"
+                ;;
+
+            # Tier 2 - Supplementary Patterns (14)
+            "test"|"tests"|"testing")
+                echo "*_test.go"
+                ;;
+            "mock"|"mocks"|"fake"|"stub")
+                echo "*_mock.go *mock*.go *Mock*.go *fake*.go *stub*.go"
+                ;;
+            "proto"|"protobuf"|"grpc"|"pb")
+                echo "*.proto *.pb.go *_grpc.pb.go"
+                ;;
+            "repository"|"repo"|"repositories")
+                echo "*repo*.go *Repo*.go *repository*.go *Repository*.go"
+                ;;
+            "options"|"option"|"opts")
+                echo "*option*.go *Option*.go options.go"
+                ;;
+            "auth"|"authentication"|"jwt")
+                echo "*auth*.go *Auth*.go *jwt*.go"
+                ;;
+            "log"|"logger"|"logging")
+                echo "*log*.go *Log*.go *logger*.go logger.go"
+                ;;
+            "metrics"|"metric"|"prometheus")
+                echo "*metric*.go *Metric*.go"
+                ;;
+            "registry"|"discovery"|"consul"|"etcd")
+                echo "*registry*.go *Registry*.go *discovery*.go"
+                ;;
+            "util"|"utils"|"helper"|"helpers")
+                echo "*util*.go *Utils*.go *helper*.go utils.go helper.go"
+                ;;
+            "request"|"response"|"dto")
+                echo "*request*.go *response*.go *Request*.go *Response*.go"
+                ;;
+            "binding"|"validator"|"validation")
+                echo "*binding*.go *validator*.go *validation*.go"
+                ;;
+            "render"|"renderer")
+                echo "*render*.go *Render*.go"
+                ;;
+            "tracing"|"trace"|"opentelemetry"|"otel")
+                echo "*tracing*.go *trace*.go *Trace*.go"
+                ;;
+            "circuitbreaker"|"breaker"|"resilience")
+                echo "*circuitbreaker*.go *breaker*.go"
+                ;;
+            "model"|"models"|"entity"|"entities")
+                echo "*model*.go *Model*.go *entity*.go"
+                ;;
+            "pkg")
+                echo "*.go"
+                # Package code, rely on directory matching
                 ;;
             *)
                 echo ""
@@ -904,6 +1009,103 @@ get_dir_patterns() {
                 ;;
             "interactor"|"interactors"|"use case"|"operation")
                 echo "interactors operations app/interactors app/operations"
+                ;;
+            *)
+                echo ""
+                ;;
+        esac
+    elif [ "$proj_type" = "go" ]; then
+        # Go directory patterns (based on gin, go-kit, cobra, kratos analysis)
+        case "$pattern" in
+            # Tier 1 - Core Patterns (12)
+            "handler"|"handlers")
+                echo "handlers handler"
+                ;;
+            "service"|"services"|"svc")
+                echo "services service svc"
+                ;;
+            "middleware"|"middlewares"|"mw")
+                echo "middleware middlewares"
+                ;;
+            "transport"|"transports")
+                echo "transport transports"
+                ;;
+            "endpoint"|"endpoints")
+                echo "endpoint endpoints"
+                ;;
+            "client"|"clients")
+                echo "client clients"
+                ;;
+            "server"|"servers")
+                echo "server servers"
+                ;;
+            "config"|"configuration"|"cfg")
+                echo "config configs configuration"
+                ;;
+            "router"|"routes"|"routing")
+                echo "router routes routing"
+                ;;
+            "cmd"|"main"|"entrypoint")
+                echo "cmd"
+                ;;
+            "internal")
+                echo "internal"
+                ;;
+            "errors"|"error")
+                echo "errors"
+                ;;
+
+            # Tier 2 - Supplementary Patterns (14)
+            "test"|"tests"|"testing")
+                echo "tests test testdata"
+                ;;
+            "mock"|"mocks"|"fake"|"stub")
+                echo "mocks mock fakes stubs"
+                ;;
+            "proto"|"protobuf"|"grpc"|"pb")
+                echo "proto protobuf pb api grpc"
+                ;;
+            "repository"|"repo"|"repositories")
+                echo "repository repositories repo repos"
+                ;;
+            "options"|"option"|"opts")
+                echo "options"
+                ;;
+            "auth"|"authentication"|"jwt")
+                echo "auth authentication"
+                ;;
+            "log"|"logger"|"logging")
+                echo "log logs logging logger"
+                ;;
+            "metrics"|"metric"|"prometheus")
+                echo "metrics"
+                ;;
+            "registry"|"discovery"|"consul"|"etcd")
+                echo "registry discovery"
+                ;;
+            "util"|"utils"|"helper"|"helpers")
+                echo "util utils helper helpers common"
+                ;;
+            "request"|"response"|"dto")
+                echo "request response dto"
+                ;;
+            "binding"|"validator"|"validation")
+                echo "binding validator validation"
+                ;;
+            "render"|"renderer")
+                echo "render"
+                ;;
+            "tracing"|"trace"|"opentelemetry"|"otel")
+                echo "tracing trace"
+                ;;
+            "circuitbreaker"|"breaker"|"resilience")
+                echo "circuitbreaker breaker"
+                ;;
+            "model"|"models"|"entity"|"entities")
+                echo "model models entity entities domain"
+                ;;
+            "pkg")
+                echo "pkg"
                 ;;
             *)
                 echo ""
