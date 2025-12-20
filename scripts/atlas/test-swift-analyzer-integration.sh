@@ -45,14 +45,15 @@ cd "$TEST_PROJECT"
 PROJECT_TYPE=""
 NEEDS_SWIFT_ANALYSIS=false
 
-if ls *.xcodeproj &>/dev/null || ls *.xcworkspace &>/dev/null; then
+if ls *.xcodeproj &>/dev/null || ls *.xcworkspace &>/dev/null || \
+   [ -f "Package.swift" ] || [ -f "Project.swift" ] || [ -d "Tuist" ]; then
     PROJECT_TYPE="iOS/Swift"
     NEEDS_SWIFT_ANALYSIS=true
-    echo -e "${GREEN}✓ Detected iOS project${NC}"
+    echo -e "${GREEN}✓ Detected iOS/Swift project${NC}"
     echo "  Project type: $PROJECT_TYPE"
     echo "  Needs Swift analysis: $NEEDS_SWIFT_ANALYSIS"
 else
-    echo -e "${RED}✗ Not an iOS project${NC}"
+    echo -e "${RED}✗ Not an iOS/Swift project${NC}"
     exit 1
 fi
 

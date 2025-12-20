@@ -51,6 +51,8 @@ detect_project_files() {
         "mix.exs"               # Elixir
         "pubspec.yaml"          # Dart/Flutter
         "*.xcodeproj"           # iOS/macOS
+        "Package.swift"         # Swift Package Manager
+        "Project.swift"         # Tuist
     )
 
     for pattern in "${files[@]}"; do

@@ -197,8 +197,9 @@ Please choose where to start? (or just say "1" "2" "3")
 #### Detect Project Language First
 
 ```bash
-# Auto-detect project type
-if [ -f "Package.swift" ] || [ -d "*.xcodeproj" ]; then
+# Auto-detect project type (Swift before Ruby to avoid Gemfile misdetection)
+if [ -f "Package.swift" ] || [ -f "Project.swift" ] || [ -d "Tuist" ] || \
+   ls *.xcodeproj >/dev/null 2>&1 || ls *.xcworkspace >/dev/null 2>&1; then
     LANG="swift"
 elif [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
     LANG="kotlin"
