@@ -6,7 +6,20 @@
 
 ## 2025-12（當前月份）
 
-### Week 3 (12/20): Go + Rust Language Support ⭐⭐⭐⭐⭐
+### Week 3 (12/20): Go + Rust + Ruby + AST Operations ⭐⭐⭐⭐⭐
+
+**op_definition / op_import 實作完成** (12/20):
+- 新增 2 個 AST 操作到 `ast-grep-search.sh`（8 個操作總計）
+- `op_definition`: 精確定位函數/類別/結構體定義（7 語言支援）
+- `op_import`: 提取 import 語句 + 可選模組過濾（7 語言支援）
+- **關鍵發現**: AST 精確度 > grep 文字匹配（grep 有 False Positives）
+- 驗證方法論學習：Ground Truth 本身需要驗證
+→ [驗證報告](./2025-12/2025-12-20-ast-grep-definition-import-validation.md)
+
+**Ruby/Rails 語言支援完成** (12/20):
+- 26 個模式（model, controller, job, mailer, concern, spec 等）
+- 測試專案：ruby-spree（~2000 個 Ruby 檔案）
+→ 詳見 CLAUDE.md Multi-Language Pattern Support
 
 **Go 語言支援完成** (12/20):
 - 26 個模式（handler, service, middleware, transport, endpoint 等）
