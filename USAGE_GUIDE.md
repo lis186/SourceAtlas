@@ -197,7 +197,7 @@ Simply put: **"How does this project typically implement X?"**
 3. **Testing Patterns**: How to test this feature
 4. **Implementation Guide**: Step-by-step guide for new features
 
-### Supported Patterns (141 total)
+### Supported Patterns (221 total)
 
 #### Quick Overview
 
@@ -207,6 +207,9 @@ Simply put: **"How does this project typically implement X?"**
 | **TypeScript/React/Vue** | 50 | React Core, Vue Core, Backend Integration |
 | **Android/Kotlin** | 31 | Architecture Components, UI, Data Layer |
 | **Python** | 26 | Django, FastAPI, Flask, Celery |
+| **Ruby/Rails** | 26 | ActiveRecord, Controller, Service, Job |
+| **Go** | 26 | Handler, Service, Middleware, Transport |
+| **Rust** | 28 | Handler, Service, Middleware, Runtime |
 
 #### Popular Patterns (Cross-Language)
 

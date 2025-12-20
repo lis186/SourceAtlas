@@ -1,8 +1,8 @@
 # SourceAtlas Roadmap
 
 **Current Status**: v2.9.0 Complete ✅
-**Last Updated**: 2025-12-12
-**Pattern Count**: 141 patterns (iOS 34, TypeScript/React/Vue 50, Android/Kotlin 31, Python 26)
+**Last Updated**: 2025-12-20
+**Pattern Count**: 221 patterns (iOS 34, TypeScript/React/Vue 50, Android/Kotlin 31, Python 26, Ruby 26, Go 26, Rust 28)
 
 ---
 
@@ -20,7 +20,7 @@
 | `/atlas.flow` | Flow tracing (11 modes) | ✅ 2025-12-01 |
 | `/atlas.deps` | Dependency analysis | ✅ 2025-12-12 |
 
-### Multi-Language Patterns (141 Total)
+### Multi-Language Patterns (221 Total)
 
 | Language | Patterns | Tier 1 | Tier 2 |
 |----------|----------|--------|--------|
@@ -28,6 +28,9 @@
 | TypeScript/React/Vue | 50 | 25 | 25 |
 | Android/Kotlin | 31 | 12 | 19 |
 | Python | 26 | 12 | 14 |
+| Ruby/Rails | 26 | 12 | 14 |
+| Go | 26 | 12 | 14 |
+| Rust | 28 | 14 | 14 |
 
 ---
 
@@ -117,6 +120,7 @@ Based on P0-A implementation (2025-12-01):
 
 | Date | Milestone | Impact |
 |------|-----------|--------|
+| 2025-12-20 | 221 patterns | 7 language support (+ Ruby, Go, Rust) |
 | 2025-12-12 | v2.9.0 Release | `/atlas.deps` + Model 優化 |
 | 2025-12-06 | v2.8.1 Release | Constitution v1.1 + Handoffs |
 | 2025-12-05 | v2.8.0 Release | Constitution v1.0 + Monorepo |
@@ -129,14 +133,12 @@ Based on P0-A implementation (2025-12-01):
 
 ### In Progress 🔵
 
-- [ ] v3.0 語言擴展決策（Go + Ruby?）
 - [ ] User feedback collection
 
 ### Upcoming 📋
 
-- [ ] Go patterns research
-- [ ] Ruby patterns research
 - [ ] `/atlas.flow` AST integration
+- [ ] Additional language patterns (C#, Java, etc.)
 
 ---
 
@@ -184,14 +186,20 @@ From v1.0 to v2.7.0:
 - [x] Breaking change detection
 - [x] Migration checklist generation
 
+### v2.9.x (Achieved) ✅
+- [x] 221 patterns (7 languages)
+- [x] Ruby/Rails support (26 patterns)
+- [x] Go support (26 patterns)
+- [x] Rust support (28 patterns)
+
 ### v3.0.0 (Future Targets)
-- [ ] 200+ patterns (+60)
-- [ ] 6 languages supported (+2)
+- [x] 200+ patterns - ✅ Achieved (221)
+- [x] 6+ languages supported - ✅ Achieved (7)
 - [ ] AST-based flow analysis
 - [ ] User satisfaction >4/5
 
 ### Long-term Vision
-- [ ] 300+ patterns (8+ languages)
+- [ ] 300+ patterns (10+ languages)
 - [ ] Real-time monitoring
 - [ ] IDE plugin integration
 - [ ] Team collaboration features

@@ -197,7 +197,7 @@ key_directories:
 3. **測試模式**：如何測試這個功能
 4. **實作指南**：逐步實作新功能
 
-### 支援的 Patterns (141 個)
+### 支援的 Patterns (221 個)
 
 #### 快速總覽
 
@@ -207,6 +207,9 @@ key_directories:
 | **TypeScript/React/Vue** | 50 | React 核心、Vue 核心、後端整合 |
 | **Android/Kotlin** | 31 | Architecture Components、UI、資料層 |
 | **Python** | 26 | Django、FastAPI、Flask、Celery |
+| **Ruby/Rails** | 26 | ActiveRecord、Controller、Service、Job |
+| **Go** | 26 | Handler、Service、Middleware、Transport |
+| **Rust** | 28 | Handler、Service、Middleware、Runtime |
 
 #### 熱門 Patterns（跨語言）
 
