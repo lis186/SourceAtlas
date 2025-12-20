@@ -1,6 +1,6 @@
 #!/bin/bash
 # SourceAtlas - Pattern Detection Script (Ultra-Fast Version)
-# Multi-Language Support: Swift/iOS, TypeScript/React, Android/Kotlin, and Python
+# Multi-Language Support: Swift/iOS, TypeScript/React, Android/Kotlin, Python, and Ruby
 #
 # Purpose: Identify files matching a given pattern type using filename/directory matching only
 # Philosophy: Scripts collect data quickly, AI does deep interpretation
@@ -29,7 +29,7 @@ set -euo pipefail
 PATTERN="${1:-}"
 PROJECT_PATH="${2:-.}"
 
-# Detect project type (swift vs typescript vs android vs python)
+# Detect project type (swift vs typescript vs android vs python vs ruby)
 detect_project_type() {
     local path="$1"
 
@@ -45,6 +45,13 @@ detect_project_type() {
     if [ -f "$path/Podfile" ] || [ -f "$path/Package.swift" ] || \
        find "$path" -maxdepth 3 -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null | grep -q .; then
         echo "swift"
+        return
+    fi
+
+    # Check for Ruby indicators (before Python - Gemfile is very specific)
+    if [ -f "$path/Gemfile" ] || [ -f "$path/config.ru" ] || \
+       [ -f "$path/Rakefile" ] || [ -f "$path/.ruby-version" ]; then
+        echo "ruby"
         return
     fi
 
@@ -261,6 +268,99 @@ get_file_patterns() {
                 ;;
             "spider"|"spiders"|"scrapy"|"crawler")
                 echo "*spider.py *spiders.py *_spider.py *_spiders.py"
+                ;;
+            *)
+                echo ""
+                ;;
+        esac
+    elif [ "$proj_type" = "ruby" ]; then
+        # Ruby/Rails patterns (based on Spree e-commerce analysis)
+        case "$pattern" in
+            # Tier 1 - Core Rails Patterns (14)
+            "controller"|"controllers"|"action controller")
+                echo "*_controller.rb *Controller.rb"
+                ;;
+            "model"|"models"|"active record"|"activerecord")
+                echo "*.rb"
+                # Note: Ruby models often don't have suffix, rely on directory matching
+                ;;
+            "service"|"services"|"service object"|"business logic")
+                echo "*_service.rb *Service.rb"
+                ;;
+            "job"|"jobs"|"background job"|"active job"|"sidekiq"|"worker")
+                echo "*_job.rb *Job.rb *_worker.rb *Worker.rb"
+                ;;
+            "serializer"|"serializers"|"active model serializer"|"jsonapi")
+                echo "*_serializer.rb *Serializer.rb"
+                ;;
+            "mailer"|"mailers"|"action mailer"|"email")
+                echo "*_mailer.rb *Mailer.rb"
+                ;;
+            "concern"|"concerns"|"module"|"mixin")
+                echo "*.rb"
+                # Concerns are modules, rely on directory matching
+                ;;
+            "helper"|"helpers"|"view helper")
+                echo "*_helper.rb *Helper.rb"
+                ;;
+            "decorator"|"decorators"|"presenter"|"presenters"|"draper")
+                echo "*_decorator.rb *Decorator.rb *_presenter.rb *Presenter.rb"
+                ;;
+            "policy"|"policies"|"pundit"|"authorization"|"cancan")
+                echo "*_policy.rb *Policy.rb *_ability.rb ability.rb"
+                ;;
+            "form"|"forms"|"form object"|"reform")
+                echo "*_form.rb *Form.rb"
+                ;;
+            "query"|"queries"|"query object"|"finder")
+                echo "*_query.rb *Query.rb *_finder.rb *Finder.rb"
+                ;;
+            "validator"|"validators"|"custom validator"|"validation")
+                echo "*_validator.rb *Validator.rb"
+                ;;
+            "api"|"api endpoint"|"grape"|"rails api"|"endpoint")
+                echo "*_api.rb *API.rb api.rb"
+                ;;
+
+            # Tier 2 - Supplementary Patterns (12)
+            "spec"|"specs"|"rspec"|"test"|"tests"|"minitest")
+                echo "*_spec.rb *_test.rb spec_helper.rb rails_helper.rb test_helper.rb"
+                ;;
+            "factory"|"factories"|"factory bot"|"fabricator")
+                echo "*_factory.rb factories.rb *_fabricator.rb"
+                ;;
+            "migration"|"migrations"|"active record migration"|"db")
+                echo "*_migration.rb *.rb"
+                # Migrations in db/migrate/, rely on directory matching
+                ;;
+            "rake"|"rake task"|"task"|"tasks")
+                echo "*.rake"
+                ;;
+            "initializer"|"initializers"|"config")
+                echo "*.rb"
+                # Initializers in config/initializers/, rely on directory matching
+                ;;
+            "middleware"|"rack middleware"|"rack")
+                echo "*_middleware.rb *Middleware.rb"
+                ;;
+            "engine"|"engines"|"rails engine"|"mountable")
+                echo "engine.rb *_engine.rb"
+                ;;
+            "observer"|"observers"|"callback")
+                echo "*_observer.rb *Observer.rb *_callback.rb"
+                ;;
+            "uploader"|"uploaders"|"carrierwave"|"shrine"|"active storage")
+                echo "*_uploader.rb *Uploader.rb"
+                ;;
+            "channel"|"channels"|"action cable"|"websocket")
+                echo "*_channel.rb *Channel.rb"
+                ;;
+            "scope"|"scopes"|"named scope")
+                echo "*.rb"
+                # Scopes are in models, rely on directory matching
+                ;;
+            "interactor"|"interactors"|"use case"|"operation")
+                echo "*_interactor.rb *Interactor.rb *_operation.rb *Operation.rb"
                 ;;
             *)
                 echo ""
@@ -716,6 +816,94 @@ get_dir_patterns() {
                 ;;
             "spider"|"spiders"|"scrapy"|"crawler")
                 echo "spiders crawlers"
+                ;;
+            *)
+                echo ""
+                ;;
+        esac
+    elif [ "$proj_type" = "ruby" ]; then
+        # Ruby/Rails directory patterns (based on Spree e-commerce analysis)
+        case "$pattern" in
+            # Tier 1 - Core Rails Patterns (14)
+            "controller"|"controllers"|"action controller")
+                echo "controllers app/controllers"
+                ;;
+            "model"|"models"|"active record"|"activerecord")
+                echo "models app/models"
+                ;;
+            "service"|"services"|"service object"|"business logic")
+                echo "services app/services"
+                ;;
+            "job"|"jobs"|"background job"|"active job"|"sidekiq"|"worker")
+                echo "jobs workers app/jobs app/workers sidekiq"
+                ;;
+            "serializer"|"serializers"|"active model serializer"|"jsonapi")
+                echo "serializers app/serializers"
+                ;;
+            "mailer"|"mailers"|"action mailer"|"email")
+                echo "mailers app/mailers"
+                ;;
+            "concern"|"concerns"|"module"|"mixin")
+                echo "concerns app/models/concerns app/controllers/concerns"
+                ;;
+            "helper"|"helpers"|"view helper")
+                echo "helpers app/helpers"
+                ;;
+            "decorator"|"decorators"|"presenter"|"presenters"|"draper")
+                echo "decorators presenters app/decorators app/presenters"
+                ;;
+            "policy"|"policies"|"pundit"|"authorization"|"cancan")
+                echo "policies app/policies"
+                ;;
+            "form"|"forms"|"form object"|"reform")
+                echo "forms app/forms"
+                ;;
+            "query"|"queries"|"query object"|"finder")
+                echo "queries finders app/queries app/finders"
+                ;;
+            "validator"|"validators"|"custom validator"|"validation")
+                echo "validators app/validators"
+                ;;
+            "api"|"api endpoint"|"grape"|"rails api"|"endpoint")
+                echo "api app/api"
+                ;;
+
+            # Tier 2 - Supplementary Patterns (12)
+            "spec"|"specs"|"rspec"|"test"|"tests"|"minitest")
+                echo "spec test spec/models spec/controllers spec/services spec/requests spec/features"
+                ;;
+            "factory"|"factories"|"factory bot"|"fabricator")
+                echo "factories spec/factories test/factories"
+                ;;
+            "migration"|"migrations"|"active record migration"|"db")
+                echo "migrate db/migrate"
+                ;;
+            "rake"|"rake task"|"task"|"tasks")
+                echo "tasks lib/tasks"
+                ;;
+            "initializer"|"initializers"|"config")
+                echo "initializers config/initializers"
+                ;;
+            "middleware"|"rack middleware"|"rack")
+                echo "middleware app/middleware lib/middleware"
+                ;;
+            "engine"|"engines"|"rails engine"|"mountable")
+                echo "engines"
+                ;;
+            "observer"|"observers"|"callback")
+                echo "observers app/observers"
+                ;;
+            "uploader"|"uploaders"|"carrierwave"|"shrine"|"active storage")
+                echo "uploaders app/uploaders"
+                ;;
+            "channel"|"channels"|"action cable"|"websocket")
+                echo "channels app/channels"
+                ;;
+            "scope"|"scopes"|"named scope")
+                echo "models app/models"
+                ;;
+            "interactor"|"interactors"|"use case"|"operation")
+                echo "interactors operations app/interactors app/operations"
                 ;;
             *)
                 echo ""

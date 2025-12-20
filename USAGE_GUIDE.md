@@ -724,7 +724,7 @@ cp scripts/atlas/patterns/ios/networking.sh scripts/atlas/patterns/ios/custom-pa
 - ✅ TypeScript (React + Next.js)
 - ✅ Android (Kotlin)
 - ✅ Python (26 patterns)
-- 🔵 Ruby (in development)
+- ✅ Ruby (26 patterns)
 - 🔵 Go (in development)
 
 ### Q: Where are analysis results saved?
