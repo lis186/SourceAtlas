@@ -6,7 +6,7 @@
 
 適用於 Claude Code | 支援 iOS/TypeScript/Android/Python
 
-[![Version](https://img.shields.io/badge/version-v2.9.5-blue)](https://github.com/lis186/SourceAtlas/releases)
+[![Version](https://img.shields.io/badge/version-v2.9.6-blue)](https://github.com/lis186/SourceAtlas/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![Constitution](https://img.shields.io/badge/constitution-v1.1-purple)](./ANALYSIS_CONSTITUTION.md)
 

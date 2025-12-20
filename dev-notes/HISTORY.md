@@ -8,6 +8,13 @@
 
 ### Week 3 (12/20): Go + Rust + Ruby + AST Operations ⭐⭐⭐⭐⭐
 
+**🎉 v2.9.6 發布** (12/20):
+- **Tuist 支援**：新增 `Project.swift` 和 `Tuist/` 目錄偵測
+- **新語法支援**：Swift 6、Python 3.12、Rust 2024
+- **Bug Fixes**：Glob pattern、Swift ast-grep patterns、Rust macro
+- **QA 測試**：30 個測試案例，100% 通過
+- 11 個檔案更新（scripts + commands + docs）
+
 **op_definition / op_import 實作完成** (12/20):
 - 新增 2 個 AST 操作到 `ast-grep-search.sh`（8 個操作總計）
 - `op_definition`: 精確定位函數/類別/結構體定義（7 語言支援）
