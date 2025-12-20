@@ -41,6 +41,13 @@
 - Noncopyable (`~Copyable`) 和 Typed Throws (`throws(Error)`) 自動相容
 - 測試通過：Swift 6 新語法全部正確匹配
 
+**多語言新版本語法支援** (12/20):
+- **Python 3.12**：`class Name[T]:` generic class patterns
+- **Rust 2024**：`async || {}` / `async move || {}` async closures
+- **Go 1.22**：`for i := range N` 自動相容
+- **Kotlin 2.1**：guard conditions 待 ast-grep 支援
+- **Ruby 3.4**：`it` block parameter 自動相容
+
 **Ruby/Rails 語言支援完成** (12/20):
 - 26 個模式（model, controller, job, mailer, concern, spec 等）
 - 測試專案：ruby-spree（~2000 個 Ruby 檔案）

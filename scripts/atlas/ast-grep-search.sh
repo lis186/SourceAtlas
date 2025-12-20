@@ -545,6 +545,9 @@ op_async() {
                 $AST_GREP_CMD --pattern '$EXPR.await' --lang rust --json "$PROJECT_PATH" 2>/dev/null
                 $AST_GREP_CMD --pattern 'async fn $NAME' --lang rust --json "$PROJECT_PATH" 2>/dev/null
                 $AST_GREP_CMD --pattern 'async move { $$$ }' --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                # Rust 2024: async closures
+                $AST_GREP_CMD --pattern 'async || { $$$ }' --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern 'async move || { $$$ }' --lang rust --json "$PROJECT_PATH" 2>/dev/null
             } | jq -s 'add // []'
             ;;
         ruby)
@@ -784,6 +787,9 @@ op_definition() {
                 $AST_GREP_CMD --pattern "def $name(\$\$\$):" --lang python --json "$PROJECT_PATH" 2>/dev/null
                 $AST_GREP_CMD --pattern "class $name:" --lang python --json "$PROJECT_PATH" 2>/dev/null
                 $AST_GREP_CMD --pattern "class $name(\$\$\$):" --lang python --json "$PROJECT_PATH" 2>/dev/null
+                # Python 3.12+: generic class with type parameters
+                $AST_GREP_CMD --pattern "class $name[\$\$\$]: \$\$\$" --lang python --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "class $name[\$\$\$](\$\$\$): \$\$\$" --lang python --json "$PROJECT_PATH" 2>/dev/null
             } | jq -s 'add // []'
             ;;
         go)
