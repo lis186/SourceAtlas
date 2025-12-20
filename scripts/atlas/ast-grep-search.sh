@@ -744,9 +744,13 @@ op_definition() {
         swift)
             {
                 $AST_GREP_CMD --pattern "func $name(\$\$\$)" --lang swift --json "$PROJECT_PATH" 2>/dev/null
-                $AST_GREP_CMD --pattern "class $name" --lang swift --json "$PROJECT_PATH" 2>/dev/null
-                $AST_GREP_CMD --pattern "struct $name" --lang swift --json "$PROJECT_PATH" 2>/dev/null
-                $AST_GREP_CMD --pattern "enum $name" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                # Swift 類型宣告需要完整語法：無繼承 + 有繼承兩種 pattern
+                $AST_GREP_CMD --pattern "class $name { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "class $name: \$\$\$INHERIT { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "struct $name { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "struct $name: \$\$\$INHERIT { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "enum $name { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "enum $name: \$\$\$INHERIT { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
             } | jq -s 'add // []'
             ;;
         tsx|typescript)
