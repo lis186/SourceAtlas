@@ -86,7 +86,11 @@ detect_language() {
     fi
 
     # 基於專案檔案偵測
-    if [[ -f "$path/Package.swift" ]] || [[ -d "$path/"*.xcodeproj ]] || [[ -d "$path/"*.xcworkspace ]]; then
+    # 注意：glob pattern 在 [[ ]] 中不會展開，需用 ls 檢查
+    # 分開檢查 xcodeproj 和 xcworkspace（避免 zsh 當一個失敗時整個失敗）
+    if [[ -f "$path/Package.swift" ]] || \
+       ls -d "$path"/*.xcodeproj >/dev/null 2>&1 || \
+       ls -d "$path"/*.xcworkspace >/dev/null 2>&1; then
         echo "swift"
     elif [[ -f "$path/package.json" ]]; then
         # 檢查是否為 TypeScript
@@ -936,6 +940,10 @@ while [[ $# -gt 0 ]]; do
             OUTPUT_COUNT=true
             shift
             ;;
+        --primary)
+            PRIMARY_ONLY=true
+            shift
+            ;;
         -h|--help)
             echo "Usage: $0 <operation> <target> [options]"
             echo ""
@@ -953,6 +961,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --fallback          - Output grep fallback command"
             echo "  --json              - JSON output format"
             echo "  --count             - Output match count only"
+            echo "  --primary           - Only return primary definitions (Ruby: filter concerns)"
             exit 0
             ;;
         *)
