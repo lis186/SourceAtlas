@@ -6,6 +6,22 @@
 
 ## 2025-12（當前月份）
 
+### Week 3 (12/21): Benchmark + Scale Detection Fix ⭐⭐⭐⭐⭐
+
+**🎯 SourceAtlas Benchmark 完成** (12/21):
+- **測試專案**: Firefox iOS, Thunderbird Android, Cal.com, Prefect, Discourse
+- **原始準確率**: 93.3% (56/60)，Scale 偵測僅 60%
+- **問題診斷**: 門檻過於保守 (>150 files = VERY_LARGE)
+- **修正後準確率**: Scale 100% (5/5)，預期整體 ~98%
+→ [Benchmark 報告](../test_targets/test_results/benchmark-2025-12-21.md)
+
+**Scale Detection v2.0** (12/21):
+- **修正 1**: Swift 優先偵測（>50 Swift files → iOS，避免被 fastlane Gemfile 誤判）
+- **修正 2**: 統計所有程式碼檔案（跨語言一致性）
+- **修正 3**: 門檻調整（LARGE: 2K-10K, VERY_LARGE: >10K）
+- **移除 LOC**: 跨語言不一致，改用純檔案數
+→ [方法論文件](./2025-12/2025-12-21-scale-detection-methodology.md)
+
 ### Week 3 (12/20): Go + Rust + Ruby + AST Operations ⭐⭐⭐⭐⭐
 
 **🎉 v2.9.6 發布** (12/20):
