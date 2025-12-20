@@ -179,6 +179,24 @@ $AST_SCRIPT pattern "data class" --lang kotlin --path .
 # TypeScript Custom Hook (use* prefix)
 $AST_SCRIPT pattern "hook" --lang tsx --path .
 
+# Go struct definition
+$AST_SCRIPT pattern "struct" --lang go --path .
+
+# Go goroutine
+$AST_SCRIPT pattern "goroutine" --lang go --path .
+
+# Rust async function
+$AST_SCRIPT pattern "async" --lang rust --path .
+
+# Rust trait definition
+$AST_SCRIPT pattern "trait" --lang rust --path .
+
+# Ruby class definition
+$AST_SCRIPT pattern "class" --lang ruby --path .
+
+# Ruby module definition
+$AST_SCRIPT pattern "module" --lang ruby --path .
+
 # If ast-grep not installed, get grep fallback command
 $AST_SCRIPT pattern "async" --fallback
 ```
