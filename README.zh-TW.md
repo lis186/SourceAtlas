@@ -329,16 +329,16 @@ Claude Code + 2 分鐘安裝
 <details>
 <summary><b>Q: 準確嗎？</b></summary>
 
-**在 8 個真實專案上測試**：
+**在 5 個公開開源專案上測試**：
 
-| 指標 | 結果 | 專案數 |
-|------|------|--------|
-| **Pattern 檢測** | 92-100% | 7 個 iOS 專案 |
-| **Impact 分析** | 95%+ 準確率 | 4 個測試場景 |
-| **Overview 理解** | 80-95% 深度 | 1 個 TypeScript 專案 |
-| **專案規模** | 2K - 255K LOC | 8 個專案（127x 差距）|
+| 指標 | 結果 | 專案 |
+|------|------|------|
+| **Pattern 檢測** | 73% Good, 27% Fair | 5 個專案 |
+| **Swift 品質** | 100% Good | Swiftfin, WordPress-iOS |
+| **執行速度** | 0.3s - 14s | 所有 patterns |
+| **掃描效率** | <1.5% 檔案 | 所有專案 |
 
-**架構覆蓋**: SwiftUI, UIKit, MVVM, Clean Architecture, TCA, Redux, Swift/ObjC 混合
+**測試專案**: [Swiftfin](https://github.com/jellyfin/Swiftfin), [WordPress-iOS](https://github.com/wordpress-mobile/WordPress-iOS), [Signal-Android](https://github.com/signalapp/Signal-Android), [AntennaPod](https://github.com/AntennaPod/AntennaPod), [FastAPI](https://github.com/tiangolo/fastapi)
 
 📊 **完整數據**: [BENCHMARK.md](./BENCHMARK.md)
 

@@ -329,16 +329,16 @@ Complete list in [USAGE_GUIDE.md](./USAGE_GUIDE.md#supported-patterns-141)
 <details>
 <summary><b>Q: Is it accurate?</b></summary>
 
-**Tested on 8 real projects**:
+**Tested on 5 public open-source projects**:
 
 | Metric | Result | Projects |
 |--------|--------|----------|
-| **Pattern Detection** | 92-100% | 7 iOS projects |
-| **Impact Analysis** | 95%+ accuracy | 4 test scenarios |
-| **Overview Understanding** | 80-95% depth | 1 TypeScript project |
-| **Project Scale** | 2K - 255K LOC | 8 projects (127x range) |
+| **Pattern Detection** | 73% Good, 27% Fair | 5 projects |
+| **Swift Quality** | 100% Good | Swiftfin, WordPress-iOS |
+| **Execution Speed** | 0.3s - 14s | All patterns |
+| **Scan Efficiency** | <1.5% files | All projects |
 
-**Architecture Coverage**: SwiftUI, UIKit, MVVM, Clean Architecture, TCA, Redux, Swift/ObjC hybrid
+**Test Projects**: [Swiftfin](https://github.com/jellyfin/Swiftfin), [WordPress-iOS](https://github.com/wordpress-mobile/WordPress-iOS), [Signal-Android](https://github.com/signalapp/Signal-Android), [AntennaPod](https://github.com/AntennaPod/AntennaPod), [FastAPI](https://github.com/tiangolo/fastapi)
 
 📊 **Complete Data**: [BENCHMARK.md](./BENCHMARK.md)
 
