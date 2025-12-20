@@ -35,6 +35,12 @@
 - 移除無法解析的 `-> $type` pattern（CLI 參數衝突）
 - 測試通過：definition、type、call、async、import 全部正常
 
+**Swift 6 語法支援** (12/20):
+- **op_definition**：新增 `consuming func` / `borrowing func` patterns
+- **op_import**：新增 `public/internal/private import` patterns
+- Noncopyable (`~Copyable`) 和 Typed Throws (`throws(Error)`) 自動相容
+- 測試通過：Swift 6 新語法全部正確匹配
+
 **Ruby/Rails 語言支援完成** (12/20):
 - 26 個模式（model, controller, job, mailer, concern, spec 等）
 - 測試專案：ruby-spree（~2000 個 Ruby 檔案）

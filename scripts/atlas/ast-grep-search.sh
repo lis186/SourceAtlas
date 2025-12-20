@@ -747,6 +747,9 @@ op_definition() {
         swift)
             {
                 $AST_GREP_CMD --pattern "func $name(\$\$\$)" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                # Swift 6: consuming/borrowing 方法
+                $AST_GREP_CMD --pattern "consuming func $name(\$\$\$)" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "borrowing func $name(\$\$\$)" --lang swift --json "$PROJECT_PATH" 2>/dev/null
                 # Swift 類型宣告需要完整語法：無繼承 + 有繼承兩種 pattern
                 $AST_GREP_CMD --pattern "class $name { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
                 $AST_GREP_CMD --pattern "class $name: \$\$\$INHERIT { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
@@ -848,7 +851,13 @@ op_import() {
     local result
     case "$lang" in
         swift)
-            result=$($AST_GREP_CMD --pattern 'import $MODULE' --lang swift --json "$PROJECT_PATH" 2>/dev/null || echo "[]")
+            result=$({
+                $AST_GREP_CMD --pattern 'import $MODULE' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                # Swift 6: access-controlled imports
+                $AST_GREP_CMD --pattern 'public import $MODULE' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern 'internal import $MODULE' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern 'private import $MODULE' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []')
             ;;
         tsx|typescript)
             result=$({
