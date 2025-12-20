@@ -48,7 +48,7 @@
 
 **範例**：想知道這個專案怎麼處理 API，直接找到 `UserAPI.swift:45` 和測試範例
 
-**支援 141 個 patterns**：MVVM、Networking、Core Data、React Hook、Next.js API、Jetpack Compose、Vue Composable、Pinia、Zustand...
+**支援 221 個 patterns**：MVVM、Networking、Core Data、React Hook、Next.js API、Jetpack Compose、Vue Composable、Pinia、Zustand...
 
 ---
 
@@ -295,7 +295,7 @@ ls ~/.claude/commands/atlas.*.md
 
 ### 核心文檔
 
-- **[使用指南](./USAGE_GUIDE.md)** - 完整的命令說明、141 個 patterns、疑難排解
+- **[使用指南](./USAGE_GUIDE.md)** - 完整的命令說明、221 個 patterns、疑難排解
 - **[全局安裝](./GLOBAL_INSTALLATION.md)** - 安裝選項、管理命令、疑難排解
 - **[Benchmark](./BENCHMARK.md)** - 8 個真實專案的測試結果、準確率數據
 

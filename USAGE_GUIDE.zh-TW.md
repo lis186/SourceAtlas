@@ -897,7 +897,7 @@ head -20 ~/.claude/commands/atlas.overview.md
 **改善搜尋準確度的技巧**：
 
 1. **從通用到具體**：先用 `"api"` 看有什麼，再精煉為 `"api endpoint"`
-2. **查看 Pattern 列表**：參考 [支援的 Patterns](#支援的-patterns-141-個)
+2. **查看 Pattern 列表**：參考 [支援的 Patterns](#支援的-patterns-221-個)
 3. **結合 overview**：先用 `/atlas.overview` 了解架構後再搜尋
 
 ### 快速診斷檢查清單

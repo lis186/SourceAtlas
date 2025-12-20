@@ -48,7 +48,7 @@ For Claude Code | Supports iOS/TypeScript/Android/Python
 
 **Example**: Want to know how this project handles APIs, directly find `UserAPI.swift:45` and test examples
 
-**Supports 141 patterns**: MVVM, Networking, Core Data, React Hook, Next.js API, Jetpack Compose, Vue Composable, Pinia, Zustand...
+**Supports 221 patterns**: MVVM, Networking, Core Data, React Hook, Next.js API, Jetpack Compose, Vue Composable, Pinia, Zustand...
 
 ---
 
@@ -295,7 +295,7 @@ What do you want to do?
 
 ### Core Documentation
 
-- **[Usage Guide](./USAGE_GUIDE.md)** - Complete command reference, 141 patterns, troubleshooting
+- **[Usage Guide](./USAGE_GUIDE.md)** - Complete command reference, 221 patterns, troubleshooting
 - **[Global Installation](./GLOBAL_INSTALLATION.md)** - Installation options, management commands, troubleshooting
 - **[Benchmark](./BENCHMARK.md)** - Test results from 8 real projects, accuracy data
 

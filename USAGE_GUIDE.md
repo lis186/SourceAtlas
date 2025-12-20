@@ -897,7 +897,7 @@ head -20 ~/.claude/commands/atlas.overview.md
 **Tips for Improving Search Accuracy**:
 
 1. **From general to specific**: First use `"api"` to see what's there, then refine to `"api endpoint"`
-2. **Check Pattern list**: Refer to [Supported Patterns](#supported-patterns-141-total)
+2. **Check Pattern list**: Refer to [Supported Patterns](#supported-patterns-221-total)
 3. **Combine with overview**: First use `/atlas.overview` to understand architecture, then search
 
 ### Quick Diagnostic Checklist
