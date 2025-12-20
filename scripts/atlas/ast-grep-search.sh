@@ -16,6 +16,8 @@
 #   usage <api>            - API 使用盤點 (for /atlas.deps)
 #   async                  - async/await 流程 (for /atlas.flow)
 #   boundary <type>        - 邊界偵測 api|db (for /atlas.flow)
+#   definition <name>      - 定義搜尋 (for /atlas.flow)
+#   import [module]        - Import 語句提取 (for /atlas.flow, /atlas.impact)
 #
 # Options:
 #   --lang <language>      - 指定語言 (swift|tsx|kotlin|python|go|rust|ruby)
@@ -23,6 +25,7 @@
 #   --fallback             - 輸出 grep fallback 命令（不執行 ast-grep）
 #   --json                 - JSON 輸出格式
 #   --count                - 只輸出匹配數量
+#   --primary              - 只返回主要定義（Ruby: 過濾 concern 嵌套）
 #
 # Exit codes:
 #   0 - 成功
@@ -43,6 +46,7 @@ LANG=""
 OUTPUT_JSON=false
 OUTPUT_COUNT=false
 FALLBACK_MODE=false
+PRIMARY_ONLY=false
 
 # ============================================================
 # ast-grep 偵測（快取結果）
@@ -82,7 +86,13 @@ detect_language() {
     fi
 
     # 基於專案檔案偵測
-    if [[ -f "$path/Package.swift" ]] || [[ -d "$path/"*.xcodeproj ]] || [[ -d "$path/"*.xcworkspace ]]; then
+    # 注意：glob pattern 在 [[ ]] 中不會展開，需用 ls 檢查
+    # Swift 偵測：SPM, Xcode, Tuist
+    if [[ -f "$path/Package.swift" ]] || \
+       ls -d "$path"/*.xcodeproj >/dev/null 2>&1 || \
+       ls -d "$path"/*.xcworkspace >/dev/null 2>&1 || \
+       [[ -f "$path/Project.swift" ]] || \
+       [[ -d "$path/Tuist" ]]; then
         echo "swift"
     elif [[ -f "$path/package.json" ]]; then
         # 檢查是否為 TypeScript
@@ -166,6 +176,8 @@ op_call() {
             {
                 $AST_GREP_CMD --pattern "\$OBJ.$func_name(\$\$\$)" --lang rust --json "$PROJECT_PATH" 2>/dev/null
                 $AST_GREP_CMD --pattern "$func_name(\$\$\$)" --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                # Rust macros: println!, format!, vec!, etc.
+                $AST_GREP_CMD --pattern "$func_name!(\$\$\$)" --lang rust --json "$PROJECT_PATH" 2>/dev/null
             } | jq -s 'add // []'
             ;;
         ruby)
@@ -197,12 +209,13 @@ op_type() {
     case "$lang" in
         swift)
             {
+                # Swift 類型引用需要完整語法
                 # 變數宣告
-                $AST_GREP_CMD --pattern "\$VAR: $type_name" --lang swift --json "$PROJECT_PATH" 2>/dev/null
-                # 返回類型
-                $AST_GREP_CMD --pattern "-> $type_name" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "var \$NAME: $type_name" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "let \$NAME: $type_name" --lang swift --json "$PROJECT_PATH" 2>/dev/null
                 # 泛型參數
                 $AST_GREP_CMD --pattern "<$type_name>" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "<\$T: $type_name>" --lang swift --json "$PROJECT_PATH" 2>/dev/null
             } | jq -s 'add // []'
             ;;
         tsx|typescript)
@@ -534,6 +547,9 @@ op_async() {
                 $AST_GREP_CMD --pattern '$EXPR.await' --lang rust --json "$PROJECT_PATH" 2>/dev/null
                 $AST_GREP_CMD --pattern 'async fn $NAME' --lang rust --json "$PROJECT_PATH" 2>/dev/null
                 $AST_GREP_CMD --pattern 'async move { $$$ }' --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                # Rust 2024: async closures
+                $AST_GREP_CMD --pattern 'async || { $$$ }' --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern 'async move || { $$$ }' --lang rust --json "$PROJECT_PATH" 2>/dev/null
             } | jq -s 'add // []'
             ;;
         ruby)
@@ -678,6 +694,233 @@ op_boundary() {
 }
 
 # ============================================================
+# Ruby 定義排序 - 區分主要定義 vs concern 嵌套
+# ============================================================
+ruby_rank_definitions() {
+    local json="$1"
+    local name="$2"
+    local name_lower
+    name_lower=$(echo "$name" | tr '[:upper:]' '[:lower:]')
+
+    # 分類邏輯：
+    # 1. primary: app/models/.../name.rb (檔名 = 類名，不在子目錄)
+    # 2. library: lib/.../name.rb
+    # 3. concern: name/*.rb (子目錄，通常是 concerns)
+    # 4. nested: 其他（如 promotion/rules/product.rb 是不同的類）
+    echo "$json" | jq --arg name "$name_lower" '
+        def categorize:
+            # 檢查是否為 concern 子目錄 (例如 product/webhooks.rb)
+            if (.file | test("/" + $name + "/[^/]+\\.rb$"; "i")) then "concern"
+            # 檢查是否為主要定義 (例如 app/models/spree/product.rb，不是 promotion/rules/product.rb)
+            elif (.file | test("/app/models/[^/]+/" + $name + "\\.rb$"; "i")) then "primary"
+            # 檢查是否為 library 定義
+            elif (.file | test("/lib/.*/" + $name + "\\.rb$"; "i")) then "library"
+            else "nested" end;
+
+        def priority:
+            if .category == "primary" then 1
+            elif .category == "library" then 2
+            elif .category == "nested" then 3
+            else 4 end;
+
+        [.[] | . + {category: categorize}] | sort_by(priority)
+    '
+}
+
+# ============================================================
+# 定義搜尋 (definition) - 找 top-level 定義
+# ============================================================
+op_definition() {
+    local name="$1"
+    local lang
+    lang=$(detect_language "$PROJECT_PATH")
+
+    if $FALLBACK_MODE; then
+        case "$lang" in
+            swift) echo "grep -rn 'func $name\\|class $name\\|struct $name\\|enum $name' --include='*.swift' \"$PROJECT_PATH\"" ;;
+            tsx|typescript) echo "grep -rn 'function $name\\|class $name\\|const $name\\|interface $name\\|type $name' --include='*.ts' --include='*.tsx' \"$PROJECT_PATH\"" ;;
+            kotlin) echo "grep -rn 'fun $name\\|class $name\\|object $name\\|data class $name' --include='*.kt' \"$PROJECT_PATH\"" ;;
+            python) echo "grep -rn '^def $name\\|^class $name' --include='*.py' \"$PROJECT_PATH\"" ;;
+            go) echo "grep -rn 'func $name\\|type $name struct\\|type $name interface' --include='*.go' \"$PROJECT_PATH\"" ;;
+            rust) echo "grep -rn 'fn $name\\|struct $name\\|enum $name\\|trait $name' --include='*.rs' \"$PROJECT_PATH\"" ;;
+            ruby) echo "grep -rn 'def $name\\|class $name\\|module $name' --include='*.rb' \"$PROJECT_PATH\"" ;;
+        esac
+        return 0
+    fi
+
+    case "$lang" in
+        swift)
+            {
+                $AST_GREP_CMD --pattern "func $name(\$\$\$)" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                # Swift 6: consuming/borrowing 方法
+                $AST_GREP_CMD --pattern "consuming func $name(\$\$\$)" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "borrowing func $name(\$\$\$)" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                # Swift 類型宣告需要完整語法：無繼承 + 有繼承兩種 pattern
+                $AST_GREP_CMD --pattern "class $name { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "class $name: \$\$\$INHERIT { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "struct $name { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "struct $name: \$\$\$INHERIT { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "enum $name { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "enum $name: \$\$\$INHERIT { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
+        tsx|typescript)
+            {
+                $AST_GREP_CMD --pattern "function $name(\$\$\$)" --lang tsx --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "class $name" --lang tsx --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "const $name = \$\$\$" --lang tsx --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "interface $name" --lang tsx --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "type $name = \$\$\$" --lang tsx --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "export function $name(\$\$\$)" --lang tsx --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "export class $name" --lang tsx --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "export const $name = \$\$\$" --lang tsx --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
+        kotlin)
+            {
+                $AST_GREP_CMD --pattern "fun $name(\$\$\$)" --lang kotlin --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "class $name" --lang kotlin --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "object $name" --lang kotlin --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "data class $name" --lang kotlin --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
+        python)
+            {
+                $AST_GREP_CMD --pattern "def $name(\$\$\$):" --lang python --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "class $name:" --lang python --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "class $name(\$\$\$):" --lang python --json "$PROJECT_PATH" 2>/dev/null
+                # Python 3.12+: generic class with type parameters
+                $AST_GREP_CMD --pattern "class $name[\$\$\$]: \$\$\$" --lang python --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "class $name[\$\$\$](\$\$\$): \$\$\$" --lang python --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
+        go)
+            {
+                $AST_GREP_CMD --pattern "func $name(\$\$\$)" --lang go --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "type $name struct { \$\$\$ }" --lang go --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "type $name interface { \$\$\$ }" --lang go --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
+        rust)
+            {
+                $AST_GREP_CMD --pattern "fn $name(\$\$\$)" --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "pub fn $name(\$\$\$)" --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "struct $name" --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "enum $name" --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "trait $name" --lang rust --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
+        ruby)
+            local ruby_result
+            ruby_result=$({
+                $AST_GREP_CMD --pattern "def $name" --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "class $name" --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "module $name" --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []')
+
+            # Ruby 專用後處理：分類 + 排序
+            ruby_result=$(ruby_rank_definitions "$ruby_result" "$name")
+
+            # --primary 過濾
+            if $PRIMARY_ONLY; then
+                ruby_result=$(echo "$ruby_result" | jq '[.[] | select(.category == "primary" or .category == "library")]')
+            fi
+
+            echo "$ruby_result"
+            ;;
+        *)
+            echo "[]"
+            exit 2
+            ;;
+    esac
+}
+
+# ============================================================
+# Import 語句提取 (import) - 支援可選過濾
+# ============================================================
+op_import() {
+    local module="$1"  # 可選
+    local lang
+    lang=$(detect_language "$PROJECT_PATH")
+
+    if $FALLBACK_MODE; then
+        case "$lang" in
+            swift) echo "grep -rn '^import ' --include='*.swift' \"$PROJECT_PATH\"" ;;
+            tsx|typescript) echo "grep -rn '^import \\|require(' --include='*.ts' --include='*.tsx' \"$PROJECT_PATH\"" ;;
+            kotlin) echo "grep -rn '^import ' --include='*.kt' \"$PROJECT_PATH\"" ;;
+            python) echo "grep -rn '^import \\|^from .* import' --include='*.py' \"$PROJECT_PATH\"" ;;
+            go) echo "grep -rn '^import ' --include='*.go' \"$PROJECT_PATH\"" ;;
+            rust) echo "grep -rn '^use \\|^mod ' --include='*.rs' \"$PROJECT_PATH\"" ;;
+            ruby) echo "grep -rn \"require \\|require_relative \" --include='*.rb' \"$PROJECT_PATH\"" ;;
+        esac
+        return 0
+    fi
+
+    local result
+    case "$lang" in
+        swift)
+            result=$({
+                $AST_GREP_CMD --pattern 'import $MODULE' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                # Swift 6: access-controlled imports
+                $AST_GREP_CMD --pattern 'public import $MODULE' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern 'internal import $MODULE' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern 'private import $MODULE' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []')
+            ;;
+        tsx|typescript)
+            result=$({
+                $AST_GREP_CMD --pattern 'import $$$ from "$SOURCE"' --lang tsx --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "import $$$ from '\$SOURCE'" --lang tsx --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern 'import "$SOURCE"' --lang tsx --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern 'require("$SOURCE")' --lang tsx --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "require('\$SOURCE')" --lang tsx --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []')
+            ;;
+        kotlin)
+            result=$($AST_GREP_CMD --pattern 'import $PACKAGE' --lang kotlin --json "$PROJECT_PATH" 2>/dev/null || echo "[]")
+            ;;
+        python)
+            result=$({
+                $AST_GREP_CMD --pattern 'import $MODULE' --lang python --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern 'from $MODULE import $$$' --lang python --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []')
+            ;;
+        go)
+            result=$({
+                $AST_GREP_CMD --pattern 'import "$PKG"' --lang go --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern 'import ( $$$ )' --lang go --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []')
+            ;;
+        rust)
+            result=$({
+                $AST_GREP_CMD --pattern 'use $PATH' --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern 'mod $NAME' --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern 'extern crate $NAME' --lang rust --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []')
+            ;;
+        ruby)
+            result=$({
+                $AST_GREP_CMD --pattern 'require "$FILE"' --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "require '\$FILE'" --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern 'require_relative "$FILE"' --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "require_relative '\$FILE'" --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []')
+            ;;
+        *)
+            echo "[]"
+            exit 2
+            ;;
+    esac
+
+    # 可選過濾：若提供 module 參數，只返回包含該 module 的 import
+    if [[ -n "$module" ]]; then
+        echo "$result" | jq --arg m "$module" '[.[] | select(.text | contains($m))]'
+    else
+        echo "$result"
+    fi
+}
+
+# ============================================================
 # 輸出處理
 # ============================================================
 process_output() {
@@ -721,6 +964,10 @@ while [[ $# -gt 0 ]]; do
             OUTPUT_COUNT=true
             shift
             ;;
+        --primary)
+            PRIMARY_ONLY=true
+            shift
+            ;;
         -h|--help)
             echo "Usage: $0 <operation> <target> [options]"
             echo ""
@@ -738,6 +985,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --fallback          - Output grep fallback command"
             echo "  --json              - JSON output format"
             echo "  --count             - Output match count only"
+            echo "  --primary           - Only return primary definitions (Ruby: filter concerns)"
             exit 0
             ;;
         *)
@@ -794,6 +1042,14 @@ case "$OPERATION" in
     boundary)
         [[ -z "$TARGET" ]] && { echo "Error: Boundary type required (api|db)" >&2; exit 3; }
         result=$(op_boundary "$TARGET")
+        ;;
+    definition)
+        [[ -z "$TARGET" ]] && { echo "Error: Definition name required" >&2; exit 3; }
+        result=$(op_definition "$TARGET")
+        ;;
+    import)
+        # TARGET 是可選的（用於過濾特定 module）
+        result=$(op_import "$TARGET")
         ;;
     *)
         echo "Error: Unknown operation: $OPERATION" >&2

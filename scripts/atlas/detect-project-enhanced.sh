@@ -133,6 +133,9 @@ elif ls "$PROJECT_PATH"/*.xcodeproj 1>/dev/null 2>&1 || ls "$PROJECT_PATH"/*.xcw
 elif [ -f "$PROJECT_PATH/Package.swift" ]; then
     echo "   ✓ Swift Package (Package.swift found)"
     PROJECT_TYPE="swift"
+elif [ -f "$PROJECT_PATH/Project.swift" ] || [ -d "$PROJECT_PATH/Tuist" ]; then
+    echo "   ✓ Swift/Tuist (Tuist project found)"
+    PROJECT_TYPE="swift"
 else
     # Last resort: check subdirectories for config files
     SUBDIR_TYPE=$(detect_from_subdirs "$PROJECT_PATH")

@@ -16,8 +16,8 @@ examples/*
 !examples/README.md
 !examples/.gitignore
 
-# Ideas (草稿筆記，but track them for transparency)
-# ideas/* - 不忽略，保持可見
+# Ideas (內部構想，不公開)
+ideas/
 
 # Backup files
 *.backup*

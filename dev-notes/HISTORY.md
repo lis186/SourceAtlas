@@ -6,7 +6,69 @@
 
 ## 2025-12（當前月份）
 
-### Week 3 (12/20): Go + Rust Language Support ⭐⭐⭐⭐⭐
+### Week 3 (12/20): Go + Rust + Ruby + AST Operations ⭐⭐⭐⭐⭐
+
+**🎉 v2.9.6 發布** (12/20):
+- **Tuist 支援**：新增 `Project.swift` 和 `Tuist/` 目錄偵測
+- **新語法支援**：Swift 6、Python 3.12、Rust 2024
+- **Bug Fixes**：Glob pattern、Swift ast-grep patterns、Rust macro
+- **QA 測試**：30 個測試案例，100% 通過
+- 11 個檔案更新（scripts + commands + docs）
+
+**op_definition / op_import 實作完成** (12/20):
+- 新增 2 個 AST 操作到 `ast-grep-search.sh`（8 個操作總計）
+- `op_definition`: 精確定位函數/類別/結構體定義（7 語言支援）
+- `op_import`: 提取 import 語句 + 可選模組過濾（7 語言支援）
+- **關鍵發現**: AST 精確度 > grep 文字匹配（grep 有 False Positives）
+- 驗證方法論學習：Ground Truth 本身需要驗證
+→ [驗證報告](./2025-12/2025-12-20-ast-grep-definition-import-validation.md)
+
+**Ruby op_definition UX 增強** (12/20):
+- 新增 `category` 欄位：primary / library / concern / nested（基於 Rails 慣例）
+- 新增 `--primary` 參數：只返回主要定義
+- **關鍵修正**：Ruby class reopening 是合法語法，ast-grep 精確度 = 100%
+- 原始框架錯誤：誤將 6 個結果當成 False Positives（實際是 UX 問題）
+→ [驗證報告](./2025-12/2025-12-20-ast-grep-definition-import-validation.md)
+
+**語言偵測增強** (12/20):
+- **Glob 修復**：`[[ -d ]]` 中 glob 不展開，改用 `ls -d`
+- **Tuist 支援**：新增 `Project.swift` 和 `Tuist/` 目錄偵測
+- Swift 偵測現支援：SPM (`Package.swift`)、Xcode (`.xcodeproj/.xcworkspace`)、Tuist
+- 測試通過：Swiftfin（有 Gemfile）正確偵測為 swift
+
+**Swift ast-grep Pattern 修復** (12/20):
+- **op_definition**：`class/struct/enum $name` 需要完整語法（`{ $$$ }` + 繼承）
+- **op_type**：`$VAR: $type` 無效，改用 `var/let $NAME: $type`
+- 移除無法解析的 `-> $type` pattern（CLI 參數衝突）
+- 測試通過：definition、type、call、async、import 全部正常
+
+**Swift 6 語法支援** (12/20):
+- **op_definition**：新增 `consuming func` / `borrowing func` patterns
+- **op_import**：新增 `public/internal/private import` patterns
+- Noncopyable (`~Copyable`) 和 Typed Throws (`throws(Error)`) 自動相容
+- 測試通過：Swift 6 新語法全部正確匹配
+
+**多語言新版本語法支援** (12/20):
+- **Python 3.12**：`class Name[T]:` generic class patterns
+- **Rust 2024**：`async || {}` / `async move || {}` async closures
+- **Go 1.22**：`for i := range N` 自動相容
+- **Kotlin 2.1**：guard conditions 待 ast-grep 支援
+- **Ruby 3.4**：`it` block parameter 自動相容
+
+**Rust op_call Macro 支援** (12/20):
+- **修復**：`println!`, `format!`, `vec!` 等巨集呼叫需要 `!` 語法
+- 新增 pattern：`$func_name!($$$)` 匹配 Rust 巨集
+- 測試通過：tokio 專案 println! 找到 65 個結果
+
+**完整 QA 測試** (12/20):
+- 30 個測試案例，100% 通過
+- 覆蓋：語言偵測、8 個 AST 操作、新語法、JSON 格式、Edge Cases
+- 測試腳本：`/tmp/ast-grep-full-test-v3.sh`
+
+**Ruby/Rails 語言支援完成** (12/20):
+- 26 個模式（model, controller, job, mailer, concern, spec 等）
+- 測試專案：ruby-spree（~2000 個 Ruby 檔案）
+→ 詳見 CLAUDE.md Multi-Language Pattern Support
 
 **Go 語言支援完成** (12/20):
 - 26 個模式（handler, service, middleware, transport, endpoint 等）

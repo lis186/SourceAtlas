@@ -316,6 +316,39 @@ TOTAL_FILES=$(find . -name "*.py" \
 
 **Source**: `scripts/atlas/benchmark.sh`, `./v1-implementation-log.md`
 
+### 6. Don't Assume Ground Truth is Correct ❌ ⭐ (NEW)
+
+**Wrong**:
+```bash
+# 用 grep 作為 Ground Truth
+grep -rn "^func Logger" --include='*.go' | wc -l  # 結果: 4
+ast-grep definition Logger | jq 'length'          # 結果: 1
+# 結論: ast-grep 只有 25% 準確率？❌
+```
+
+**Right**:
+```bash
+# grep 是前綴匹配！
+grep "^func Logger" matches:
+  - func Logger()           ✅ 正確
+  - func LoggerWithFormatter()  ❌ False Positive
+  - func LoggerWithWriter()     ❌ False Positive
+  - func LoggerWithConfig()     ❌ False Positive
+
+# ast-grep 是 AST 精確匹配
+ast-grep definition Logger matches:
+  - func Logger()           ✅ 正確（唯一）
+```
+
+**Why**: AST 匹配比文字匹配更精確，「較少匹配」可能是正確過濾了 False Positives
+
+**Lesson**:
+1. **驗證方法本身需要驗證**
+2. **AST 結構匹配 > 正則文字匹配**
+3. **「較少結果」可能代表更高精確度**
+
+**Source**: `./2025-12/2025-12-20-ast-grep-definition-import-validation.md`
+
 ---
 
 ## 📐 Metrics and Targets
@@ -420,6 +453,24 @@ TOTAL_FILES=$(find . -name "*.py" \
 
 **Source**: `./toon-vs-yaml-analysis.md` - Final Decision
 
+### 5. Validation Methods Need Validation ⭐ (NEW)
+
+**Discovery**: 使用 grep 驗證 ast-grep 時，發現 57% 準確率
+
+**Investigation**: 調查後發現 grep 有 False Positives，ast-grep 是正確的
+
+**Learning**:
+- **Ground Truth 可能有缺陷** - 不能假設驗證基準是正確的
+- **AST 精確度 > 文字匹配** - 語法結構匹配優於正則表達式
+- **Meta-validation 必要性** - 驗證方法本身需要交叉驗證
+
+**Application**:
+- 使用多種方法交叉驗證（grep + ast-grep + 手動檢查）
+- 當結果不一致時，深入調查而非直接接受 Ground Truth
+- 記錄驗證過程，包括失敗案例的根因分析
+
+**Source**: `./2025-12/2025-12-20-ast-grep-definition-import-validation.md`
+
 ---
 
 ## 🔄 Iteration History
@@ -520,9 +571,10 @@ Use this checklist when implementing new features:
 - [ ] **High-entropy prioritization** - README > configs > models > code
 - [ ] **Evidence-based claims** - Every hypothesis needs file:line references
 - [ ] **Document as you build** - Don't leave docs for later
+- [ ] **Validate the validation** - Ground Truth may have its own errors ⭐ (NEW)
 
 ---
 
 **Maintained by**: SourceAtlas Team
-**Last Updated**: 2025-11-22 (v1.0 Complete)
-**Next Update**: After v2.5 Phase 1 (Week 1)
+**Last Updated**: 2025-12-20 (v2.9.6 - AST Validation Methodology)
+**Next Update**: After v3.0 Phase 1

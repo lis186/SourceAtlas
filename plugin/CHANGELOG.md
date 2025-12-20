@@ -5,6 +5,27 @@ All notable changes to SourceAtlas Plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.6] - 2025-12-20
+
+### Added
+- **Tuist Project Support** - Detect Swift projects using Tuist build system ⭐
+  - Support `Project.swift` and `Tuist/` directory detection
+  - Prioritize Swift detection over Ruby (avoid Gemfile misdetection)
+- **New Language Syntax Support** ⭐
+  - **Swift 6**: `consuming func`, `borrowing func`, access-controlled imports
+  - **Python 3.12**: Generic class syntax `class Name[T]:`
+  - **Rust 2024**: Async closures `async || {}`
+
+### Fixed
+- **Language Detection** - Fixed glob pattern not expanding in `[[ -d ]]` tests
+- **Swift ast-grep Patterns** - Fixed `op_definition` and `op_type` patterns
+- **Rust op_call** - Added macro support (`println!`, `format!`, etc.)
+
+### Changed
+- Updated 11 files with Tuist support and pattern fixes
+- Comprehensive QA testing: 30 tests, 100% pass rate
+- Bumped version to 2.9.6
+
 ## [2.9.5] - 2025-12-19
 
 ### Added

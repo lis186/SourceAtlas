@@ -41,8 +41,9 @@ detect_project_type() {
         return
     fi
 
-    # Check for Swift/iOS indicators
+    # Check for Swift/iOS indicators (Xcode, SPM, Tuist)
     if [ -f "$path/Podfile" ] || [ -f "$path/Package.swift" ] || \
+       [ -f "$path/Project.swift" ] || [ -d "$path/Tuist" ] || \
        find "$path" -maxdepth 3 -name "*.xcodeproj" -o -name "*.xcworkspace" 2>/dev/null | grep -q .; then
         echo "swift"
         return

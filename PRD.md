@@ -597,10 +597,7 @@ sourceatlas2/
 │   ├── implementation-roadmap.md        # ✅ v2.5 roadmap
 │   └── NEXT_STEPS.md                    # ✅ Next steps guide
 │
-├── prompts/                             # v2.0 Manual Prompts (kept for reference)
-│   ├── stage0-fingerprint.md
-│   ├── stage1-validation.md
-│   └── stage2-hotspots.md
+├── PROMPTS.md                           # Manual Prompts (Stage 0/1/2)
 │
 ├── scripts/atlas/                       # Helper Scripts
 │   ├── detect-project-enhanced.sh       # ✅ Scale-aware detection

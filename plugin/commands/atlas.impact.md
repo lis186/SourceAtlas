@@ -111,8 +111,12 @@ TYPE="COMPONENT"
 Understand the project structure:
 
 ```bash
-# Detect project type
-if [ -f "package.json" ]; then
+# Detect project type (Swift BEFORE Ruby to avoid Gemfile misdetection)
+if [ -f "Package.swift" ] || [ -f "Project.swift" ] || [ -d "Tuist" ] || \
+   ls *.xcodeproj >/dev/null 2>&1 || ls *.xcworkspace >/dev/null 2>&1; then
+    PROJECT_TYPE="iOS/Swift"
+    NEEDS_SWIFT_ANALYSIS=true
+elif [ -f "package.json" ]; then
     PROJECT_TYPE="Node.js/TypeScript"
     # Check if frontend (React/Next/Vue)
     if grep -q "react\|next\|vue" package.json; then
@@ -122,9 +126,6 @@ elif [ -f "Gemfile" ]; then
     PROJECT_TYPE="Ruby/Rails"
 elif [ -f "go.mod" ]; then
     PROJECT_TYPE="Go"
-elif [ -d "*.xcodeproj" ] || [ -d "*.xcworkspace" ]; then
-    PROJECT_TYPE="iOS/Swift"
-    NEEDS_SWIFT_ANALYSIS=true
 fi
 ```
 
