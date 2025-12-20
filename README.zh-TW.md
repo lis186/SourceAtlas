@@ -86,7 +86,7 @@
 
 ---
 
-### 5. 流程追蹤（資料流分析）⭐ NEW
+### 5. 流程追蹤（資料流分析）
 
 ```bash
 /atlas.flow "user login"
@@ -105,7 +105,7 @@
 
 ---
 
-### 6. 依賴分析（升級規劃）⭐ NEW
+### 6. 依賴分析（升級規劃）
 
 ```bash
 /atlas.deps "iOS 16 → 17"
@@ -303,7 +303,7 @@ ls ~/.claude/commands/atlas.*.md
 
 - **[CLAUDE.md](./CLAUDE.md)** - AI 協作指南、專案架構、開發規範
 - **[開發歷史](./dev-notes/HISTORY.md)** - 完整的演進時間線
-- **[PRD](./PRD.md)** - 產品需求文檔（v2.7.0）
+- **[PRD](./PRD.md)** - 產品需求文檔
 
 ---
 
@@ -430,7 +430,7 @@ Claude Code + 2 分鐘安裝
 
 ## 📜 分析憲法 (Constitution)
 
-**v2.8.0 新增**：所有分析命令遵循 [ANALYSIS_CONSTITUTION.md](./ANALYSIS_CONSTITUTION.md)
+所有分析命令遵循 [ANALYSIS_CONSTITUTION.md](./ANALYSIS_CONSTITUTION.md)
 
 ### 核心原則
 
@@ -464,7 +464,7 @@ bash scripts/atlas/validate-constitution.sh --check-structure
 
 ## 🗺️ 開發狀態
 
-**v2.9.4 (當前)**：AI 協作偵測 - 支援 12+ AI 工具 ✅
+**v2.9.6**：完整支援 9 個命令、221 patterns、7 種語言 ✅
 
 - ✅ `/atlas.init` - 專案初始化（自動觸發規則）
 - ✅ `/atlas.overview` - 專案概覽
@@ -472,8 +472,8 @@ bash scripts/atlas/validate-constitution.sh --check-structure
 - ✅ `/atlas.impact` - 影響分析（靜態分析）
 - ✅ `/atlas.history` - 時序分析（Git 歷史）
 - ✅ `/atlas.flow` - 流程追蹤（資料流分析）
-- ✅ `/atlas.deps` - 依賴分析（升級規劃）⭐ NEW
-- ✅ `/atlas.list` - 查看已儲存的分析 ⭐ NEW
+- ✅ `/atlas.deps` - 依賴分析（升級規劃）
+- ✅ `/atlas.list` - 查看已儲存的分析
 - ✅ `/atlas.clear` - 清空快取
 - ✅ **持久化 v2.0** - `--save` 參數、30 天過期警告、告知式快取
 
@@ -490,6 +490,6 @@ bash scripts/atlas/validate-constitution.sh --check-structure
 ---
 
 **SourceAtlas** - Claude Code 的程式分析助手
-v2.9.4 | 最新更新: 2025-12-19 | MIT License
+v2.9.6 | MIT License
 
 Made with ❤️ and 🤖
