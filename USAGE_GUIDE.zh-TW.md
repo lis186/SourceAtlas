@@ -804,7 +804,7 @@ cd ../api
 **症狀**: iOS 專案沒有顯示 Swift/ObjC interop 分析
 
 **解決方式**:
-1. 確認專案有 `.xcodeproj` 或 `.xcworkspace`
+1. 確認專案有 `.xcodeproj`、`.xcworkspace`、`Package.swift` 或 `Project.swift` (Tuist)
 2. 確認目標檔案是 `.swift`、`.m` 或 `.h`
 3. 檢查 `scripts/atlas/analyzers/swift-analyzer.sh` 是否存在
 

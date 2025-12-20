@@ -804,7 +804,7 @@ cd ../api
 **Symptom**: iOS project doesn't show Swift/ObjC interop analysis
 
 **Solution**:
-1. Confirm project has `.xcodeproj` or `.xcworkspace`
+1. Confirm project has `.xcodeproj`, `.xcworkspace`, `Package.swift`, or `Project.swift` (Tuist)
 2. Confirm target file is `.swift`, `.m`, or `.h`
 3. Check if `scripts/atlas/analyzers/swift-analyzer.sh` exists
 
