@@ -23,10 +23,10 @@
 - 原始框架錯誤：誤將 6 個結果當成 False Positives（實際是 UX 問題）
 → [驗證報告](./2025-12/2025-12-20-ast-grep-definition-import-validation.md)
 
-**語言偵測 Glob 修復** (12/20):
-- **問題**：`[[ -d "$path/"*.xcodeproj ]]` 的 glob 在 bash `[[ ]]` 中不展開
-- **影響**：Swift 專案有 Gemfile 時被誤判為 Ruby
-- **修復**：改用 `ls -d` 分開檢查 xcodeproj 和 xcworkspace
+**語言偵測增強** (12/20):
+- **Glob 修復**：`[[ -d ]]` 中 glob 不展開，改用 `ls -d`
+- **Tuist 支援**：新增 `Project.swift` 和 `Tuist/` 目錄偵測
+- Swift 偵測現支援：SPM (`Package.swift`)、Xcode (`.xcodeproj/.xcworkspace`)、Tuist
 - 測試通過：Swiftfin（有 Gemfile）正確偵測為 swift
 
 **Swift ast-grep Pattern 修復** (12/20):

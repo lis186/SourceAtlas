@@ -87,10 +87,12 @@ detect_language() {
 
     # 基於專案檔案偵測
     # 注意：glob pattern 在 [[ ]] 中不會展開，需用 ls 檢查
-    # 分開檢查 xcodeproj 和 xcworkspace（避免 zsh 當一個失敗時整個失敗）
+    # Swift 偵測：SPM, Xcode, Tuist
     if [[ -f "$path/Package.swift" ]] || \
        ls -d "$path"/*.xcodeproj >/dev/null 2>&1 || \
-       ls -d "$path"/*.xcworkspace >/dev/null 2>&1; then
+       ls -d "$path"/*.xcworkspace >/dev/null 2>&1 || \
+       [[ -f "$path/Project.swift" ]] || \
+       [[ -d "$path/Tuist" ]]; then
         echo "swift"
     elif [[ -f "$path/package.json" ]]; then
         # 檢查是否為 TypeScript
