@@ -86,7 +86,7 @@ For Claude Code | Supports iOS/TypeScript/Android/Python
 
 ---
 
-### 5. Flow Tracing (Data Flow Analysis) ⭐ NEW
+### 5. Flow Tracing (Data Flow Analysis)
 
 ```bash
 /atlas.flow "user login"
@@ -105,7 +105,7 @@ For Claude Code | Supports iOS/TypeScript/Android/Python
 
 ---
 
-### 6. Dependency Analysis (Upgrade Planning) ⭐ NEW
+### 6. Dependency Analysis (Upgrade Planning)
 
 ```bash
 /atlas.deps "iOS 16 → 17"
@@ -303,7 +303,7 @@ What do you want to do?
 
 - **[CLAUDE.md](./CLAUDE.md)** - AI collaboration guide, project architecture, development standards
 - **[Development History](./dev-notes/HISTORY.md)** - Complete evolution timeline
-- **[PRD](./PRD.md)** - Product Requirements Document (v2.7.0)
+- **[PRD](./PRD.md)** - Product Requirements Document
 
 ---
 
@@ -430,7 +430,7 @@ You can use the manual method (see [PROMPTS.md](./PROMPTS.md)), but Claude Code 
 
 ## 📜 Analysis Constitution
 
-**New in v2.8.0**: All analysis commands follow [ANALYSIS_CONSTITUTION.md](./ANALYSIS_CONSTITUTION.md)
+All analysis commands follow [ANALYSIS_CONSTITUTION.md](./ANALYSIS_CONSTITUTION.md)
 
 ### Core Principles
 
@@ -464,7 +464,7 @@ bash scripts/atlas/validate-constitution.sh --check-structure
 
 ## 🗺️ Development Status
 
-**v2.9.4 (Current)**: AI Collaboration Detection - Support 12+ AI tools ✅
+**v2.9.6**: Full support for 9 commands, 221 patterns, 7 languages ✅
 
 - ✅ `/atlas.init` - Project initialization (auto-trigger rules)
 - ✅ `/atlas.overview` - Project overview
@@ -472,8 +472,8 @@ bash scripts/atlas/validate-constitution.sh --check-structure
 - ✅ `/atlas.impact` - Impact analysis (static analysis)
 - ✅ `/atlas.history` - Temporal analysis (Git history)
 - ✅ `/atlas.flow` - Flow tracing (data flow analysis)
-- ✅ `/atlas.deps` - Dependency analysis (upgrade planning) ⭐ NEW
-- ✅ `/atlas.list` - View saved analyses ⭐ NEW
+- ✅ `/atlas.deps` - Dependency analysis (upgrade planning)
+- ✅ `/atlas.list` - View saved analyses
 - ✅ `/atlas.clear` - Clear cache
 - ✅ **Persistence v2.0** - `--save` parameter, 30-day expiration warning, informative caching
 
@@ -490,6 +490,6 @@ bash scripts/atlas/validate-constitution.sh --check-structure
 ---
 
 **SourceAtlas** - Code Analysis Assistant for Claude Code
-v2.9.4 | Last Updated: 2025-12-19 | MIT License
+v2.9.6 | MIT License
 
 Made with ❤️ and 🤖
