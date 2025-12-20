@@ -30,10 +30,10 @@
 - 測試通過：Swiftfin（有 Gemfile）正確偵測為 swift
 
 **Swift ast-grep Pattern 修復** (12/20):
-- **問題**：`class $name` 等 pattern 在 Swift 中報 ERROR node
-- **原因**：Swift 類型宣告需要完整語法（包含 `{ }` 和繼承）
-- **修復**：每種類型新增兩個 pattern（無繼承 + 有繼承）
-- 測試通過：class、struct、enum 全部正常匹配
+- **op_definition**：`class/struct/enum $name` 需要完整語法（`{ $$$ }` + 繼承）
+- **op_type**：`$VAR: $type` 無效，改用 `var/let $NAME: $type`
+- 移除無法解析的 `-> $type` pattern（CLI 參數衝突）
+- 測試通過：definition、type、call、async、import 全部正常
 
 **Ruby/Rails 語言支援完成** (12/20):
 - 26 個模式（model, controller, job, mailer, concern, spec 等）

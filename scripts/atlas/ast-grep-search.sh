@@ -207,12 +207,13 @@ op_type() {
     case "$lang" in
         swift)
             {
+                # Swift 類型引用需要完整語法
                 # 變數宣告
-                $AST_GREP_CMD --pattern "\$VAR: $type_name" --lang swift --json "$PROJECT_PATH" 2>/dev/null
-                # 返回類型
-                $AST_GREP_CMD --pattern "-> $type_name" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "var \$NAME: $type_name" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "let \$NAME: $type_name" --lang swift --json "$PROJECT_PATH" 2>/dev/null
                 # 泛型參數
                 $AST_GREP_CMD --pattern "<$type_name>" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "<\$T: $type_name>" --lang swift --json "$PROJECT_PATH" 2>/dev/null
             } | jq -s 'add // []'
             ;;
         tsx|typescript)
