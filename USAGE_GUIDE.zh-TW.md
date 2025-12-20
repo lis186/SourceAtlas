@@ -725,7 +725,7 @@ cp scripts/atlas/patterns/ios/networking.sh scripts/atlas/patterns/ios/custom-pa
 - ✅ Android (Kotlin)
 - ✅ Python (26 patterns)
 - ✅ Ruby (26 patterns)
-- 🔵 Go (開發中)
+- ✅ Go (26 patterns)
 
 ### Q: 分析結果保存在哪裡？
 
