@@ -265,34 +265,38 @@ echo ""
 
 # Determine scale based on file count
 # Per Constitution Article VI: Scale-Aware Policy
-if [ "$TOTAL_FILES" -lt 20 ]; then
+# Updated 2025-12-21: Adjusted thresholds based on benchmark validation
+# - Benchmark tested: Firefox iOS (12K), Thunderbird (7K), Cal.com (9K), Prefect (4K), Discourse (21K)
+# - Previous thresholds were too conservative (>500 = VERY_LARGE)
+# - New thresholds align with real-world project sizes
+if [ "$TOTAL_FILES" -lt 100 ]; then
     SCALE="TINY"
     MAX_SCAN_RATIO="50%"
     MAX_SCAN_FILES="10"
     LOW_CONFIDENCE_LIMIT="2"
     HYPOTHESIS_TARGET="5-8"
-elif [ "$TOTAL_FILES" -lt 50 ]; then
+elif [ "$TOTAL_FILES" -lt 500 ]; then
     SCALE="SMALL"
     MAX_SCAN_RATIO="20%"
-    MAX_SCAN_FILES="10"
+    MAX_SCAN_FILES="15"
     LOW_CONFIDENCE_LIMIT="3"
     HYPOTHESIS_TARGET="7-10"
-elif [ "$TOTAL_FILES" -lt 150 ]; then
+elif [ "$TOTAL_FILES" -lt 2000 ]; then
     SCALE="MEDIUM"
     MAX_SCAN_RATIO="10%"
-    MAX_SCAN_FILES="15"
+    MAX_SCAN_FILES="20"
     LOW_CONFIDENCE_LIMIT="4"
     HYPOTHESIS_TARGET="10-15"
-elif [ "$TOTAL_FILES" -lt 500 ]; then
+elif [ "$TOTAL_FILES" -lt 15000 ]; then
     SCALE="LARGE"
     MAX_SCAN_RATIO="5%"
-    MAX_SCAN_FILES="25"
+    MAX_SCAN_FILES="30"
     LOW_CONFIDENCE_LIMIT="5"
     HYPOTHESIS_TARGET="12-18"
 else
     SCALE="VERY_LARGE"
     MAX_SCAN_RATIO="3%"
-    MAX_SCAN_FILES="30"
+    MAX_SCAN_FILES="40"
     LOW_CONFIDENCE_LIMIT="6"
     HYPOTHESIS_TARGET="15-20"
 fi
