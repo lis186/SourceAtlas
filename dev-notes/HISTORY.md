@@ -48,6 +48,16 @@
 - **Kotlin 2.1**：guard conditions 待 ast-grep 支援
 - **Ruby 3.4**：`it` block parameter 自動相容
 
+**Rust op_call Macro 支援** (12/20):
+- **修復**：`println!`, `format!`, `vec!` 等巨集呼叫需要 `!` 語法
+- 新增 pattern：`$func_name!($$$)` 匹配 Rust 巨集
+- 測試通過：tokio 專案 println! 找到 65 個結果
+
+**完整 QA 測試** (12/20):
+- 30 個測試案例，100% 通過
+- 覆蓋：語言偵測、8 個 AST 操作、新語法、JSON 格式、Edge Cases
+- 測試腳本：`/tmp/ast-grep-full-test-v3.sh`
+
 **Ruby/Rails 語言支援完成** (12/20):
 - 26 個模式（model, controller, job, mailer, concern, spec 等）
 - 測試專案：ruby-spree（~2000 個 Ruby 檔案）

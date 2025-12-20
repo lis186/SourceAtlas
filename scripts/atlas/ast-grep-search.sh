@@ -176,6 +176,8 @@ op_call() {
             {
                 $AST_GREP_CMD --pattern "\$OBJ.$func_name(\$\$\$)" --lang rust --json "$PROJECT_PATH" 2>/dev/null
                 $AST_GREP_CMD --pattern "$func_name(\$\$\$)" --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                # Rust macros: println!, format!, vec!, etc.
+                $AST_GREP_CMD --pattern "$func_name!(\$\$\$)" --lang rust --json "$PROJECT_PATH" 2>/dev/null
             } | jq -s 'add // []'
             ;;
         ruby)
