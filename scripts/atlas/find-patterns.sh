@@ -1189,8 +1189,7 @@ main() {
     local temp_file=$(mktemp)
     trap "rm -f $temp_file" EXIT
 
-    # Find files matching any of the file patterns
-    # Note: .xcdatamodeld is a directory (bundle), so we allow both files and directories
+    # Strategy 1: Find files matching file name patterns (score: 10 base + 8 if in relevant dir)
     find "$PROJECT_PATH" \( -type f -o -type d \) \( "${find_args[@]}" \) \
         ! -path "*/node_modules/*" \
         ! -path "*/.venv/*" \
@@ -1222,6 +1221,29 @@ main() {
 
         echo "$score|$file"
     done > "$temp_file"
+
+    # Strategy 2: Find all files in relevant directories (score: 8, lower than file name match)
+    # This catches files like middleware/cors.py that don't match *middleware.py
+    if [ -n "$dir_patterns" ] && [ "$PROJECT_TYPE" = "python" ]; then
+        for dir_pattern in $dir_patterns; do
+            # Find directories matching the pattern
+            find "$PROJECT_PATH" -type d -iname "$dir_pattern" \
+                ! -path "*/node_modules/*" \
+                ! -path "*/.venv/*" \
+                ! -path "*/venv/*" \
+                ! -path "*/__pycache__/*" \
+                ! -path "*/.git/*" \
+                2>/dev/null | while IFS= read -r dir; do
+                    # Find Python files in that directory
+                    find "$dir" -maxdepth 1 -type f -name "*.py" 2>/dev/null | while IFS= read -r file; do
+                        # Check if already in temp_file to avoid duplicates
+                        if ! grep -qF "$file" "$temp_file" 2>/dev/null; then
+                            echo "8|$file"
+                        fi
+                    done
+            done
+        done >> "$temp_file"
+    fi
 
     # Sort by score (descending) and output top 10 files
     sort -t'|' -k1 -nr "$temp_file" | head -10 | cut -d'|' -f2

@@ -723,7 +723,7 @@ cp scripts/atlas/patterns/ios/networking.sh scripts/atlas/patterns/ios/custom-pa
 - ✅ iOS (Swift + Objective-C)
 - ✅ TypeScript (React + Next.js)
 - ✅ Android (Kotlin)
-- 🔵 Python (開發中)
+- ✅ Python (26 patterns)
 - 🔵 Ruby (開發中)
 - 🔵 Go (開發中)
 
