@@ -6,6 +6,21 @@
 
 ## 2025-12（當前月份）
 
+### Week 3 (12/20): Go + Rust Language Support ⭐⭐⭐⭐⭐
+
+**Go 語言支援完成** (12/20):
+- 26 個模式（handler, service, middleware, transport, endpoint 等）
+- 4 個測試專案：gin, go-kit, cobra, kratos
+- 測試檔案：708 個 Go 檔案
+→ 詳見 CLAUDE.md Multi-Language Pattern Support
+
+**Rust 語言支援完成** (12/20):
+- 28 個模式（lib, main, mod, error, config, handler, service, middleware, runtime 等）
+- 4 個測試專案：actix-web, axum, ripgrep, tokio
+- 測試檔案：1459 個 Rust 檔案
+- **多語言支援總計**：7 語言、221 patterns
+→ 詳見 CLAUDE.md Multi-Language Pattern Support
+
 ### Week 3 (12/19): Branded Output v2.9.5 + AI Collaboration Detection v2.9.4 ⭐⭐⭐⭐
 
 **品牌識別輸出格式** (12/19):

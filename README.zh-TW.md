@@ -48,7 +48,7 @@
 
 **範例**：想知道這個專案怎麼處理 API，直接找到 `UserAPI.swift:45` 和測試範例
 
-**支援 141 個 patterns**：MVVM、Networking、Core Data、React Hook、Next.js API、Jetpack Compose、Vue Composable、Pinia、Zustand...
+**支援 221 個 patterns**：MVVM、Networking、Core Data、React Hook、Next.js API、Jetpack Compose、Vue Composable、Pinia、Zustand...
 
 ---
 
@@ -195,7 +195,9 @@
 - ✅ **TypeScript/React/Vue**: 完整支援（50 patterns）
 - ✅ **Android/Kotlin**: 完整支援（31 patterns）
 - ✅ **Python**: 完整支援（26 patterns）
-- 🔵 **Go/Rust**: 規劃中（v2.6）
+- ✅ **Ruby/Rails**: 完整支援（26 patterns）
+- ✅ **Go**: 完整支援（26 patterns）
+- ✅ **Rust**: 完整支援（28 patterns）
 
 </details>
 
@@ -293,7 +295,7 @@ ls ~/.claude/commands/atlas.*.md
 
 ### 核心文檔
 
-- **[使用指南](./USAGE_GUIDE.md)** - 完整的命令說明、141 個 patterns、疑難排解
+- **[使用指南](./USAGE_GUIDE.md)** - 完整的命令說明、221 個 patterns、疑難排解
 - **[全局安裝](./GLOBAL_INSTALLATION.md)** - 安裝選項、管理命令、疑難排解
 - **[Benchmark](./BENCHMARK.md)** - 8 個真實專案的測試結果、準確率數據
 
@@ -321,8 +323,11 @@ Claude Code + 2 分鐘安裝
 - **TypeScript/React/Vue**: 50 patterns (Hooks, Next.js, Zustand, Pinia...)
 - **Android/Kotlin**: 31 patterns (ViewModel, Room, Compose, Hilt, MVI...)
 - **Python**: 26 patterns (Django, FastAPI, Flask, Celery...)
+- **Ruby/Rails**: 26 patterns (ActiveRecord, Controller, Service, Job...)
+- **Go**: 26 patterns (Handler, Service, Middleware, Transport...)
+- **Rust**: 28 patterns (Handler, Service, Middleware, Runtime...)
 
-完整列表見 [USAGE_GUIDE.md](./USAGE_GUIDE.md#支援的-patterns-141-個)
+完整列表見 [USAGE_GUIDE.md](./USAGE_GUIDE.md#支援的-patterns)
 
 </details>
 

@@ -197,7 +197,7 @@ Simply put: **"How does this project typically implement X?"**
 3. **Testing Patterns**: How to test this feature
 4. **Implementation Guide**: Step-by-step guide for new features
 
-### Supported Patterns (141 total)
+### Supported Patterns (221 total)
 
 #### Quick Overview
 
@@ -207,6 +207,9 @@ Simply put: **"How does this project typically implement X?"**
 | **TypeScript/React/Vue** | 50 | React Core, Vue Core, Backend Integration |
 | **Android/Kotlin** | 31 | Architecture Components, UI, Data Layer |
 | **Python** | 26 | Django, FastAPI, Flask, Celery |
+| **Ruby/Rails** | 26 | ActiveRecord, Controller, Service, Job |
+| **Go** | 26 | Handler, Service, Middleware, Transport |
+| **Rust** | 28 | Handler, Service, Middleware, Runtime |
 
 #### Popular Patterns (Cross-Language)
 
@@ -726,6 +729,7 @@ cp scripts/atlas/patterns/ios/networking.sh scripts/atlas/patterns/ios/custom-pa
 - ✅ Python (26 patterns)
 - ✅ Ruby (26 patterns)
 - ✅ Go (26 patterns)
+- ✅ Rust (28 patterns)
 
 ### Q: Where are analysis results saved?
 
@@ -893,7 +897,7 @@ head -20 ~/.claude/commands/atlas.overview.md
 **Tips for Improving Search Accuracy**:
 
 1. **From general to specific**: First use `"api"` to see what's there, then refine to `"api endpoint"`
-2. **Check Pattern list**: Refer to [Supported Patterns](#supported-patterns-141-total)
+2. **Check Pattern list**: Refer to [Supported Patterns](#supported-patterns-221-total)
 3. **Combine with overview**: First use `/atlas.overview` to understand architecture, then search
 
 ### Quick Diagnostic Checklist

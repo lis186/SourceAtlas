@@ -18,7 +18,7 @@
 #   boundary <type>        - 邊界偵測 api|db (for /atlas.flow)
 #
 # Options:
-#   --lang <language>      - 指定語言 (swift|tsx|kotlin|python)
+#   --lang <language>      - 指定語言 (swift|tsx|kotlin|python|go|rust|ruby)
 #   --path <project_path>  - 專案路徑 (default: .)
 #   --fallback             - 輸出 grep fallback 命令（不執行 ast-grep）
 #   --json                 - JSON 輸出格式
@@ -99,6 +99,8 @@ detect_language() {
         echo "go"
     elif [[ -f "$path/Cargo.toml" ]]; then
         echo "rust"
+    elif [[ -f "$path/Gemfile" ]] || [[ -f "$path/config.ru" ]]; then
+        echo "ruby"
     else
         echo "tsx"  # 預設
     fi
@@ -154,6 +156,25 @@ op_call() {
                 $AST_GREP_CMD --pattern "$func_name(\$\$\$)" --lang python --json "$PROJECT_PATH" 2>/dev/null
             } | jq -s 'add // []'
             ;;
+        go)
+            {
+                $AST_GREP_CMD --pattern "\$OBJ.$func_name(\$\$\$)" --lang go --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "$func_name(\$\$\$)" --lang go --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
+        rust)
+            {
+                $AST_GREP_CMD --pattern "\$OBJ.$func_name(\$\$\$)" --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "$func_name(\$\$\$)" --lang rust --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
+        ruby)
+            {
+                $AST_GREP_CMD --pattern "\$OBJ.$func_name(\$\$\$)" --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "$func_name(\$\$\$)" --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "$func_name \$\$\$" --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
         *)
             echo "[]"
             ;;
@@ -197,6 +218,46 @@ op_type() {
                 $AST_GREP_CMD --pattern "\$VAR: \$\$\$$type_name" --lang kotlin --json "$PROJECT_PATH" 2>/dev/null
                 # 類繼承
                 $AST_GREP_CMD --pattern "class \$NAME : \$\$\$$type_name\$\$\$" --lang kotlin --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
+        python)
+            {
+                # 類型標註
+                $AST_GREP_CMD --pattern "\$VAR: $type_name" --lang python --json "$PROJECT_PATH" 2>/dev/null
+                # 返回類型
+                $AST_GREP_CMD --pattern "-> $type_name" --lang python --json "$PROJECT_PATH" 2>/dev/null
+                # 類繼承
+                $AST_GREP_CMD --pattern "class \$NAME($type_name)" --lang python --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
+        go)
+            {
+                # 變數宣告
+                $AST_GREP_CMD --pattern "var \$VAR $type_name" --lang go --json "$PROJECT_PATH" 2>/dev/null
+                # 函數參數/返回類型
+                $AST_GREP_CMD --pattern "\$VAR $type_name" --lang go --json "$PROJECT_PATH" 2>/dev/null
+                # 指標類型
+                $AST_GREP_CMD --pattern "*$type_name" --lang go --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
+        rust)
+            {
+                # 變數宣告
+                $AST_GREP_CMD --pattern "let \$VAR: $type_name" --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                # 返回類型
+                $AST_GREP_CMD --pattern "-> $type_name" --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                # impl
+                $AST_GREP_CMD --pattern "impl $type_name" --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                # 泛型
+                $AST_GREP_CMD --pattern "<$type_name>" --lang rust --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
+        ruby)
+            {
+                # Ruby 是動態類型，搜尋類定義和模組
+                $AST_GREP_CMD --pattern "class $type_name" --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "module $type_name" --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern "$type_name.new" --lang ruby --json "$PROJECT_PATH" 2>/dev/null
             } | jq -s 'add // []'
             ;;
         *)
@@ -284,6 +345,95 @@ rule:
                     ;;
             esac
             ;;
+        python)
+            case "$normalized" in
+                "async"|"async function"|"async def")
+                    $AST_GREP_CMD --pattern 'async def $NAME' --lang python --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                "decorator"|"decorators")
+                    $AST_GREP_CMD --pattern '@$DECORATOR' --lang python --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                "class"|"dataclass")
+                    $AST_GREP_CMD --pattern '@dataclass' --lang python --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                *)
+                    echo "[]"
+                    exit 2
+                    ;;
+            esac
+            ;;
+        go)
+            case "$normalized" in
+                "goroutine"|"go routine"|"concurrent")
+                    $AST_GREP_CMD --pattern 'go $FUNC($$$)' --lang go --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                "channel"|"chan")
+                    $AST_GREP_CMD --pattern 'chan $TYPE' --lang go --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                "interface")
+                    $AST_GREP_CMD --pattern 'type $NAME interface { $$$ }' --lang go --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                "struct")
+                    $AST_GREP_CMD --pattern 'type $NAME struct { $$$ }' --lang go --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                "defer")
+                    $AST_GREP_CMD --pattern 'defer $EXPR' --lang go --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                *)
+                    echo "[]"
+                    exit 2
+                    ;;
+            esac
+            ;;
+        rust)
+            case "$normalized" in
+                "async"|"async function"|"async fn")
+                    $AST_GREP_CMD --pattern 'async fn $NAME' --lang rust --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                "await")
+                    $AST_GREP_CMD --pattern '$EXPR.await' --lang rust --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                "trait")
+                    $AST_GREP_CMD --pattern 'trait $NAME' --lang rust --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                "impl"|"implementation")
+                    $AST_GREP_CMD --pattern 'impl $TYPE' --lang rust --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                "macro"|"macros")
+                    $AST_GREP_CMD --pattern '$NAME!' --lang rust --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                "derive")
+                    $AST_GREP_CMD --pattern '#[derive($$$)]' --lang rust --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                *)
+                    echo "[]"
+                    exit 2
+                    ;;
+            esac
+            ;;
+        ruby)
+            case "$normalized" in
+                "class")
+                    $AST_GREP_CMD --pattern 'class $NAME' --lang ruby --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                "module")
+                    $AST_GREP_CMD --pattern 'module $NAME' --lang ruby --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                "def"|"method"|"function")
+                    $AST_GREP_CMD --pattern 'def $NAME' --lang ruby --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                "block"|"do block")
+                    $AST_GREP_CMD --pattern 'do $$$' --lang ruby --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                "attr"|"attr_accessor")
+                    $AST_GREP_CMD --pattern 'attr_accessor $$$' --lang ruby --json "$PROJECT_PATH" 2>/dev/null || echo "[]"
+                    ;;
+                *)
+                    echo "[]"
+                    exit 2
+                    ;;
+            esac
+            ;;
         *)
             echo "[]"
             exit 2
@@ -338,6 +488,9 @@ op_async() {
             tsx) echo "grep -rn 'await ' --include='*.ts' --include='*.tsx' \"$PROJECT_PATH\"" ;;
             kotlin) echo "grep -rn 'suspend fun' --include='*.kt' \"$PROJECT_PATH\"" ;;
             python) echo "grep -rn 'await ' --include='*.py' \"$PROJECT_PATH\"" ;;
+            go) echo "grep -rn 'go func\\|go \\w' --include='*.go' \"$PROJECT_PATH\"" ;;
+            rust) echo "grep -rn '\\.await\\|async fn' --include='*.rs' \"$PROJECT_PATH\"" ;;
+            ruby) echo "grep -rn 'Thread.new\\|async' --include='*.rb' \"$PROJECT_PATH\"" ;;
         esac
         return 0
     fi
@@ -366,6 +519,28 @@ op_async() {
             {
                 $AST_GREP_CMD --pattern 'await $EXPR' --lang python --json "$PROJECT_PATH" 2>/dev/null
                 $AST_GREP_CMD --pattern 'async def $NAME($$$):' --lang python --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
+        go)
+            {
+                # Go 使用 goroutine 而非 async/await
+                $AST_GREP_CMD --pattern 'go $FUNC($$$)' --lang go --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern 'go func() { $$$ }()' --lang go --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern '<-$CHAN' --lang go --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
+        rust)
+            {
+                $AST_GREP_CMD --pattern '$EXPR.await' --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern 'async fn $NAME' --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern 'async move { $$$ }' --lang rust --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
+        ruby)
+            {
+                # Ruby 使用 Thread 或 async gem
+                $AST_GREP_CMD --pattern 'Thread.new { $$$ }' --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+                $AST_GREP_CMD --pattern 'Async { $$$ }' --lang ruby --json "$PROJECT_PATH" 2>/dev/null
             } | jq -s 'add // []'
             ;;
         *)
@@ -411,6 +586,34 @@ op_boundary() {
                         $AST_GREP_CMD --pattern 'OkHttpClient()' --lang kotlin --json "$PROJECT_PATH" 2>/dev/null
                     } | jq -s 'add // []'
                     ;;
+                python)
+                    {
+                        $AST_GREP_CMD --pattern 'requests.$METHOD($$$)' --lang python --json "$PROJECT_PATH" 2>/dev/null
+                        $AST_GREP_CMD --pattern 'httpx.$METHOD($$$)' --lang python --json "$PROJECT_PATH" 2>/dev/null
+                        $AST_GREP_CMD --pattern 'aiohttp.$METHOD($$$)' --lang python --json "$PROJECT_PATH" 2>/dev/null
+                    } | jq -s 'add // []'
+                    ;;
+                go)
+                    {
+                        $AST_GREP_CMD --pattern 'http.Get($$$)' --lang go --json "$PROJECT_PATH" 2>/dev/null
+                        $AST_GREP_CMD --pattern 'http.Post($$$)' --lang go --json "$PROJECT_PATH" 2>/dev/null
+                        $AST_GREP_CMD --pattern 'client.Do($$$)' --lang go --json "$PROJECT_PATH" 2>/dev/null
+                    } | jq -s 'add // []'
+                    ;;
+                rust)
+                    {
+                        $AST_GREP_CMD --pattern 'reqwest::get($$$)' --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                        $AST_GREP_CMD --pattern 'client.get($$$)' --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                        $AST_GREP_CMD --pattern 'hyper::Client' --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                    } | jq -s 'add // []'
+                    ;;
+                ruby)
+                    {
+                        $AST_GREP_CMD --pattern 'Net::HTTP.$METHOD($$$)' --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+                        $AST_GREP_CMD --pattern 'HTTParty.$METHOD($$$)' --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+                        $AST_GREP_CMD --pattern 'Faraday.$METHOD($$$)' --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+                    } | jq -s 'add // []'
+                    ;;
                 *)
                     echo "[]"
                     ;;
@@ -434,6 +637,32 @@ op_boundary() {
                     {
                         $AST_GREP_CMD --pattern '@Query($$$)' --lang kotlin --json "$PROJECT_PATH" 2>/dev/null
                         $AST_GREP_CMD --pattern '@Insert' --lang kotlin --json "$PROJECT_PATH" 2>/dev/null
+                    } | jq -s 'add // []'
+                    ;;
+                python)
+                    {
+                        $AST_GREP_CMD --pattern 'session.query($$$)' --lang python --json "$PROJECT_PATH" 2>/dev/null
+                        $AST_GREP_CMD --pattern '$MODEL.objects.$METHOD($$$)' --lang python --json "$PROJECT_PATH" 2>/dev/null
+                    } | jq -s 'add // []'
+                    ;;
+                go)
+                    {
+                        $AST_GREP_CMD --pattern 'db.Query($$$)' --lang go --json "$PROJECT_PATH" 2>/dev/null
+                        $AST_GREP_CMD --pattern 'db.Exec($$$)' --lang go --json "$PROJECT_PATH" 2>/dev/null
+                        $AST_GREP_CMD --pattern 'gorm.Open($$$)' --lang go --json "$PROJECT_PATH" 2>/dev/null
+                    } | jq -s 'add // []'
+                    ;;
+                rust)
+                    {
+                        $AST_GREP_CMD --pattern 'diesel::$METHOD($$$)' --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                        $AST_GREP_CMD --pattern 'sqlx::query($$$)' --lang rust --json "$PROJECT_PATH" 2>/dev/null
+                    } | jq -s 'add // []'
+                    ;;
+                ruby)
+                    {
+                        $AST_GREP_CMD --pattern '$MODEL.find($$$)' --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+                        $AST_GREP_CMD --pattern '$MODEL.where($$$)' --lang ruby --json "$PROJECT_PATH" 2>/dev/null
+                        $AST_GREP_CMD --pattern 'ActiveRecord::Base.$METHOD($$$)' --lang ruby --json "$PROJECT_PATH" 2>/dev/null
                     } | jq -s 'add // []'
                     ;;
                 *)

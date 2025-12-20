@@ -197,7 +197,7 @@ key_directories:
 3. **測試模式**：如何測試這個功能
 4. **實作指南**：逐步實作新功能
 
-### 支援的 Patterns (141 個)
+### 支援的 Patterns (221 個)
 
 #### 快速總覽
 
@@ -207,6 +207,9 @@ key_directories:
 | **TypeScript/React/Vue** | 50 | React 核心、Vue 核心、後端整合 |
 | **Android/Kotlin** | 31 | Architecture Components、UI、資料層 |
 | **Python** | 26 | Django、FastAPI、Flask、Celery |
+| **Ruby/Rails** | 26 | ActiveRecord、Controller、Service、Job |
+| **Go** | 26 | Handler、Service、Middleware、Transport |
+| **Rust** | 28 | Handler、Service、Middleware、Runtime |
 
 #### 熱門 Patterns（跨語言）
 
@@ -726,6 +729,7 @@ cp scripts/atlas/patterns/ios/networking.sh scripts/atlas/patterns/ios/custom-pa
 - ✅ Python (26 patterns)
 - ✅ Ruby (26 patterns)
 - ✅ Go (26 patterns)
+- ✅ Rust (28 patterns)
 
 ### Q: 分析結果保存在哪裡？
 
@@ -893,7 +897,7 @@ head -20 ~/.claude/commands/atlas.overview.md
 **改善搜尋準確度的技巧**：
 
 1. **從通用到具體**：先用 `"api"` 看有什麼，再精煉為 `"api endpoint"`
-2. **查看 Pattern 列表**：參考 [支援的 Patterns](#支援的-patterns-141-個)
+2. **查看 Pattern 列表**：參考 [支援的 Patterns](#支援的-patterns-221-個)
 3. **結合 overview**：先用 `/atlas.overview` 了解架構後再搜尋
 
 ### 快速診斷檢查清單
