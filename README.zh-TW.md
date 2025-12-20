@@ -447,13 +447,13 @@ bash scripts/atlas/validate-constitution.sh <分析輸出.yaml>
 bash scripts/atlas/validate-constitution.sh --check-structure
 ```
 
-### 實測效果
+### 實測指標
 
-| 指標 | Before | After | 改進 |
-|------|--------|-------|------|
-| file:line 引用 | 0.3 個 | 12 個 | +3900% |
-| 驗證成本 | 手動審查 | 自動 1 秒 | -95% |
-| 輸出行數 | 361 行 | 133 行 | -63% |
+| 指標 | 數值 |
+|------|------|
+| file:line 引用 | 每次分析 12 個 |
+| 驗證成本 | 自動 1 秒 |
+| 輸出行數 | ~133 行 |
 
 ---
 

@@ -447,13 +447,13 @@ bash scripts/atlas/validate-constitution.sh <analysis-output.yaml>
 bash scripts/atlas/validate-constitution.sh --check-structure
 ```
 
-### Measured Results
+### Current Metrics
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| file:line references | 0.3 | 12 | +3900% |
-| Validation cost | Manual review | Auto 1 sec | -95% |
-| Output lines | 361 lines | 133 lines | -63% |
+| Metric | Value |
+|--------|-------|
+| file:line references | 12 per analysis |
+| Validation cost | Auto 1 sec |
+| Output lines | ~133 lines |
 
 ---
 
