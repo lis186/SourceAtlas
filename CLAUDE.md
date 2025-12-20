@@ -410,7 +410,7 @@ This workflow ensures clear feature separation and allows GitButler to automatic
 
 ## Multi-Language Pattern Support
 
-**Total 141 patterns**, covering mainstream tech stacks:
+**Total 167 patterns**, covering mainstream tech stacks:
 
 | Language/Framework | Patterns | Detailed Report |
 |-----------|----------|----------|
@@ -418,6 +418,7 @@ This workflow ensures clear feature separation and allows GitButler to automatic
 | Kotlin/Android | 31 | `dev-notes/2025-11/2025-11-30-kotlin-patterns-implementation-report.md` |
 | Python | 26 | `dev-notes/2025-11/` |
 | TypeScript/React/Vue | 50 | `dev-notes/2025-11/` |
+| Ruby/Rails | 26 | `dev-notes/2025-12/` |
 
 **Methodology**: See `dev-notes/archives/lessons/new-language-support-methodology.md`
 
@@ -478,10 +479,11 @@ Each command uses different Claude models based on task complexity, balancing sp
 - [x] Kotlin/Android - 31 patterns
 - [x] Python - 26 patterns
 - [x] TypeScript/React/Vue - 50 patterns
-- **Total: 141 patterns**
+- [x] Ruby/Rails - 26 patterns
+- **Total: 167 patterns**
 
 ### 🔮 Future (v3.0)
-- Go/Rust/Ruby patterns
+- Go/Rust patterns
 - SourceAtlas Monitor - Continuous tracking and trend analysis
 - Technical debt quantification
 - Health dashboard
