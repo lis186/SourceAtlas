@@ -9,6 +9,8 @@ A set of AI-powered slash commands for [Claude Code](https://claude.ai/code) tha
 [![Version](https://img.shields.io/badge/version-v2.9.6-blue)](https://github.com/lis186/SourceAtlas/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
+![Command Menu](./docs/images/atlas-command-menu.png)
+
 ---
 
 ## Have You Ever...
