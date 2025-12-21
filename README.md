@@ -323,6 +323,18 @@ All commands support `--save`:
 
 ---
 
+## Acknowledgments
+
+SourceAtlas is built on these excellent open-source tools:
+
+| Tool | Purpose | Link |
+|------|---------|------|
+| **ast-grep** | AST-based code search for `/atlas.pattern` and `/atlas.deps` | [GitHub](https://github.com/ast-grep/ast-grep) |
+| **code-maat** | Git history analysis for `/atlas.history` | [GitHub](https://github.com/adamtornhill/code-maat) |
+| **Claude Code** | AI-powered code assistant | [claude.ai/code](https://claude.ai/code) |
+
+---
+
 **SourceAtlas** — Understand any codebase in minutes, not days.
 
 v2.9.6 | MIT License | Made with Claude Code

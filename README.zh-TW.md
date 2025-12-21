@@ -323,6 +323,18 @@ ls ~/.claude/commands/atlas.*.md
 
 ---
 
+## 致謝
+
+SourceAtlas 建立在這些優秀的開源工具之上：
+
+| 工具 | 用途 | 連結 |
+|------|------|------|
+| **ast-grep** | `/atlas.pattern` 和 `/atlas.deps` 的 AST 搜尋 | [GitHub](https://github.com/ast-grep/ast-grep) |
+| **code-maat** | `/atlas.history` 的 Git 歷史分析 | [GitHub](https://github.com/adamtornhill/code-maat) |
+| **Claude Code** | AI 程式碼助手 | [claude.ai/code](https://claude.ai/code) |
+
+---
+
 **SourceAtlas** — 用分鐘而不是天來理解任何 codebase。
 
 v2.9.6 | MIT License | Made with Claude Code
