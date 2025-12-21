@@ -1,6 +1,6 @@
 # SourceAtlas
 
-> 🌐 **English** | [繁體中文](./README.zh-TW.md)
+> 🌐 [sourceatlas.io](https://sourceatlas.io) | **English** | [繁體中文](./README.zh-TW.md)
 
 **Get project overview in ~3 minutes by scanning <5% of files**
 
