@@ -177,7 +177,16 @@
 
 <sub>✓ = E2E verified on 2025-12-21. [Verification Report](./dev-notes/2025-12/2025-12-21-deps-e2e-verification.md)</sub>
 
-<sub>Note: `/atlas.history` not yet formally benchmarked.</sub>
+### `/atlas.history` - Temporal Analysis ✓
+
+| Metric | Result |
+|--------|--------|
+| **Hotspots Detection** | 100% (Top 10 identified) |
+| **Temporal Coupling** | 100% (6 pairs detected) |
+| **Contributors Mapping** | 100% (7 contributors) |
+| **Test Projects** | 1 (Kotlin) |
+
+<sub>✓ = E2E verified on 2025-12-21. [Verification Report](./dev-notes/2025-12/2025-12-21-history-e2e-verification.md)</sub>
 
 ---
 
@@ -253,7 +262,7 @@ ls ~/.claude/commands/atlas.*.md
 
 | Limitation | Details |
 |------------|---------|
-| **Benchmark scope** | 5 commands tested (`overview`, `pattern`, `flow`, `impact`, `deps`); `history` is estimate |
+| **Benchmark scope** | 6 commands tested (`overview`, `pattern`, `flow`, `impact`, `deps`, `history`) |
 | **Tech Stack detection** | May miss secondary languages (e.g., React in a Python project) |
 | **Architecture detection** | May miss secondary patterns (e.g., MVI in Clean Architecture) |
 | **Best for mature projects** | Works best with README, config files; limited for undocumented legacy code |

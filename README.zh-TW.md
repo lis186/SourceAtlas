@@ -177,7 +177,16 @@
 
 <sub>✓ = 2025-12-21 E2E 驗證通過。[驗證報告](./dev-notes/2025-12/2025-12-21-deps-e2e-verification.md)</sub>
 
-<sub>備註：`/atlas.history` 尚未正式 Benchmark。</sub>
+### `/atlas.history` - 時序分析 ✓
+
+| 指標 | 結果 |
+|------|------|
+| **Hotspots 偵測** | 100%（Top 10 識別） |
+| **Temporal Coupling** | 100%（6 組偵測） |
+| **Contributors 映射** | 100%（7 位貢獻者） |
+| **測試專案** | 1（Kotlin） |
+
+<sub>✓ = 2025-12-21 E2E 驗證通過。[驗證報告](./dev-notes/2025-12/2025-12-21-history-e2e-verification.md)</sub>
 
 ---
 
@@ -253,7 +262,7 @@ ls ~/.claude/commands/atlas.*.md
 
 | 限制 | 說明 |
 |------|------|
-| **Benchmark 範圍** | 5 個命令已測試（`overview`、`pattern`、`flow`、`impact`、`deps`）；`history` 為估計值 |
+| **Benchmark 範圍** | 6 個命令已測試（`overview`、`pattern`、`flow`、`impact`、`deps`、`history`） |
 | **Tech Stack 偵測** | 可能漏掉次要語言（如 Python 專案中的 React） |
 | **架構偵測** | 可能漏掉次要模式（如 Clean Architecture 中的 MVI） |
 | **適合成熟專案** | 對有 README、設定檔的專案效果最好；無文件的 legacy code 效果有限 |
