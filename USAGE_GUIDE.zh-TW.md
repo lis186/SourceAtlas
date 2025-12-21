@@ -33,7 +33,7 @@ SourceAtlas 適用於以下常見情境：
 | # | 情境 | 主要命令 | 說明 |
 |---|------|---------|------|
 | 1 | **接手新專案** | `/atlas.overview` | 加入團隊第一天，快速建立全局認知 |
-| 2 | **Code Review / 技術盡調** | `/atlas.overview` + `/atlas.history` | 評估程式碼品質和專案演進 |
+| 2 | **Code Review** | `/atlas.overview` + `/atlas.history` | 評估程式碼品質和專案演進 |
 | 3 | **修 Bug** | `/atlas.flow` | 追蹤執行路徑，定位問題根源 |
 | 4 | **新增功能** | `/atlas.pattern` + `/atlas.impact` | 學習現有慣例，評估影響範圍 |
 | 5 | **面試評估候選人 GitHub** | `/atlas.overview` + `/atlas.history` | 快速判斷開發能力和習慣 |
