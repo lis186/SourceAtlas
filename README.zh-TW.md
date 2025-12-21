@@ -123,72 +123,16 @@
 
 **在 5 個開源專案測試**：Firefox iOS、Discourse、Cal.com、Prefect、Thunderbird
 
-### `/atlas.overview` - 專案理解 ✓
+| 命令 | 關鍵指標 | 結果 | 報告 |
+|------|---------|------|------|
+| `/atlas.overview` | 整體準確率 | 93%（56/60） | [✓](./dev-notes/2025-12/2025-12-21-overview-e2e-verification.md) |
+| `/atlas.pattern` | 搜尋精確率 | 98.6%（7/7 案例） | [✓](./dev-notes/2025-12/2025-12-21-pattern-e2e-verification.md) |
+| `/atlas.impact` | 內部一致性 | 100%（5/5 專案） | [✓](./dev-notes/2025-12/2025-12-21-impact-e2e-verification.md) |
+| `/atlas.flow` | 入口點偵測 | 100%（5/5 專案） | [✓](./dev-notes/2025-12/2025-12-21-flow-e2e-verification.md) |
+| `/atlas.deps` | 模式識別 | 100%（2/2 案例） | [✓](./dev-notes/2025-12/2025-12-21-deps-e2e-verification.md) |
+| `/atlas.history` | Hotspots 偵測 | 100%（Top 10） | [✓](./dev-notes/2025-12/2025-12-21-history-e2e-verification.md) |
 
-| 指標 | 結果 |
-|------|------|
-| **整體準確率** | 93%（56/60 分） |
-| **Tech Stack 偵測** | 90% |
-| **架構偵測** | 90% |
-| **核心模組** | 100% |
-| **Business Domain** | 100% |
-| **AI 協作程度** | 100% |
-| **平均速度** | ~2 分 41 秒 / 專案 |
-
-<sub>✓ = 2025-12-21 E2E 驗證通過。[驗證報告](./dev-notes/2025-12/2025-12-21-overview-e2e-verification.md)</sub>
-
-### `/atlas.pattern` - Pattern 搜尋 ✓
-
-| 指標 | 結果 |
-|------|------|
-| **搜尋精確率** | 98.6% |
-| **測試案例** | 7/7 通過 |
-| **測試語言** | Swift、Ruby、Python、TypeScript、Kotlin |
-
-<sub>✓ = 2025-12-21 E2E 驗證通過。[驗證報告](./dev-notes/2025-12/2025-12-21-pattern-e2e-verification.md)</sub>
-
-### `/atlas.impact` - 影響分析 ✓
-
-| 指標 | 結果 |
-|------|------|
-| **內部一致性** | 100%（5/5 專案） |
-| **測試語言** | Swift、Ruby、Python、TypeScript、Kotlin |
-| **分析依賴數** | 2,068 個檔案 |
-
-<sub>✓ = 2025-12-21 內部一致性驗證通過。LLM 分析結果可能與簡單 grep 計數不同。[E2E 驗證報告](./dev-notes/2025-12/2025-12-21-impact-e2e-verification.md)</sub>
-
-### `/atlas.flow` - Flow 追蹤 ✓
-
-| 指標 | 結果 |
-|------|------|
-| **入口點偵測** | 100%（5/5 專案） |
-| **呼叫鏈深度** | 每專案 4-5 層 |
-| **邊界識別** | 100%（每專案 4-5 種） |
-| **測試語言** | Swift、Ruby、Python、TypeScript、Kotlin |
-
-<sub>✓ = 2025-12-21 E2E 驗證通過。[驗證報告](./dev-notes/2025-12/2025-12-21-flow-e2e-verification.md)</sub>
-
-### `/atlas.deps` - 依賴分析 ✓
-
-| 指標 | 結果 |
-|------|------|
-| **模式識別** | 100%（升級 vs 盤點） |
-| **Phase 0 規則** | 100% 有效 |
-| **測試語言** | Python、Ruby |
-| **測試案例** | 2/2 通過 |
-
-<sub>✓ = 2025-12-21 E2E 驗證通過。[驗證報告](./dev-notes/2025-12/2025-12-21-deps-e2e-verification.md)</sub>
-
-### `/atlas.history` - 時序分析 ✓
-
-| 指標 | 結果 |
-|------|------|
-| **Hotspots 偵測** | 100%（Top 10 識別） |
-| **Temporal Coupling** | 100%（6 組偵測） |
-| **Contributors 映射** | 100%（7 位貢獻者） |
-| **測試專案** | 1（Kotlin） |
-
-<sub>✓ = 2025-12-21 E2E 驗證通過。[驗證報告](./dev-notes/2025-12/2025-12-21-history-e2e-verification.md)</sub>
+<sub>全部於 2025-12-21 E2E 驗證通過。測試語言：Swift、Ruby、Python、TypeScript、Kotlin。點擊 ✓ 查看詳細報告。</sub>
 
 ---
 

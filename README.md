@@ -123,72 +123,16 @@ A set of AI-powered slash commands for [Claude Code](https://claude.ai/code) tha
 
 **Tested on 5 open-source projects**: Firefox iOS, Discourse, Cal.com, Prefect, Thunderbird
 
-### `/atlas.overview` - Project Understanding ✓
+| Command | Key Metric | Result | Report |
+|---------|-----------|--------|--------|
+| `/atlas.overview` | Overall Accuracy | 93% (56/60) | [✓](./dev-notes/2025-12/2025-12-21-overview-e2e-verification.md) |
+| `/atlas.pattern` | Search Precision | 98.6% (7/7 cases) | [✓](./dev-notes/2025-12/2025-12-21-pattern-e2e-verification.md) |
+| `/atlas.impact` | Internal Consistency | 100% (5/5 projects) | [✓](./dev-notes/2025-12/2025-12-21-impact-e2e-verification.md) |
+| `/atlas.flow` | Entry Point Detection | 100% (5/5 projects) | [✓](./dev-notes/2025-12/2025-12-21-flow-e2e-verification.md) |
+| `/atlas.deps` | Mode Detection | 100% (2/2 cases) | [✓](./dev-notes/2025-12/2025-12-21-deps-e2e-verification.md) |
+| `/atlas.history` | Hotspots Detection | 100% (Top 10) | [✓](./dev-notes/2025-12/2025-12-21-history-e2e-verification.md) |
 
-| Metric | Result |
-|--------|--------|
-| **Overall Accuracy** | 93% (56/60 points) |
-| **Tech Stack Detection** | 90% |
-| **Architecture Detection** | 90% |
-| **Core Modules** | 100% |
-| **Business Domain** | 100% |
-| **AI Collaboration Level** | 100% |
-| **Average Speed** | ~2 min 41 sec per project |
-
-<sub>✓ = E2E verified on 2025-12-21. [Verification Report](./dev-notes/2025-12/2025-12-21-overview-e2e-verification.md)</sub>
-
-### `/atlas.pattern` - Pattern Search ✓
-
-| Metric | Result |
-|--------|--------|
-| **Search Precision** | 98.6% |
-| **Test Cases** | 7/7 passed |
-| **Languages Tested** | Swift, Ruby, Python, TypeScript, Kotlin |
-
-<sub>✓ = E2E verified on 2025-12-21. [Verification Report](./dev-notes/2025-12/2025-12-21-pattern-e2e-verification.md)</sub>
-
-### `/atlas.impact` - Impact Analysis ✓
-
-| Metric | Result |
-|--------|--------|
-| **Internal Consistency** | 100% (5/5 projects) |
-| **Languages Tested** | Swift, Ruby, Python, TypeScript, Kotlin |
-| **Total Dependencies Analyzed** | 2,068 files |
-
-<sub>✓ = Internal consistency verified on 2025-12-21. LLM-based analysis may vary from simple grep counts. [E2E Verification Report](./dev-notes/2025-12/2025-12-21-impact-e2e-verification.md)</sub>
-
-### `/atlas.flow` - Flow Tracing ✓
-
-| Metric | Result |
-|--------|--------|
-| **Entry Point Detection** | 100% (5/5 projects) |
-| **Call Chain Depth** | 4-5 levels per project |
-| **Boundary Identification** | 100% (4-5 types per project) |
-| **Languages Tested** | Swift, Ruby, Python, TypeScript, Kotlin |
-
-<sub>✓ = E2E verified on 2025-12-21. [Verification Report](./dev-notes/2025-12/2025-12-21-flow-e2e-verification.md)</sub>
-
-### `/atlas.deps` - Dependency Analysis ✓
-
-| Metric | Result |
-|--------|--------|
-| **Mode Detection** | 100% (Upgrade vs Inventory) |
-| **Phase 0 Rules** | 100% effective |
-| **Languages Tested** | Python, Ruby |
-| **Test Cases** | 2/2 passed |
-
-<sub>✓ = E2E verified on 2025-12-21. [Verification Report](./dev-notes/2025-12/2025-12-21-deps-e2e-verification.md)</sub>
-
-### `/atlas.history` - Temporal Analysis ✓
-
-| Metric | Result |
-|--------|--------|
-| **Hotspots Detection** | 100% (Top 10 identified) |
-| **Temporal Coupling** | 100% (6 pairs detected) |
-| **Contributors Mapping** | 100% (7 contributors) |
-| **Test Projects** | 1 (Kotlin) |
-
-<sub>✓ = E2E verified on 2025-12-21. [Verification Report](./dev-notes/2025-12/2025-12-21-history-e2e-verification.md)</sub>
+<sub>All E2E verified on 2025-12-21. Languages tested: Swift, Ruby, Python, TypeScript, Kotlin. Click ✓ for detailed reports.</sub>
 
 ---
 
