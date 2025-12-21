@@ -4,7 +4,7 @@
 
 **Complete usage instructions for all slash commands**
 
-For Claude Code | v2.9.6 | Constitution v1.1
+For Claude Code | v2.10.0 | Constitution v1.1
 
 ---
 
@@ -19,10 +19,9 @@ For Claude Code | v2.9.6 | Constitution v1.1
 7. [/atlas.history](#atlashistory) - Git history analysis
 8. [/atlas.flow](#atlasflow) - Execution flow tracing
 9. [/atlas.deps](#atlasdeps) - Dependency analysis
-10. [/atlas.init](#atlasinit) - Project initialization
-11. [/atlas.list](#atlaslist) - List cached analyses
-12. [/atlas.clear](#atlasclear) - Clear cached analyses
-13. [FAQ](#faq)
+10. [/atlas.list](#atlaslist) - List cached analyses
+11. [/atlas.clear](#atlasclear) - Clear cached analyses
+12. [FAQ](#faq)
 
 ---
 
@@ -89,16 +88,18 @@ SourceAtlas is suitable for the following common scenarios:
 
 ## Installation
 
-**Complete installation guide**: [GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
+**Complete plugin guide**: [plugin/README.md](./plugin/README.md)
 
 ### Quick Start
 
 ```bash
-git clone https://github.com/lis186/SourceAtlas.git ~/dev/sourceatlas2
-cd ~/dev/sourceatlas2 && ./install-global.sh
+git clone https://github.com/lis186/SourceAtlas.git
+claude --plugin-dir ./SourceAtlas/plugin
 ```
 
-Install once, use in all projects.
+Or add to Claude Code settings for permanent use.
+
+**Agent Skills**: With v2.10.0, Claude automatically suggests the right analysis based on your questions — no commands to memorize!
 
 ---
 
@@ -864,22 +865,6 @@ Risk Level: 🟡 Medium
 
 ---
 
-## /atlas.init
-
-**Initialize SourceAtlas trigger rules**
-
-### Usage
-
-```bash
-/atlas.init
-```
-
-### Feature Description
-
-Injects SourceAtlas auto-trigger rules into the project's CLAUDE.md, so Claude Code knows when to automatically suggest using Atlas commands.
-
----
-
 ## /atlas.list
 
 **List cached analysis results**
@@ -954,9 +939,10 @@ The command will show what will be deleted and ask for confirmation before proce
 
 **A**: Check the following:
 
-1. **Confirm installation**:
+1. **Confirm plugin is loaded**:
    ```bash
-   ls ~/.claude/commands/atlas.*.md
+   # Make sure you started Claude Code with:
+   claude --plugin-dir ./SourceAtlas/plugin
    ```
 
 2. **Confirm in project directory**:
@@ -1106,23 +1092,19 @@ cat .gitignore | grep -E "node_modules|Pods|build|\.app"
 **Diagnostic Steps**:
 
 ```bash
-# 1. Check if command files exist
-ls -la ~/.claude/commands/atlas.*.md
+# 1. Ensure you're using the plugin flag
+claude --plugin-dir ./SourceAtlas/plugin
 
-# 2. Check file permissions
-ls -l ~/.claude/commands/atlas.*.md
-
-# 3. Check Claude Code version
-# In Claude Code, run: /help
+# 2. Check Claude Code version (need 1.0.33+)
+claude --version
 ```
 
 **Solution**:
 
 | Check Result | Reason | Fix Method |
 |-------------|--------|-----------|
-| Files don't exist | Not installed or installation failed | Re-run `./install-global.sh` |
-| Permission error (---x------) | Symlink points to non-existent location | `./install-global.sh --remove` then reinstall |
-| Claude Code version too old | Doesn't support Slash Commands | Update Claude Code to latest version |
+| Plugin not loaded | Not using --plugin-dir flag | Run `claude --plugin-dir ./SourceAtlas/plugin` |
+| Claude Code version too old | Doesn't support Plugins (need 1.0.33+) | Update Claude Code to latest version |
 
 ### Issue 5: Incorrect output format
 
@@ -1131,16 +1113,16 @@ ls -l ~/.claude/commands/atlas.*.md
 **Diagnostic Steps**:
 
 ```bash
-# Check prompt file content
-head -20 ~/.claude/commands/atlas.overview.md
+# Check prompt file content in plugin
+head -20 ./SourceAtlas/plugin/commands/atlas.overview.md
 ```
 
 **Possible Causes**:
 
 | Symptom | Reason | Fix Method |
 |---------|--------|-----------|
-| Missing frontmatter (---) | File corrupted | `git restore .claude/commands/` then reinstall |
-| Content is old version | Not updated to latest | `cd ~/dev/sourceatlas2 && git pull && ./install-global.sh` |
+| Missing frontmatter (---) | File corrupted | Re-clone repository |
+| Content is old version | Not updated to latest | `cd SourceAtlas && git pull` |
 | YAML syntax error | AI parsing issue | Re-run command (Claude randomness) |
 
 ### Issue 6: Pattern search results inaccurate
@@ -1169,11 +1151,11 @@ Run the following commands for a complete health check:
 ```bash
 # === SourceAtlas Health Check ===
 
-echo "1. Check installation..."
-ls -la ~/.claude/commands/atlas.*.md
+echo "1. Check plugin commands..."
+ls -la ./SourceAtlas/plugin/commands/atlas.*.md
 
-echo -e "\n2. Check scripts..."
-ls -la ~/.claude/scripts/atlas/
+echo -e "\n2. Check plugin skills..."
+ls -la ./SourceAtlas/plugin/skills/
 
 echo -e "\n3. Check project root..."
 pwd
@@ -1189,7 +1171,8 @@ echo -e "\n=== Check Complete ==="
 ```
 
 **Expected Results**:
-- ✅ See 9 .md files (init, overview, pattern, impact, history, flow, deps, list, clear)
+- ✅ See 8 .md command files (overview, pattern, impact, history, flow, deps, list, clear)
+- ✅ See 6 skill directories (codebase-overview, pattern-finder, etc.)
 - ✅ See scripts/atlas/ directory
 - ✅ At project root (has .git/)
 - ✅ Code file count < 1000 (TINY/SMALL) or < 5000 (MEDIUM/LARGE)
