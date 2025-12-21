@@ -121,7 +121,7 @@
 
 **Tested on 5 open-source projects**: Firefox iOS, Discourse, Cal.com, Prefect, Thunderbird
 
-### `/atlas.overview` - Project Understanding
+### `/atlas.overview` - Project Understanding ✓
 
 | Metric | Result |
 |--------|--------|
@@ -133,7 +133,9 @@
 | **AI Collaboration Level** | 100% |
 | **Average Speed** | ~2 min 41 sec per project |
 
-### `/atlas.pattern` - Pattern Search
+<sub>✓ = E2E verified on 2025-12-21. [Verification Report](./dev-notes/2025-12/2025-12-21-overview-e2e-verification.md)</sub>
+
+### `/atlas.pattern` - Pattern Search ✓
 
 | Metric | Result |
 |--------|--------|
@@ -141,7 +143,9 @@
 | **Test Cases** | 7/7 passed |
 | **Languages Tested** | Swift, Ruby, Python, TypeScript, Kotlin |
 
-### `/atlas.impact` - Impact Analysis
+<sub>✓ = E2E verified on 2025-12-21. [Verification Report](./dev-notes/2025-12/2025-12-21-pattern-e2e-verification.md)</sub>
+
+### `/atlas.impact` - Impact Analysis ✓
 
 | Metric | Result |
 |--------|--------|
@@ -149,7 +153,7 @@
 | **Languages Tested** | Swift, Ruby, Python, TypeScript, Kotlin |
 | **Total Dependencies Analyzed** | 2,068 files |
 
-<sub>Note: Internal Consistency = category subtotals sum to total (no double-counting). LLM-based analysis may vary from simple grep counts.</sub>
+<sub>✓ = Internal consistency verified on 2025-12-21. LLM-based analysis may vary from simple grep counts. [E2E Verification Report](./dev-notes/2025-12/2025-12-21-impact-e2e-verification.md)</sub>
 
 ### `/atlas.flow` - Flow Tracing ✓
 
@@ -238,7 +242,7 @@ ls ~/.claude/commands/atlas.*.md
 
 | Limitation | Details |
 |------------|---------|
-| **Benchmark scope** | Only `/atlas.overview` tested; other commands are estimates |
+| **Benchmark scope** | 4 commands tested (`overview`, `pattern`, `flow`, `impact`); `history` and `deps` are estimates |
 | **Tech Stack detection** | May miss secondary languages (e.g., React in a Python project) |
 | **Architecture detection** | May miss secondary patterns (e.g., MVI in Clean Architecture) |
 | **Best for mature projects** | Works best with README, config files; limited for undocumented legacy code |

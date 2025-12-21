@@ -121,7 +121,7 @@
 
 **在 5 個開源專案測試**：Firefox iOS、Discourse、Cal.com、Prefect、Thunderbird
 
-### `/atlas.overview` - 專案理解
+### `/atlas.overview` - 專案理解 ✓
 
 | 指標 | 結果 |
 |------|------|
@@ -133,7 +133,9 @@
 | **AI 協作程度** | 100% |
 | **平均速度** | ~2 分 41 秒 / 專案 |
 
-### `/atlas.pattern` - Pattern 搜尋
+<sub>✓ = 2025-12-21 E2E 驗證通過。[驗證報告](./dev-notes/2025-12/2025-12-21-overview-e2e-verification.md)</sub>
+
+### `/atlas.pattern` - Pattern 搜尋 ✓
 
 | 指標 | 結果 |
 |------|------|
@@ -141,7 +143,9 @@
 | **測試案例** | 7/7 通過 |
 | **測試語言** | Swift、Ruby、Python、TypeScript、Kotlin |
 
-### `/atlas.impact` - 影響分析
+<sub>✓ = 2025-12-21 E2E 驗證通過。[驗證報告](./dev-notes/2025-12/2025-12-21-pattern-e2e-verification.md)</sub>
+
+### `/atlas.impact` - 影響分析 ✓
 
 | 指標 | 結果 |
 |------|------|
@@ -149,7 +153,7 @@
 | **測試語言** | Swift、Ruby、Python、TypeScript、Kotlin |
 | **分析依賴數** | 2,068 個檔案 |
 
-<sub>備註：內部一致性 = 分類加總等於總數（無重複計算）。LLM 分析結果可能與簡單 grep 計數不同。</sub>
+<sub>✓ = 2025-12-21 內部一致性驗證通過。LLM 分析結果可能與簡單 grep 計數不同。[E2E 驗證報告](./dev-notes/2025-12/2025-12-21-impact-e2e-verification.md)</sub>
 
 ### `/atlas.flow` - Flow 追蹤 ✓
 
@@ -238,7 +242,7 @@ ls ~/.claude/commands/atlas.*.md
 
 | 限制 | 說明 |
 |------|------|
-| **Benchmark 範圍** | 只有 `/atlas.overview` 經過測試；其他命令為估計值 |
+| **Benchmark 範圍** | 4 個命令已測試（`overview`、`pattern`、`flow`、`impact`）；`history` 和 `deps` 為估計值 |
 | **Tech Stack 偵測** | 可能漏掉次要語言（如 Python 專案中的 React） |
 | **架構偵測** | 可能漏掉次要模式（如 Clean Architecture 中的 MVI） |
 | **適合成熟專案** | 對有 README、設定檔的專案效果最好；無文件的 legacy code 效果有限 |
