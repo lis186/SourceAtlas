@@ -40,6 +40,8 @@
 
 SourceAtlas 使用**資訊理論**優先掃描高熵檔案（configs、READMEs、models），而非實作細節。只需掃描 <5% 的檔案，即可在數分鐘內達到 70-80% 的理解深度。
 
+![Flow Diagram Example](./docs/images/atlas-flow-diagram.png)
+
 ---
 
 ## 6 個命令解決 6 個真實問題
@@ -167,6 +169,8 @@ cd ~/projects/any-project
 /atlas.init      # 一次性：注入自動提示規則
 /atlas.overview  # 開始理解專案
 ```
+
+![Overview Output Example](./docs/images/atlas-overview-output.png)
 
 **驗證安裝**：
 ```bash

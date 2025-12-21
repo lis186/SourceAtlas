@@ -40,6 +40,8 @@ A set of AI-powered slash commands for [Claude Code](https://claude.ai/code) tha
 
 SourceAtlas uses **information theory** to prioritize high-entropy files (configs, READMEs, models) over implementation details. By scanning <5% of files, it achieves 70-80% understanding depth in minutes instead of days.
 
+![Flow Diagram Example](./docs/images/atlas-flow-diagram.png)
+
 ---
 
 ## 6 Commands for 6 Real Problems
@@ -167,6 +169,8 @@ cd ~/projects/any-project
 /atlas.init      # One-time: inject auto-trigger rules
 /atlas.overview  # Start understanding
 ```
+
+![Overview Output Example](./docs/images/atlas-overview-output.png)
 
 **Verify installation**:
 ```bash
