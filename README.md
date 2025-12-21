@@ -287,7 +287,6 @@ All commands support `--save`:
 
 - **Report Issues**: [GitHub Issues](https://github.com/lis186/SourceAtlas/issues)
 - **Contribute Code**: PRs welcome
-- **Add Languages**: Python, Ruby, Go, Rust patterns welcome
 
 ---
 

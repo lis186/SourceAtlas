@@ -287,7 +287,6 @@ ls ~/.claude/commands/atlas.*.md
 
 - **回報問題**：[GitHub Issues](https://github.com/lis186/SourceAtlas/issues)
 - **貢獻程式碼**：歡迎 PR
-- **新增語言**：歡迎 Python、Ruby、Go、Rust 模式貢獻
 
 ---
 
