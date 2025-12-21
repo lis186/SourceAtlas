@@ -290,6 +290,46 @@ grep -r "${COMPONENT_NAME}\.\|${COMPONENT_NAME}(" \
   . 2>/dev/null | grep -v node_modules | head -30
 ```
 
+**Phase 4: Mutually Exclusive Categorization** ⚠️ REQUIRED
+
+```bash
+# IMPORTANT: Categories MUST be mutually exclusive to avoid double-counting
+# Save all dependent files first
+grep -rl "${COMPONENT_NAME}" --include="*.swift" . 2>/dev/null | grep -v Test | grep -v Mock | sort -u > /tmp/all_deps.txt
+
+# Count total (this is the authoritative number)
+TOTAL=$(wc -l < /tmp/all_deps.txt)
+
+# Categorize with exclusion chain (order matters!)
+# 1. Core module files (highest priority)
+CORE=$(grep "${COMPONENT_NAME}" /tmp/all_deps.txt | wc -l)
+
+# 2. Coordinators (exclude core)
+COORDINATORS=$(grep -v "${COMPONENT_NAME}" /tmp/all_deps.txt | grep 'Coordinator' | wc -l)
+
+# 3. Frontend (exclude core and coordinators)
+FRONTEND=$(grep -v "${COMPONENT_NAME}" /tmp/all_deps.txt | grep -v 'Coordinator' | grep 'Frontend' | wc -l)
+
+# 4. Others (everything else)
+OTHERS=$(grep -v "${COMPONENT_NAME}" /tmp/all_deps.txt | grep -v 'Coordinator' | grep -v 'Frontend' | wc -l)
+
+# VERIFY: Sum must equal total
+echo "Verification: $CORE + $COORDINATORS + $FRONTEND + $OTHERS = $TOTAL"
+```
+
+**Phase 5: Exact API Usage Counts** ⚠️ REQUIRED
+
+```bash
+# NEVER estimate - always run actual grep counts
+# For each key API/property, count exact occurrences
+
+# Example for Swift:
+echo "selectedTab: $(grep -rn '\.selectedTab' --include='*.swift' . | grep -v Test | wc -l)"
+echo "addDelegate: $(grep -rn 'addDelegate' --include='*.swift' . | grep -v Test | wc -l)"
+
+# Report actual numbers, NOT estimates like "~30"
+```
+
 ---
 
 ### Step 4: Test Impact Analysis (1-2 minutes)
