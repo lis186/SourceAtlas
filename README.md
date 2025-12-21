@@ -149,7 +149,7 @@
 | **Languages Tested** | Swift, Ruby, Python, TypeScript, Kotlin |
 | **Total Dependencies Analyzed** | 2,068 files |
 
-### `/atlas.flow` - Flow Tracing
+### `/atlas.flow` - Flow Tracing ✓
 
 | Metric | Result |
 |--------|--------|
@@ -158,9 +158,9 @@
 | **Boundary Identification** | 100% (4-5 types per project) |
 | **Languages Tested** | Swift, Ruby, Python, TypeScript, Kotlin |
 
-<sub>Note: Other commands not yet formally benchmarked.</sub>
+<sub>✓ = E2E verified on 2025-12-21. [Verification Report](./dev-notes/2025-12/2025-12-21-flow-e2e-verification.md)</sub>
 
-<!-- TODO: Add link to detailed benchmark report -->
+<sub>Note: Other commands not yet formally benchmarked.</sub>
 
 ---
 

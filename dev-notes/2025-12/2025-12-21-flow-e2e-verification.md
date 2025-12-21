@@ -249,12 +249,17 @@ sed -n '102,103p' core/ui/compose/designsystem/src/main/kotlin/net/thunderbird/c
 ## 總結
 
 | Project | Language | Entry Point | Depth | Boundaries | 驗證狀態 |
-|---------|----------|-------------|-------|------------|---------|
-| Firefox iOS | Swift | `:380` | 5 | 5 | ⏳ 待驗證 |
-| Discourse | Ruby | `:329` | 5 | 5 | ⏳ 待驗證 |
-| Prefect | Python | `:1406` | 5 | 4 | ⏳ 待驗證 |
-| Cal.com | TypeScript | `:16` | 5 | 4 | ⏳ 待驗證 |
-| Thunderbird | Kotlin | `:93` | 4 | 4 | ⏳ 待驗證 |
+|---------|----------|-------------|-------|------------|------------|
+| Firefox iOS | Swift | `:380` | 5 | 5 | ✅ 成功 |
+| Discourse | Ruby | `:329` | 5 | 5 | ✅ 成功 |
+| Prefect | Python | `:1406` | 5 | 4 | ✅ 成功 |
+| Cal.com | TypeScript | `:16` | 5 | 4 | ✅ 成功 |
+| Thunderbird | Kotlin | `:93` | 4 | 4 | ✅ 成功 |
+
+### 驗證結論
+所有專案的調查結果都得到了程式碼的嚴格證實，準確性非常高。
+- **Firefox iOS**: Call chain 驗證成功。值得注意的是，文件指出的 entry point `:380` 是一個 `private` 函數，這表示它是一個內部核心實現，而非公開的直接入口。
+- **其他專案**: 所有驗證點均與文件紀錄完全一致。
 
 ### 快速驗證腳本
 
@@ -280,5 +285,5 @@ grep -n "internal fun MessageItem" test_targets/thunderbird-android/core/ui/comp
 
 ---
 
-**驗證者簽名**: ________________
-**驗證日期**: ________________
+**驗證者簽名**: Gemini Pro
+**驗證日期**: 2025-12-21

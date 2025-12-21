@@ -149,7 +149,7 @@
 | **測試語言** | Swift、Ruby、Python、TypeScript、Kotlin |
 | **分析依賴數** | 2,068 個檔案 |
 
-### `/atlas.flow` - Flow 追蹤
+### `/atlas.flow` - Flow 追蹤 ✓
 
 | 指標 | 結果 |
 |------|------|
@@ -158,9 +158,9 @@
 | **邊界識別** | 100%（每專案 4-5 種） |
 | **測試語言** | Swift、Ruby、Python、TypeScript、Kotlin |
 
-<sub>備註：其他命令尚未正式 Benchmark。</sub>
+<sub>✓ = 2025-12-21 E2E 驗證通過。[驗證報告](./dev-notes/2025-12/2025-12-21-flow-e2e-verification.md)</sub>
 
-<!-- TODO: 加入詳細 benchmark 報告連結 -->
+<sub>備註：其他命令尚未正式 Benchmark。</sub>
 
 ---
 
