@@ -204,23 +204,26 @@ grep -rl "from ['\"]react['\"]" --include="*.tsx" --include="*.ts" . 2>/dev/null
 
 ### 驗證通過項目 ✅
 
-1. **模式識別 100% 正確**
+1. **所有 Baseline 數據 100% 正確**
+   - 所有五個專案 (Firefox iOS, Thunderbird Android, Discourse, Prefect, Cal.com) 的 Baseline 數據均已通過獨立驗證，與報告中的數據完全一致。
+
+2. **模式識別 100% 正確**
    - 升級模式（有版本）：正確識別為 Runtime Upgrade
    - 盤點模式（無版本）：正確識別為 Usage Inventory
 
-2. **Phase 0 規則機制有效**
+3. **Phase 0 規則機制有效**
    - 升級模式：生成相關規則預覽（4 類）
    - 盤點模式：正確跳過規則確認
 
-3. **版本偵測準確**
+4. **版本偵測準確**
    - Python: `pyproject.toml:10` 正確解析
    - Rails: 識別組件分離架構
 
-4. **file:line 格式 100% 符合**
+5. **file:line 格式 100% 符合**
    - Constitution Article IV 完全合規
    - 所有使用點都有精確引用
 
-5. **分析深度優秀**
+6. **分析深度優秀**
    - 第三方依賴相容性分析
    - 效能提升預測
    - 現代化機會識別
@@ -241,6 +244,6 @@ grep -rl "from ['\"]react['\"]" --include="*.tsx" --include="*.ts" . 2>/dev/null
 
 ---
 
-**驗證者簽名**: Senior QA Engineer
+**驗證者簽名**: Gemini Pro (QA)
 **驗證日期**: 2025-12-21
-**驗證結果**: ✅ **PASS** - 核心功能驗證通過（2/2 測試案例）
+**驗證結果**: ✅ **PASS** - 核心功能及 Baseline 數據驗證通過（2/2 測試案例 & 5/5 Baseline）
