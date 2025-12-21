@@ -141,6 +141,14 @@
 | **測試案例** | 7/7 通過 |
 | **測試語言** | Swift、Ruby、Python、TypeScript、Kotlin |
 
+### `/atlas.impact` - 影響分析
+
+| 指標 | 結果 |
+|------|------|
+| **分類驗證** | 100%（5/5 專案） |
+| **測試語言** | Swift、Ruby、Python、TypeScript、Kotlin |
+| **分析依賴數** | 2,068 個檔案 |
+
 <sub>備註：其他命令尚未正式 Benchmark。</sub>
 
 <!-- TODO: 加入詳細 benchmark 報告連結 -->

@@ -141,6 +141,14 @@
 | **Test Cases** | 7/7 passed |
 | **Languages Tested** | Swift, Ruby, Python, TypeScript, Kotlin |
 
+### `/atlas.impact` - Impact Analysis
+
+| Metric | Result |
+|--------|--------|
+| **Category Validation** | 100% (5/5 projects) |
+| **Languages Tested** | Swift, Ruby, Python, TypeScript, Kotlin |
+| **Total Dependencies Analyzed** | 2,068 files |
+
 <sub>Note: Other commands not yet formally benchmarked.</sub>
 
 <!-- TODO: Add link to detailed benchmark report -->
