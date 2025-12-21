@@ -458,7 +458,7 @@ Recommended to cross-reference with official documentation:
 - [Official documentation URL]
 
 ───────────────────────────────
-🗺️ v2.9.4 │ Constitution v1.1
+🗺️ v2.9.6 │ Constitution v1.1
 ```
 
 For further analysis:

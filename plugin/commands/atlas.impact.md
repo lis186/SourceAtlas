@@ -721,7 +721,7 @@ Add at the end of output:
 💡 Enter number (e.g., `1`) or copy command to execute
 
 ───────────────────────────────
-🗺️ v2.9.4 │ Constitution v1.1
+🗺️ v2.9.6 │ Constitution v1.1
 ```
 
 ### End Conditions vs Recommendations (choose one, mutually exclusive)
