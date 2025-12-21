@@ -8,7 +8,6 @@ SourceAtlas helps developers quickly understand any codebase through pattern lea
 
 ### Slash Commands (User-invoked)
 
-- **🚀 Project Init** (`/atlas.init`) - Initialize SourceAtlas in any project
 - **🔍 Project Overview** (`/atlas.overview`) - Quick project understanding (<5% file scan)
 - **🎯 Pattern Learning** (`/atlas.pattern`) - Learn design patterns from existing code
 - **📊 Impact Analysis** (`/atlas.impact`) - Analyze change impact with static dependency analysis
@@ -54,24 +53,11 @@ cp -r /path/to/sourceatlas-plugin ~/.claude/commands/sourceatlas
 /plugin install sourceatlas@sourceatlas-marketplace
 
 # Start using
-/atlas.init
+/atlas.overview
 /atlas.pattern "api endpoint"
 ```
 
 ## 📖 Usage
-
-### `/atlas.init` - Initialize Project 🆕
-
-Initialize SourceAtlas in your project by injecting auto-trigger rules into CLAUDE.md.
-
-```bash
-/atlas.init
-```
-
-**What it does:**
-- Creates or updates CLAUDE.md with SourceAtlas auto-trigger rules
-- Claude Code will automatically suggest Atlas commands when appropriate
-- Sets up command reference for quick access
 
 ### `/atlas.overview` - Project Overview
 
@@ -355,7 +341,6 @@ sourceatlas-plugin/
 ├── .claude-plugin/
 │   └── plugin.json          # Plugin metadata
 ├── commands/                # Slash commands (user-invoked)
-│   ├── atlas.init.md
 │   ├── atlas.overview.md
 │   ├── atlas.pattern.md
 │   ├── atlas.impact.md
@@ -392,7 +377,6 @@ cp -r plugin ~/test-marketplace/sourceatlas-plugin
 
 # Test in any project
 cd ~/your-project
-/atlas.init
 /atlas.overview
 /atlas.pattern "api endpoint"
 /atlas.impact "User model"
@@ -431,4 +415,4 @@ Based on SourceAtlas v2.5 methodology:
 
 ---
 
-**SourceAtlas v2.9.6** - Understanding codebases at the speed of thought 🚀
+**SourceAtlas v2.10.0** - Understanding codebases at the speed of thought 🚀
