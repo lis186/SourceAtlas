@@ -1,5 +1,13 @@
 # SourceAtlas
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/images/sourceatlas-logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="./docs/images/sourceatlas-logo-light.svg">
+    <img alt="SourceAtlas Logo" src="./docs/images/sourceatlas-logo-light.svg">
+  </picture>
+</p>
+
 > 🌐 [sourceatlas.io](https://sourceatlas.io) | **English** | [繁體中文](./README.zh-TW.md)
 
 **Get project overview in ~3 minutes by scanning <5% of files**
