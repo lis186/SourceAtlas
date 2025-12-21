@@ -1,6 +1,6 @@
 # SourceAtlas - Usage Guide
 
-> 🌐 [sourceatlas.io](https://sourceatlas.io) | **English** | [繁體中文](./USAGE_GUIDE.zh-TW.md)
+> 🌐 [sourceatlas.io](https://www.sourceatlas.io) | **English** | [繁體中文](./USAGE_GUIDE.zh-TW.md)
 
 **Complete usage instructions for all slash commands**
 
