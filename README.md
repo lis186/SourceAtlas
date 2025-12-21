@@ -283,6 +283,16 @@ ls ~/.claude/commands/atlas.*.md
 
 ---
 
+## Privacy & Cost
+
+| Aspect | Details |
+|--------|---------|
+| **Data Privacy** | Code is sent to Claude API for analysis. SourceAtlas itself stores nothing. Check your organization's AI policy. |
+| **Token Usage** | ~50-100k tokens per analysis (~$0.15-0.30 USD with Sonnet) |
+| **Local Processing** | Git history analysis (code-maat) runs locally. AST search (ast-grep) runs locally. |
+
+---
+
 ## Save & Share Analyses
 
 All commands support `--save`:

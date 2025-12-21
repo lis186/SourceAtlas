@@ -283,6 +283,16 @@ ls ~/.claude/commands/atlas.*.md
 
 ---
 
+## 隱私與成本
+
+| 項目 | 說明 |
+|------|------|
+| **資料隱私** | 程式碼會傳送到 Claude API 進行分析。SourceAtlas 本身不儲存任何資料。請確認你的組織 AI 政策。 |
+| **Token 使用量** | 每次分析約 50-100k tokens（約 $0.15-0.30 USD，使用 Sonnet） |
+| **本地處理** | Git 歷史分析 (code-maat) 在本地執行。AST 搜尋 (ast-grep) 在本地執行。 |
+
+---
+
 ## 儲存與分享分析
 
 所有命令支援 `--save`：
