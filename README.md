@@ -25,7 +25,7 @@
 | Task | Before | After |
 |------|--------|-------|
 | Understand project architecture | 2-3 days | **~3-15 minutes** ✓ |
-| Find API implementation examples | Ask colleagues / random searching | **~seconds** |
+| Find API implementation examples | Ask colleagues / random searching | **~seconds** ✓ |
 | Analyze impact of code changes | Manual tracking, hope for the best | **~1-2 minutes** |
 | Plan framework upgrade | Weeks of research | **~15-30 minutes** |
 | Find code hotspots & experts | Ask around | **~5-10 minutes** |
@@ -119,7 +119,9 @@
 
 ## Benchmark Results
 
-**`/atlas.overview` tested on 5 open-source projects**: Firefox iOS, Discourse, Cal.com, Prefect, Thunderbird
+**Tested on 5 open-source projects**: Firefox iOS, Discourse, Cal.com, Prefect, Thunderbird
+
+### `/atlas.overview` - Project Understanding
 
 | Metric | Result |
 |--------|--------|
@@ -131,7 +133,15 @@
 | **AI Collaboration Level** | 100% |
 | **Average Speed** | ~2 min 41 sec per project |
 
-<sub>Note: Benchmark covers `/atlas.overview` only. Other commands not yet benchmarked.</sub>
+### `/atlas.pattern` - Pattern Search
+
+| Metric | Result |
+|--------|--------|
+| **Search Precision** | 98.6% |
+| **Test Cases** | 7/7 passed |
+| **Languages Tested** | Swift, Ruby, Python, TypeScript, Kotlin |
+
+<sub>Note: Other commands not yet formally benchmarked.</sub>
 
 <!-- TODO: Add link to detailed benchmark report -->
 
@@ -176,7 +186,7 @@ ls ~/.claude/commands/atlas.*.md
 | Command | Problem It Solves | Time |
 |---------|------------------|------|
 | `/atlas.overview` | New to project, need the big picture | ~3-15 min ✓ |
-| `/atlas.pattern "X"` | Need to implement X, want examples | ~seconds |
+| `/atlas.pattern "X"` | Need to implement X, want examples | ~seconds ✓ |
 | `/atlas.impact "file"` | About to change code, worried about side effects | ~1-2 min |
 | `/atlas.history` | Need to find hotspots and experts | ~5-10 min |
 | `/atlas.flow "feature"` | Need to understand a feature's execution path | ~3-5 min |

@@ -25,7 +25,7 @@
 | 任務 | 以前 | 現在 |
 |------|------|------|
 | 理解專案架構 | 2-3 天 | **~3-15 分鐘** ✓ |
-| 找 API 實作範例 | 問同事 / 亂翻 | **~秒級** |
+| 找 API 實作範例 | 問同事 / 亂翻 | **~秒級** ✓ |
 | 分析程式碼修改影響 | 手動追蹤，祈禱不會爆 | **~1-2 分鐘** |
 | 規劃框架升級 | 研究好幾週 | **~15-30 分鐘** |
 | 找程式碼熱點和專家 | 到處問人 | **~5-10 分鐘** |
@@ -119,7 +119,9 @@
 
 ## Benchmark 結果
 
-**`/atlas.overview` 在 5 個開源專案測試**：Firefox iOS、Discourse、Cal.com、Prefect、Thunderbird
+**在 5 個開源專案測試**：Firefox iOS、Discourse、Cal.com、Prefect、Thunderbird
+
+### `/atlas.overview` - 專案理解
 
 | 指標 | 結果 |
 |------|------|
@@ -131,7 +133,15 @@
 | **AI 協作程度** | 100% |
 | **平均速度** | ~2 分 41 秒 / 專案 |
 
-<sub>備註：Benchmark 僅涵蓋 `/atlas.overview`，其他命令尚未正式測試。</sub>
+### `/atlas.pattern` - Pattern 搜尋
+
+| 指標 | 結果 |
+|------|------|
+| **搜尋精確率** | 98.6% |
+| **測試案例** | 7/7 通過 |
+| **測試語言** | Swift、Ruby、Python、TypeScript、Kotlin |
+
+<sub>備註：其他命令尚未正式 Benchmark。</sub>
 
 <!-- TODO: 加入詳細 benchmark 報告連結 -->
 
@@ -176,7 +186,7 @@ ls ~/.claude/commands/atlas.*.md
 | 命令 | 解決的問題 | 時間 |
 |------|-----------|------|
 | `/atlas.overview` | 新接手專案，需要全貌 | ~3-15 分鐘 ✓ |
-| `/atlas.pattern "X"` | 需要實作 X，想找範例 | ~秒級 |
+| `/atlas.pattern "X"` | 需要實作 X，想找範例 | ~秒級 ✓ |
 | `/atlas.impact "file"` | 準備改 code，擔心副作用 | ~1-2 分鐘 |
 | `/atlas.history` | 需要找熱點和專家 | ~5-10 分鐘 |
 | `/atlas.flow "feature"` | 需要理解功能的執行路徑 | ~3-5 分鐘 |
