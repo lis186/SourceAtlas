@@ -92,12 +92,48 @@ detect_from_subdirs() {
     echo "$found_type"
 }
 
+# Helper: Count Swift files (for iOS detection priority)
+SWIFT_FILE_COUNT=$(find "$PROJECT_PATH" -type f -name "*.swift" ! -path "*/Pods/*" ! -path "*/.build/*" ! -path "*/.git/*" 2>/dev/null | wc -l | tr -d ' ')
+
 # Methodology project: Markdown > Code, and has shell scripts
 if [ "$MD_COUNT" -gt 10 ] && [ "$MD_COUNT" -gt "$CODE_COUNT" ] && [ "$SH_COUNT" -gt 0 ]; then
     echo "   ✓ Methodology/Documentation Project (Markdown-driven)"
     echo "     (Markdown: $MD_COUNT, Scripts: $SH_COUNT, Code: $CODE_COUNT)"
     PROJECT_TYPE="methodology"
-# Check for monorepo first (before single-package detection)
+# PRIORITY 0: iOS/Swift projects (may have Gemfile for fastlane, check Swift count first)
+elif [ "$SWIFT_FILE_COUNT" -gt 50 ]; then
+    echo "   ✓ iOS/Swift (Swift files: $SWIFT_FILE_COUNT)"
+    PROJECT_TYPE="ios"
+# PRIORITY 1: Strong language markers (take precedence over monorepo)
+# These files indicate the PRIMARY language even if monorepo tools exist
+elif [ -f "$PROJECT_PATH/Gemfile" ]; then
+    echo "   ✓ Ruby/Rails (Gemfile found)"
+    PROJECT_TYPE="ruby"
+elif [ -f "$PROJECT_PATH/go.mod" ]; then
+    echo "   ✓ Go (go.mod found)"
+    PROJECT_TYPE="go"
+elif [ -f "$PROJECT_PATH/Cargo.toml" ]; then
+    echo "   ✓ Rust (Cargo.toml found)"
+    PROJECT_TYPE="rust"
+elif [ -f "$PROJECT_PATH/pyproject.toml" ] || [ -f "$PROJECT_PATH/requirements.txt" ]; then
+    echo "   ✓ Python (pyproject.toml or requirements.txt found)"
+    PROJECT_TYPE="python"
+elif [ -f "$PROJECT_PATH/build.gradle" ] || [ -f "$PROJECT_PATH/build.gradle.kts" ] || [ -f "$PROJECT_PATH/settings.gradle" ] || [ -f "$PROJECT_PATH/settings.gradle.kts" ]; then
+    echo "   ✓ Android/Kotlin (Gradle project found)"
+    PROJECT_TYPE="android"
+elif ls "$PROJECT_PATH"/*.xcodeproj 1>/dev/null 2>&1 || ls "$PROJECT_PATH"/*.xcworkspace 1>/dev/null 2>&1; then
+    echo "   ✓ iOS/Swift (Xcode project found)"
+    PROJECT_TYPE="ios"
+elif [ -f "$PROJECT_PATH/Package.swift" ]; then
+    echo "   ✓ Swift Package (Package.swift found)"
+    PROJECT_TYPE="swift"
+elif [ -f "$PROJECT_PATH/Project.swift" ] || [ -d "$PROJECT_PATH/Tuist" ]; then
+    echo "   ✓ Swift/Tuist (Tuist project found)"
+    PROJECT_TYPE="swift"
+elif [ -f "$PROJECT_PATH/composer.json" ]; then
+    echo "   ✓ PHP (composer.json found)"
+    PROJECT_TYPE="php"
+# PRIORITY 2: Monorepo detection (only for JS/TS projects without strong language markers)
 elif MONOREPO_TYPE=$(check_monorepo "$PROJECT_PATH"); then
     echo "   ✓ Monorepo ($MONOREPO_TYPE)"
     PROJECT_TYPE="monorepo"
@@ -112,30 +148,6 @@ elif MONOREPO_TYPE=$(check_monorepo "$PROJECT_PATH"); then
 elif [ -f "$PROJECT_PATH/package.json" ]; then
     echo "   ✓ Node.js/TypeScript (package.json found)"
     PROJECT_TYPE="nodejs"
-elif [ -f "$PROJECT_PATH/go.mod" ]; then
-    echo "   ✓ Go (go.mod found)"
-    PROJECT_TYPE="go"
-elif [ -f "$PROJECT_PATH/pyproject.toml" ] || [ -f "$PROJECT_PATH/requirements.txt" ]; then
-    echo "   ✓ Python (pyproject.toml or requirements.txt found)"
-    PROJECT_TYPE="python"
-elif [ -f "$PROJECT_PATH/Cargo.toml" ]; then
-    echo "   ✓ Rust (Cargo.toml found)"
-    PROJECT_TYPE="rust"
-elif [ -f "$PROJECT_PATH/composer.json" ]; then
-    echo "   ✓ PHP (composer.json found)"
-    PROJECT_TYPE="php"
-elif [ -f "$PROJECT_PATH/build.gradle" ] || [ -f "$PROJECT_PATH/build.gradle.kts" ] || [ -f "$PROJECT_PATH/settings.gradle" ] || [ -f "$PROJECT_PATH/settings.gradle.kts" ]; then
-    echo "   ✓ Android/Kotlin (Gradle project found)"
-    PROJECT_TYPE="android"
-elif ls "$PROJECT_PATH"/*.xcodeproj 1>/dev/null 2>&1 || ls "$PROJECT_PATH"/*.xcworkspace 1>/dev/null 2>&1; then
-    echo "   ✓ iOS/Swift (Xcode project found)"
-    PROJECT_TYPE="ios"
-elif [ -f "$PROJECT_PATH/Package.swift" ]; then
-    echo "   ✓ Swift Package (Package.swift found)"
-    PROJECT_TYPE="swift"
-elif [ -f "$PROJECT_PATH/Project.swift" ] || [ -d "$PROJECT_PATH/Tuist" ]; then
-    echo "   ✓ Swift/Tuist (Tuist project found)"
-    PROJECT_TYPE="swift"
 else
     # Last resort: check subdirectories for config files
     SUBDIR_TYPE=$(detect_from_subdirs "$PROJECT_PATH")
@@ -224,6 +236,15 @@ case "$PROJECT_TYPE" in
             ! -path "*/target/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
         echo "   Rust files: $TOTAL_FILES"
         ;;
+    ruby)
+        RUBY_FILES=$(find "$PROJECT_PATH" -type f -name "*.rb" \
+            ! -path "*/vendor/*" ! -path "*/.git/*" ! -path "*/tmp/*" | wc -l | tr -d ' ')
+        ERB_FILES=$(find "$PROJECT_PATH" -type f -name "*.erb" \
+            ! -path "*/vendor/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
+        TOTAL_FILES=$((RUBY_FILES + ERB_FILES))
+        echo "   Ruby files: $RUBY_FILES"
+        echo "   ERB templates: $ERB_FILES"
+        ;;
     php)
         TOTAL_FILES=$(find "$PROJECT_PATH" -type f -name "*.php" \
             ! -path "*/vendor/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
@@ -263,36 +284,52 @@ esac
 
 echo ""
 
-# Determine scale based on file count
+# Count ALL code files for accurate scale detection
+# This ensures scale is based on total codebase size, not just primary language
+ALL_CODE_FILES=$(find "$PROJECT_PATH" -type f \( \
+    -name "*.py" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \
+    -o -name "*.go" -o -name "*.rs" -o -name "*.rb" -o -name "*.erb" \
+    -o -name "*.php" -o -name "*.swift" -o -name "*.m" -o -name "*.h" \
+    -o -name "*.kt" -o -name "*.java" -o -name "*.cs" -o -name "*.cpp" -o -name "*.c" \
+    \) ! -path "*/.git/*" ! -path "*/node_modules/*" ! -path "*/.venv/*" ! -path "*/venv/*" \
+    ! -path "*/vendor/*" ! -path "*/target/*" ! -path "*/dist/*" ! -path "*/build/*" \
+    ! -path "*/__pycache__/*" ! -path "*/Pods/*" ! -path "*/.next/*" ! -path "*/.nuxt/*" \
+    ! -path "*/DerivedData/*" ! -path "*/.gradle/*" ! -path "*/tmp/*" 2>/dev/null | wc -l | tr -d ' ')
+
+echo "   All code files (for scale): $ALL_CODE_FILES"
+
+# Determine scale based on ALL code files
 # Per Constitution Article VI: Scale-Aware Policy
-if [ "$TOTAL_FILES" -lt 20 ]; then
+# Updated 2025-12-21: Simplified to use file count only (LOC removed for cross-language consistency)
+# Thresholds based on benchmark validation: Firefox iOS (12K), Thunderbird (7K), Cal.com (9K), Prefect (4K), Discourse (21K)
+if [ "$ALL_CODE_FILES" -lt 100 ]; then
     SCALE="TINY"
     MAX_SCAN_RATIO="50%"
     MAX_SCAN_FILES="10"
     LOW_CONFIDENCE_LIMIT="2"
     HYPOTHESIS_TARGET="5-8"
-elif [ "$TOTAL_FILES" -lt 50 ]; then
+elif [ "$ALL_CODE_FILES" -lt 500 ]; then
     SCALE="SMALL"
     MAX_SCAN_RATIO="20%"
-    MAX_SCAN_FILES="10"
+    MAX_SCAN_FILES="15"
     LOW_CONFIDENCE_LIMIT="3"
     HYPOTHESIS_TARGET="7-10"
-elif [ "$TOTAL_FILES" -lt 150 ]; then
+elif [ "$ALL_CODE_FILES" -lt 2000 ]; then
     SCALE="MEDIUM"
     MAX_SCAN_RATIO="10%"
-    MAX_SCAN_FILES="15"
+    MAX_SCAN_FILES="20"
     LOW_CONFIDENCE_LIMIT="4"
     HYPOTHESIS_TARGET="10-15"
-elif [ "$TOTAL_FILES" -lt 500 ]; then
+elif [ "$ALL_CODE_FILES" -lt 10000 ]; then
     SCALE="LARGE"
     MAX_SCAN_RATIO="5%"
-    MAX_SCAN_FILES="25"
+    MAX_SCAN_FILES="30"
     LOW_CONFIDENCE_LIMIT="5"
     HYPOTHESIS_TARGET="12-18"
 else
     SCALE="VERY_LARGE"
     MAX_SCAN_RATIO="3%"
-    MAX_SCAN_FILES="30"
+    MAX_SCAN_FILES="40"
     LOW_CONFIDENCE_LIMIT="6"
     HYPOTHESIS_TARGET="15-20"
 fi
@@ -307,7 +344,8 @@ if [ "$RECOMMENDED_SCAN_COUNT" -lt 1 ]; then
 fi
 
 echo "📏 Project Scale: $SCALE"
-echo "   Total content files: $TOTAL_FILES"
+echo "   Primary language files: $TOTAL_FILES"
+echo "   All code files: $ALL_CODE_FILES"
 echo ""
 
 echo "🎯 Recommended Scan Strategy (per Constitution Article I & VI):"

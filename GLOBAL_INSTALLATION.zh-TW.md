@@ -304,7 +304,7 @@ cd ~/dev/sourceatlas2
 ## 更多資源
 
 - **主要文檔**: [README.md](./README.md)
-- **使用指南**: [USAGE_GUIDE.md](./USAGE_GUIDE.md)
+- **使用指南**: [USAGE_GUIDE.zh-TW.md](./USAGE_GUIDE.zh-TW.md)
 - **回報問題**: [GitHub Issues](https://github.com/lis186/SourceAtlas/issues)
 
 ---

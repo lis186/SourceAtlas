@@ -1136,7 +1136,7 @@ Mark items that are **worth attention** - unusual, risky, or important:
 • "why is this changed often"      → History analysis
 
 ───────────────────────────────
-🗺️ v2.9.4 │ Constitution v1.1
+🗺️ v2.9.6 │ Constitution v1.1
 ```
 
 ### Color Semantics

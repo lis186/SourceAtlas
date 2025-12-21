@@ -353,7 +353,7 @@ summary:
 💡 Enter a number (e.g., `1`) or copy the command to execute
 
 ───────────────────────────────
-🗺️ v2.9.4 │ Constitution v1.1
+🗺️ v2.9.6 │ Constitution v1.1
 ```
 
 ---

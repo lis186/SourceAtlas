@@ -264,7 +264,7 @@ install_commands() {
     echo ""
     echo -e "  ${BLUE}/atlas.flow${NC} [entry point or query]"
     echo "    - Trace code execution flow and data flow"
-    echo "    - Examples: \"用戶登入流程\", \"handleSubmit\", \"API 錯誤處理\""
+    echo "    - Examples: \"user login\", \"handleSubmit\", \"error handling\""
     echo "    - Supports 11 analysis modes (forward, reverse, error, data...)"
     echo ""
     echo -e "  ${BLUE}/atlas.deps${NC} [upgrade query]"

@@ -763,7 +763,9 @@ get_file_patterns() {
                 echo "*Factory.swift *Factory.m *Factory.h *Builder.swift *Builder.m *Builder.h *Creator.swift *Creator.m *Creator.h *DIContainer.swift *DIContainer.m *DIContainer.h *Injector.swift *Injector.m *Injector.h *Container.swift *Container.m *Container.h *Dependencies.swift *Dependencies.m *Dependencies.h *DI*.swift *DI*.m *DI*.h *Assembly.swift *Assembly.m *Assembly.h"
                 ;;
             "viewmodel"|"view model"|"mvvm"|"observable"|"observableobject"|"observable object")
-                echo "*ViewModel.swift *ViewModel.m *ViewModel.h *VM.swift *VM.m *VM.h *Store.swift *Store.m *Store.h"
+                # Note: Removed *Store.swift as it's too broad (matches DataStore, SessionStore, etc.)
+                # Use "reducer" pattern for TCA Store patterns
+                echo "*ViewModel.swift *ViewModel.m *ViewModel.h *VM.swift *VM.m *VM.h"
                 ;;
             "view controller"|"viewcontroller")
                 echo "*ViewController.swift *ViewController.m *ViewController.h *VC.swift *VC.m *VC.h *Controller.swift *Controller.m *Controller.h"
@@ -1499,7 +1501,8 @@ get_dir_patterns() {
                 echo "Factories Builders DI/Factories Domain/Factories Utilities/Factories DI DependencyInjection Dependencies Injection Factory Container"
                 ;;
             "viewmodel"|"view model"|"mvvm"|"observable"|"observableobject"|"observable object")
-                echo "ViewModels ViewModel MVVM Presentation Store State"
+                # Note: Removed Store as it's too broad (matches DataStore, TabStore, etc.)
+                echo "ViewModels ViewModel MVVM Presentation"
                 ;;
             "view controller"|"viewcontroller")
                 echo "ViewControllers Controllers UI Views"
@@ -1706,6 +1709,94 @@ main() {
             echo "  - client / http client / api client" >&2
             echo "  - pipeline / pipelines / scrapy pipeline" >&2
             echo "  - spider / spiders / scrapy / crawler" >&2
+        elif [ "$PROJECT_TYPE" = "ruby" ]; then
+            echo "Supported patterns (Ruby/Rails):" >&2
+            echo "" >&2
+            echo "Tier 1 - Core patterns (14):" >&2
+            echo "  - controller / controllers / action controller" >&2
+            echo "  - model / models / active record" >&2
+            echo "  - service / services / service object" >&2
+            echo "  - job / jobs / background job / sidekiq / worker" >&2
+            echo "  - serializer / serializers / jsonapi" >&2
+            echo "  - mailer / mailers / action mailer" >&2
+            echo "  - concern / concerns / module / mixin" >&2
+            echo "  - helper / helpers / view helper" >&2
+            echo "  - decorator / presenters / draper" >&2
+            echo "  - policy / policies / pundit / authorization" >&2
+            echo "  - form / forms / form object" >&2
+            echo "  - query / queries / query object / finder" >&2
+            echo "  - validator / validators / validation" >&2
+            echo "  - api / api endpoint / grape / rails api" >&2
+            echo "" >&2
+            echo "Tier 2 - Supplementary patterns (12):" >&2
+            echo "  - spec / specs / rspec / test / minitest" >&2
+            echo "  - factory / factories / factory bot" >&2
+            echo "  - migration / migrations / db" >&2
+            echo "  - rake / rake task / tasks" >&2
+            echo "  - initializer / initializers / config" >&2
+            echo "  - middleware / rack middleware" >&2
+            echo "  - engine / engines / rails engine" >&2
+            echo "  - observer / observers / callback" >&2
+            echo "  - uploader / uploaders / carrierwave / shrine" >&2
+            echo "  - channel / channels / action cable / websocket" >&2
+            echo "  - scope / scopes / named scope" >&2
+            echo "  - interactor / interactors / use case / operation" >&2
+        elif [ "$PROJECT_TYPE" = "go" ]; then
+            echo "Supported patterns (Go):" >&2
+            echo "" >&2
+            echo "Tier 1 - Core patterns (12):" >&2
+            echo "  - handler / handlers" >&2
+            echo "  - service / services / svc" >&2
+            echo "  - middleware / middlewares" >&2
+            echo "  - transport / transports" >&2
+            echo "  - endpoint / endpoints" >&2
+            echo "  - client / clients" >&2
+            echo "  - server / servers" >&2
+            echo "  - config / configuration" >&2
+            echo "  - router / routes / routing" >&2
+            echo "  - cmd / main / entrypoint" >&2
+            echo "  - internal" >&2
+            echo "  - errors / error" >&2
+            echo "" >&2
+            echo "Tier 2 - Supplementary patterns (14):" >&2
+            echo "  - test / tests / testing" >&2
+            echo "  - mock / mocks / fake / stub" >&2
+            echo "  - proto / protobuf / grpc" >&2
+            echo "  - repository / repo" >&2
+            echo "  - auth / authentication / jwt" >&2
+            echo "  - log / logger / logging" >&2
+            echo "  - metrics / prometheus" >&2
+            echo "  - util / utils / helper" >&2
+            echo "  - request / response / dto" >&2
+            echo "  - model / models / entity" >&2
+        elif [ "$PROJECT_TYPE" = "rust" ]; then
+            echo "Supported patterns (Rust):" >&2
+            echo "" >&2
+            echo "Tier 1 - Core patterns (14):" >&2
+            echo "  - lib / library" >&2
+            echo "  - main / bin / entrypoint" >&2
+            echo "  - mod / module" >&2
+            echo "  - error / errors" >&2
+            echo "  - config / configuration / settings" >&2
+            echo "  - handler / handlers" >&2
+            echo "  - service / services" >&2
+            echo "  - middleware / middlewares" >&2
+            echo "  - router / routes / routing" >&2
+            echo "  - client / clients" >&2
+            echo "  - server / servers" >&2
+            echo "  - response / responses" >&2
+            echo "  - state / context / app_state" >&2
+            echo "  - builder / builders" >&2
+            echo "" >&2
+            echo "Tier 2 - Supplementary patterns (14):" >&2
+            echo "  - test / tests / testing" >&2
+            echo "  - bench / benchmark / benches" >&2
+            echo "  - example / examples" >&2
+            echo "  - util / utils / helper" >&2
+            echo "  - macro / macros" >&2
+            echo "  - runtime / executor" >&2
+            echo "  - task / tasks / spawn" >&2
+            echo "  - types / type_defs" >&2
         else
             echo "Supported patterns (Swift/iOS):" >&2
             echo "" >&2
@@ -1773,19 +1864,45 @@ main() {
     local temp_file=$(mktemp)
     trap "rm -f $temp_file" EXIT
 
+    # Determine if this is a test-related pattern (should NOT exclude test directories)
+    local is_test_pattern=false
+    case "$normalized" in
+        "test"|"tests"|"testing"|"mock"|"fake"|"stub"|"spec"|"specs"|"rspec"|"pytest"|"unittest"|"minitest"|"e2e"|"unit test"|"vitest"|"jest")
+            is_test_pattern=true
+            ;;
+    esac
+
+    # Build exclusion arguments
+    local exclude_args=(
+        ! -path "*/node_modules/*"
+        ! -path "*/.venv/*"
+        ! -path "*/venv/*"
+        ! -path "*/vendor/*"
+        ! -path "*/Pods/*"
+        ! -path "*/__pycache__/*"
+        ! -path "*/.git/*"
+        ! -path "*/DerivedData/*"
+        ! -path "*/build/*"
+        ! -path "*/.build/*"
+        ! -path "*/Carthage/*"
+    )
+
+    # For non-test patterns, also exclude test directories
+    if [ "$is_test_pattern" = false ]; then
+        exclude_args+=(
+            ! -path "*/tests/*"
+            ! -path "*/test/*"
+            ! -path "*/spec/*"
+            ! -path "*/__tests__/*"
+            ! -path "*/testing/*"
+            ! -path "*/testFixtures/*"
+            ! -path "*/androidTest/*"
+        )
+    fi
+
     # Strategy 1: Find files matching file name patterns (score: 10 base + 8 if in relevant dir)
     find "$PROJECT_PATH" \( -type f -o -type d \) \( "${find_args[@]}" \) \
-        ! -path "*/node_modules/*" \
-        ! -path "*/.venv/*" \
-        ! -path "*/venv/*" \
-        ! -path "*/vendor/*" \
-        ! -path "*/Pods/*" \
-        ! -path "*/__pycache__/*" \
-        ! -path "*/.git/*" \
-        ! -path "*/DerivedData/*" \
-        ! -path "*/build/*" \
-        ! -path "*/.build/*" \
-        ! -path "*/Carthage/*" \
+        "${exclude_args[@]}" \
         2>/dev/null | while IFS= read -r file; do
             # Skip directories unless they match .xcdatamodeld pattern
             if [ -d "$file" ] && [[ ! "$file" =~ \.xcdatamodeld$ ]]; then
@@ -1810,13 +1927,9 @@ main() {
     # This catches files like middleware/cors.py that don't match *middleware.py
     if [ -n "$dir_patterns" ] && [ "$PROJECT_TYPE" = "python" ]; then
         for dir_pattern in $dir_patterns; do
-            # Find directories matching the pattern
+            # Find directories matching the pattern (reuse exclude_args)
             find "$PROJECT_PATH" -type d -iname "$dir_pattern" \
-                ! -path "*/node_modules/*" \
-                ! -path "*/.venv/*" \
-                ! -path "*/venv/*" \
-                ! -path "*/__pycache__/*" \
-                ! -path "*/.git/*" \
+                "${exclude_args[@]}" \
                 2>/dev/null | while IFS= read -r dir; do
                     # Find Python files in that directory
                     find "$dir" -maxdepth 1 -type f -name "*.py" 2>/dev/null | while IFS= read -r file; do
