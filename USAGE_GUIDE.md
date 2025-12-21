@@ -1,10 +1,10 @@
 # SourceAtlas - Usage Guide
 
-> 🌐 **English** | [繁體中文](./USAGE_GUIDE.zh-TW.md)
+> 🌐 [sourceatlas.io](https://sourceatlas.io) | **English** | [繁體中文](./USAGE_GUIDE.zh-TW.md)
 
-**Complete usage instructions for 7 slash commands**
+**Complete usage instructions for all slash commands**
 
-For Claude Code | v2.9.0 | Constitution v1.1
+For Claude Code | v2.9.6 | Constitution v1.1
 
 ---
 
@@ -13,14 +13,16 @@ For Claude Code | v2.9.0 | Constitution v1.1
 1. [Use Cases](#use-cases)
 2. [Recommended Workflow](#recommended-workflow)
 3. [Installation](#installation)
-4. [Command 1: /atlas.overview](#command-1-atlasoverview)
-5. [Command 2: /atlas.pattern](#command-2-atlaspattern)
-6. [Command 3: /atlas.impact](#command-3-atlasimpact)
-7. [Command 4: /atlas.history](#command-4-atlashistory)
-8. [Command 5: /atlas.flow](#command-5-atlasflow)
-9. [Command 6: /atlas.deps](#command-6-atlasdeps) ⭐ NEW
-10. [Command 7: /atlas.init](#command-7-atlasinit)
-11. [FAQ](#faq)
+4. [/atlas.overview](#atlasoverview) - Project overview
+5. [/atlas.pattern](#atlaspattern) - Learn design patterns
+6. [/atlas.impact](#atlasimpact) - Code change impact
+7. [/atlas.history](#atlashistory) - Git history analysis
+8. [/atlas.flow](#atlasflow) - Execution flow tracing
+9. [/atlas.deps](#atlasdeps) - Dependency analysis
+10. [/atlas.init](#atlasinit) - Project initialization
+11. [/atlas.list](#atlaslist) - List cached analyses
+12. [/atlas.clear](#atlasclear) - Clear cached analyses
+13. [FAQ](#faq)
 
 ---
 
@@ -100,7 +102,7 @@ Install once, use in all projects.
 
 ---
 
-## Command 1: /atlas.overview
+## /atlas.overview
 
 **Quickly understand project overview**
 
@@ -168,7 +170,7 @@ key_directories:
 
 ---
 
-## Command 2: /atlas.pattern
+## /atlas.pattern
 
 **Learn project design patterns**
 
@@ -415,7 +417,7 @@ Simply put: **"How does this project typically implement X?"**
 
 ---
 
-## Command 3: /atlas.impact
+## /atlas.impact
 
 **Analyze code change impact**
 
@@ -541,9 +543,199 @@ find . -name '*.h' -not -path '*/Pods/*' -exec \
 
 ---
 
-## Command 6: /atlas.deps
+## /atlas.history
 
-**Analyze Library/Framework usage for upgrade planning** ⭐ NEW
+**Analyze git history for hotspots and team knowledge**
+
+### Usage
+
+```bash
+/atlas.history
+/atlas.history src/
+```
+
+### What You Get
+
+1. **Hotspots**: Files changed most frequently (likely complex or risky)
+2. **Temporal Coupling**: Files that often change together (hidden dependencies)
+3. **Recent Contributors**: Who has knowledge of which areas
+4. **Risk Assessment**: Bus factor risks and knowledge concentration
+
+### Execution Time
+
+**5-10 minutes** (analyzing git commit history)
+
+### Prerequisites
+
+- Requires `code-maat` (auto-installed on first run with user permission)
+- Java 8+ runtime
+
+### Usage Examples
+
+#### Example 1: Project-wide Analysis
+
+**Scenario**: Want to identify risk areas and understand team knowledge distribution
+
+**Command**:
+```bash
+/atlas.history
+```
+
+**Output** (summary):
+```
+## Hotspots (Top 10)
+
+| Rank | File | Changes | LOC | Complexity Score |
+|------|------|---------|-----|------------------|
+| 1 | src/core/processor.ts | 45 | 892 | 40,140 |
+| 2 | src/api/handlers.ts | 38 | 456 | 17,328 |
+
+## Temporal Coupling (Significant Pairs)
+
+| File A | File B | Coupling | Co-changes |
+|--------|--------|----------|------------|
+| src/user/model.ts | src/user/service.ts | 0.85 | 23 |
+
+## Bus Factor Risks
+
+- `src/legacy/` - Only 1 contributor in last 6 months
+- `src/payments/` - Primary contributor left 3 months ago
+```
+
+**What You Learned**:
+- `processor.ts` is a hotspot with 45 changes (potential technical debt)
+- User model and service have high coupling (expected, same domain)
+- Legacy code has bus factor risk (needs knowledge transfer)
+
+**Next Step**: Use `/atlas.impact "src/core/processor.ts"` to understand dependencies before refactoring
+
+---
+
+## /atlas.flow
+
+**Trace execution flow from entry point to boundaries**
+
+### Usage
+
+```bash
+/atlas.flow "user login"
+/atlas.flow "checkout process"
+/atlas.flow "from LoginViewController"
+```
+
+### What You Get
+
+1. **Entry Points**: Where the flow starts (controllers, handlers, etc.)
+2. **Execution Path**: Complete call chain with file:line references
+3. **Boundary Identification**: External touchpoints (API, DB, Auth, Payment)
+4. **Data Flow**: How data transforms through the flow
+
+### 11 Analysis Modes
+
+| Mode | Trigger | Description |
+|------|---------|-------------|
+| Component Trace | `"from ComponentName"` | Trace from specific component |
+| Feature Flow | `"feature name"` | Map full feature execution |
+| API Trace | `"API /path"` | Trace API endpoint handling |
+| Event Flow | `"event name"` | Track event propagation |
+| Data Flow | `"data EntityName"` | Follow data transformations |
+| Error Flow | `"error handling"` | Map error propagation paths |
+| Auth Flow | `"authentication"` | Trace auth/permission checks |
+| State Flow | `"state StateName"` | Track state changes |
+| Integration | `"integration ServiceName"` | Map external service calls |
+| Lifecycle | `"lifecycle ComponentName"` | Trace component lifecycle |
+| Navigation | `"navigation"` | Map navigation structure |
+
+### Execution Time
+
+**3-5 minutes** (depends on flow complexity)
+
+### Usage Examples
+
+#### Example 1: Understanding Login Flow
+
+**Scenario**: Need to understand how user authentication works in the codebase
+
+**Command**:
+```bash
+/atlas.flow "user login"
+```
+
+**Output** (summary):
+```
+## Entry Points
+
+1. `LoginViewController.swift:25` - UI entry point
+2. `AuthAPI.swift:40` - API entry point
+
+## Execution Path
+
+LoginViewController.swift:25
+  ↓ loginButtonTapped()
+  ↓ AuthService.swift:30 - login(email:password:)
+    ↓ APIClient.swift:45 - post("/auth/login")
+    ↓ TokenManager.swift:20 - saveToken()
+  ↓ NavigationCoordinator.swift:50 - showDashboard()
+
+## Boundaries Identified
+
+| Type | Location | Purpose |
+|------|----------|---------|
+| API | APIClient.swift:45 | Auth endpoint call |
+| Storage | TokenManager.swift:20 | Secure token storage |
+| Navigation | NavigationCoordinator.swift:50 | Screen transition |
+```
+
+**What You Learned**:
+- Login has 2 entry points (UI and API)
+- Flow touches 4 components: ViewController → Service → APIClient → TokenManager
+- Token is stored securely (TokenManager uses Keychain)
+- Coordinator pattern used for navigation
+
+**Next Step**: Use `/atlas.pattern "authentication"` to learn auth implementation conventions
+
+#### Example 2: Tracing Checkout Process
+
+**Scenario**: Need to modify checkout, want to understand full flow first
+
+**Command**:
+```bash
+/atlas.flow "checkout process"
+```
+
+**Output** (summary):
+```
+## Execution Path
+
+CartViewController.swift:100
+  ↓ checkoutButtonTapped()
+  ↓ CheckoutService.swift:25 - initiateCheckout(cart:)
+    ↓ PaymentGateway.swift:40 - processPayment()
+    ↓ OrderService.swift:60 - createOrder()
+    ↓ InventoryService.swift:30 - reserveItems()
+  ↓ ConfirmationViewController.swift:15 - show()
+
+## Boundaries Identified
+
+| Type | Location | Purpose |
+|------|----------|---------|
+| Payment | PaymentGateway.swift:40 | External payment API |
+| Database | OrderService.swift:60 | Order persistence |
+| Inventory | InventoryService.swift:30 | Stock management |
+```
+
+**What You Learned**:
+- Checkout touches payment, order, and inventory systems
+- PaymentGateway is external API boundary (high risk for changes)
+- 5 services involved in the flow
+
+**Next Step**: Use `/atlas.impact "CheckoutService.swift"` before making changes
+
+---
+
+## /atlas.deps
+
+**Analyze library/framework usage for upgrade planning**
 
 ### Usage
 
@@ -672,7 +864,7 @@ Risk Level: 🟡 Medium
 
 ---
 
-## Command 7: /atlas.init
+## /atlas.init
 
 **Initialize SourceAtlas trigger rules**
 
@@ -685,6 +877,74 @@ Risk Level: 🟡 Medium
 ### Feature Description
 
 Injects SourceAtlas auto-trigger rules into the project's CLAUDE.md, so Claude Code knows when to automatically suggest using Atlas commands.
+
+---
+
+## /atlas.list
+
+**List cached analysis results**
+
+### Usage
+
+```bash
+/atlas.list
+```
+
+### What You Get
+
+A table showing all cached analyses in `.sourceatlas/`:
+
+```
+📁 .sourceatlas/ saved analyses:
+
+| Type | File | Size | Modified | Status |
+|------|------|------|----------|--------|
+| overview | overview.yaml | 2.3 KB | 3 days ago | ✅ |
+| pattern | patterns/api.md | 1.5 KB | 45 days ago | ⚠️ |
+| history | history.md | 4.2 KB | 60 days ago | ⚠️ |
+
+📊 Stats: 3 cached, 2 expired (>30 days)
+```
+
+### Expiry Warnings
+
+- Analyses older than **30 days** are marked with ⚠️
+- Expired analyses may not reflect current codebase state
+- Use `--force` flag to re-analyze: `/atlas.overview --force`
+
+---
+
+## /atlas.clear
+
+**Clear cached analysis results**
+
+### Usage
+
+```bash
+# Clear all cached analyses
+/atlas.clear
+
+# Clear specific type
+/atlas.clear overview
+/atlas.clear patterns
+/atlas.clear history
+```
+
+### Supported Targets
+
+| Target | Path | Description |
+|--------|------|-------------|
+| `overview` | `.sourceatlas/overview.yaml` | Project overview |
+| `patterns` | `.sourceatlas/patterns/` | Pattern analyses |
+| `flows` | `.sourceatlas/flows/` | Flow traces |
+| `history` | `.sourceatlas/history.md` | Git history analysis |
+| `impact` | `.sourceatlas/impact/` | Impact analyses |
+| `deps` | `.sourceatlas/deps/` | Dependency analyses |
+| (no argument) | `.sourceatlas/*` | Clear all |
+
+### Confirmation Required
+
+The command will show what will be deleted and ask for confirmation before proceeding.
 
 ---
 
@@ -735,8 +995,10 @@ cp scripts/atlas/patterns/ios/networking.sh scripts/atlas/patterns/ios/custom-pa
 
 **A**:
 - Output is displayed directly in Claude Code conversation
-- Not automatically saved to files
-- Can manually copy results to save
+- Add `--save` flag to persist results: `/atlas.overview --save`
+- Saved analyses go to `.sourceatlas/` directory
+- Use `/atlas.list` to view cached analyses
+- Cached analyses are automatically loaded on re-run (add `--force` to re-analyze)
 
 ### Q: Can I analyze private codebases?
 
@@ -927,7 +1189,7 @@ echo -e "\n=== Check Complete ==="
 ```
 
 **Expected Results**:
-- ✅ See 7 .md files (init, overview, pattern, impact, history, flow, deps)
+- ✅ See 9 .md files (init, overview, pattern, impact, history, flow, deps, list, clear)
 - ✅ See scripts/atlas/ directory
 - ✅ At project root (has .git/)
 - ✅ Code file count < 1000 (TINY/SMALL) or < 5000 (MEDIUM/LARGE)
@@ -944,4 +1206,4 @@ echo -e "\n=== Check Complete ==="
 ---
 
 **SourceAtlas** - Code analysis assistant for Claude Code
-v2.9.0 | Updated: 2025-12-08
+v2.9.6 | Updated: 2025-12-21
