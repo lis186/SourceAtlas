@@ -36,6 +36,12 @@ A set of AI-powered slash commands for [Claude Code](https://claude.ai/code) tha
 
 ---
 
+## How It Works
+
+SourceAtlas uses **information theory** to prioritize high-entropy files (configs, READMEs, models) over implementation details. By scanning <5% of files, it achieves 70-80% understanding depth in minutes instead of days.
+
+---
+
 ## 6 Commands for 6 Real Problems
 
 ### 1. "I just joined the project, where do I start?"
