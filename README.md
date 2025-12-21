@@ -2,10 +2,9 @@
 
 > 🌐 **English** | [繁體中文](./README.zh-TW.md)
 
-**Understand a 12,000-file codebase in under 3 minutes**
+**Get project overview in ~3 minutes by scanning <5% of files**
 
 [![Version](https://img.shields.io/badge/version-v2.9.6-blue)](https://github.com/lis186/SourceAtlas/releases)
-[![Accuracy](https://img.shields.io/badge/accuracy-93.3%25-brightgreen)](#-benchmark-results)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 ---
@@ -25,11 +24,13 @@
 
 | Task | Before | After |
 |------|--------|-------|
-| Understand project architecture | 2-3 days | **5-15 minutes** |
-| Find API implementation examples | Ask colleagues / random searching | **0.1-30 seconds** |
-| Analyze impact of code changes | Manual tracking, hope for the best | **1-2 minutes** |
-| Plan framework upgrade | Weeks of research | **15-30 minutes** |
-| Find code hotspots & experts | Ask around | **5-10 minutes** |
+| Understand project architecture | 2-3 days | **~3-15 minutes** ✓ |
+| Find API implementation examples | Ask colleagues / random searching | **~seconds** |
+| Analyze impact of code changes | Manual tracking, hope for the best | **~1-2 minutes** |
+| Plan framework upgrade | Weeks of research | **~15-30 minutes** |
+| Find code hotspots & experts | Ask around | **~5-10 minutes** |
+
+<sub>✓ = benchmarked on 5 open-source projects. Others are estimates based on usage.</sub>
 
 ---
 
@@ -118,18 +119,19 @@
 
 ## Benchmark Results
 
-Tested on **5 real open-source projects**: Firefox iOS, Discourse, Cal.com, Prefect, Thunderbird
+**`/atlas.overview` tested on 5 open-source projects**: Firefox iOS, Discourse, Cal.com, Prefect, Thunderbird
 
 | Metric | Result |
 |--------|--------|
-| **Overall Accuracy** | 93.3% (56/60 points) |
+| **Overall Accuracy** | 93% (56/60 points) |
 | **Tech Stack Detection** | 90% |
 | **Architecture Detection** | 90% |
 | **Core Modules** | 100% |
 | **Business Domain** | 100% |
 | **AI Collaboration Level** | 100% |
-| **Average Speed** | 2 min 41 sec per project |
-| **Efficiency Gain** | 30x faster than manual |
+| **Average Speed** | ~2 min 41 sec per project |
+
+<sub>Note: Benchmark covers `/atlas.overview` only. Other commands not yet benchmarked.</sub>
 
 <!-- TODO: Add link to detailed benchmark report -->
 
@@ -173,15 +175,17 @@ ls ~/.claude/commands/atlas.*.md
 
 | Command | Problem It Solves | Time |
 |---------|------------------|------|
-| `/atlas.overview` | New to project, need the big picture | 5-15 min |
-| `/atlas.pattern "X"` | Need to implement X, want examples | 0.1-30 sec |
-| `/atlas.impact "file"` | About to change code, worried about side effects | 1-2 min |
-| `/atlas.history` | Need to find hotspots and experts | 5-10 min |
-| `/atlas.flow "feature"` | Need to understand a feature's execution path | 3-5 min |
-| `/atlas.deps "upgrade"` | Planning framework/SDK upgrade | 15-30 min |
-| `/atlas.init` | First time using SourceAtlas | 10 sec |
+| `/atlas.overview` | New to project, need the big picture | ~3-15 min ✓ |
+| `/atlas.pattern "X"` | Need to implement X, want examples | ~seconds |
+| `/atlas.impact "file"` | About to change code, worried about side effects | ~1-2 min |
+| `/atlas.history` | Need to find hotspots and experts | ~5-10 min |
+| `/atlas.flow "feature"` | Need to understand a feature's execution path | ~3-5 min |
+| `/atlas.deps "upgrade"` | Planning framework/SDK upgrade | ~15-30 min |
+| `/atlas.init` | First time using SourceAtlas | ~10 sec |
 | `/atlas.list` | Check what analyses are cached | instant |
 | `/atlas.clear` | Clear outdated cache | instant |
+
+<sub>✓ = benchmarked. Times without ✓ are estimates.</sub>
 
 ---
 
@@ -198,6 +202,18 @@ ls ~/.claude/commands/atlas.*.md
 | **Rust** | 28 | Handler, Service, Middleware, Async Runtime |
 
 **Total: 221 patterns**
+
+---
+
+## Limitations
+
+| Limitation | Details |
+|------------|---------|
+| **Benchmark scope** | Only `/atlas.overview` tested; other commands are estimates |
+| **Tech Stack detection** | May miss secondary languages (e.g., React in a Python project) |
+| **Architecture detection** | May miss secondary patterns (e.g., MVI in Clean Architecture) |
+| **Best for mature projects** | Works best with README, config files; limited for undocumented legacy code |
+| **Language coverage** | 7 languages supported; non-mainstream languages need manual verification |
 
 ---
 
