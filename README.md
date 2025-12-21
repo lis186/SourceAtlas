@@ -149,6 +149,15 @@
 | **Languages Tested** | Swift, Ruby, Python, TypeScript, Kotlin |
 | **Total Dependencies Analyzed** | 2,068 files |
 
+### `/atlas.flow` - Flow Tracing
+
+| Metric | Result |
+|--------|--------|
+| **Entry Point Detection** | 100% (5/5 projects) |
+| **Call Chain Depth** | 4-5 levels per project |
+| **Boundary Identification** | 100% (4-5 types per project) |
+| **Languages Tested** | Swift, Ruby, Python, TypeScript, Kotlin |
+
 <sub>Note: Other commands not yet formally benchmarked.</sub>
 
 <!-- TODO: Add link to detailed benchmark report -->

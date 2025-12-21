@@ -149,6 +149,15 @@
 | **測試語言** | Swift、Ruby、Python、TypeScript、Kotlin |
 | **分析依賴數** | 2,068 個檔案 |
 
+### `/atlas.flow` - Flow 追蹤
+
+| 指標 | 結果 |
+|------|------|
+| **入口點偵測** | 100%（5/5 專案） |
+| **呼叫鏈深度** | 每專案 4-5 層 |
+| **邊界識別** | 100%（每專案 4-5 種） |
+| **測試語言** | Swift、Ruby、Python、TypeScript、Kotlin |
+
 <sub>備註：其他命令尚未正式 Benchmark。</sub>
 
 <!-- TODO: 加入詳細 benchmark 報告連結 -->
