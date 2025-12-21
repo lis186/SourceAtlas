@@ -148,10 +148,10 @@ A set of AI-powered slash commands for [Claude Code](https://claude.ai/code) tha
 
 ```bash
 # 1. Clone
-git clone https://github.com/lis186/SourceAtlas.git ~/dev/sourceatlas2
+git clone https://github.com/lis186/SourceAtlas.git
 
 # 2. Install
-cd ~/dev/sourceatlas2 && ./install-global.sh
+cd SourceAtlas && ./install-global.sh
 ```
 
 ### First Use

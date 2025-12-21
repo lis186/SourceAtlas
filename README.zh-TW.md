@@ -148,10 +148,10 @@
 
 ```bash
 # 1. Clone
-git clone https://github.com/lis186/SourceAtlas.git ~/dev/sourceatlas2
+git clone https://github.com/lis186/SourceAtlas.git
 
 # 2. 安裝
-cd ~/dev/sourceatlas2 && ./install-global.sh
+cd SourceAtlas && ./install-global.sh
 ```
 
 ### 第一次使用
