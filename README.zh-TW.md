@@ -276,7 +276,7 @@ ls ~/.claude/commands/atlas.*.md
 
 | 文件 | 說明 |
 |------|------|
-| [使用指南](./USAGE_GUIDE.md) | 完整命令參考、全部 221 種模式 |
+| [使用指南](./USAGE_GUIDE.zh-TW.md) | 完整命令參考、全部 221 種模式 |
 | [安裝指南](./GLOBAL_INSTALLATION.md) | 詳細安裝選項 |
 | [分析憲法](./ANALYSIS_CONSTITUTION.md) | 所有分析遵循的品質原則 |
 | [CLAUDE.md](./CLAUDE.md) | 開發者指南、架構 |
