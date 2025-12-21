@@ -4,6 +4,8 @@
 
 **掃描 <5% 的檔案，約 3 分鐘取得專案全貌**
 
+一組 [Claude Code](https://claude.ai/code) slash commands，幫助你快速理解任何 codebase。
+
 [![Version](https://img.shields.io/badge/version-v2.9.6-blue)](https://github.com/lis186/SourceAtlas/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 

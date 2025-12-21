@@ -4,6 +4,8 @@
 
 **Get project overview in ~3 minutes by scanning <5% of files**
 
+A set of AI-powered slash commands for [Claude Code](https://claude.ai/code) that help you understand any codebase quickly.
+
 [![Version](https://img.shields.io/badge/version-v2.9.6-blue)](https://github.com/lis186/SourceAtlas/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
