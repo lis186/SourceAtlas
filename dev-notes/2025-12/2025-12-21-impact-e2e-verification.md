@@ -8,12 +8,14 @@
 
 ## Benchmark 聲稱
 
-| 指標 | 宣稱值 |
-|------|--------|
-| **Category Validation** | 100% (5/5 projects) |
-| **Languages Tested** | Swift, Ruby, Python, TypeScript, Kotlin |
-| **Total Dependencies** | 2,068 files |
-| **Total Test Files** | 969 files |
+| 指標 | 宣稱值 | 定義 |
+|------|--------|------|
+| **Internal Consistency** | 100% (5/5 projects) | 分類加總 = 總數 |
+| **Languages Tested** | Swift, Ruby, Python, TypeScript, Kotlin | - |
+| **Total Dependencies** | 2,068 files | LLM 分析結果 |
+| **Total Test Files** | 969 files | LLM 分析結果 |
+
+> ⚠️ **重要**: Benchmark 的 "100%" 是指「內部一致性」（分類不重複計算），而非「可用 grep 獨立驗證」。
 
 ### 專案詳細
 

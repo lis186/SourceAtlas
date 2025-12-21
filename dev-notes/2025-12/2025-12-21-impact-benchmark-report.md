@@ -7,10 +7,19 @@
 
 | Metric | Result |
 |--------|--------|
-| **Category Validation** | 100% (5/5 projects) |
+| **Internal Consistency** | 100% (5/5 projects) |
 | **Languages Tested** | Swift, Ruby, Python, TypeScript, Kotlin |
 | **Total Dependencies Analyzed** | 2,068 files |
 | **Total Test Files** | 969 files |
+
+### Important Definitions
+
+| Term | Definition |
+|------|------------|
+| **Internal Consistency** | Category subtotals sum to total (no double-counting) |
+| **NOT External Verifiability** | Numbers are LLM-analyzed, may differ from simple grep |
+
+> ⚠️ **Note**: This benchmark validates that `/atlas.impact` produces internally consistent categorization. The actual file counts depend on LLM semantic analysis and may vary from simple `grep -rl` results due to pattern interpretation differences.
 
 ## Test Results by Project
 
@@ -64,4 +73,27 @@ Added two new required phases:
 
 ## Conclusion
 
-`/atlas.impact` achieves 100% validation accuracy across 5 projects in 5 different languages when using the updated categorization logic.
+`/atlas.impact` achieves 100% **internal consistency** across 5 projects in 5 different languages when using the updated categorization logic.
+
+### What This Means
+
+- ✅ **Categories don't overlap** - No double-counting in categorization
+- ✅ **Math is correct** - Subtotals always sum to total
+- ✅ **Multi-language support** - Works across Swift, Ruby, Python, TypeScript, Kotlin
+
+### What This Does NOT Mean
+
+- ❌ **Exact grep reproducibility** - LLM analysis differs from simple `grep -rl`
+- ❌ **Deterministic counts** - Same query may produce slightly different results
+
+### E2E Verification Results (2025-12-21)
+
+| Project | Tests Match | Deps Variance | Notes |
+|---------|-------------|---------------|-------|
+| Thunderbird | ✅ 100% | +6.6% | Within acceptable range |
+| Firefox iOS | ✅ 100% | -19.4% | Pattern sensitivity |
+| Discourse | ❌ | +244% | "User" is common word |
+| Prefect | ❌ | +91% | Broad pattern match |
+| Cal.com | ⚠️ | +37% | Case sensitivity |
+
+> 📋 Full E2E report: [2025-12-21-impact-e2e-verification.md](./2025-12-21-impact-e2e-verification.md)

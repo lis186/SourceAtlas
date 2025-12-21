@@ -145,9 +145,11 @@
 
 | Metric | Result |
 |--------|--------|
-| **Category Validation** | 100% (5/5 projects) |
+| **Internal Consistency** | 100% (5/5 projects) |
 | **Languages Tested** | Swift, Ruby, Python, TypeScript, Kotlin |
 | **Total Dependencies Analyzed** | 2,068 files |
+
+<sub>Note: Internal Consistency = category subtotals sum to total (no double-counting). LLM-based analysis may vary from simple grep counts.</sub>
 
 ### `/atlas.flow` - Flow Tracing ✓
 
