@@ -166,7 +166,18 @@
 
 <sub>✓ = E2E verified on 2025-12-21. [Verification Report](./dev-notes/2025-12/2025-12-21-flow-e2e-verification.md)</sub>
 
-<sub>Note: Other commands not yet formally benchmarked.</sub>
+### `/atlas.deps` - Dependency Analysis ✓
+
+| Metric | Result |
+|--------|--------|
+| **Mode Detection** | 100% (Upgrade vs Inventory) |
+| **Phase 0 Rules** | 100% effective |
+| **Languages Tested** | Python, Ruby |
+| **Test Cases** | 2/2 passed |
+
+<sub>✓ = E2E verified on 2025-12-21. [Verification Report](./dev-notes/2025-12/2025-12-21-deps-e2e-verification.md)</sub>
+
+<sub>Note: `/atlas.history` not yet formally benchmarked.</sub>
 
 ---
 
@@ -242,7 +253,7 @@ ls ~/.claude/commands/atlas.*.md
 
 | Limitation | Details |
 |------------|---------|
-| **Benchmark scope** | 4 commands tested (`overview`, `pattern`, `flow`, `impact`); `history` and `deps` are estimates |
+| **Benchmark scope** | 5 commands tested (`overview`, `pattern`, `flow`, `impact`, `deps`); `history` is estimate |
 | **Tech Stack detection** | May miss secondary languages (e.g., React in a Python project) |
 | **Architecture detection** | May miss secondary patterns (e.g., MVI in Clean Architecture) |
 | **Best for mature projects** | Works best with README, config files; limited for undocumented legacy code |
