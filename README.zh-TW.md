@@ -1,6 +1,6 @@
 # SourceAtlas
 
-> [sourceatlas.io](https://sourceatlas.io) | [English](./README.md) | 🌐 **繁體中文**
+> [sourceatlas.io](https://www.sourceatlas.io) | [English](./README.md) | 🌐 **繁體中文**
 
 **掃描 <5% 的檔案，約 3 分鐘取得專案全貌**
 

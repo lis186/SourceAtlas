@@ -1,6 +1,6 @@
 # SourceAtlas - 使用指南
 
-> 🌐 [sourceatlas.io](https://sourceatlas.io) | [English](./USAGE_GUIDE.md) | **繁體中文**
+> 🌐 [sourceatlas.io](https://www.sourceatlas.io) | [English](./USAGE_GUIDE.md) | **繁體中文**
 
 **所有斜線命令的完整使用說明**
 
