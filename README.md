@@ -27,7 +27,7 @@ A set of AI-powered slash commands for [Claude Code](https://claude.ai/code) tha
 | Task | Before | After |
 |------|--------|-------|
 | Understand project architecture | 2-3 days | **~3-15 minutes** ✓ |
-| Find API implementation examples | Ask colleagues / random searching | **~seconds** ✓ |
+| Find API implementation examples | Ask colleagues / random searching | **~seconds** |
 | Analyze impact of code changes | Manual tracking, hope for the best | **~1-2 minutes** |
 | Plan framework upgrade | Weeks of research | **~15-30 minutes** |
 | Find code hotspots & experts | Ask around | **~5-10 minutes** |
@@ -44,9 +44,9 @@ A set of AI-powered slash commands for [Claude Code](https://claude.ai/code) tha
 /atlas.overview
 ```
 
-**In 5-15 minutes, get**: Tech stack, architecture patterns, project scale, code quality signals
+**In ~3 minutes, get**: Tech stack, architecture patterns, project scale, code quality signals
 
-> *"Within 10 minutes, I knew it was Swift 5.10 + MVVM + Coordinator, with 12K files and decent test coverage"*
+**Example output**: Detects Swift 5.10 + MVVM + Coordinator, 12K files, test coverage level
 
 ---
 
@@ -60,7 +60,7 @@ A set of AI-powered slash commands for [Claude Code](https://claude.ai/code) tha
 
 **In 0.1-30 seconds, get**: 2-3 best example files with exact line numbers + implementation guide
 
-> *"Found `UserAPI.swift:45` with tests — copied the pattern, done in 5 minutes"*
+**Example output**: Returns `UserAPI.swift:45` with matching test file and implementation guide
 
 **221 patterns supported**: MVVM, Networking, Core Data, React Hooks, Next.js API, Jetpack Compose, Vue Composable, FastAPI, Rails Controller...
 
@@ -75,7 +75,7 @@ A set of AI-powered slash commands for [Claude Code](https://claude.ai/code) tha
 
 **In 1-2 minutes, get**: All dependents, Breaking Change risks, test coverage, migration steps
 
-> *"Found 23 files depending on it, 5 breaking changes — knew exactly what to update"*
+**Example output**: Lists 23 dependent files, identifies 5 breaking change risks
 
 ---
 
@@ -88,7 +88,7 @@ A set of AI-powered slash commands for [Claude Code](https://claude.ai/code) tha
 
 **In 5-10 minutes, get**: Hotspots (files that change constantly), Hidden Coupling, Knowledge Distribution
 
-> *"Discovered `PaymentService.swift` changed 47 times in 6 months, only 1 person touched it — bus factor alert!"*
+**Example output**: Shows `PaymentService.swift` with 47 changes, flags single-contributor bus factor risk
 
 ---
 
@@ -101,7 +101,7 @@ A set of AI-powered slash commands for [Claude Code](https://claude.ai/code) tha
 
 **In 3-5 minutes, get**: Entry points, complete execution path, boundary identification (API/DB/Auth/Payment)
 
-> *"Traced from `LoginViewController` → `AuthService` → `APIClient` → `TokenManager` in one shot"*
+**Example output**: Traces `LoginViewController` → `AuthService` → `APIClient` → `TokenManager`
 
 ---
 
@@ -115,7 +115,7 @@ A set of AI-powered slash commands for [Claude Code](https://claude.ai/code) tha
 
 **In 15-30 minutes, get**: Deprecated APIs, version checks to remove, third-party compatibility, effort estimate
 
-> *"Got a complete migration checklist: 10 version checks removable, 35 deprecated APIs, estimated 40-60 hours"*
+**Example output**: Migration checklist with removable version checks, deprecated APIs, effort estimate
 
 ---
 

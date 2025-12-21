@@ -27,7 +27,7 @@
 | 任務 | 以前 | 現在 |
 |------|------|------|
 | 理解專案架構 | 2-3 天 | **~3-15 分鐘** ✓ |
-| 找 API 實作範例 | 問同事 / 亂翻 | **~秒級** ✓ |
+| 找 API 實作範例 | 問同事 / 亂翻 | **~秒級** |
 | 分析程式碼修改影響 | 手動追蹤，祈禱不會爆 | **~1-2 分鐘** |
 | 規劃框架升級 | 研究好幾週 | **~15-30 分鐘** |
 | 找程式碼熱點和專家 | 到處問人 | **~5-10 分鐘** |
@@ -44,9 +44,9 @@
 /atlas.overview
 ```
 
-**5-15 分鐘內得到**：Tech stack、架構模式、專案規模、程式碼品質訊號
+**約 3 分鐘內得到**：Tech stack、架構模式、專案規模、程式碼品質訊號
 
-> *「10 分鐘內，我就知道這是 Swift 5.10 + MVVM + Coordinator，有 12K 檔案，測試覆蓋率還不錯」*
+**輸出範例**：偵測到 Swift 5.10 + MVVM + Coordinator，12K 檔案，測試覆蓋程度
 
 ---
 
@@ -60,7 +60,7 @@
 
 **0.1-30 秒內得到**：2-3 個最佳範例檔案 + 精確行數 + 實作指南
 
-> *「找到 `UserAPI.swift:45` 還有測試 — 照抄模式，5 分鐘搞定」*
+**輸出範例**：回傳 `UserAPI.swift:45`，附帶對應測試檔案和實作指南
 
 **支援 221 種模式**：MVVM、Networking、Core Data、React Hooks、Next.js API、Jetpack Compose、Vue Composable、FastAPI、Rails Controller...
 
@@ -75,7 +75,7 @@
 
 **1-2 分鐘內得到**：所有依賴者、Breaking Change 風險、測試覆蓋、遷移步驟
 
-> *「發現 23 個檔案依賴它，5 個 breaking changes — 精確知道要改哪些」*
+**輸出範例**：列出 23 個依賴檔案，識別 5 個 breaking change 風險
 
 ---
 
@@ -88,7 +88,7 @@
 
 **5-10 分鐘內得到**：Hotspots（頻繁修改的檔案）、隱藏耦合、知識分布
 
-> *「發現 `PaymentService.swift` 6 個月內改了 47 次，只有 1 個人碰過 — Bus Factor 警報！」*
+**輸出範例**：顯示 `PaymentService.swift` 有 47 次修改，標記單一貢獻者 bus factor 風險
 
 ---
 
@@ -101,7 +101,7 @@
 
 **3-5 分鐘內得到**：入口點、完整執行路徑、邊界識別（API/DB/Auth/Payment）
 
-> *「一次追完 `LoginViewController` → `AuthService` → `APIClient` → `TokenManager`」*
+**輸出範例**：追蹤 `LoginViewController` → `AuthService` → `APIClient` → `TokenManager`
 
 ---
 
@@ -115,7 +115,7 @@
 
 **15-30 分鐘內得到**：Deprecated APIs、可移除的版本檢查、第三方相容性、工時估計
 
-> *「拿到完整遷移清單：10 個版本檢查可移除、35 個 deprecated APIs、估計 40-60 小時」*
+**輸出範例**：遷移清單，包含可移除的版本檢查、deprecated APIs、工時估計
 
 ---
 
