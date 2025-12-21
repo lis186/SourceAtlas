@@ -89,7 +89,7 @@ SourceAtlas 適用於以下常見情境：
 
 ## 安裝
 
-**完整安裝指南**：[GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
+**完整安裝指南**：[GLOBAL_INSTALLATION.zh-TW.md](./GLOBAL_INSTALLATION.zh-TW.md)
 
 ### 快速開始
 
