@@ -5,6 +5,27 @@ All notable changes to SourceAtlas Plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.0] - 2025-12-22
+
+### Added
+- **Agent Skills** - 6 model-invoked skills for automatic analysis triggering ⭐ Major Feature
+  - `codebase-overview`: Triggers `/atlas.overview` for architecture questions
+  - `pattern-finder`: Triggers `/atlas.pattern` for implementation examples
+  - `impact-analyzer`: Triggers `/atlas.impact` for change impact questions
+  - `code-flow-tracer`: Triggers `/atlas.flow` for execution flow questions
+  - `history-analyzer`: Triggers `/atlas.history` for code ownership questions
+  - `dependency-analyzer`: Triggers `/atlas.deps` for upgrade planning
+  - No commands to memorize — Claude automatically chooses the right analysis
+
+### Removed
+- **`/atlas.init` command** - Replaced by Agent Skills (auto-trigger without modifying project files)
+- **`install-global.sh`** - Replaced by plugin-based installation
+
+### Changed
+- **Plugin-first installation** - Use `claude --plugin-dir ./plugin` instead of global script
+- **Total commands now: 8** (removed init, kept overview, pattern, impact, history, flow, deps, list, clear)
+- Updated README with new installation method and Skills documentation
+
 ## [2.9.6] - 2025-12-20
 
 ### Added

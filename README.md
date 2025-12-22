@@ -150,7 +150,7 @@ SourceAtlas uses **information theory** to prioritize high-entropy files (config
 
 ### Requirements
 
-- **Claude Code** 0.3+ ([Get it here](https://claude.ai/code))
+- **Claude Code** 1.0.33+ ([Get it here](https://claude.ai/code))
 - **Git** 2.0+
 - **macOS 12+** or **Linux**
 
@@ -160,29 +160,26 @@ SourceAtlas uses **information theory** to prioritize high-entropy files (config
 # 1. Clone
 git clone https://github.com/lis186/SourceAtlas.git
 
-# 2. Install
-cd SourceAtlas && ./install-global.sh
+# 2. Use as plugin
+claude --plugin-dir ./SourceAtlas/plugin
 ```
+
+Or add to your Claude Code settings for permanent use.
 
 ### First Use
 
 ```bash
 cd ~/projects/any-project
-/atlas.init      # One-time: inject auto-trigger rules
 /atlas.overview  # Start understanding
 ```
 
 ![Overview Output Example](./docs/images/atlas-overview-output.png)
 
-**Verify installation**:
-```bash
-ls ~/.claude/commands/atlas.*.md
-# Should see 9 files
-```
+With **Agent Skills**, Claude automatically suggests the right analysis based on your questions — no commands to memorize!
 
 ---
 
-## All 9 Commands
+## All 8 Commands
 
 | Command | Problem It Solves | Time |
 |---------|------------------|------|
@@ -192,7 +189,6 @@ ls ~/.claude/commands/atlas.*.md
 | `/atlas.history` | Need to find hotspots and experts | ~5-10 min |
 | `/atlas.flow "feature"` | Need to understand a feature's execution path | ~3-5 min |
 | `/atlas.deps "upgrade"` | Planning framework/SDK upgrade | ~15-30 min |
-| `/atlas.init` | First time using SourceAtlas | ~10 sec |
 | `/atlas.list` | Check what analyses are cached | instant |
 | `/atlas.clear` | Clear outdated cache | instant |
 
