@@ -598,6 +598,100 @@ Based on analysis results, may suggest:
 
 ---
 
+## Self-Verification Phase (REQUIRED)
+
+> **Purpose**: Prevent hallucinated dependency names, incorrect version numbers, and fictional API changes from appearing in output.
+> This phase runs AFTER output generation, BEFORE save.
+
+### Step V1: Extract Verifiable Claims
+
+After generating the dependency analysis output, extract all verifiable claims:
+
+**Claim Types to Extract:**
+
+| Type | Pattern | Verification Method |
+|------|---------|---------------------|
+| **Dependency Name** | Package names in inventory | Check package manifest |
+| **Current Version** | "react@18.2.0" | `grep "react" package.json` |
+| **File Path** | Usage location files | `test -f path` |
+| **Usage Count** | "used in 45 files" | `grep -r "import" \| wc -l` |
+| **Config File** | "package.json", "Podfile" | `test -f config_file` |
+
+### Step V2: Parallel Verification Execution
+
+Run **ALL** verification checks in parallel:
+
+```bash
+# Execute all verifications in a single parallel block
+
+# 1. Verify dependency exists in manifest
+if ! grep -q '"react"' package.json 2>/dev/null; then
+    echo "❌ DEPENDENCY_NOT_FOUND: react in package.json"
+fi
+
+# 2. Verify version matches
+claimed_version="18.2.0"
+actual_version=$(grep -o '"react": "[^"]*"' package.json 2>/dev/null | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+')
+if [ "$actual_version" != "$claimed_version" ]; then
+    echo "⚠️ VERSION_MISMATCH: claimed $claimed_version, actual $actual_version"
+fi
+
+# 3. Verify usage file paths
+for path in "src/components/App.tsx" "src/hooks/useAuth.ts"; do
+    if [ ! -f "$path" ]; then
+        echo "❌ FILE_NOT_FOUND: $path"
+    fi
+done
+
+# 4. Verify package manifest exists
+for manifest in "package.json" "Podfile" "build.gradle"; do
+    if [ -f "$manifest" ]; then
+        echo "✅ MANIFEST_FOUND: $manifest"
+        break
+    fi
+done
+```
+
+### Step V3: Handle Verification Results
+
+**If ALL checks pass:**
+- Continue to output/save
+
+**If ANY check fails:**
+1. **DO NOT output the uncorrected analysis**
+2. Fix each failed claim:
+   - `DEPENDENCY_NOT_FOUND` → Remove from inventory or find correct manifest
+   - `VERSION_MISMATCH` → Update with actual version from manifest
+   - `FILE_NOT_FOUND` → Search for correct usage locations
+3. Re-generate affected sections with corrected information
+4. Re-run verification on corrected sections
+
+### Step V4: Verification Summary (Append to Output)
+
+Add to footer (before `🗺️ v2.9.6 │ Constitution v1.1`):
+
+**If all verifications passed:**
+```
+✅ Verified: [N] dependencies, [M] versions, [K] usage files
+```
+
+**If corrections were made:**
+```
+🔧 Self-corrected: [list specific corrections made]
+✅ Verified: [N] dependencies, [M] versions, [K] usage files
+```
+
+### Verification Checklist
+
+Before finalizing output, confirm:
+- [ ] All dependencies verified to exist in package manifest
+- [ ] All version numbers match actual manifest entries
+- [ ] Usage file paths verified to exist
+- [ ] Breaking change examples verified in actual API docs (if claimed)
+- [ ] Migration code snippets verified to be syntactically correct
+
+---
+
 ## Save Mode (--save)
 
 If `--save` is present in `$ARGUMENTS`:

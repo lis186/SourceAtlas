@@ -2575,6 +2575,105 @@ After `/atlas.flow`, users can:
 
 ---
 
+## Self-Verification Phase (REQUIRED)
+
+> **Purpose**: Prevent hallucinated file paths, incorrect method names, and fictional code flows from appearing in output.
+> This phase runs AFTER output generation, BEFORE save.
+
+### Step V1: Extract Verifiable Claims
+
+After generating the flow analysis output, extract all verifiable claims:
+
+**Claim Types to Extract:**
+
+| Type | Pattern | Verification Method |
+|------|---------|---------------------|
+| **File Path** | `path/to/file.ext:line` | `test -f path/to/file.ext` |
+| **Method Name** | `ClassName.methodName()` | `grep -q "methodName" file` |
+| **Class Name** | `class ClassName`, `struct ClassName` | `grep -q "class ClassName" file` |
+| **Step Count** | "8-step flow", "5 phases" | Count actual steps in diagram |
+| **Line Number** | `:334`, `:567` | `sed -n 'Np' file` |
+| **ASCII Diagram** | Flow boxes, arrows | Verify file/method references |
+
+### Step V2: Parallel Verification Execution
+
+Run **ALL** verification checks in parallel:
+
+```bash
+# Execute all verifications in a single parallel block
+
+# 1. Verify file paths in flow steps
+for path in "api/resolvers/shop-order.resolver.ts" "service/order.service.ts"; do
+    if [ ! -f "$path" ]; then
+        echo "❌ FILE_NOT_FOUND: $path"
+    fi
+done
+
+# 2. Verify method/class existence
+if ! grep -q "addItemToOrder" "api/resolvers/shop-order.resolver.ts" 2>/dev/null; then
+    echo "❌ METHOD_NOT_FOUND: addItemToOrder in api/resolvers/shop-order.resolver.ts"
+fi
+
+# 3. Verify line number references
+claimed_line=334
+file_path="api/resolvers/shop-order.resolver.ts"
+if [ -f "$file_path" ]; then
+    line_content=$(sed -n "${claimed_line}p" "$file_path")
+    if [ -z "$line_content" ]; then
+        echo "❌ LINE_NOT_FOUND: line $claimed_line in $file_path"
+    fi
+fi
+
+# 4. Verify step count
+claimed_steps=8
+# Count actual steps found during analysis
+actual_steps=$(echo "$flow_steps" | wc -l)
+if [ "$actual_steps" != "$claimed_steps" ]; then
+    echo "⚠️ STEP_COUNT_MISMATCH: claimed $claimed_steps, actual $actual_steps"
+fi
+```
+
+### Step V3: Handle Verification Results
+
+**If ALL checks pass:**
+- Continue to output/save
+
+**If ANY check fails:**
+1. **DO NOT output the uncorrected analysis**
+2. Fix each failed claim:
+   - `FILE_NOT_FOUND` → Search for correct path using `find . -name "filename*"`
+   - `METHOD_NOT_FOUND` → Search for correct method using `grep -r "methodName"`
+   - `LINE_NOT_FOUND` → Re-read file and find correct line number
+   - `STEP_COUNT_MISMATCH` → Update step count or add missing steps
+3. Re-generate affected sections with corrected information
+4. Re-run verification on corrected sections
+
+### Step V4: Verification Summary (Append to Output)
+
+Add to footer (before `🗺️ v2.9.6 │ Constitution v1.1`):
+
+**If all verifications passed:**
+```
+✅ Verified: [N] file paths, [M] methods, [K] line references
+```
+
+**If corrections were made:**
+```
+🔧 Self-corrected: [list specific corrections made]
+✅ Verified: [N] file paths, [M] methods, [K] line references
+```
+
+### Verification Checklist
+
+Before finalizing output, confirm:
+- [ ] All file paths in "Detailed Step-by-Step" table verified to exist
+- [ ] All `:line` references verified (line exists, content is relevant)
+- [ ] All method names in ASCII diagram verified via grep
+- [ ] Step count matches actual number of traced steps
+- [ ] Entry point file verified to exist
+
+---
+
 ## Save Mode (--save)
 
 If `--save` is present in `$ARGUMENTS`:
