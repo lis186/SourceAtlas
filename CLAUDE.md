@@ -74,15 +74,18 @@ sourceatlas2/
 ├── PROMPTS.md              # Complete prompt templates for all 3 stages
 ├── PRD.md                  # Product requirements (v2.7 Commands architecture)
 ├── USAGE_GUIDE.md          # Detailed usage instructions
-├── GLOBAL_INSTALLATION.md  # Global installation guide
+│
+├── plugin/                 # ⭐ Claude Code plugin (for distribution)
+│   ├── .claude-plugin/     # Plugin metadata
+│   ├── commands/           # Slash commands
+│   └── skills/             # Agent Skills
 │
 ├── .claude/commands/       # Claude Code slash commands
 │   ├── atlas.overview.md   # ✅ /atlas.overview (Stage 0)
 │   └── atlas.pattern.md    # ✅ /atlas.pattern (Pattern Learning)
 │
 ├── scripts/                # Analysis scripts
-│   ├── atlas/              # ⭐ Atlas command core scripts
-│   └── install-global.sh   # ⭐ Global installation script
+│   └── atlas/              # ⭐ Atlas command core scripts
 │
 ├── proposals/              # ✅ Feature proposals (unimplemented features) ⭐
 │   ├── README.md           # Proposal index
@@ -113,29 +116,42 @@ sourceatlas2/
 
 ## Installation and Usage
 
-### Global Installation (Recommended) ⭐
+### Plugin Installation (Recommended) ⭐
 
-**Install once, use anywhere**:
+**Method 1: Claude Code `/plugin` Command (Official)**
 
 ```bash
-# Run from SourceAtlas project root
-./install-global.sh
+# In Claude Code, add SourceAtlas as a marketplace
+/plugin marketplace add lis186/SourceAtlas
 
-# Now available in any project
-cd ~/projects/any-project
-/atlas.overview
-/atlas.pattern "api endpoint"
+# Browse and install from the plugin menu
+/plugin
+
+# Or install directly
+/plugin install sourceatlas@lis186/SourceAtlas
 ```
 
-**Installation Methods**:
-- **Default (Symlink)**: Auto-syncs updates, recommended for daily use
-- **Copy Method**: `INSTALL_METHOD=copy ./install-global.sh`, suitable for stable versions
+**Method 2: Via npx CLI**
 
-**Management Commands**:
-- `./install-global.sh --check` - Check installation status
-- `./install-global.sh --remove` - Uninstall
+```bash
+# Install using claude-plugins CLI
+npx claude-plugins install lis186/SourceAtlas
+```
 
-📚 **Complete Guide**: See [GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
+**Method 3: Manual Installation**
+
+```bash
+# Clone repository
+git clone https://github.com/lis186/SourceAtlas.git
+
+# Copy plugin contents to Claude Code directories
+cp -r SourceAtlas/plugin/commands/* ~/.claude/commands/
+cp -r SourceAtlas/plugin/skills/* ~/.claude/skills/
+```
+
+📚 **References**:
+- [Official Plugin Docs](https://claude.com/blog/claude-code-plugins)
+- [Plugin Registry](https://claude-plugins.dev/)
 
 ### Using Analysis Prompts
 
@@ -541,7 +557,7 @@ After completing feature implementation, check and update before asking about ve
 | 6 | **Implementation notes** | `dev-notes/YYYY-MM/YYYY-MM-DD-*.md` | Detailed implementation doc |
 | 7 | **Command files sync** | `.claude/commands/` ↔ `plugin/commands/` | Ensure consistency |
 | 8 | **New scripts** | `scripts/atlas/*.sh` | Verify existence and executable |
-| 9 | **install-global.sh** | If new scripts added, verify inclusion | Symlink includes automatically |
+| 9 | **Plugin sync** | `plugin/` ↔ `.claude/` | Ensure commands/skills are synced |
 
 ### Checklist Flow
 
