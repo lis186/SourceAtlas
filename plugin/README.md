@@ -6,13 +6,29 @@ SourceAtlas helps developers quickly understand any codebase through pattern lea
 
 ## ✨ Features
 
-- **🚀 Project Init** (`/atlas.init`) - Initialize SourceAtlas in any project
+### Slash Commands (User-invoked)
+
 - **🔍 Project Overview** (`/atlas.overview`) - Quick project understanding (<5% file scan)
 - **🎯 Pattern Learning** (`/atlas.pattern`) - Learn design patterns from existing code
 - **📊 Impact Analysis** (`/atlas.impact`) - Analyze change impact with static dependency analysis
 - **📈 History Analysis** (`/atlas.history`) - Git history temporal analysis (Hotspots, Coupling, Contributors)
 - **🔄 Flow Analysis** (`/atlas.flow`) - Trace code execution and data flow (11 analysis modes)
-- **📦 Dependency Analysis** (`/atlas.deps`) - Library/framework upgrade analysis (iOS, Android, Python, React) ⭐ NEW
+- **📦 Dependency Analysis** (`/atlas.deps`) - Library/framework upgrade analysis (iOS, Android, Python, React)
+
+### Agent Skills (Model-invoked) ⭐ NEW
+
+Claude automatically triggers the right analysis based on your questions:
+
+| You Ask | Claude Runs |
+|---------|-------------|
+| "What's the architecture of this project?" | `/atlas.overview` |
+| "How do I add an API endpoint?" | `/atlas.pattern "api endpoint"` |
+| "What breaks if I change this file?" | `/atlas.impact` |
+| "How does login work?" | `/atlas.flow "login"` |
+| "Who knows this code best?" | `/atlas.history` |
+| "How much work to upgrade to iOS 17?" | `/atlas.deps "iOS 16 → 17"` |
+
+No need to remember commands — just ask naturally!
 
 ## 🚀 Installation
 
@@ -37,24 +53,11 @@ cp -r /path/to/sourceatlas-plugin ~/.claude/commands/sourceatlas
 /plugin install sourceatlas@sourceatlas-marketplace
 
 # Start using
-/atlas.init
+/atlas.overview
 /atlas.pattern "api endpoint"
 ```
 
 ## 📖 Usage
-
-### `/atlas.init` - Initialize Project 🆕
-
-Initialize SourceAtlas in your project by injecting auto-trigger rules into CLAUDE.md.
-
-```bash
-/atlas.init
-```
-
-**What it does:**
-- Creates or updates CLAUDE.md with SourceAtlas auto-trigger rules
-- Claude Code will automatically suggest Atlas commands when appropriate
-- Sets up command reference for quick access
 
 ### `/atlas.overview` - Project Overview
 
@@ -244,6 +247,46 @@ Analyze library/framework dependencies for upgrade planning and migration.
 - ✅ Python projects (missing deps files) - 100% accuracy
 - ✅ Kotlin workspaces (1,509 imports) - 100% accuracy
 
+## 🧠 Agent Skills (Auto-triggered)
+
+SourceAtlas includes 6 Agent Skills that let Claude automatically choose the right analysis tool based on your natural language questions.
+
+### Available Skills
+
+| Skill | Triggers When You Ask About |
+|-------|----------------------------|
+| `codebase-overview` | Project structure, architecture, tech stack, onboarding |
+| `pattern-finder` | How to implement features, code examples, conventions |
+| `impact-analyzer` | Change impact, dependencies, breaking changes, safety |
+| `code-flow-tracer` | How features work, execution paths, data flow |
+| `history-analyzer` | Hotspots, code ownership, bus factor, knowledge silos |
+| `dependency-analyzer` | Upgrades, migrations, deprecated APIs, version changes |
+
+### Example Conversations
+
+**You**: "I just joined this project, can you help me understand it?"
+**Claude**: *automatically runs `/atlas.overview`*
+
+**You**: "I need to add a new API endpoint, how does this project do it?"
+**Claude**: *automatically runs `/atlas.pattern "api endpoint"`*
+
+**You**: "Is it safe to refactor UserService.ts?"
+**Claude**: *automatically runs `/atlas.impact "UserService.ts"`*
+
+### Skills Location
+
+```
+plugin/skills/
+├── codebase-overview/SKILL.md
+├── pattern-finder/SKILL.md
+├── impact-analyzer/SKILL.md
+├── code-flow-tracer/SKILL.md
+├── history-analyzer/SKILL.md
+└── dependency-analyzer/SKILL.md
+```
+
+---
+
 ## 🎓 How It Works
 
 SourceAtlas uses **information theory principles** to understand codebases efficiently:
@@ -297,13 +340,22 @@ Zod validation.
 sourceatlas-plugin/
 ├── .claude-plugin/
 │   └── plugin.json          # Plugin metadata
-├── commands/
-│   ├── atlas.init.md        # Project initialization
-│   ├── atlas.overview.md    # Project overview
-│   ├── atlas.pattern.md     # Pattern learning
-│   ├── atlas.impact.md      # Impact analysis
-│   ├── atlas.history.md     # History analysis
-│   └── atlas.flow.md        # Flow analysis ⭐ NEW
+├── commands/                # Slash commands (user-invoked)
+│   ├── atlas.overview.md
+│   ├── atlas.pattern.md
+│   ├── atlas.impact.md
+│   ├── atlas.history.md
+│   ├── atlas.flow.md
+│   ├── atlas.deps.md
+│   ├── atlas.list.md
+│   └── atlas.clear.md
+├── skills/                  # Agent Skills (model-invoked) ⭐ NEW
+│   ├── codebase-overview/SKILL.md
+│   ├── pattern-finder/SKILL.md
+│   ├── impact-analyzer/SKILL.md
+│   ├── code-flow-tracer/SKILL.md
+│   ├── history-analyzer/SKILL.md
+│   └── dependency-analyzer/SKILL.md
 ├── README.md
 ├── CHANGELOG.md
 ├── TESTING.md
@@ -325,7 +377,6 @@ cp -r plugin ~/test-marketplace/sourceatlas-plugin
 
 # Test in any project
 cd ~/your-project
-/atlas.init
 /atlas.overview
 /atlas.pattern "api endpoint"
 /atlas.impact "User model"
@@ -364,4 +415,4 @@ Based on SourceAtlas v2.5 methodology:
 
 ---
 
-**SourceAtlas v2.7.0** - Understanding codebases at the speed of thought 🚀
+**SourceAtlas v2.10.0** - Understanding codebases at the speed of thought 🚀

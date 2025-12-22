@@ -6,7 +6,7 @@
 
 一組 [Claude Code](https://claude.ai/code) slash commands，幫助你快速理解任何 codebase。
 
-[![Version](https://img.shields.io/badge/version-v2.9.6-blue)](https://github.com/lis186/SourceAtlas/releases)
+[![Version](https://img.shields.io/badge/version-v2.10.0-blue)](https://github.com/lis186/SourceAtlas/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 ![Command Menu](./docs/images/atlas-command-menu.png)
@@ -150,7 +150,7 @@ SourceAtlas 使用**資訊理論**優先掃描高熵檔案（configs、READMEs�
 
 ### 需求
 
-- **Claude Code** 0.3+（[安裝連結](https://claude.ai/code)）
+- **Claude Code** 1.0.33+（[安裝連結](https://claude.ai/code)）
 - **Git** 2.0+
 - **macOS 12+** 或 **Linux**
 
@@ -160,29 +160,26 @@ SourceAtlas 使用**資訊理論**優先掃描高熵檔案（configs、READMEs�
 # 1. Clone
 git clone https://github.com/lis186/SourceAtlas.git
 
-# 2. 安裝
-cd SourceAtlas && ./install-global.sh
+# 2. 以 Plugin 方式使用
+claude --plugin-dir ./SourceAtlas/plugin
 ```
+
+或加入 Claude Code 設定以永久使用。
 
 ### 第一次使用
 
 ```bash
 cd ~/projects/any-project
-/atlas.init      # 一次性：注入自動提示規則
 /atlas.overview  # 開始理解專案
 ```
 
 ![Overview Output Example](./docs/images/atlas-overview-output.png)
 
-**驗證安裝**：
-```bash
-ls ~/.claude/commands/atlas.*.md
-# 應該看到 9 個檔案
-```
+透過 **Agent Skills**，Claude 會根據你的問題自動建議合適的分析 — 不用記指令！
 
 ---
 
-## 全部 9 個命令
+## 全部 8 個命令
 
 | 命令 | 解決的問題 | 時間 |
 |------|-----------|------|
@@ -192,7 +189,6 @@ ls ~/.claude/commands/atlas.*.md
 | `/atlas.history` | 需要找熱點和專家 | ~5-10 分鐘 |
 | `/atlas.flow "feature"` | 需要理解功能的執行路徑 | ~3-5 分鐘 |
 | `/atlas.deps "upgrade"` | 規劃框架/SDK 升級 | ~15-30 分鐘 |
-| `/atlas.init` | 第一次使用 SourceAtlas | ~10 秒 |
 | `/atlas.list` | 查看快取了哪些分析 | 即時 |
 | `/atlas.clear` | 清除過期快取 | 即時 |
 
@@ -277,7 +273,8 @@ ls ~/.claude/commands/atlas.*.md
 | 文件 | 說明 |
 |------|------|
 | [使用指南](./USAGE_GUIDE.zh-TW.md) | 完整命令參考、全部 221 種模式 |
-| [安裝指南](./GLOBAL_INSTALLATION.zh-TW.md) | 詳細安裝選項 |
+| [實戰案例](./docs/case-studies/) | 真實專案分析（Firefox iOS 等） |
+| [Plugin 指南](./plugin/README.md) | Plugin 安裝與功能 |
 | [分析憲法](./ANALYSIS_CONSTITUTION.md) | 所有分析遵循的品質原則 |
 | [CLAUDE.md](./CLAUDE.md) | 開發者指南、架構 |
 
@@ -304,4 +301,4 @@ SourceAtlas 建立在這些優秀的開源工具之上：
 
 **SourceAtlas** — 用分鐘而不是天來理解任何 codebase。
 
-v2.9.6 | MIT License | Made with Claude Code
+v2.10.0 | MIT License | Made with Claude Code

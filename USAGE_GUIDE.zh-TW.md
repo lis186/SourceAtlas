@@ -4,7 +4,7 @@
 
 **所有斜線命令的完整使用說明**
 
-適用於 Claude Code | v2.9.6 | Constitution v1.1
+適用於 Claude Code | v2.10.0 | Constitution v1.1
 
 ---
 
@@ -19,10 +19,9 @@
 7. [/atlas.history](#atlashistory) - Git 歷史分析
 8. [/atlas.flow](#atlasflow) - 執行流程追蹤
 9. [/atlas.deps](#atlasdeps) - 依賴分析
-10. [/atlas.init](#atlasinit) - 專案初始化
-11. [/atlas.list](#atlaslist) - 列出快取分析
-12. [/atlas.clear](#atlasclear) - 清除快取分析
-13. [常見問題](#常見問題)
+10. [/atlas.list](#atlaslist) - 列出快取分析
+11. [/atlas.clear](#atlasclear) - 清除快取分析
+12. [常見問題](#常見問題)
 
 ---
 
@@ -89,16 +88,18 @@ SourceAtlas 適用於以下常見情境：
 
 ## 安裝
 
-**完整安裝指南**：[GLOBAL_INSTALLATION.zh-TW.md](./GLOBAL_INSTALLATION.zh-TW.md)
+**完整 Plugin 指南**：[plugin/README.md](./plugin/README.md)
 
 ### 快速開始
 
 ```bash
-git clone https://github.com/lis186/SourceAtlas.git ~/dev/sourceatlas2
-cd ~/dev/sourceatlas2 && ./install-global.sh
+git clone https://github.com/lis186/SourceAtlas.git
+claude --plugin-dir ./SourceAtlas/plugin
 ```
 
-安裝一次，所有專案都能用。
+或加入 Claude Code 設定以永久使用。
+
+**Agent Skills**：v2.10.0 起，Claude 會根據你的問題自動建議合適的分析 — 不用記指令！
 
 ---
 
@@ -864,22 +865,6 @@ CartViewController.swift:100
 
 ---
 
-## /atlas.init
-
-**初始化 SourceAtlas 觸發規則**
-
-### 使用方式
-
-```bash
-/atlas.init
-```
-
-### 功能說明
-
-將 SourceAtlas 的自動觸發規則注入到專案的 CLAUDE.md 中，讓 Claude Code 知道何時自動建議使用 Atlas 命令。
-
----
-
 ## /atlas.list
 
 **列出快取的分析結果**
@@ -954,9 +939,10 @@ CartViewController.swift:100
 
 **A**: 檢查以下幾點：
 
-1. **確認安裝**:
+1. **確認 Plugin 已載入**:
    ```bash
-   ls ~/.claude/commands/atlas.*.md
+   # 確保你是用這個方式啟動 Claude Code：
+   claude --plugin-dir ./SourceAtlas/plugin
    ```
 
 2. **確認在專案目錄**:
@@ -1106,23 +1092,19 @@ cat .gitignore | grep -E "node_modules|Pods|build|\.app"
 **診斷步驟**:
 
 ```bash
-# 1. 檢查命令檔案是否存在
-ls -la ~/.claude/commands/atlas.*.md
+# 1. 確保你是用 plugin 方式啟動
+claude --plugin-dir ./SourceAtlas/plugin
 
-# 2. 檢查檔案權限
-ls -l ~/.claude/commands/atlas.*.md
-
-# 3. 檢查 Claude Code 版本
-# 在 Claude Code 中執行：/help
+# 2. 檢查 Claude Code 版本（需要 1.0.33+）
+claude --version
 ```
 
 **解決方式**：
 
 | 檢查結果 | 原因 | 修復方法 |
 |---------|------|---------|
-| 檔案不存在 | 未安裝或安裝失敗 | 重新執行 `./install-global.sh` |
-| 權限錯誤（---x------） | Symlink 指向不存在的位置 | `./install-global.sh --remove` 後重裝 |
-| Claude Code 版本過舊 | 不支援 Slash Commands | 更新 Claude Code 到最新版本 |
+| Plugin 未載入 | 未使用 --plugin-dir 參數 | 執行 `claude --plugin-dir ./SourceAtlas/plugin` |
+| Claude Code 版本過舊 | 不支援 Plugins（需要 1.0.33+） | 更新 Claude Code 到最新版本 |
 
 ### 問題 5: 輸出格式不正確
 
@@ -1131,16 +1113,16 @@ ls -l ~/.claude/commands/atlas.*.md
 **診斷步驟**:
 
 ```bash
-# 檢查 prompt 文件內容
-head -20 ~/.claude/commands/atlas.overview.md
+# 檢查 plugin 中的 prompt 文件內容
+head -20 ./SourceAtlas/plugin/commands/atlas.overview.md
 ```
 
 **可能原因**：
 
 | 症狀 | 原因 | 修復方法 |
 |------|------|---------|
-| 缺少 frontmatter (---) | 檔案損壞 | `git restore .claude/commands/` 後重裝 |
-| 內容是舊版本 | 未更新到最新版 | `cd ~/dev/sourceatlas2 && git pull && ./install-global.sh` |
+| 缺少 frontmatter (---) | 檔案損壞 | 重新 clone repository |
+| 內容是舊版本 | 未更新到最新版 | `cd SourceAtlas && git pull` |
 | YAML 語法錯誤 | AI 解析問題 | 重新執行命令（Claude 隨機性） |
 
 ### 問題 6: Pattern 搜尋結果不準確
@@ -1169,11 +1151,11 @@ head -20 ~/.claude/commands/atlas.overview.md
 ```bash
 # === SourceAtlas 健康檢查 ===
 
-echo "1. 檢查安裝..."
-ls -la ~/.claude/commands/atlas.*.md
+echo "1. 檢查 plugin 命令..."
+ls -la ./SourceAtlas/plugin/commands/atlas.*.md
 
-echo -e "\n2. 檢查腳本..."
-ls -la ~/.claude/scripts/atlas/
+echo -e "\n2. 檢查 plugin skills..."
+ls -la ./SourceAtlas/plugin/skills/
 
 echo -e "\n3. 檢查專案根目錄..."
 pwd
@@ -1189,8 +1171,8 @@ echo -e "\n=== 檢查完成 ==="
 ```
 
 **預期結果**：
-- ✅ 看到 9 個 .md 檔案（init, overview, pattern, impact, history, flow, deps, list, clear）
-- ✅ 看到 scripts/atlas/ 目錄
+- ✅ 看到 8 個 .md 命令檔案（overview, pattern, impact, history, flow, deps, list, clear）
+- ✅ 看到 6 個 skill 目錄（codebase-overview, pattern-finder 等）
 - ✅ 在專案根目錄（有 .git/）
 - ✅ 程式碼檔案數 < 1000（TINY/SMALL）或 < 5000（MEDIUM/LARGE）
 
