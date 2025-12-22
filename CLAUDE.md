@@ -75,6 +75,9 @@ sourceatlas2/
 ├── PRD.md                  # Product requirements (v2.7 Commands architecture)
 ├── USAGE_GUIDE.md          # Detailed usage instructions
 │
+├── .claude-plugin/         # ⭐ Marketplace config (for /plugin marketplace add)
+│   └── marketplace.json    # Plugin registry
+│
 ├── plugin/                 # ⭐ Claude Code plugin (for distribution)
 │   ├── .claude-plugin/     # Plugin metadata
 │   ├── commands/           # Slash commands
