@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Official Plugin Marketplace** - Now installable via Claude Code plugin system ⭐
   ```bash
   /plugin marketplace add lis186/SourceAtlas
-  /plugin install sourceatlas@lis186-sourceatlas
+  /plugin install sourceatlas@lis186-SourceAtlas
   ```
 - **`.claude-plugin/marketplace.json`** - Marketplace manifest for plugin distribution
 

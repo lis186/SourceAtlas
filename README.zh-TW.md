@@ -160,7 +160,7 @@ SourceAtlas 使用**資訊理論**優先掃描高熵檔案（configs、READMEs�
 ```bash
 # 在 Claude Code 中執行：
 /plugin marketplace add lis186/SourceAtlas
-/plugin install sourceatlas@lis186-sourceatlas
+/plugin install sourceatlas@lis186-SourceAtlas
 ```
 
 **方法 B：本地快速測試**

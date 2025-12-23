@@ -95,7 +95,7 @@ SourceAtlas is suitable for the following common scenarios:
 ```bash
 # In Claude Code:
 /plugin marketplace add lis186/SourceAtlas
-/plugin install sourceatlas@lis186-sourceatlas
+/plugin install sourceatlas@lis186-SourceAtlas
 ```
 
 For local development/testing:

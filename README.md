@@ -160,7 +160,7 @@ SourceAtlas uses **information theory** to prioritize high-entropy files (config
 ```bash
 # In Claude Code:
 /plugin marketplace add lis186/SourceAtlas
-/plugin install sourceatlas@lis186-sourceatlas
+/plugin install sourceatlas@lis186-SourceAtlas
 ```
 
 **Option B: Quick Local Testing**

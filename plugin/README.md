@@ -39,7 +39,7 @@ No need to remember commands — just ask naturally!
 /plugin marketplace add lis186/SourceAtlas
 
 # Step 2: Install the plugin
-/plugin install sourceatlas@lis186-sourceatlas
+/plugin install sourceatlas@lis186-SourceAtlas
 
 # Step 3: Start using in any project
 /atlas.overview
@@ -58,7 +58,7 @@ claude --plugin-dir ./plugin
 
 # Or add as local marketplace
 /plugin marketplace add ./path/to/SourceAtlas
-/plugin install sourceatlas@lis186-sourceatlas
+/plugin install sourceatlas@lis186-SourceAtlas
 ```
 
 ## 📖 Usage
@@ -374,7 +374,7 @@ claude --plugin-dir ./plugin
 # Option 2: Local marketplace
 # From the SourceAtlas repository root:
 /plugin marketplace add ./
-/plugin install sourceatlas@lis186-sourceatlas
+/plugin install sourceatlas@lis186-SourceAtlas
 
 # Test in any project
 cd ~/your-project
@@ -383,8 +383,8 @@ cd ~/your-project
 /atlas.impact "User model"
 
 # After making changes to plugin/
-/plugin uninstall sourceatlas@lis186-sourceatlas
-/plugin install sourceatlas@lis186-sourceatlas
+/plugin uninstall sourceatlas@lis186-SourceAtlas
+/plugin install sourceatlas@lis186-SourceAtlas
 ```
 
 ## 🤝 Contributing

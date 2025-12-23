@@ -95,7 +95,7 @@ SourceAtlas 適用於以下常見情境：
 ```bash
 # 在 Claude Code 中執行：
 /plugin marketplace add lis186/SourceAtlas
-/plugin install sourceatlas@lis186-sourceatlas
+/plugin install sourceatlas@lis186-SourceAtlas
 ```
 
 本地開發/測試：

@@ -129,7 +129,7 @@ sourceatlas2/
 /plugin marketplace add lis186/SourceAtlas
 
 # Step 2: Install the plugin
-/plugin install sourceatlas@lis186-sourceatlas
+/plugin install sourceatlas@lis186-SourceAtlas
 
 # Step 3: Start using in any project
 /atlas.overview
@@ -146,10 +146,10 @@ sourceatlas2/
 /plugin
 
 # Update marketplace
-/plugin marketplace update lis186-sourceatlas
+/plugin marketplace update lis186-SourceAtlas
 
 # Uninstall
-/plugin uninstall sourceatlas@lis186-sourceatlas
+/plugin uninstall sourceatlas@lis186-SourceAtlas
 ```
 
 📚 **Official Docs**: See [Claude Code Plugin Documentation](https://code.claude.com/docs/en/plugins)
