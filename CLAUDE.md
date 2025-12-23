@@ -166,6 +166,23 @@ claude --plugin-dir ./plugin
 /plugin marketplace add ./
 ```
 
+### Command Naming Convention
+
+Commands have different names depending on the environment:
+
+| Environment | Command Format | Example |
+|-------------|----------------|---------|
+| **Local Development** (`.claude/commands/`) | `/atlas.XXX` | `/atlas.overview` |
+| **Plugin Installed** (`plugin/commands/`) | `/sourceatlas:XXX` | `/sourceatlas:overview` |
+
+**File Structure**:
+- `.claude/commands/atlas.overview.md` → `/atlas.overview`
+- `plugin/commands/overview.md` → `/sourceatlas:overview`
+
+**Why Different?**
+- Local: `atlas.` prefix provides namespace, avoids conflicts with generic names like `/overview`
+- Plugin: Plugin name `sourceatlas` already provides namespace, so command files use short names
+
 ### Using Analysis Prompts
 
 #### When to Run Analysis
