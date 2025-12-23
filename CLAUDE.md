@@ -74,15 +74,21 @@ sourceatlas2/
 ├── PROMPTS.md              # Complete prompt templates for all 3 stages
 ├── PRD.md                  # Product requirements (v2.7 Commands architecture)
 ├── USAGE_GUIDE.md          # Detailed usage instructions
-├── GLOBAL_INSTALLATION.md  # Global installation guide
 │
-├── .claude/commands/       # Claude Code slash commands
+├── .claude-plugin/         # ⭐ Claude Code Plugin Marketplace
+│   └── marketplace.json    # Marketplace manifest (for plugin distribution)
+│
+├── .claude/commands/       # Claude Code slash commands (local development)
 │   ├── atlas.overview.md   # ✅ /atlas.overview (Stage 0)
 │   └── atlas.pattern.md    # ✅ /atlas.pattern (Pattern Learning)
 │
+├── plugin/                 # ⭐ Official Claude Code Plugin
+│   ├── .claude-plugin/     # Plugin manifest
+│   ├── commands/           # Slash commands
+│   └── skills/             # Agent Skills (auto-triggered)
+│
 ├── scripts/                # Analysis scripts
-│   ├── atlas/              # ⭐ Atlas command core scripts
-│   └── install-global.sh   # ⭐ Global installation script
+│   └── atlas/              # ⭐ Atlas command core scripts
 │
 ├── proposals/              # ✅ Feature proposals (unimplemented features) ⭐
 │   ├── README.md           # Proposal index
@@ -113,29 +119,51 @@ sourceatlas2/
 
 ## Installation and Usage
 
-### Global Installation (Recommended) ⭐
+### Plugin Installation (Recommended) ⭐
 
-**Install once, use anywhere**:
+**Install via Claude Code Plugin System**:
 
 ```bash
-# Run from SourceAtlas project root
-./install-global.sh
+# Step 1: Add the SourceAtlas marketplace
+/plugin marketplace add lis186/SourceAtlas
 
-# Now available in any project
-cd ~/projects/any-project
+# Step 2: Install the plugin
+/plugin install sourceatlas@lis186-sourceatlas
+
+# Step 3: Start using in any project
 /atlas.overview
 /atlas.pattern "api endpoint"
 ```
 
-**Installation Methods**:
-- **Default (Symlink)**: Auto-syncs updates, recommended for daily use
-- **Copy Method**: `INSTALL_METHOD=copy ./install-global.sh`, suitable for stable versions
+**Installation Scopes**:
+- **User scope** (default): Available across all your projects
+- **Project scope**: Shared with project collaborators (`--scope project`)
 
 **Management Commands**:
-- `./install-global.sh --check` - Check installation status
-- `./install-global.sh --remove` - Uninstall
+```bash
+# Check installed plugins
+/plugin
 
-📚 **Complete Guide**: See [GLOBAL_INSTALLATION.md](./GLOBAL_INSTALLATION.md)
+# Update marketplace
+/plugin marketplace update lis186-sourceatlas
+
+# Uninstall
+/plugin uninstall sourceatlas@lis186-sourceatlas
+```
+
+📚 **Official Docs**: See [Claude Code Plugin Documentation](https://code.claude.com/docs/en/plugins)
+
+### Local Development Testing
+
+For SourceAtlas development or customization:
+
+```bash
+# Test plugin locally without installation
+claude --plugin-dir ./plugin
+
+# Or add as local marketplace
+/plugin marketplace add ./
+```
 
 ### Using Analysis Prompts
 
@@ -536,12 +564,12 @@ After completing feature implementation, check and update before asking about ve
 | 1 | **README version badge** | `README.md`, `README.zh-TW.md` | Update version badge |
 | 2 | **CLAUDE.md Current Status** | `CLAUDE.md` | Version list + section title |
 | 3 | **Plugin version** | `plugin/.claude-plugin/plugin.json` | "version" field |
-| 4 | **Plugin CHANGELOG** | `plugin/CHANGELOG.md` | New version section |
-| 5 | **Dev history** | `dev-notes/HISTORY.md` | Current week entry |
-| 6 | **Implementation notes** | `dev-notes/YYYY-MM/YYYY-MM-DD-*.md` | Detailed implementation doc |
-| 7 | **Command files sync** | `.claude/commands/` ↔ `plugin/commands/` | Ensure consistency |
-| 8 | **New scripts** | `scripts/atlas/*.sh` | Verify existence and executable |
-| 9 | **install-global.sh** | If new scripts added, verify inclusion | Symlink includes automatically |
+| 4 | **Marketplace version** | `.claude-plugin/marketplace.json` | Plugin version in marketplace |
+| 5 | **Plugin CHANGELOG** | `plugin/CHANGELOG.md` | New version section |
+| 6 | **Dev history** | `dev-notes/HISTORY.md` | Current week entry |
+| 7 | **Implementation notes** | `dev-notes/YYYY-MM/YYYY-MM-DD-*.md` | Detailed implementation doc |
+| 8 | **Command files sync** | `.claude/commands/` ↔ `plugin/commands/` | Ensure consistency |
+| 9 | **New scripts** | `scripts/atlas/*.sh` | Verify existence and executable |
 
 ### Checklist Flow
 

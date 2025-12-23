@@ -156,15 +156,18 @@ SourceAtlas uses **information theory** to prioritize high-entropy files (config
 
 ### Installation
 
+**Option A: Plugin Marketplace (Recommended)**
 ```bash
-# 1. Clone
-git clone https://github.com/lis186/SourceAtlas.git
-
-# 2. Use as plugin
-claude --plugin-dir ./SourceAtlas/plugin
+# In Claude Code:
+/plugin marketplace add lis186/SourceAtlas
+/plugin install sourceatlas@lis186-sourceatlas
 ```
 
-Or add to your Claude Code settings for permanent use.
+**Option B: Quick Local Testing**
+```bash
+git clone https://github.com/lis186/SourceAtlas.git
+claude --plugin-dir ./SourceAtlas/plugin
+```
 
 ### First Use
 
