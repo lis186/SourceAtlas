@@ -503,6 +503,102 @@ This command complements `/atlas.impact` (static analysis) with temporal insight
 
 ---
 
+## Self-Verification Phase (REQUIRED)
+
+> **Purpose**: Prevent hallucinated file paths, incorrect commit counts, and fictional contributor data from appearing in output.
+> This phase runs AFTER output generation, BEFORE save.
+
+### Step V1: Extract Verifiable Claims
+
+After generating the history analysis output, extract all verifiable claims:
+
+**Claim Types to Extract:**
+
+| Type | Pattern | Verification Method |
+|------|---------|---------------------|
+| **File Path** | Hotspot files, coupled files | `test -f path` |
+| **Commit Count** | "500 commits", "changed 120 times" | `git log --oneline \| wc -l` |
+| **Contributor** | Author names, counts | `git shortlog -sn \| head` |
+| **Date Range** | "since 2023", "last 6 months" | `git log --format="%ai" \| head/tail` |
+| **Coupling Pair** | "A.ts ↔ B.ts (85%)" | Verify both files exist |
+
+### Step V2: Parallel Verification Execution
+
+Run **ALL** verification checks in parallel:
+
+```bash
+# Execute all verifications in a single parallel block
+
+# 1. Verify hotspot files exist
+for path in "src/core/service.ts" "lib/utils.py"; do
+    if [ ! -f "$path" ]; then
+        echo "❌ FILE_NOT_FOUND: $path"
+    fi
+done
+
+# 2. Verify commit count is reasonable
+claimed_total=500
+actual_total=$(git rev-list --count HEAD 2>/dev/null)
+if [ $((actual_total * 80 / 100)) -gt $claimed_total ] || [ $((actual_total * 120 / 100)) -lt $claimed_total ]; then
+    echo "⚠️ COMMIT_COUNT_CHECK: claimed $claimed_total, actual $actual_total"
+fi
+
+# 3. Verify top contributor exists
+claimed_contributor="bep"
+if ! git shortlog -sn --all 2>/dev/null | grep -q "$claimed_contributor"; then
+    echo "❌ CONTRIBUTOR_NOT_FOUND: $claimed_contributor"
+fi
+
+# 4. Verify coupling pairs
+for pair in "file1.ts:file2.ts"; do
+    IFS=':' read -r f1 f2 <<< "$pair"
+    if [ ! -f "$f1" ] || [ ! -f "$f2" ]; then
+        echo "❌ COUPLING_PAIR_INVALID: $f1 ↔ $f2"
+    fi
+done
+```
+
+### Step V3: Handle Verification Results
+
+**If ALL checks pass:**
+- Continue to output/save
+
+**If ANY check fails:**
+1. **DO NOT output the uncorrected analysis**
+2. Fix each failed claim:
+   - `FILE_NOT_FOUND` → Search for correct path or remove from hotspots
+   - `COMMIT_COUNT_CHECK` → Update with actual count from git
+   - `CONTRIBUTOR_NOT_FOUND` → Verify spelling or remove
+   - `COUPLING_PAIR_INVALID` → Remove invalid coupling pairs
+3. Re-generate affected sections with corrected information
+4. Re-run verification on corrected sections
+
+### Step V4: Verification Summary (Append to Output)
+
+Add to footer (before `🗺️ v2.9.6 │ Constitution v1.1`):
+
+**If all verifications passed:**
+```
+✅ Verified: [N] hotspot files, [M] contributors, commit counts
+```
+
+**If corrections were made:**
+```
+🔧 Self-corrected: [list specific corrections made]
+✅ Verified: [N] hotspot files, [M] contributors, commit counts
+```
+
+### Verification Checklist
+
+Before finalizing output, confirm:
+- [ ] All hotspot file paths verified to exist
+- [ ] Commit counts verified against `git rev-list --count`
+- [ ] Top contributors verified against `git shortlog`
+- [ ] Coupling pairs verified (both files exist)
+- [ ] Date ranges verified against actual git history
+
+---
+
 ## Save Mode (--save)
 
 If `--save` is present in `$ARGUMENTS`:

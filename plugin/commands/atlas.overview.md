@@ -428,6 +428,103 @@ Use numbered table:
 
 ---
 
+## Self-Verification Phase (REQUIRED)
+
+> **Purpose**: Prevent hallucinated file paths, incorrect counts, and fictional configurations from appearing in output.
+> This phase runs AFTER output generation, BEFORE save.
+
+### Step V1: Extract Verifiable Claims
+
+After generating the YAML output, extract all verifiable claims:
+
+**Claim Types to Extract:**
+
+| Type | Pattern | Verification Method |
+|------|---------|---------------------|
+| **File Path** | `scanned_files.file` entries | `test -f path` |
+| **Directory** | Architecture directories mentioned | `test -d path` |
+| **File Count** | `total_files`, `scanned_files` | `find . -type f \| wc -l` |
+| **Config File** | AI tools `config_file` entries | `test -f config_file` |
+| **Git Branch** | `context.git_branch` | `git branch --show-current` |
+
+### Step V2: Parallel Verification Execution
+
+Run **ALL** verification checks in parallel:
+
+```bash
+# Execute all verifications in a single parallel block
+
+# 1. Verify scanned_files entries exist
+for path in "path/to/file1" "path/to/file2"; do
+    if [ ! -f "$path" ]; then
+        echo "❌ FILE_NOT_FOUND: $path"
+    fi
+done
+
+# 2. Verify AI tool config files
+for config in "CLAUDE.md" ".cursorrules" ".github/copilot-instructions.md"; do
+    if [ ! -f "$config" ] && [ ! -d "$config" ]; then
+        echo "❌ CONFIG_NOT_FOUND: $config"
+    fi
+done
+
+# 3. Verify file count is reasonable
+claimed_count=150
+actual_count=$(find . -type f -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/.venv/*" 2>/dev/null | wc -l | tr -d ' ')
+# Allow 10% variance for dynamic counts
+if [ $((actual_count * 90 / 100)) -gt $claimed_count ] || [ $((actual_count * 110 / 100)) -lt $claimed_count ]; then
+    echo "⚠️ COUNT_CHECK: claimed $claimed_count, actual ~$actual_count"
+fi
+
+# 4. Verify git branch if claimed
+claimed_branch="main"
+actual_branch=$(git branch --show-current 2>/dev/null)
+if [ "$actual_branch" != "$claimed_branch" ]; then
+    echo "❌ BRANCH_MISMATCH: claimed $claimed_branch, actual $actual_branch"
+fi
+```
+
+### Step V3: Handle Verification Results
+
+**If ALL checks pass:**
+- Continue to output/save
+
+**If ANY check fails:**
+1. **DO NOT output the uncorrected analysis**
+2. Fix each failed claim:
+   - `FILE_NOT_FOUND` → Remove from scanned_files or find correct path
+   - `CONFIG_NOT_FOUND` → Remove from tools_detected or verify path
+   - `COUNT_CHECK` → Update total_files with actual count
+   - `BRANCH_MISMATCH` → Update context.git_branch
+3. Re-generate affected YAML sections with corrected information
+4. Re-run verification on corrected sections
+
+### Step V4: Verification Summary (Append to Output)
+
+Add to footer (before `🗺️ v2.9.6 │ Constitution v1.1`):
+
+**If all verifications passed:**
+```
+✅ Verified: [N] scanned files, [M] config paths, file count
+```
+
+**If corrections were made:**
+```
+🔧 Self-corrected: [list specific corrections made]
+✅ Verified: [N] scanned files, [M] config paths, file count
+```
+
+### Verification Checklist
+
+Before finalizing output, confirm:
+- [ ] All `scanned_files.file` entries verified to exist
+- [ ] All `tools_detected.config_file` entries verified to exist
+- [ ] `total_files` count verified against filesystem
+- [ ] `context.git_branch` verified against current branch
+- [ ] `evidence` file references in hypotheses verified to exist
+
+---
+
 ## Save Mode (--save)
 
 If `--save` flag is present in arguments:

@@ -460,6 +460,102 @@ Use numbered table:
 
 ---
 
+## Self-Verification Phase (REQUIRED)
+
+> **Purpose**: Prevent hallucinated file paths, incorrect counts, and fictional code from appearing in output.
+> This phase runs AFTER output generation, BEFORE save.
+
+### Step V1: Extract Verifiable Claims
+
+After generating the output, extract all verifiable claims:
+
+**Claim Types to Extract:**
+
+| Type | Pattern | Verification Method |
+|------|---------|---------------------|
+| **File Path** | `path/to/file.ext:line` | `test -f path/to/file.ext` |
+| **Directory** | `app/services/`, `src/controllers/` | `test -d path` |
+| **Line Count** | "contains 500 lines", "2,850 LOC" | `wc -l < file` |
+| **Code Snippet** | Fenced code blocks claiming to be from files | `grep -F 'key_line' file` |
+| **File Count** | "23 middleware files", "5 crates" | `find/ls \| wc -l` |
+
+### Step V2: Parallel Verification Execution
+
+Run **ALL** verification checks in parallel using Bash:
+
+```bash
+# Execute all verifications in a single parallel block
+# Example verification script:
+
+# 1. File path checks (batch)
+for path in "path/to/file1.ts" "path/to/file2.swift" "service/order.ts:334"; do
+    file_only=$(echo "$path" | cut -d: -f1)
+    if [ ! -f "$file_only" ]; then
+        echo "❌ FILE_NOT_FOUND: $path"
+    fi
+done
+
+# 2. Directory checks
+for dir in "app/services" "packages/core"; do
+    if [ ! -d "$dir" ]; then
+        echo "❌ DIR_NOT_FOUND: $dir"
+    fi
+done
+
+# 3. Count verification (example)
+actual_count=$(find . -name "*Middleware*.swift" -type f 2>/dev/null | wc -l | tr -d ' ')
+claimed_count=23
+if [ "$actual_count" != "$claimed_count" ]; then
+    echo "❌ COUNT_MISMATCH: claimed $claimed_count, actual $actual_count"
+fi
+
+# 4. Code snippet spot-check (verify key line exists)
+if ! grep -q "class OrderService" "path/to/order.service.ts" 2>/dev/null; then
+    echo "❌ CODE_NOT_FOUND: 'class OrderService' in path/to/order.service.ts"
+fi
+```
+
+### Step V3: Handle Verification Results
+
+**If ALL checks pass:**
+- Continue to output/save
+
+**If ANY check fails:**
+1. **DO NOT output the uncorrected analysis**
+2. Fix each failed claim:
+   - `FILE_NOT_FOUND` → Search for correct path using `find . -name "filename*"`
+   - `DIR_NOT_FOUND` → Search for correct directory using `find . -type d -name "dirname*"`
+   - `COUNT_MISMATCH` → Update to actual count
+   - `CODE_NOT_FOUND` → Re-read the actual file, extract correct snippet
+3. Re-generate affected sections with corrected information
+4. Re-run verification on corrected sections
+
+### Step V4: Verification Summary (Append to Output)
+
+Add to footer (before `🗺️ v2.9.6 │ Constitution v1.1`):
+
+**If all verifications passed:**
+```
+✅ Verified: [N] file paths, [M] directories, [K] code snippets
+```
+
+**If corrections were made:**
+```
+🔧 Self-corrected: [list specific corrections made]
+✅ Verified: [N] file paths, [M] directories, [K] code snippets
+```
+
+### Verification Checklist
+
+Before finalizing output, confirm:
+- [ ] All file paths in "Best Examples" section verified to exist
+- [ ] All `:line` references verified (line number exists, content matches)
+- [ ] All directories in "Key Conventions" verified to exist
+- [ ] Code snippets verified against actual file content
+- [ ] Numerical counts (files, lines, etc.) verified against filesystem
+
+---
+
 ## Save Mode (--save)
 
 If `--save` is present in `$ARGUMENTS`:
