@@ -57,8 +57,13 @@ Please read and follow our [Code of Conduct](./CODE_OF_CONDUCT.md).
 git clone https://github.com/lis186/SourceAtlas.git
 cd SourceAtlas
 
-# Install globally for testing
-./install-global.sh
+# Option 1: Test with plugin directly
+claude --plugin-dir ./plugin
+
+# Option 2: Install via local marketplace
+# In Claude Code:
+/plugin marketplace add ./
+/plugin install sourceatlas@lis186-sourceatlas
 ```
 
 ### Testing Your Changes

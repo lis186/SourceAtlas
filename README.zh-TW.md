@@ -156,15 +156,18 @@ SourceAtlas 使用**資訊理論**優先掃描高熵檔案（configs、READMEs�
 
 ### 安裝
 
+**方法 A：Plugin Marketplace（推薦）**
 ```bash
-# 1. Clone
-git clone https://github.com/lis186/SourceAtlas.git
-
-# 2. 以 Plugin 方式使用
-claude --plugin-dir ./SourceAtlas/plugin
+# 在 Claude Code 中執行：
+/plugin marketplace add lis186/SourceAtlas
+/plugin install sourceatlas@lis186-sourceatlas
 ```
 
-或加入 Claude Code 設定以永久使用。
+**方法 B：本地快速測試**
+```bash
+git clone https://github.com/lis186/SourceAtlas.git
+claude --plugin-dir ./SourceAtlas/plugin
+```
 
 ### 第一次使用
 

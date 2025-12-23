@@ -32,29 +32,33 @@ No need to remember commands — just ask naturally!
 
 ## 🚀 Installation
 
-### Method 1: Local Development/Testing
+### Method 1: Via Claude Code Plugin (Recommended)
 
 ```bash
-# Clone or download this repository
-cd ~/.claude/commands
-git clone https://github.com/lis186/SourceAtlas.git sourceatlas
+# Step 1: Add the SourceAtlas marketplace
+/plugin marketplace add lis186/SourceAtlas
 
-# Or copy the plugin directory
-cp -r /path/to/sourceatlas-plugin ~/.claude/commands/sourceatlas
-```
+# Step 2: Install the plugin
+/plugin install sourceatlas@lis186-sourceatlas
 
-### Method 2: Via Claude Code Plugin (Recommended)
-
-```bash
-# In Claude Code, add the marketplace
-/plugin marketplace add lis186/sourceatlas-marketplace
-
-# Install the plugin
-/plugin install sourceatlas@sourceatlas-marketplace
-
-# Start using
+# Step 3: Start using in any project
 /atlas.overview
 /atlas.pattern "api endpoint"
+```
+
+**Installation Scopes**:
+- **User scope** (default): Available across all your projects
+- **Project scope**: `--scope project` to share with collaborators
+
+### Method 2: Local Development/Testing
+
+```bash
+# Test plugin locally without installation
+claude --plugin-dir ./plugin
+
+# Or add as local marketplace
+/plugin marketplace add ./path/to/SourceAtlas
+/plugin install sourceatlas@lis186-sourceatlas
 ```
 
 ## 📖 Usage
@@ -365,15 +369,13 @@ sourceatlas-plugin/
 ### Testing Locally
 
 ```bash
-# Create a test marketplace structure
-mkdir -p ~/test-marketplace
-cp -r plugin ~/test-marketplace/sourceatlas-plugin
+# Option 1: Direct plugin loading (fastest for development)
+claude --plugin-dir ./plugin
 
-# Add local marketplace in Claude Code
-/plugin marketplace add file:///Users/yourname/test-marketplace
-
-# Install and test
-/plugin install sourceatlas-plugin@test-marketplace
+# Option 2: Local marketplace
+# From the SourceAtlas repository root:
+/plugin marketplace add ./
+/plugin install sourceatlas@lis186-sourceatlas
 
 # Test in any project
 cd ~/your-project
@@ -381,10 +383,9 @@ cd ~/your-project
 /atlas.pattern "api endpoint"
 /atlas.impact "User model"
 
-# After making changes
-/plugin uninstall sourceatlas-plugin@test-marketplace
-# Make your changes
-/plugin install sourceatlas-plugin@test-marketplace
+# After making changes to plugin/
+/plugin uninstall sourceatlas@lis186-sourceatlas
+/plugin install sourceatlas@lis186-sourceatlas
 ```
 
 ## 🤝 Contributing
