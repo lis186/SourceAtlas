@@ -71,8 +71,8 @@ claude --plugin-dir ./plugin
 ```bash
 # Test on a sample project
 cd /path/to/test-project
-/atlas.overview
-/atlas.pattern "your pattern"
+/sourceatlas:overview
+/sourceatlas:pattern "your pattern"
 ```
 
 ### Project Structure

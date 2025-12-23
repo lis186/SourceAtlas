@@ -13,14 +13,14 @@
 1. [使用情境](#使用情境)
 2. [建議流程](#建議流程)
 3. [安裝](#安裝)
-4. [/atlas.overview](#atlasoverview) - 專案全貌
-5. [/atlas.pattern](#atlaspattern) - 學習設計模式
-6. [/atlas.impact](#atlasimpact) - 程式碼變更影響
-7. [/atlas.history](#atlashistory) - Git 歷史分析
-8. [/atlas.flow](#atlasflow) - 執行流程追蹤
-9. [/atlas.deps](#atlasdeps) - 依賴分析
-10. [/atlas.list](#atlaslist) - 列出快取分析
-11. [/atlas.clear](#atlasclear) - 清除快取分析
+4. [/sourceatlas:overview](#atlasoverview) - 專案全貌
+5. [/sourceatlas:pattern](#atlaspattern) - 學習設計模式
+6. [/sourceatlas:impact](#atlasimpact) - 程式碼變更影響
+7. [/sourceatlas:history](#atlashistory) - Git 歷史分析
+8. [/sourceatlas:flow](#atlasflow) - 執行流程追蹤
+9. [/sourceatlas:deps](#atlasdeps) - 依賴分析
+10. [/sourceatlas:list](#atlaslist) - 列出快取分析
+11. [/sourceatlas:clear](#atlasclear) - 清除快取分析
 12. [常見問題](#常見問題)
 
 ---
@@ -31,22 +31,22 @@ SourceAtlas 適用於以下常見情境：
 
 | # | 情境 | 主要命令 | 說明 |
 |---|------|---------|------|
-| 1 | **接手新專案** | `/atlas.overview` | 加入團隊第一天，快速建立全局認知 |
-| 2 | **Code Review** | `/atlas.overview` + `/atlas.history` | 評估程式碼品質和專案演進 |
-| 3 | **修 Bug** | `/atlas.flow` | 追蹤執行路徑，定位問題根源 |
-| 4 | **新增功能** | `/atlas.pattern` + `/atlas.impact` | 學習現有慣例，評估影響範圍 |
-| 5 | **面試評估候選人 GitHub** | `/atlas.overview` + `/atlas.history` | 快速判斷開發能力和習慣 |
-| 6 | **學習開源專案** | `/atlas.overview` + `/atlas.pattern` | 理解架構設計和 best practices |
-| 7 | **Breaking Change 評估** | `/atlas.impact` + `/atlas.flow` | 修改自己的 API，找出所有呼叫方 |
-| 8 | **Library/Framework 升級** | `/atlas.impact` + `/atlas.pattern` | 升級第三方套件，找出使用點、學新寫法 |
+| 1 | **接手新專案** | `/sourceatlas:overview` | 加入團隊第一天，快速建立全局認知 |
+| 2 | **Code Review** | `/sourceatlas:overview` + `/sourceatlas:history` | 評估程式碼品質和專案演進 |
+| 3 | **修 Bug** | `/sourceatlas:flow` | 追蹤執行路徑，定位問題根源 |
+| 4 | **新增功能** | `/sourceatlas:pattern` + `/sourceatlas:impact` | 學習現有慣例，評估影響範圍 |
+| 5 | **面試評估候選人 GitHub** | `/sourceatlas:overview` + `/sourceatlas:history` | 快速判斷開發能力和習慣 |
+| 6 | **學習開源專案** | `/sourceatlas:overview` + `/sourceatlas:pattern` | 理解架構設計和 best practices |
+| 7 | **Breaking Change 評估** | `/sourceatlas:impact` + `/sourceatlas:flow` | 修改自己的 API，找出所有呼叫方 |
+| 8 | **Library/Framework 升級** | `/sourceatlas:impact` + `/sourceatlas:pattern` | 升級第三方套件，找出使用點、學新寫法 |
 
 ### 不同經驗等級的切入點
 
 | 經驗等級 | 主要挑戰 | 建議起點 |
 |---------|---------|---------|
-| **Junior** | 不知道怎麼「讀」程式碼、容易迷失在細節 | `/atlas.overview` 給全局地圖 → `/atlas.pattern` 學習慣例 |
-| **Mid-level** | 知道怎麼讀，但效率不高、容易遺漏 | `/atlas.flow` 追蹤執行路徑 → `/atlas.impact` 評估改動範圍 |
-| **Senior** | 效率還行，但想更快、想驗證假設 | `/atlas.history` 看演進脈絡，快速驗證架構猜測 |
+| **Junior** | 不知道怎麼「讀」程式碼、容易迷失在細節 | `/sourceatlas:overview` 給全局地圖 → `/sourceatlas:pattern` 學習慣例 |
+| **Mid-level** | 知道怎麼讀，但效率不高、容易遺漏 | `/sourceatlas:flow` 追蹤執行路徑 → `/sourceatlas:impact` 評估改動範圍 |
+| **Senior** | 效率還行，但想更快、想驗證假設 | `/sourceatlas:history` 看演進脈絡，快速驗證架構猜測 |
 
 ---
 
@@ -55,33 +55,33 @@ SourceAtlas 適用於以下常見情境：
 ### 標準 5 步流程（適用大多數情境）
 
 ```
-1. /atlas.overview     → 建立全局認知（5-10 分鐘）
-2. /atlas.pattern      → 學習該專案的慣例（按需）
-3. /atlas.flow         → 追蹤特定功能流程（按需）
-4. /atlas.impact       → 評估改動影響（準備動手時）
-5. /atlas.history      → 了解演進脈絡（深入時）
+1. /sourceatlas:overview     → 建立全局認知（5-10 分鐘）
+2. /sourceatlas:pattern      → 學習該專案的慣例（按需）
+3. /sourceatlas:flow         → 追蹤特定功能流程（按需）
+4. /sourceatlas:impact       → 評估改動影響（準備動手時）
+5. /sourceatlas:history      → 了解演進脈絡（深入時）
 ```
 
 ### 依情境的變體
 
 **情境 1-2：快速理解專案**
 ```
-/atlas.overview → /atlas.history（可選）
+/sourceatlas:overview → /sourceatlas:history（可選）
 ```
 
 **情境 3：修 Bug**
 ```
-/atlas.flow "從 [entry point] 開始" → 定位問題
+/sourceatlas:flow "從 [entry point] 開始" → 定位問題
 ```
 
 **情境 4：新增功能**
 ```
-/atlas.pattern "[功能類型]" → /atlas.impact "[相關檔案]"
+/sourceatlas:pattern "[功能類型]" → /sourceatlas:impact "[相關檔案]"
 ```
 
 **情境 7-8：升級評估**
 ```
-/atlas.impact "[API 或 library]" → /atlas.pattern "[新版寫法]"
+/sourceatlas:impact "[API 或 library]" → /sourceatlas:pattern "[新版寫法]"
 ```
 
 ---
@@ -108,14 +108,14 @@ claude --plugin-dir ./SourceAtlas/plugin
 
 ---
 
-## /atlas.overview
+## /sourceatlas:overview
 
 **快速理解專案全貌**
 
 ### 使用方式
 
 ```bash
-/atlas.overview
+/sourceatlas:overview
 ```
 
 ### 你會得到什麼
@@ -147,7 +147,7 @@ claude --plugin-dir ./SourceAtlas/plugin
 
 **命令**：
 ```bash
-/atlas.overview
+/sourceatlas:overview
 ```
 
 **輸出**（摘要）：
@@ -172,20 +172,20 @@ key_directories:
 - 測試覆蓋率 85%（專業團隊）
 - 主要邏輯在 src/app/（App Router 架構）
 
-**下一步**：用 `/atlas.pattern "api endpoint"` 學習 API 實作方式
+**下一步**：用 `/sourceatlas:pattern "api endpoint"` 學習 API 實作方式
 
 ---
 
-## /atlas.pattern
+## /sourceatlas:pattern
 
 **學習專案的設計模式**
 
 ### 使用方式
 
 ```bash
-/atlas.pattern "api endpoint"
-/atlas.pattern "file upload"
-/atlas.pattern "authentication"
+/sourceatlas:pattern "api endpoint"
+/sourceatlas:pattern "file upload"
+/sourceatlas:pattern "authentication"
 ```
 
 ### 什麼是 "Pattern"？
@@ -333,7 +333,7 @@ key_directories:
 
 </details>
 
-**試用範例**：`/atlas.pattern "api endpoint"`
+**試用範例**：`/sourceatlas:pattern "api endpoint"`
 
 ### 執行時間
 
@@ -347,7 +347,7 @@ key_directories:
 
 **命令**：
 ```bash
-/atlas.pattern "api endpoint"
+/sourceatlas:pattern "api endpoint"
 ```
 
 **輸出**（摘要）：
@@ -387,7 +387,7 @@ key_directories:
 
 **命令**：
 ```bash
-/atlas.pattern "swiftui view"
+/sourceatlas:pattern "swiftui view"
 ```
 
 **輸出**（摘要）：
@@ -423,7 +423,7 @@ key_directories:
 
 ---
 
-## /atlas.impact
+## /sourceatlas:impact
 
 **分析程式碼變更影響**
 
@@ -431,13 +431,13 @@ key_directories:
 
 ```bash
 # 分析檔案
-/atlas.impact "src/api/users.ts"
+/sourceatlas:impact "src/api/users.ts"
 
 # 分析 API
-/atlas.impact api "/api/users/{id}"
+/sourceatlas:impact api "/api/users/{id}"
 
 # 分析 Model
-/atlas.impact "User model"
+/sourceatlas:impact "User model"
 ```
 
 ### 你會得到什麼
@@ -465,7 +465,7 @@ key_directories:
 
 **命令**：
 ```bash
-/atlas.impact api "/api/users/{id}"
+/sourceatlas:impact api "/api/users/{id}"
 ```
 
 **輸出**（摘要）：
@@ -508,7 +508,7 @@ key_directories:
 
 **命令**：
 ```bash
-/atlas.impact "User.swift"
+/sourceatlas:impact "User.swift"
 ```
 
 **輸出**（摘要）：
@@ -549,15 +549,15 @@ find . -name '*.h' -not -path '*/Pods/*' -exec \
 
 ---
 
-## /atlas.history
+## /sourceatlas:history
 
 **分析 git 歷史，找出熱點和團隊知識分布**
 
 ### 使用方式
 
 ```bash
-/atlas.history
-/atlas.history src/
+/sourceatlas:history
+/sourceatlas:history src/
 ```
 
 ### 你會得到什麼
@@ -584,7 +584,7 @@ find . -name '*.h' -not -path '*/Pods/*' -exec \
 
 **命令**：
 ```bash
-/atlas.history
+/sourceatlas:history
 ```
 
 **輸出**（摘要）：
@@ -613,20 +613,20 @@ find . -name '*.h' -not -path '*/Pods/*' -exec \
 - User model 和 service 高度耦合（預期內，同一領域）
 - Legacy 程式碼有巴士因子風險（需要知識轉移）
 
-**下一步**：用 `/atlas.impact "src/core/processor.ts"` 了解依賴關係後再重構
+**下一步**：用 `/sourceatlas:impact "src/core/processor.ts"` 了解依賴關係後再重構
 
 ---
 
-## /atlas.flow
+## /sourceatlas:flow
 
 **從入口點追蹤執行流程到邊界**
 
 ### 使用方式
 
 ```bash
-/atlas.flow "user login"
-/atlas.flow "checkout process"
-/atlas.flow "from LoginViewController"
+/sourceatlas:flow "user login"
+/sourceatlas:flow "checkout process"
+/sourceatlas:flow "from LoginViewController"
 ```
 
 ### 你會得到什麼
@@ -664,7 +664,7 @@ find . -name '*.h' -not -path '*/Pods/*' -exec \
 
 **命令**：
 ```bash
-/atlas.flow "user login"
+/sourceatlas:flow "user login"
 ```
 
 **輸出**（摘要）：
@@ -698,7 +698,7 @@ LoginViewController.swift:25
 - Token 安全儲存（TokenManager 使用 Keychain）
 - 使用 Coordinator 模式進行導航
 
-**下一步**：用 `/atlas.pattern "authentication"` 學習認證實作慣例
+**下一步**：用 `/sourceatlas:pattern "authentication"` 學習認證實作慣例
 
 #### 範例 2: 追蹤結帳流程
 
@@ -706,7 +706,7 @@ LoginViewController.swift:25
 
 **命令**：
 ```bash
-/atlas.flow "checkout process"
+/sourceatlas:flow "checkout process"
 ```
 
 **輸出**（摘要）：
@@ -735,20 +735,20 @@ CartViewController.swift:100
 - PaymentGateway 是外部 API 邊界（修改風險高）
 - 共 5 個服務參與這個流程
 
-**下一步**：修改前先用 `/atlas.impact "CheckoutService.swift"` 評估影響
+**下一步**：修改前先用 `/sourceatlas:impact "CheckoutService.swift"` 評估影響
 
 ---
 
-## /atlas.deps
+## /sourceatlas:deps
 
 **分析 Library/Framework 使用情況，協助升級規劃**
 
 ### 使用方式
 
 ```bash
-/atlas.deps "react"
-/atlas.deps "axios"
-/atlas.deps "lodash" --breaking
+/sourceatlas:deps "react"
+/sourceatlas:deps "axios"
+/sourceatlas:deps "lodash" --breaking
 ```
 
 ### 什麼是 Dependency 分析？
@@ -758,7 +758,7 @@ CartViewController.swift:100
 - 哪些 API 在新版本會有 **breaking changes**？
 - 需要修改**哪些檔案**？
 
-`/atlas.deps` 幫你自動盤點所有使用點，對照 breaking changes，生成 migration checklist。
+`/sourceatlas:deps` 幫你自動盤點所有使用點，對照 breaking changes，生成 migration checklist。
 
 ### 你會得到什麼
 
@@ -780,7 +780,7 @@ CartViewController.swift:100
 
 **命令**：
 ```bash
-/atlas.deps "react"
+/sourceatlas:deps "react"
 ```
 
 **輸出**（摘要）：
@@ -838,7 +838,7 @@ CartViewController.swift:100
 
 **命令**：
 ```bash
-/atlas.deps "axios" --breaking
+/sourceatlas:deps "axios" --breaking
 ```
 
 **輸出**（摘要）：
@@ -870,14 +870,14 @@ CartViewController.swift:100
 
 ---
 
-## /atlas.list
+## /sourceatlas:list
 
 **列出快取的分析結果**
 
 ### 使用方式
 
 ```bash
-/atlas.list
+/sourceatlas:list
 ```
 
 ### 你會得到什麼
@@ -900,11 +900,11 @@ CartViewController.swift:100
 
 - 超過 **30 天** 的分析會標記 ⚠️
 - 過期的分析可能不再反映程式碼庫的現狀
-- 使用 `--force` 標記重新分析：`/atlas.overview --force`
+- 使用 `--force` 標記重新分析：`/sourceatlas:overview --force`
 
 ---
 
-## /atlas.clear
+## /sourceatlas:clear
 
 **清除快取的分析結果**
 
@@ -912,12 +912,12 @@ CartViewController.swift:100
 
 ```bash
 # 清除所有快取分析
-/atlas.clear
+/sourceatlas:clear
 
 # 清除特定類型
-/atlas.clear overview
-/atlas.clear patterns
-/atlas.clear history
+/sourceatlas:clear overview
+/sourceatlas:clear patterns
+/sourceatlas:clear history
 ```
 
 ### 支援的目標
@@ -986,9 +986,9 @@ cp scripts/atlas/patterns/ios/networking.sh scripts/atlas/patterns/ios/custom-pa
 
 **A**:
 - 輸出直接顯示在 Claude Code 對話中
-- 加上 `--save` 標記來持久化結果：`/atlas.overview --save`
+- 加上 `--save` 標記來持久化結果：`/sourceatlas:overview --save`
 - 已儲存的分析會放在 `.sourceatlas/` 目錄
-- 用 `/atlas.list` 查看已快取的分析
+- 用 `/sourceatlas:list` 查看已快取的分析
 - 快取的分析在重新執行時會自動載入（加 `--force` 可強制重新分析）
 
 ### Q: 可以分析私有 codebase 嗎？
@@ -998,9 +998,9 @@ cp scripts/atlas/patterns/ios/networking.sh scripts/atlas/patterns/ios/custom-pa
 ### Q: 效能如何？會不會很慢？
 
 **A**:
-- `/atlas.overview`: 10-15 分鐘
-- `/atlas.pattern`: 0.1-30 秒
-- `/atlas.impact`: 1-2 分鐘
+- `/sourceatlas:overview`: 10-15 分鐘
+- `/sourceatlas:pattern`: 0.1-30 秒
+- `/sourceatlas:impact`: 1-2 分鐘
 
 使用資訊理論原則，只掃描 <5% 檔案。
 
@@ -1011,10 +1011,10 @@ cp scripts/atlas/patterns/ios/networking.sh scripts/atlas/patterns/ios/custom-pa
 範例：
 ```bash
 cd packages/web
-/atlas.overview
+/sourceatlas:overview
 
 cd ../api
-/atlas.overview
+/sourceatlas:overview
 ```
 
 ---
@@ -1027,14 +1027,14 @@ cd ../api
 
 ```bash
 # Step 1: 理解專案 (10 分鐘)
-/atlas.overview
+/sourceatlas:overview
 
 # Step 2: 學習現有實作 (0.1 秒)
-/atlas.pattern "api endpoint"
-/atlas.pattern "authentication"
+/sourceatlas:pattern "api endpoint"
+/sourceatlas:pattern "authentication"
 
 # Step 3: 分析影響 (1 分鐘)
-/atlas.impact "src/api/auth.ts"
+/sourceatlas:impact "src/api/auth.ts"
 ```
 
 **總時間**: 15 分鐘內完整掌握專案
@@ -1045,7 +1045,7 @@ cd ../api
 
 ### 問題 1: 找不到 patterns
 
-**症狀**: `/atlas.pattern` 回報「No patterns found」
+**症狀**: `/sourceatlas:pattern` 回報「No patterns found」
 
 **解決方式**:
 1. 確認專案類型是否支援（iOS/TypeScript/Android）
@@ -1063,7 +1063,7 @@ cd ../api
 
 ### 問題 3: 執行時間過長
 
-**症狀**: `/atlas.overview` 超過 20 分鐘還沒完成
+**症狀**: `/sourceatlas:overview` 超過 20 分鐘還沒完成
 
 **診斷步驟**（執行這些命令找出原因）:
 
@@ -1085,14 +1085,14 @@ cat .gitignore | grep -E "node_modules|Pods|build|\.app"
 | 根本原因 | 修復方法 | 預期改善 |
 |---------|---------|---------|
 | 缺少 .gitignore | 加入 `node_modules/`, `Pods/`, `*.app` | 速度提升 80% |
-| 專案過大 (>100K LOC) | 在子目錄執行：`cd src && /atlas.overview` | 依子目錄數量分散時間 |
+| 專案過大 (>100K LOC) | 在子目錄執行：`cd src && /sourceatlas:overview` | 依子目錄數量分散時間 |
 | 網路延遲 | 檢查 [Claude API 狀態](https://status.anthropic.com) | 等待或稍後重試 |
 
 **仍然緩慢？** 請[回報問題](https://github.com/lis186/SourceAtlas/issues)並附上診斷結果
 
 ### 問題 4: 命令找不到
 
-**症狀**: 執行 `/atlas.overview` 時顯示「Command not found」
+**症狀**: 執行 `/sourceatlas:overview` 時顯示「Command not found」
 
 **診斷步驟**:
 
@@ -1113,13 +1113,13 @@ claude --version
 
 ### 問題 5: 輸出格式不正確
 
-**症狀**: `/atlas.overview` 輸出純文字而非 YAML 格式
+**症狀**: `/sourceatlas:overview` 輸出純文字而非 YAML 格式
 
 **診斷步驟**:
 
 ```bash
 # 檢查 plugin 中的 prompt 文件內容
-head -20 ./SourceAtlas/plugin/commands/atlas.overview.md
+head -20 ./SourceAtlas/plugin/commands/sourceatlas:overview.md
 ```
 
 **可能原因**：
@@ -1132,13 +1132,13 @@ head -20 ./SourceAtlas/plugin/commands/atlas.overview.md
 
 ### 問題 6: Pattern 搜尋結果不準確
 
-**症狀**: `/atlas.pattern "api"` 回傳不相關的檔案
+**症狀**: `/sourceatlas:pattern "api"` 回傳不相關的檔案
 
 **常見原因與解決**：
 
 | 情況 | 原因 | 改善方法 |
 |------|------|---------|
-| 找到測試檔案而非實作 | Pattern 太通用 | 使用更具體的關鍵字：`/atlas.pattern "api endpoint"` |
+| 找到測試檔案而非實作 | Pattern 太通用 | 使用更具體的關鍵字：`/sourceatlas:pattern "api endpoint"` |
 | 找到舊程式碼 | 專案有歷史遺留 | 檢查檔案的最後修改日期，關注最新的 |
 | 語言混用 | 多語言專案 | 指定目錄：先 `cd ios/` 再執行命令 |
 | 零結果 | 關鍵字不符專案慣例 | 嘗試同義詞：`"controller"` → `"view model"` |
@@ -1147,7 +1147,7 @@ head -20 ./SourceAtlas/plugin/commands/atlas.overview.md
 
 1. **從通用到具體**：先用 `"api"` 看有什麼，再精煉為 `"api endpoint"`
 2. **查看 Pattern 列表**：參考 [支援的 Patterns](#支援的-patterns-221-個)
-3. **結合 overview**：先用 `/atlas.overview` 了解架構後再搜尋
+3. **結合 overview**：先用 `/sourceatlas:overview` 了解架構後再搜尋
 
 ### 快速診斷檢查清單
 
@@ -1157,7 +1157,7 @@ head -20 ./SourceAtlas/plugin/commands/atlas.overview.md
 # === SourceAtlas 健康檢查 ===
 
 echo "1. 檢查 plugin 命令..."
-ls -la ./SourceAtlas/plugin/commands/atlas.*.md
+ls -la ./SourceAtlas/plugin/commands/sourceatlas:*.md
 
 echo -e "\n2. 檢查 plugin skills..."
 ls -la ./SourceAtlas/plugin/skills/
@@ -1193,4 +1193,4 @@ echo -e "\n=== 檢查完成 ==="
 ---
 
 **SourceAtlas** - Claude Code 的程式分析助手
-v2.9.6 | 更新時間: 2025-12-21
+v2.10.1 | 更新時間: 2025-12-23
