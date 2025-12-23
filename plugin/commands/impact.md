@@ -549,7 +549,7 @@ interface UserResponse {
 - Largest imports: [N] headers
 - Circular dependencies: [None|Detected]
 
-💡 **Full Swift Analysis**: Run `/atlas.impact [target].m` to see complete 7-section analysis
+💡 **Full Swift Analysis**: Run `/sourceatlas:impact [target].m` to see complete 7-section analysis
 
 ---
 
@@ -715,13 +715,13 @@ Add at the end of output:
 
 | # | Command | Purpose |
 |---|------|------|
-| 1 | `/atlas.flow "[entry point]"` | Impact chain involves N-layer calls, need to trace complete flow |
-| 2 | `/atlas.history "[directory]"` | This area changes frequently, need to understand historical patterns |
+| 1 | `/sourceatlas:flow "[entry point]"` | Impact chain involves N-layer calls, need to trace complete flow |
+| 2 | `/sourceatlas:history "[directory]"` | This area changes frequently, need to understand historical patterns |
 
 💡 Enter number (e.g., `1`) or copy command to execute
 
 ───────────────────────────────
-🗺️ v2.9.6 │ Constitution v1.1
+🗺️ v2.10.1 │ Constitution v1.1
 ```
 
 ### End Conditions vs Recommendations (choose one, mutually exclusive)
@@ -746,10 +746,10 @@ When impact scope is large or there are clear risks, **only output table, do not
 
 | Finding | Recommended Command | Parameter Source |
 |------|---------|---------|
-| Involves specific pattern | `/atlas.pattern` | pattern name |
-| Complex impact chain | `/atlas.flow` | entry point file |
-| Need to understand change history | `/atlas.history` | related directory |
-| Need broader context | `/atlas.overview` | no parameters needed |
+| Involves specific pattern | `/sourceatlas:pattern` | pattern name |
+| Complex impact chain | `/sourceatlas:flow` | entry point file |
+| Need to understand change history | `/sourceatlas:history` | related directory |
+| Need broader context | `/sourceatlas:overview` | no parameters needed |
 
 ### Output Format (Section 7.3)
 
@@ -843,7 +843,7 @@ fi
 
 ### Step V4: Verification Summary (Append to Output)
 
-Add to footer (before `🗺️ v2.9.6 │ Constitution v1.1`):
+Add to footer (before `🗺️ v2.10.1 │ Constitution v1.1`):
 
 **If all verifications passed:**
 ```
