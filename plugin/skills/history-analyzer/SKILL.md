@@ -16,15 +16,15 @@ Trigger this skill when the user:
 
 ## Instructions
 
-1. Run `/atlas.history` for the entire repo, or `/atlas.history <path>` for specific directory
-2. Optionally specify time range: `/atlas.history . 6` for last 6 months
+1. Run `/sourceatlas:history` for the entire repo, or `/sourceatlas:history <path>` for specific directory
+2. Optionally specify time range: `/sourceatlas:history . 6` for last 6 months
 3. Returns hotspots, coupling analysis, and contributor distribution
 
 ## Command Formats
 
-- Full repo: `/atlas.history`
-- Specific directory: `/atlas.history src/`
-- With time range: `/atlas.history . 6` (last 6 months)
+- Full repo: `/sourceatlas:history`
+- Specific directory: `/sourceatlas:history src/`
+- With time range: `/sourceatlas:history . 6` (last 6 months)
 
 ## What User Gets
 

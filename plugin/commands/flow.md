@@ -939,10 +939,10 @@ When a boundary is reached:
 User can control boundary behavior:
 
 ```
-/atlas.flow "order flow"                 → Default: stop at boundaries
-/atlas.flow "order flow --cross-boundary" → Cross boundaries, continue tracing
-/atlas.flow "order flow --only-internal"  → Only trace internal code
-/atlas.flow "order flow --include-lib"    → Include third-party library internals
+/sourceatlas:flow "order flow"                 → Default: stop at boundaries
+/sourceatlas:flow "order flow --cross-boundary" → Cross boundaries, continue tracing
+/sourceatlas:flow "order flow --only-internal"  → Only trace internal code
+/sourceatlas:flow "order flow --include-lib"    → Include third-party library internals
 ```
 
 ---
@@ -965,10 +965,10 @@ User can control boundary behavior:
 #### User-Controlled Depth
 
 ```
-/atlas.flow "from OrderService.create()"              → Default depth
-/atlas.flow "from OrderService.create(), depth 3"     → Limit to 3 levels
-/atlas.flow "from OrderService.create(), depth 5"     → Limit to 5 levels
-/atlas.flow "from OrderService.create(), full trace"  → Unlimited (warning)
+/sourceatlas:flow "from OrderService.create()"              → Default depth
+/sourceatlas:flow "from OrderService.create(), depth 3"     → Limit to 3 levels
+/sourceatlas:flow "from OrderService.create(), depth 5"     → Limit to 5 levels
+/sourceatlas:flow "from OrderService.create(), full trace"  → Unlimited (warning)
 ```
 
 **Depth Keywords**:
@@ -1136,7 +1136,7 @@ Mark items that are **worth attention** - unusual, risky, or important:
 • "why is this changed often"      → History analysis
 
 ───────────────────────────────
-🗺️ v2.9.6 │ Constitution v1.1
+🗺️ v2.10.1 │ Constitution v1.1
 ```
 
 ### Color Semantics
@@ -1213,7 +1213,7 @@ Legend: → Sync call  ⇢ Async  ▼ Main path
 When user requests `mermaid output` or `--mermaid`:
 
 ```
-/atlas.flow "order flow --mermaid"
+/sourceatlas:flow "order flow --mermaid"
 ```
 
 Output:
@@ -1281,9 +1281,9 @@ newbie, newbie mode, beginner, explain, explain mode, can't understand
 
 **Example Usage**:
 ```
-/atlas.flow "order flow newbie mode"
-/atlas.flow "explain OrderService.create()"
-/atlas.flow "explain this flow"
+/sourceatlas:flow "order flow newbie mode"
+/sourceatlas:flow "explain OrderService.create()"
+/sourceatlas:flow "explain this flow"
 ```
 
 ### Newbie Mode Behavior
@@ -1381,8 +1381,8 @@ Order Flow (Newbie Mode 🎓)
 
 **Explicit Activation**:
 ```
-/atlas.flow "order flow newbie mode"
-/atlas.flow "explain checkout flow"
+/sourceatlas:flow "order flow newbie mode"
+/sourceatlas:flow "explain checkout flow"
 ```
 
 **Offer Newbie Mode** (not auto-enable) when:
@@ -1427,8 +1427,8 @@ Order Flow (Summary)
 When user requests `detailed`, `full`:
 
 ```
-/atlas.flow "order flow detailed"
-/atlas.flow "detailed checkout flow"
+/sourceatlas:flow "order flow detailed"
+/sourceatlas:flow "detailed checkout flow"
 ```
 
 **Detailed Output**:
@@ -1486,10 +1486,10 @@ Order Flow (Detailed)
 Modes can be combined:
 
 ```
-/atlas.flow "order flow detailed newbie mode"
+/sourceatlas:flow "order flow detailed newbie mode"
 → Detailed output with terminology explanations
 
-/atlas.flow "order flow summary"
+/sourceatlas:flow "order flow summary"
 → Concise summary (default)
 ```
 
@@ -1508,15 +1508,15 @@ After initial output, respond intelligently to follow-ups:
 - `continue` → Continue if main path was truncated
 
 **If user asks about impact**:
-- `what if I change this` → Suggest `/atlas.impact`
+- `what if I change this` → Suggest `/sourceatlas:impact`
 - `what does step 3 affect` → Run targeted impact analysis
 
 **If user asks about history**:
-- `why is this changed often` → Suggest `/atlas.history`
+- `why is this changed often` → Suggest `/sourceatlas:history`
 - `history of this file` → Run git history analysis
 
 **If user asks about patterns**:
-- `what pattern is used here` → Suggest `/atlas.pattern`
+- `what pattern is used here` → Suggest `/sourceatlas:pattern`
 
 ---
 
@@ -1525,7 +1525,7 @@ After initial output, respond intelligently to follow-ups:
 If user requests Mermaid format:
 
 ```
-/atlas.flow "order flow, output mermaid"
+/sourceatlas:flow "order flow, output mermaid"
 ```
 
 Output:
@@ -1547,9 +1547,9 @@ flowchart TD
 User can control tracing depth via natural language:
 
 ```
-/atlas.flow "from OrderService.create(), depth 3"
-/atlas.flow "from OrderService.create(), same file only"
-/atlas.flow "from OrderService.create(), full trace"
+/sourceatlas:flow "from OrderService.create(), depth 3"
+/sourceatlas:flow "from OrderService.create(), same file only"
+/sourceatlas:flow "from OrderService.create(), full trace"
 ```
 
 **Default Behavior**:
@@ -1597,8 +1597,8 @@ User can control tracing depth via natural language:
 When user asks "who calls this":
 
 ```
-/atlas.flow "who calls OrderService.create()"
-/atlas.flow "what triggers this function"
+/sourceatlas:flow "who calls OrderService.create()"
+/sourceatlas:flow "what triggers this function"
 ```
 
 **Output Format**:
@@ -1628,8 +1628,8 @@ Callers (3 entry points):
 When user asks about failure scenarios:
 
 ```
-/atlas.flow "what if order fails"
-/atlas.flow "OrderService.create() failure path"
+/sourceatlas:flow "what if order fails"
+/sourceatlas:flow "OrderService.create() failure path"
 ```
 
 **Output Format**:
@@ -1668,8 +1668,8 @@ Order Flow (Failure Path)
 When user asks about how data transforms:
 
 ```
-/atlas.flow "how is price calculated"
-/atlas.flow "trace userId in login flow"
+/sourceatlas:flow "how is price calculated"
+/sourceatlas:flow "trace userId in login flow"
 ```
 
 **Output Format**:
@@ -1707,8 +1707,8 @@ Price Calculation Flow (Data Flow: totalPrice)
 When user asks about state transitions:
 
 ```
-/atlas.flow "order state machine"
-/atlas.flow "how does order status change"
+/sourceatlas:flow "order state machine"
+/sourceatlas:flow "how does order status change"
 ```
 
 **Output Format**:
@@ -1747,8 +1747,8 @@ Transition logic:
 When user asks to compare flows:
 
 ```
-/atlas.flow "compare VIP order vs regular order"
-/atlas.flow "compare old vs new login flow"
+/sourceatlas:flow "compare VIP order vs regular order"
+/sourceatlas:flow "compare old vs new login flow"
 ```
 
 **Output Format**:
@@ -1784,8 +1784,8 @@ Differences:
 When user wants to trace flow through log statements:
 
 ```
-/atlas.flow "find order flow from logs"
-/atlas.flow "where are the logs"
+/sourceatlas:flow "find order flow from logs"
+/sourceatlas:flow "where are the logs"
 ```
 
 **Strategy**:
@@ -1862,9 +1862,9 @@ Found 8 log points, reconstructed flow:
 When user wants to understand flow variations based on feature flags:
 
 ```
-/atlas.flow "what feature toggles affect checkout flow"
-/atlas.flow "what happens if new payment is enabled"
-/atlas.flow "compare feature toggle on/off differences"
+/sourceatlas:flow "what feature toggles affect checkout flow"
+/sourceatlas:flow "what happens if new payment is enabled"
+/sourceatlas:flow "compare feature toggle on/off differences"
 ```
 
 **Strategy**:
@@ -1910,7 +1910,7 @@ Found 4 feature toggles affecting this flow:
 
 **Output Format - Toggle Impact**:
 ```
-/atlas.flow "flow with NEW_PAYMENT_FLOW = ON"
+/sourceatlas:flow "flow with NEW_PAYMENT_FLOW = ON"
 
 Checkout Flow (NEW_PAYMENT_FLOW = ON)
 ======================================
@@ -1963,7 +1963,7 @@ Checkout Flow (NEW_PAYMENT_FLOW = ON)
 
 **Output Format - All Toggles Comparison**:
 ```
-/atlas.flow "compare all toggle combinations"
+/sourceatlas:flow "compare all toggle combinations"
 
 Checkout Flow Toggle Combination Matrix
 ========================================
@@ -2003,9 +2003,9 @@ Checkout Flow Toggle Combination Matrix
 When user wants to trace event-driven or message queue flows:
 
 ```
-/atlas.flow "what does ORDER_CREATED event trigger"
-/atlas.flow "what events are emitted after order placement"
-/atlas.flow "who is listening to this event"
+/sourceatlas:flow "what does ORDER_CREATED event trigger"
+/sourceatlas:flow "what events are emitted after order placement"
+/sourceatlas:flow "who is listening to this event"
 ```
 
 **Strategy**:
@@ -2079,8 +2079,8 @@ OrderService.create()
 When user wants to understand transaction scopes:
 
 ```
-/atlas.flow "transactions in checkout flow"
-/atlas.flow "which transaction is this operation in"
+/sourceatlas:flow "transactions in checkout flow"
+/sourceatlas:flow "which transaction is this operation in"
 ```
 
 **Search Patterns**:
@@ -2155,8 +2155,8 @@ Checkout Flow Transaction Analysis
 When user wants to understand flow variations by role:
 
 ```
-/atlas.flow "delete order flow by role"
-/atlas.flow "operation differences by permission"
+/sourceatlas:flow "delete order flow by role"
+/sourceatlas:flow "operation differences by permission"
 ```
 
 **Search Patterns**:
@@ -2238,8 +2238,8 @@ Delete Order Flow (by Role)
 When user wants to understand caching impact:
 
 ```
-/atlas.flow "get product price with cache"
-/atlas.flow "does this flow use cache"
+/sourceatlas:flow "get product price with cache"
+/sourceatlas:flow "does this flow use cache"
 ```
 
 **Search Patterns**:
@@ -2453,22 +2453,22 @@ else:
 ### Mode Combination Examples
 
 ```
-/atlas.flow "checkout flow"
+/sourceatlas:flow "checkout flow"
 → Forward Tracing + Summary + Call Graph (default)
 
-/atlas.flow "checkout flow detailed"
+/sourceatlas:flow "checkout flow detailed"
 → Forward Tracing + Detailed + Call Graph
 
-/atlas.flow "checkout flow newbie mode"
+/sourceatlas:flow "checkout flow newbie mode"
 → Forward Tracing + Newbie Mode + Call Graph + Glossary
 
-/atlas.flow "checkout flow detailed newbie mode"
+/sourceatlas:flow "checkout flow detailed newbie mode"
 → Forward Tracing + Detailed + Newbie Mode + Call Graph + Glossary
 
-/atlas.flow "what happens when checkout fails newbie mode"
+/sourceatlas:flow "what happens when checkout fails newbie mode"
 → Error Path + Newbie Mode + Call Graph + Glossary
 
-/atlas.flow "order state machine --mermaid"
+/sourceatlas:flow "order state machine --mermaid"
 → State Machine + Mermaid Diagram
 ```
 
@@ -2485,8 +2485,8 @@ else:
 
 | # | Command | Purpose |
 |---|---------|---------|
-| 1 | `/atlas.impact "[key node]"` | Found this node called in N places, higher change risk |
-| 2 | `/atlas.pattern "[pattern]"` | Flow uses this pattern, need to understand implementation conventions |
+| 1 | `/sourceatlas:impact "[key node]"` | Found this node called in N places, higher change risk |
+| 2 | `/sourceatlas:pattern "[pattern]"` | Flow uses this pattern, need to understand implementation conventions |
 
 💡 Enter number (e.g., `1`) or copy command to execute
 ```
@@ -2513,10 +2513,10 @@ When flow is complex or has clear follow-up analysis needs, **only output table,
 
 | Finding | Suggested Command | Parameter Source |
 |---------|------------------|------------------|
-| High coupling node | `/atlas.impact` | Node filename |
-| Complex pattern involved | `/atlas.pattern` | Pattern name |
-| Frequent flow changes | `/atlas.history` | Relevant directory |
-| Related flow discovered | `/atlas.flow` | Flow entry point |
+| High coupling node | `/sourceatlas:impact` | Node filename |
+| Complex pattern involved | `/sourceatlas:pattern` | Pattern name |
+| Frequent flow changes | `/sourceatlas:history` | Relevant directory |
+| Related flow discovered | `/sourceatlas:flow` | Flow entry point |
 
 ### Output Format (Section 7.3)
 
@@ -2532,11 +2532,11 @@ Use numbered table for quick selection.
 
 ## Output Modes Reference
 
-After `/atlas.flow`, users can:
+After `/sourceatlas:flow`, users can:
 - Expand specific sub-flows by typing the code (e.g., `3a`)
-- Use `/atlas.impact` to understand change impact
-- Use `/atlas.history` to see why certain parts change often
-- Use `/atlas.pattern` to learn implementation patterns
+- Use `/sourceatlas:impact` to understand change impact
+- Use `/sourceatlas:history` to see why certain parts change often
+- Use `/sourceatlas:pattern` to learn implementation patterns
 - Switch output modes or analysis modes:
 
 ### Output Control (P0)
@@ -2650,7 +2650,7 @@ fi
 
 ### Step V4: Verification Summary (Append to Output)
 
-Add to footer (before `🗺️ v2.9.6 │ Constitution v1.1`):
+Add to footer (before `🗺️ v2.10.1 │ Constitution v1.1`):
 
 **If all verifications passed:**
 ```

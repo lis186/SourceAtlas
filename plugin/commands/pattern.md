@@ -355,13 +355,13 @@ To implement similar functionality following this codebase's pattern:
 
 | # | Command | Purpose |
 |---|---------|---------|
-| 1 | `/atlas.flow "[entry point]"` | [reason based on findings] |
-| 2 | `/atlas.impact "[file]"` | [reason based on findings] |
+| 1 | `/sourceatlas:flow "[entry point]"` | [reason based on findings] |
+| 2 | `/sourceatlas:impact "[file]"` | [reason based on findings] |
 
 💡 Enter a number (e.g., `1`) or copy the command to execute
 
 ───────────────────────────────
-🗺️ v2.9.6 │ Constitution v1.1
+🗺️ v2.10.1 │ Constitution v1.1
 
 ---
 
@@ -438,10 +438,10 @@ When pattern involves complex flows or has clear next steps, **only output table
 
 | Finding | Suggested Command | Parameter Source |
 |---------|-------------------|------------------|
-| Highly related to other patterns | `/atlas.pattern` | Related pattern name |
-| Pattern involves complex flow | `/atlas.flow` | Entry point file |
-| Used in many places, has risks | `/atlas.impact` | Core file name |
-| Need to understand change history | `/atlas.history` | Optional: related directory |
+| Highly related to other patterns | `/sourceatlas:pattern` | Related pattern name |
+| Pattern involves complex flow | `/sourceatlas:flow` | Entry point file |
+| Used in many places, has risks | `/sourceatlas:impact` | Core file name |
+| Need to understand change history | `/sourceatlas:history` | Optional: related directory |
 
 ### Output Format (Section 7.3)
 
@@ -449,7 +449,7 @@ Use numbered table:
 ```markdown
 | # | Command | Purpose |
 |---|---------|---------|
-| 1 | `/atlas.flow "LoginService"` | Pattern involves 3-layer calls, need to trace full flow |
+| 1 | `/sourceatlas:flow "LoginService"` | Pattern involves 3-layer calls, need to trace full flow |
 ```
 
 ### Quality Requirements (Section 7.4-7.5)
@@ -532,7 +532,7 @@ fi
 
 ### Step V4: Verification Summary (Append to Output)
 
-Add to footer (before `🗺️ v2.9.6 │ Constitution v1.1`):
+Add to footer (before `🗺️ v2.10.1 │ Constitution v1.1`):
 
 **If all verifications passed:**
 ```

@@ -22,9 +22,9 @@ If output contains `NOT_FOUND` or directory is empty:
 📁 No saved analyses yet
 
 Use the `--save` parameter to save analysis results:
-- `/atlas.overview --save`
-- `/atlas.pattern "api" --save`
-- `/atlas.history --save`
+- `/sourceatlas:overview --save`
+- `/sourceatlas:pattern "api" --save`
+- `/sourceatlas:history --save`
 ```
 
 End.
@@ -55,8 +55,8 @@ Format results into a table, calculate days since modification, and mark expired
 📊 Stats: 7 cached, 2 expired (>30 days)
 
 💡 Tips:
-- Clear cache: `/atlas.clear`
-- Clear specific type: `/atlas.clear patterns`
+- Clear cache: `/sourceatlas:clear`
+- Clear specific type: `/sourceatlas:clear patterns`
 ```
 
 ### Step 4: List expired items with refresh commands
@@ -68,8 +68,8 @@ If there are expired items (>30 days), output copyable re-analysis commands:
 
 | File | Days | Re-analyze Command |
 |------|------|-------------------|
-| patterns/api.md | 45 days | `/atlas.pattern "api" --force --save` |
-| history.md | 60 days | `/atlas.history --force --save` |
+| patterns/api.md | 45 days | `/sourceatlas:pattern "api" --force --save` |
+| history.md | 60 days | `/sourceatlas:history --force --save` |
 
 💡 Copy the commands above to re-analyze
 ```
@@ -78,13 +78,13 @@ If there are expired items (>30 days), output copyable re-analysis commands:
 
 | Type | Command Format |
 |------|----------------|
-| overview | `/atlas.overview --force --save` |
-| overview-{dir} | `/atlas.overview {dir} --force --save` |
-| patterns/{name}.md | `/atlas.pattern "{name}" --force --save` |
-| history.md | `/atlas.history --force --save` |
-| flows/{name}.md | `/atlas.flow "{name}" --force --save` |
-| impact/{name}.md | `/atlas.impact "{name}" --force --save` |
-| deps/{name}.md | `/atlas.deps "{name}" --force --save` |
+| overview | `/sourceatlas:overview --force --save` |
+| overview-{dir} | `/sourceatlas:overview {dir} --force --save` |
+| patterns/{name}.md | `/sourceatlas:pattern "{name}" --force --save` |
+| history.md | `/sourceatlas:history --force --save` |
+| flows/{name}.md | `/sourceatlas:flow "{name}" --force --save` |
+| impact/{name}.md | `/sourceatlas:impact "{name}" --force --save` |
+| deps/{name}.md | `/sourceatlas:deps "{name}" --force --save` |
 
 **Note**: Convert `-` in filenames back to spaces for parameters (e.g., `api-endpoint.md` → `"api endpoint"`)
 

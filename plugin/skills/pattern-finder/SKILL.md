@@ -17,19 +17,19 @@ Trigger this skill when the user:
 ## Instructions
 
 1. Identify what pattern the user is looking for
-2. Run `/atlas.pattern "<pattern>"` with the relevant pattern name
+2. Run `/sourceatlas:pattern "<pattern>"` with the relevant pattern name
 3. Returns best example files with line numbers and implementation guide
 
 ## Common Patterns
 
-- API endpoints: `/atlas.pattern "api endpoint"`
-- Authentication: `/atlas.pattern "authentication"`
-- Database queries: `/atlas.pattern "database query"`
-- Background jobs: `/atlas.pattern "background job"`
-- File uploads: `/atlas.pattern "file upload"`
-- Error handling: `/atlas.pattern "error handling"`
-- Validation: `/atlas.pattern "validation"`
-- Testing: `/atlas.pattern "unit test"`
+- API endpoints: `/sourceatlas:pattern "api endpoint"`
+- Authentication: `/sourceatlas:pattern "authentication"`
+- Database queries: `/sourceatlas:pattern "database query"`
+- Background jobs: `/sourceatlas:pattern "background job"`
+- File uploads: `/sourceatlas:pattern "file upload"`
+- Error handling: `/sourceatlas:pattern "error handling"`
+- Validation: `/sourceatlas:pattern "validation"`
+- Testing: `/sourceatlas:pattern "unit test"`
 
 ## What User Gets
 

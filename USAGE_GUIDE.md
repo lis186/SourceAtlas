@@ -13,14 +13,14 @@ For Claude Code | v2.10.1 | Constitution v1.1
 1. [Use Cases](#use-cases)
 2. [Recommended Workflow](#recommended-workflow)
 3. [Installation](#installation)
-4. [/atlas.overview](#atlasoverview) - Project overview
-5. [/atlas.pattern](#atlaspattern) - Learn design patterns
-6. [/atlas.impact](#atlasimpact) - Code change impact
-7. [/atlas.history](#atlashistory) - Git history analysis
-8. [/atlas.flow](#atlasflow) - Execution flow tracing
-9. [/atlas.deps](#atlasdeps) - Dependency analysis
-10. [/atlas.list](#atlaslist) - List cached analyses
-11. [/atlas.clear](#atlasclear) - Clear cached analyses
+4. [/sourceatlas:overview](#atlasoverview) - Project overview
+5. [/sourceatlas:pattern](#atlaspattern) - Learn design patterns
+6. [/sourceatlas:impact](#atlasimpact) - Code change impact
+7. [/sourceatlas:history](#atlashistory) - Git history analysis
+8. [/sourceatlas:flow](#atlasflow) - Execution flow tracing
+9. [/sourceatlas:deps](#atlasdeps) - Dependency analysis
+10. [/sourceatlas:list](#atlaslist) - List cached analyses
+11. [/sourceatlas:clear](#atlasclear) - Clear cached analyses
 12. [FAQ](#faq)
 
 ---
@@ -31,22 +31,22 @@ SourceAtlas is suitable for the following common scenarios:
 
 | # | Scenario | Main Commands | Description |
 |---|----------|--------------|-------------|
-| 1 | **Onboarding to a new project** | `/atlas.overview` | First day on the team, quickly build holistic understanding |
-| 2 | **Code Review / Technical Due Diligence** | `/atlas.overview` + `/atlas.history` | Assess code quality and project evolution |
-| 3 | **Bug Fixing** | `/atlas.flow` | Trace execution path, locate root cause |
-| 4 | **Adding Features** | `/atlas.pattern` + `/atlas.impact` | Learn existing conventions, evaluate impact scope |
-| 5 | **Interview Candidate GitHub Assessment** | `/atlas.overview` + `/atlas.history` | Quickly assess development skills and habits |
-| 6 | **Learning Open Source Projects** | `/atlas.overview` + `/atlas.pattern` | Understand architectural design and best practices |
-| 7 | **Breaking Change Evaluation** | `/atlas.impact` + `/atlas.flow` | Modifying your own API, find all call sites |
-| 8 | **Library/Framework Upgrade** | `/atlas.impact` + `/atlas.pattern` | Upgrading third-party packages, find usage points, learn new patterns |
+| 1 | **Onboarding to a new project** | `/sourceatlas:overview` | First day on the team, quickly build holistic understanding |
+| 2 | **Code Review / Technical Due Diligence** | `/sourceatlas:overview` + `/sourceatlas:history` | Assess code quality and project evolution |
+| 3 | **Bug Fixing** | `/sourceatlas:flow` | Trace execution path, locate root cause |
+| 4 | **Adding Features** | `/sourceatlas:pattern` + `/sourceatlas:impact` | Learn existing conventions, evaluate impact scope |
+| 5 | **Interview Candidate GitHub Assessment** | `/sourceatlas:overview` + `/sourceatlas:history` | Quickly assess development skills and habits |
+| 6 | **Learning Open Source Projects** | `/sourceatlas:overview` + `/sourceatlas:pattern` | Understand architectural design and best practices |
+| 7 | **Breaking Change Evaluation** | `/sourceatlas:impact` + `/sourceatlas:flow` | Modifying your own API, find all call sites |
+| 8 | **Library/Framework Upgrade** | `/sourceatlas:impact` + `/sourceatlas:pattern` | Upgrading third-party packages, find usage points, learn new patterns |
 
 ### Entry Points by Experience Level
 
 | Experience Level | Main Challenge | Recommended Starting Point |
 |-----------------|----------------|---------------------------|
-| **Junior** | Don't know how to "read" code, easily lost in details | `/atlas.overview` for global map → `/atlas.pattern` to learn conventions |
-| **Mid-level** | Know how to read, but inefficient, easily miss things | `/atlas.flow` to trace execution → `/atlas.impact` to evaluate change scope |
-| **Senior** | Efficiency is decent, but want faster, want to verify hypotheses | `/atlas.history` to see evolution context, quickly verify architectural guesses |
+| **Junior** | Don't know how to "read" code, easily lost in details | `/sourceatlas:overview` for global map → `/sourceatlas:pattern` to learn conventions |
+| **Mid-level** | Know how to read, but inefficient, easily miss things | `/sourceatlas:flow` to trace execution → `/sourceatlas:impact` to evaluate change scope |
+| **Senior** | Efficiency is decent, but want faster, want to verify hypotheses | `/sourceatlas:history` to see evolution context, quickly verify architectural guesses |
 
 ---
 
@@ -55,33 +55,33 @@ SourceAtlas is suitable for the following common scenarios:
 ### Standard 5-Step Process (Suitable for Most Scenarios)
 
 ```
-1. /atlas.overview     → Build holistic understanding (5-10 minutes)
-2. /atlas.pattern      → Learn project conventions (as needed)
-3. /atlas.flow         → Trace specific feature flows (as needed)
-4. /atlas.impact       → Evaluate change impact (when ready to code)
-5. /atlas.history      → Understand evolution context (for deeper dive)
+1. /sourceatlas:overview     → Build holistic understanding (5-10 minutes)
+2. /sourceatlas:pattern      → Learn project conventions (as needed)
+3. /sourceatlas:flow         → Trace specific feature flows (as needed)
+4. /sourceatlas:impact       → Evaluate change impact (when ready to code)
+5. /sourceatlas:history      → Understand evolution context (for deeper dive)
 ```
 
 ### Scenario Variations
 
 **Scenarios 1-2: Quick Project Understanding**
 ```
-/atlas.overview → /atlas.history (optional)
+/sourceatlas:overview → /sourceatlas:history (optional)
 ```
 
 **Scenario 3: Bug Fixing**
 ```
-/atlas.flow "from [entry point]" → Locate issue
+/sourceatlas:flow "from [entry point]" → Locate issue
 ```
 
 **Scenario 4: Adding Features**
 ```
-/atlas.pattern "[feature type]" → /atlas.impact "[related file]"
+/sourceatlas:pattern "[feature type]" → /sourceatlas:impact "[related file]"
 ```
 
 **Scenarios 7-8: Upgrade Evaluation**
 ```
-/atlas.impact "[API or library]" → /atlas.pattern "[new version pattern]"
+/sourceatlas:impact "[API or library]" → /sourceatlas:pattern "[new version pattern]"
 ```
 
 ---
@@ -108,14 +108,14 @@ claude --plugin-dir ./SourceAtlas/plugin
 
 ---
 
-## /atlas.overview
+## /sourceatlas:overview
 
 **Quickly understand project overview**
 
 ### Usage
 
 ```bash
-/atlas.overview
+/sourceatlas:overview
 ```
 
 ### What You Get
@@ -147,7 +147,7 @@ claude --plugin-dir ./SourceAtlas/plugin
 
 **Command**:
 ```bash
-/atlas.overview
+/sourceatlas:overview
 ```
 
 **Output** (summary):
@@ -172,20 +172,20 @@ key_directories:
 - 85% test coverage (professional team)
 - Main logic is in src/app/ (App Router architecture)
 
-**Next Step**: Use `/atlas.pattern "api endpoint"` to learn API implementation patterns
+**Next Step**: Use `/sourceatlas:pattern "api endpoint"` to learn API implementation patterns
 
 ---
 
-## /atlas.pattern
+## /sourceatlas:pattern
 
 **Learn project design patterns**
 
 ### Usage
 
 ```bash
-/atlas.pattern "api endpoint"
-/atlas.pattern "file upload"
-/atlas.pattern "authentication"
+/sourceatlas:pattern "api endpoint"
+/sourceatlas:pattern "file upload"
+/sourceatlas:pattern "authentication"
 ```
 
 ### What is a "Pattern"?
@@ -333,7 +333,7 @@ Simply put: **"How does this project typically implement X?"**
 
 </details>
 
-**Try it**: `/atlas.pattern "api endpoint"`
+**Try it**: `/sourceatlas:pattern "api endpoint"`
 
 ### Execution Time
 
@@ -347,7 +347,7 @@ Simply put: **"How does this project typically implement X?"**
 
 **Command**:
 ```bash
-/atlas.pattern "api endpoint"
+/sourceatlas:pattern "api endpoint"
 ```
 
 **Output** (summary):
@@ -387,7 +387,7 @@ Simply put: **"How does this project typically implement X?"**
 
 **Command**:
 ```bash
-/atlas.pattern "swiftui view"
+/sourceatlas:pattern "swiftui view"
 ```
 
 **Output** (summary):
@@ -423,7 +423,7 @@ Simply put: **"How does this project typically implement X?"**
 
 ---
 
-## /atlas.impact
+## /sourceatlas:impact
 
 **Analyze code change impact**
 
@@ -431,13 +431,13 @@ Simply put: **"How does this project typically implement X?"**
 
 ```bash
 # Analyze a file
-/atlas.impact "src/api/users.ts"
+/sourceatlas:impact "src/api/users.ts"
 
 # Analyze an API
-/atlas.impact api "/api/users/{id}"
+/sourceatlas:impact api "/api/users/{id}"
 
 # Analyze a Model
-/atlas.impact "User model"
+/sourceatlas:impact "User model"
 ```
 
 ### What You Get
@@ -465,7 +465,7 @@ Simply put: **"How does this project typically implement X?"**
 
 **Command**:
 ```bash
-/atlas.impact api "/api/users/{id}"
+/sourceatlas:impact api "/api/users/{id}"
 ```
 
 **Output** (summary):
@@ -508,7 +508,7 @@ Simply put: **"How does this project typically implement X?"**
 
 **Command**:
 ```bash
-/atlas.impact "User.swift"
+/sourceatlas:impact "User.swift"
 ```
 
 **Output** (summary):
@@ -549,15 +549,15 @@ find . -name '*.h' -not -path '*/Pods/*' -exec \
 
 ---
 
-## /atlas.history
+## /sourceatlas:history
 
 **Analyze git history for hotspots and team knowledge**
 
 ### Usage
 
 ```bash
-/atlas.history
-/atlas.history src/
+/sourceatlas:history
+/sourceatlas:history src/
 ```
 
 ### What You Get
@@ -584,7 +584,7 @@ find . -name '*.h' -not -path '*/Pods/*' -exec \
 
 **Command**:
 ```bash
-/atlas.history
+/sourceatlas:history
 ```
 
 **Output** (summary):
@@ -613,20 +613,20 @@ find . -name '*.h' -not -path '*/Pods/*' -exec \
 - User model and service have high coupling (expected, same domain)
 - Legacy code has bus factor risk (needs knowledge transfer)
 
-**Next Step**: Use `/atlas.impact "src/core/processor.ts"` to understand dependencies before refactoring
+**Next Step**: Use `/sourceatlas:impact "src/core/processor.ts"` to understand dependencies before refactoring
 
 ---
 
-## /atlas.flow
+## /sourceatlas:flow
 
 **Trace execution flow from entry point to boundaries**
 
 ### Usage
 
 ```bash
-/atlas.flow "user login"
-/atlas.flow "checkout process"
-/atlas.flow "from LoginViewController"
+/sourceatlas:flow "user login"
+/sourceatlas:flow "checkout process"
+/sourceatlas:flow "from LoginViewController"
 ```
 
 ### What You Get
@@ -664,7 +664,7 @@ find . -name '*.h' -not -path '*/Pods/*' -exec \
 
 **Command**:
 ```bash
-/atlas.flow "user login"
+/sourceatlas:flow "user login"
 ```
 
 **Output** (summary):
@@ -698,7 +698,7 @@ LoginViewController.swift:25
 - Token is stored securely (TokenManager uses Keychain)
 - Coordinator pattern used for navigation
 
-**Next Step**: Use `/atlas.pattern "authentication"` to learn auth implementation conventions
+**Next Step**: Use `/sourceatlas:pattern "authentication"` to learn auth implementation conventions
 
 #### Example 2: Tracing Checkout Process
 
@@ -706,7 +706,7 @@ LoginViewController.swift:25
 
 **Command**:
 ```bash
-/atlas.flow "checkout process"
+/sourceatlas:flow "checkout process"
 ```
 
 **Output** (summary):
@@ -735,20 +735,20 @@ CartViewController.swift:100
 - PaymentGateway is external API boundary (high risk for changes)
 - 5 services involved in the flow
 
-**Next Step**: Use `/atlas.impact "CheckoutService.swift"` before making changes
+**Next Step**: Use `/sourceatlas:impact "CheckoutService.swift"` before making changes
 
 ---
 
-## /atlas.deps
+## /sourceatlas:deps
 
 **Analyze library/framework usage for upgrade planning**
 
 ### Usage
 
 ```bash
-/atlas.deps "react"
-/atlas.deps "axios"
-/atlas.deps "lodash" --breaking
+/sourceatlas:deps "react"
+/sourceatlas:deps "axios"
+/sourceatlas:deps "lodash" --breaking
 ```
 
 ### What is Dependency Analysis?
@@ -758,7 +758,7 @@ When you need to upgrade a library or framework, you need to know:
 - Which APIs have **breaking changes** in the new version?
 - Which **files** need to be modified?
 
-`/atlas.deps` automatically inventories all usage points, compares breaking changes, and generates a migration checklist.
+`/sourceatlas:deps` automatically inventories all usage points, compares breaking changes, and generates a migration checklist.
 
 ### What You Get
 
@@ -780,7 +780,7 @@ When you need to upgrade a library or framework, you need to know:
 
 **Command**:
 ```bash
-/atlas.deps "react"
+/sourceatlas:deps "react"
 ```
 
 **Output** (summary):
@@ -838,7 +838,7 @@ Risk Level: 🟡 Medium
 
 **Command**:
 ```bash
-/atlas.deps "axios" --breaking
+/sourceatlas:deps "axios" --breaking
 ```
 
 **Output** (summary):
@@ -870,14 +870,14 @@ Risk Level: 🟡 Medium
 
 ---
 
-## /atlas.list
+## /sourceatlas:list
 
 **List cached analysis results**
 
 ### Usage
 
 ```bash
-/atlas.list
+/sourceatlas:list
 ```
 
 ### What You Get
@@ -900,11 +900,11 @@ A table showing all cached analyses in `.sourceatlas/`:
 
 - Analyses older than **30 days** are marked with ⚠️
 - Expired analyses may not reflect current codebase state
-- Use `--force` flag to re-analyze: `/atlas.overview --force`
+- Use `--force` flag to re-analyze: `/sourceatlas:overview --force`
 
 ---
 
-## /atlas.clear
+## /sourceatlas:clear
 
 **Clear cached analysis results**
 
@@ -912,12 +912,12 @@ A table showing all cached analyses in `.sourceatlas/`:
 
 ```bash
 # Clear all cached analyses
-/atlas.clear
+/sourceatlas:clear
 
 # Clear specific type
-/atlas.clear overview
-/atlas.clear patterns
-/atlas.clear history
+/sourceatlas:clear overview
+/sourceatlas:clear patterns
+/sourceatlas:clear history
 ```
 
 ### Supported Targets
@@ -986,9 +986,9 @@ cp scripts/atlas/patterns/ios/networking.sh scripts/atlas/patterns/ios/custom-pa
 
 **A**:
 - Output is displayed directly in Claude Code conversation
-- Add `--save` flag to persist results: `/atlas.overview --save`
+- Add `--save` flag to persist results: `/sourceatlas:overview --save`
 - Saved analyses go to `.sourceatlas/` directory
-- Use `/atlas.list` to view cached analyses
+- Use `/sourceatlas:list` to view cached analyses
 - Cached analyses are automatically loaded on re-run (add `--force` to re-analyze)
 
 ### Q: Can I analyze private codebases?
@@ -998,9 +998,9 @@ cp scripts/atlas/patterns/ios/networking.sh scripts/atlas/patterns/ios/custom-pa
 ### Q: How is performance? Will it be slow?
 
 **A**:
-- `/atlas.overview`: 10-15 minutes
-- `/atlas.pattern`: 0.1-30 seconds
-- `/atlas.impact`: 1-2 minutes
+- `/sourceatlas:overview`: 10-15 minutes
+- `/sourceatlas:pattern`: 0.1-30 seconds
+- `/sourceatlas:impact`: 1-2 minutes
 
 Uses information theory principles, scans only <5% of files.
 
@@ -1011,10 +1011,10 @@ Uses information theory principles, scans only <5% of files.
 Example:
 ```bash
 cd packages/web
-/atlas.overview
+/sourceatlas:overview
 
 cd ../api
-/atlas.overview
+/sourceatlas:overview
 ```
 
 ---
@@ -1027,14 +1027,14 @@ cd ../api
 
 ```bash
 # Step 1: Understand project (10 minutes)
-/atlas.overview
+/sourceatlas:overview
 
 # Step 2: Learn existing implementation (0.1 seconds)
-/atlas.pattern "api endpoint"
-/atlas.pattern "authentication"
+/sourceatlas:pattern "api endpoint"
+/sourceatlas:pattern "authentication"
 
 # Step 3: Analyze impact (1 minute)
-/atlas.impact "src/api/auth.ts"
+/sourceatlas:impact "src/api/auth.ts"
 ```
 
 **Total Time**: Complete project mastery within 15 minutes
@@ -1045,7 +1045,7 @@ cd ../api
 
 ### Issue 1: Patterns not found
 
-**Symptom**: `/atlas.pattern` reports "No patterns found"
+**Symptom**: `/sourceatlas:pattern` reports "No patterns found"
 
 **Solution**:
 1. Confirm project type is supported (iOS/TypeScript/Android)
@@ -1063,7 +1063,7 @@ cd ../api
 
 ### Issue 3: Execution taking too long
 
-**Symptom**: `/atlas.overview` takes over 20 minutes without completing
+**Symptom**: `/sourceatlas:overview` takes over 20 minutes without completing
 
 **Diagnostic Steps** (run these commands to find the cause):
 
@@ -1085,14 +1085,14 @@ cat .gitignore | grep -E "node_modules|Pods|build|\.app"
 | Root Cause | Fix Method | Expected Improvement |
 |-----------|------------|---------------------|
 | Missing .gitignore | Add `node_modules/`, `Pods/`, `*.app` | 80% speed improvement |
-| Project too large (>100K LOC) | Run in subdirectory: `cd src && /atlas.overview` | Time distributed by subdirectories |
+| Project too large (>100K LOC) | Run in subdirectory: `cd src && /sourceatlas:overview` | Time distributed by subdirectories |
 | Network latency | Check [Claude API status](https://status.anthropic.com) | Wait or retry later |
 
 **Still slow?** Please [report issue](https://github.com/lis186/SourceAtlas/issues) with diagnostic results
 
 ### Issue 4: Command not found
 
-**Symptom**: Running `/atlas.overview` shows "Command not found"
+**Symptom**: Running `/sourceatlas:overview` shows "Command not found"
 
 **Diagnostic Steps**:
 
@@ -1113,13 +1113,13 @@ claude --version
 
 ### Issue 5: Incorrect output format
 
-**Symptom**: `/atlas.overview` outputs plain text instead of YAML format
+**Symptom**: `/sourceatlas:overview` outputs plain text instead of YAML format
 
 **Diagnostic Steps**:
 
 ```bash
 # Check prompt file content in plugin
-head -20 ./SourceAtlas/plugin/commands/atlas.overview.md
+head -20 ./SourceAtlas/plugin/commands/sourceatlas:overview.md
 ```
 
 **Possible Causes**:
@@ -1132,13 +1132,13 @@ head -20 ./SourceAtlas/plugin/commands/atlas.overview.md
 
 ### Issue 6: Pattern search results inaccurate
 
-**Symptom**: `/atlas.pattern "api"` returns irrelevant files
+**Symptom**: `/sourceatlas:pattern "api"` returns irrelevant files
 
 **Common Causes and Solutions**:
 
 | Situation | Reason | Improvement Method |
 |-----------|--------|-------------------|
-| Finding test files instead of implementation | Pattern too generic | Use more specific keywords: `/atlas.pattern "api endpoint"` |
+| Finding test files instead of implementation | Pattern too generic | Use more specific keywords: `/sourceatlas:pattern "api endpoint"` |
 | Finding old code | Project has legacy code | Check file's last modified date, focus on recent ones |
 | Mixed languages | Multi-language project | Specify directory: `cd ios/` then run command |
 | Zero results | Keywords don't match project conventions | Try synonyms: `"controller"` → `"view model"` |
@@ -1147,7 +1147,7 @@ head -20 ./SourceAtlas/plugin/commands/atlas.overview.md
 
 1. **From general to specific**: First use `"api"` to see what's there, then refine to `"api endpoint"`
 2. **Check Pattern list**: Refer to [Supported Patterns](#supported-patterns-221-total)
-3. **Combine with overview**: First use `/atlas.overview` to understand architecture, then search
+3. **Combine with overview**: First use `/sourceatlas:overview` to understand architecture, then search
 
 ### Quick Diagnostic Checklist
 
@@ -1157,7 +1157,7 @@ Run the following commands for a complete health check:
 # === SourceAtlas Health Check ===
 
 echo "1. Check plugin commands..."
-ls -la ./SourceAtlas/plugin/commands/atlas.*.md
+ls -la ./SourceAtlas/plugin/commands/sourceatlas:*.md
 
 echo -e "\n2. Check plugin skills..."
 ls -la ./SourceAtlas/plugin/skills/
@@ -1194,4 +1194,4 @@ echo -e "\n=== Check Complete ==="
 ---
 
 **SourceAtlas** - Code analysis assistant for Claude Code
-v2.9.6 | Updated: 2025-12-21
+v2.10.1 | Updated: 2025-12-23

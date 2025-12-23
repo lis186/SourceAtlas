@@ -1136,7 +1136,7 @@ Mark items that are **worth attention** - unusual, risky, or important:
 • "why is this changed often"      → History analysis
 
 ───────────────────────────────
-🗺️ v2.9.6 │ Constitution v1.1
+🗺️ v2.10.1 │ Constitution v1.1
 ```
 
 ### Color Semantics
@@ -2650,7 +2650,7 @@ fi
 
 ### Step V4: Verification Summary (Append to Output)
 
-Add to footer (before `🗺️ v2.9.6 │ Constitution v1.1`):
+Add to footer (before `🗺️ v2.10.1 │ Constitution v1.1`):
 
 **If all verifications passed:**
 ```

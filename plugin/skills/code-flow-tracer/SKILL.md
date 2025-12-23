@@ -17,16 +17,16 @@ Trigger this skill when the user:
 ## Instructions
 
 1. Identify the feature, function, or flow the user wants to trace
-2. Run `/atlas.flow "<query>"` with a natural language description
+2. Run `/sourceatlas:flow "<query>"` with a natural language description
 3. Returns call graph, boundary detection, and flow visualization
 
 ## Query Formats
 
-- Feature flow: `/atlas.flow "user login"`
-- Function trace: `/atlas.flow "handleSubmit"`
-- Error paths: `/atlas.flow "error handling flow"`
-- Data origin: `/atlas.flow "where does userProfile come from"`
-- Reverse trace: `/atlas.flow "who calls validateToken"`
+- Feature flow: `/sourceatlas:flow "user login"`
+- Function trace: `/sourceatlas:flow "handleSubmit"`
+- Error paths: `/sourceatlas:flow "error handling flow"`
+- Data origin: `/sourceatlas:flow "where does userProfile come from"`
+- Reverse trace: `/sourceatlas:flow "who calls validateToken"`
 
 ## What User Gets
 

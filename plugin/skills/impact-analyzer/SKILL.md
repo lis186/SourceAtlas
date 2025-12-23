@@ -17,15 +17,15 @@ Trigger this skill when the user:
 ## Instructions
 
 1. Identify the file, component, or API the user wants to change
-2. Run `/atlas.impact "<target>"` with the target
+2. Run `/sourceatlas:impact "<target>"` with the target
 3. Returns dependency analysis, risk assessment, and migration checklist
 
 ## Target Formats
 
-- File path: `/atlas.impact "src/api/users.ts"`
-- API endpoint: `/atlas.impact "api /api/users/{id}"`
-- Component: `/atlas.impact "UserService"`
-- Model: `/atlas.impact "User model"`
+- File path: `/sourceatlas:impact "src/api/users.ts"`
+- API endpoint: `/sourceatlas:impact "api /api/users/{id}"`
+- Component: `/sourceatlas:impact "UserService"`
+- Model: `/sourceatlas:impact "User model"`
 
 ## What User Gets
 

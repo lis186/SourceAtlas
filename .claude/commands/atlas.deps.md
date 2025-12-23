@@ -458,7 +458,7 @@ Recommended to cross-reference with official documentation:
 - [Official documentation URL]
 
 ───────────────────────────────
-🗺️ v2.9.6 │ Constitution v1.1
+🗺️ v2.10.1 │ Constitution v1.1
 ```
 
 For further analysis:
@@ -668,7 +668,7 @@ done
 
 ### Step V4: Verification Summary (Append to Output)
 
-Add to footer (before `🗺️ v2.9.6 │ Constitution v1.1`):
+Add to footer (before `🗺️ v2.10.1 │ Constitution v1.1`):
 
 **If all verifications passed:**
 ```

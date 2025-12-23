@@ -458,12 +458,12 @@ Recommended to cross-reference with official documentation:
 - [Official documentation URL]
 
 ───────────────────────────────
-🗺️ v2.9.6 │ Constitution v1.1
+🗺️ v2.10.1 │ Constitution v1.1
 ```
 
 For further analysis:
-- `/atlas.impact "[specific API]"` - Assess impact scope of specific API
-- `/atlas.pattern "[new pattern]"` - Learn new version patterns
+- `/sourceatlas:impact "[specific API]"` - Assess impact scope of specific API
+- `/sourceatlas:pattern "[new pattern]"` - Learn new version patterns
 ```
 
 ---
@@ -565,21 +565,21 @@ new_features:
 
 ### Example 1: iOS Minimum Version Upgrade
 ```bash
-/atlas.deps "iOS 16 → 17"
+/sourceatlas:deps "iOS 16 → 17"
 ```
 
 Phase 0 outputs rules preview → User confirms → Scan #available, deprecated APIs → Generate migration checklist
 
 ### Example 2: Library Major Upgrade
 ```bash
-/atlas.deps "react 17 → 18"
+/sourceatlas:deps "react 17 → 18"
 ```
 
 Phase 0 queries React 18 migration guide → Confirm rules → Scan ReactDOM.render etc. → Generate report
 
 ### Example 3: Pure Usage Inventory
 ```bash
-/atlas.deps "pandas"
+/sourceatlas:deps "pandas"
 ```
 
 Skip Phase 0 rule confirmation → Directly scan usage points → Output API usage statistics
@@ -592,9 +592,9 @@ Based on analysis results, may suggest:
 
 | Finding | Suggested Command |
 |---------|-------------------|
-| High-risk APIs concentrated in specific files | `/atlas.impact "[file]"` |
-| Need to learn new version patterns | `/atlas.pattern "[new pattern]"` |
-| Want to understand module's historical changes | `/atlas.history "[module]"` |
+| High-risk APIs concentrated in specific files | `/sourceatlas:impact "[file]"` |
+| Need to learn new version patterns | `/sourceatlas:pattern "[new pattern]"` |
+| Want to understand module's historical changes | `/sourceatlas:history "[module]"` |
 
 ---
 
@@ -668,7 +668,7 @@ done
 
 ### Step V4: Verification Summary (Append to Output)
 
-Add to footer (before `🗺️ v2.9.6 │ Constitution v1.1`):
+Add to footer (before `🗺️ v2.10.1 │ Constitution v1.1`):
 
 **If all verifications passed:**
 ```

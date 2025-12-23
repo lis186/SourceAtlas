@@ -387,13 +387,13 @@ Based on analysis findings, dynamically suggest 1-2 most relevant follow-up comm
 
 | # | Command | Purpose |
 |---|---------|---------|
-| 1 | `/atlas.impact "[hotspot file]"` | [hotspot file] changed N times, need to understand dependencies |
-| 2 | `/atlas.pattern "[pattern]"` | Hotspot involves this pattern, need to understand implementation conventions |
+| 1 | `/sourceatlas:impact "[hotspot file]"` | [hotspot file] changed N times, need to understand dependencies |
+| 2 | `/sourceatlas:pattern "[pattern]"` | Hotspot involves this pattern, need to understand implementation conventions |
 
 💡 Enter a number (e.g., `1`) or copy the command to execute
 
 ───────────────────────────────
-🗺️ v2.9.6 │ Constitution v1.1
+🗺️ v2.10.1 │ Constitution v1.1
 ```
 
 ---
@@ -480,10 +480,10 @@ When there are clear findings (hotspots, coupling, risks), **only output table, 
 
 | Finding | Recommended Command | Parameter Source |
 |---------|---------------------|------------------|
-| High-risk hotspot | `/atlas.impact` | Hotspot file name |
-| Suspicious coupling | `/atlas.flow` | Coupled module entry point |
-| Hotspot needs refactoring | `/atlas.pattern` | Related pattern |
-| Need broader context | `/atlas.overview` | No parameters needed |
+| High-risk hotspot | `/sourceatlas:impact` | Hotspot file name |
+| Suspicious coupling | `/sourceatlas:flow` | Coupled module entry point |
+| Hotspot needs refactoring | `/sourceatlas:pattern` | Related pattern |
+| Need broader context | `/sourceatlas:overview` | No parameters needed |
 
 ### Output Format (Section 7.3)
 
@@ -499,7 +499,7 @@ Use numbered table for quick selection.
 
 ## Integration with Other Commands
 
-This command complements `/atlas.impact` (static analysis) with temporal insights.
+This command complements `/sourceatlas:impact` (static analysis) with temporal insights.
 
 ---
 
@@ -575,7 +575,7 @@ done
 
 ### Step V4: Verification Summary (Append to Output)
 
-Add to footer (before `🗺️ v2.9.6 │ Constitution v1.1`):
+Add to footer (before `🗺️ v2.10.1 │ Constitution v1.1`):
 
 **If all verifications passed:**
 ```

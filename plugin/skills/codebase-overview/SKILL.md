@@ -16,7 +16,7 @@ Trigger this skill when the user:
 
 ## Instructions
 
-1. Run `/atlas.overview` to analyze the codebase
+1. Run `/sourceatlas:overview` to analyze the codebase
 2. This scans <5% of high-entropy files (configs, READMEs, models)
 3. Returns project fingerprint, architecture hypotheses, and AI collaboration level
 

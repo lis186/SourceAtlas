@@ -51,7 +51,7 @@ SourceAtlas 使用**資訊理論**優先掃描高熵檔案（configs、READMEs�
 ### 1.「我剛接手這個專案，要從哪裡開始？」
 
 ```bash
-/atlas.overview
+/sourceatlas:overview
 ```
 
 **約 3 分鐘內得到**：Tech stack、架構模式、專案規模、程式碼品質訊號
@@ -63,9 +63,9 @@ SourceAtlas 使用**資訊理論**優先掃描高熵檔案（configs、READMEs�
 ### 2.「我想寫一個 API，這個專案的慣例是怎樣？」
 
 ```bash
-/atlas.pattern "api endpoint"
-/atlas.pattern "authentication"
-/atlas.pattern "database query"
+/sourceatlas:pattern "api endpoint"
+/sourceatlas:pattern "authentication"
+/sourceatlas:pattern "database query"
 ```
 
 **0.1-30 秒內得到**：2-3 個最佳範例檔案 + 精確行數 + 實作指南
@@ -79,8 +79,8 @@ SourceAtlas 使用**資訊理論**優先掃描高熵檔案（configs、READMEs�
 ### 3.「我想改這個檔案，會影響到什麼？」
 
 ```bash
-/atlas.impact "src/api/users.ts"
-/atlas.impact api "/api/users/{id}"
+/sourceatlas:impact "src/api/users.ts"
+/sourceatlas:impact api "/api/users/{id}"
 ```
 
 **1-2 分鐘內得到**：所有依賴者、Breaking Change 風險、測試覆蓋、遷移步驟
@@ -92,8 +92,8 @@ SourceAtlas 使用**資訊理論**優先掃描高熵檔案（configs、READMEs�
 ### 4.「這段 code 誰最熟？哪裡是地雷區？」
 
 ```bash
-/atlas.history
-/atlas.history src/
+/sourceatlas:history
+/sourceatlas:history src/
 ```
 
 **5-10 分鐘內得到**：Hotspots（頻繁修改的檔案）、隱藏耦合、知識分布
@@ -105,8 +105,8 @@ SourceAtlas 使用**資訊理論**優先掃描高熵檔案（configs、READMEs�
 ### 5.「登入流程到底怎麼跑的？」
 
 ```bash
-/atlas.flow "user login"
-/atlas.flow "checkout process"
+/sourceatlas:flow "user login"
+/sourceatlas:flow "checkout process"
 ```
 
 **3-5 分鐘內得到**：入口點、完整執行路徑、邊界識別（API/DB/Auth/Payment）
@@ -118,9 +118,9 @@ SourceAtlas 使用**資訊理論**優先掃描高熵檔案（configs、READMEs�
 ### 6.「要升級到 iOS 17，到底要改多少？」
 
 ```bash
-/atlas.deps "iOS 16 → 17"
-/atlas.deps "React 17 → 18"
-/atlas.deps "Python 3.11 → 3.12"
+/sourceatlas:deps "iOS 16 → 17"
+/sourceatlas:deps "React 17 → 18"
+/sourceatlas:deps "Python 3.11 → 3.12"
 ```
 
 **15-30 分鐘內得到**：Deprecated APIs、可移除的版本檢查、第三方相容性、工時估計
@@ -135,12 +135,12 @@ SourceAtlas 使用**資訊理論**優先掃描高熵檔案（configs、READMEs�
 
 | 命令 | 關鍵指標 | 結果 | 報告 |
 |------|---------|------|------|
-| `/atlas.overview` | 整體準確率 | 93%（56/60） | [✓](./dev-notes/2025-12/2025-12-21-overview-e2e-verification.md) |
-| `/atlas.pattern` | 搜尋精確率 | 98.6%（7/7 案例） | [✓](./dev-notes/2025-12/2025-12-21-pattern-e2e-verification.md) |
-| `/atlas.impact` | 內部一致性 | 100%（5/5 專案） | [✓](./dev-notes/2025-12/2025-12-21-impact-e2e-verification.md) |
-| `/atlas.flow` | 入口點偵測 | 100%（5/5 專案） | [✓](./dev-notes/2025-12/2025-12-21-flow-e2e-verification.md) |
-| `/atlas.deps` | 模式識別 | 100%（2/2 案例） | [✓](./dev-notes/2025-12/2025-12-21-deps-e2e-verification.md) |
-| `/atlas.history` | Hotspots 偵測 | 100%（Top 10） | [✓](./dev-notes/2025-12/2025-12-21-history-e2e-verification.md) |
+| `overview` | 整體準確率 | 93%（56/60） | [✓](./dev-notes/2025-12/2025-12-21-overview-e2e-verification.md) |
+| `pattern` | 搜尋精確率 | 98.6%（7/7 案例） | [✓](./dev-notes/2025-12/2025-12-21-pattern-e2e-verification.md) |
+| `impact` | 內部一致性 | 100%（5/5 專案） | [✓](./dev-notes/2025-12/2025-12-21-impact-e2e-verification.md) |
+| `flow` | 入口點偵測 | 100%（5/5 專案） | [✓](./dev-notes/2025-12/2025-12-21-flow-e2e-verification.md) |
+| `deps` | 模式識別 | 100%（2/2 案例） | [✓](./dev-notes/2025-12/2025-12-21-deps-e2e-verification.md) |
+| `history` | Hotspots 偵測 | 100%（Top 10） | [✓](./dev-notes/2025-12/2025-12-21-history-e2e-verification.md) |
 
 <sub>全部於 2025-12-21 E2E 驗證通過。測試語言：Swift、Ruby、Python、TypeScript、Kotlin。點擊 ✓ 查看詳細報告。</sub>
 
@@ -173,7 +173,7 @@ claude --plugin-dir ./SourceAtlas/plugin
 
 ```bash
 cd ~/projects/any-project
-/atlas.overview  # 開始理解專案
+/sourceatlas:overview  # 開始理解專案
 ```
 
 ![Overview Output Example](./docs/images/atlas-overview-output.png)
@@ -186,14 +186,14 @@ cd ~/projects/any-project
 
 | 命令 | 解決的問題 | 時間 |
 |------|-----------|------|
-| `/atlas.overview` | 新接手專案，需要全貌 | ~3-15 分鐘 ✓ |
-| `/atlas.pattern "X"` | 需要實作 X，想找範例 | ~秒級 ✓ |
-| `/atlas.impact "file"` | 準備改 code，擔心副作用 | ~1-2 分鐘 |
-| `/atlas.history` | 需要找熱點和專家 | ~5-10 分鐘 |
-| `/atlas.flow "feature"` | 需要理解功能的執行路徑 | ~3-5 分鐘 |
-| `/atlas.deps "upgrade"` | 規劃框架/SDK 升級 | ~15-30 分鐘 |
-| `/atlas.list` | 查看快取了哪些分析 | 即時 |
-| `/atlas.clear` | 清除過期快取 | 即時 |
+| `/sourceatlas:overview` | 新接手專案，需要全貌 | ~3-15 分鐘 ✓ |
+| `/sourceatlas:pattern "X"` | 需要實作 X，想找範例 | ~秒級 ✓ |
+| `/sourceatlas:impact "file"` | 準備改 code，擔心副作用 | ~1-2 分鐘 |
+| `/sourceatlas:history` | 需要找熱點和專家 | ~5-10 分鐘 |
+| `/sourceatlas:flow "feature"` | 需要理解功能的執行路徑 | ~3-5 分鐘 |
+| `/sourceatlas:deps "upgrade"` | 規劃框架/SDK 升級 | ~15-30 分鐘 |
+| `/sourceatlas:list` | 查看快取了哪些分析 | 即時 |
+| `/sourceatlas:clear` | 清除過期快取 | 即時 |
 
 <sub>✓ = 已 benchmark。無 ✓ 的時間為估計值。</sub>
 
@@ -253,9 +253,9 @@ cd ~/projects/any-project
 所有命令支援 `--save`：
 
 ```bash
-/atlas.overview --save          # → .sourceatlas/overview.yaml
-/atlas.pattern "api" --save     # → .sourceatlas/patterns/api.md
-/atlas.history --save           # → .sourceatlas/history.md
+/sourceatlas:overview --save          # → .sourceatlas/overview.yaml
+/sourceatlas:pattern "api" --save     # → .sourceatlas/patterns/api.md
+/sourceatlas:history --save           # → .sourceatlas/history.md
 ```
 
 **好處**：
@@ -265,8 +265,8 @@ cd ~/projects/any-project
 
 **管理快取**：
 ```bash
-/atlas.list   # 查看所有快取分析
-/atlas.clear  # 清除全部或特定快取
+/sourceatlas:list   # 查看所有快取分析
+/sourceatlas:clear  # 清除全部或特定快取
 ```
 
 ---
@@ -296,8 +296,8 @@ SourceAtlas 建立在這些優秀的開源工具之上：
 
 | 工具 | 用途 | 連結 |
 |------|------|------|
-| **ast-grep** | `/atlas.pattern` 和 `/atlas.deps` 的 AST 搜尋 | [GitHub](https://github.com/ast-grep/ast-grep) |
-| **code-maat** | `/atlas.history` 的 Git 歷史分析 | [GitHub](https://github.com/adamtornhill/code-maat) |
+| **ast-grep** | `pattern` 和 `deps` 命令的 AST 搜尋 | [GitHub](https://github.com/ast-grep/ast-grep) |
+| **code-maat** | `history` 命令的 Git 歷史分析 | [GitHub](https://github.com/adamtornhill/code-maat) |
 | **Claude Code** | AI 程式碼助手 | [claude.ai/code](https://claude.ai/code) |
 
 ---

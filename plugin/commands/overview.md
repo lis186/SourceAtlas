@@ -347,13 +347,13 @@ summary:
 
 | # | Command | Purpose |
 |---|---------|---------|
-| 1 | `/atlas.pattern "[pattern name]"` | [reason based on findings] |
-| 2 | `/atlas.flow "[entry point]"` | [reason based on findings] |
+| 1 | `/sourceatlas:pattern "[pattern name]"` | [reason based on findings] |
+| 2 | `/sourceatlas:flow "[entry point]"` | [reason based on findings] |
 
 💡 Enter a number (e.g., `1`) or copy the command to execute
 
 ───────────────────────────────
-🗺️ v2.9.6 │ Constitution v1.1
+🗺️ v2.10.1 │ Constitution v1.1
 ```
 
 ---
@@ -406,10 +406,10 @@ When project scale is large enough or there are clear next steps, **only output 
 
 | Finding | Suggested Command | Parameter Source |
 |---------|-------------------|------------------|
-| Clear design patterns | `/atlas.pattern` | Discovered pattern name |
-| Complex architecture (multi-layer/microservices) | `/atlas.flow` | Main entry point file |
-| Scale ≥ LARGE | `/atlas.history` | No parameters needed |
-| High risk areas | `/atlas.impact` | Risk file/module name |
+| Clear design patterns | `/sourceatlas:pattern` | Discovered pattern name |
+| Complex architecture (multi-layer/microservices) | `/sourceatlas:flow` | Main entry point file |
+| Scale ≥ LARGE | `/sourceatlas:history` | No parameters needed |
+| High risk areas | `/sourceatlas:impact` | Risk file/module name |
 
 ### Output Format (Section 7.3)
 
@@ -417,7 +417,7 @@ Use numbered table:
 ```markdown
 | # | Command | Purpose |
 |---|---------|---------|
-| 1 | `/atlas.pattern "repository"` | Found Repository pattern used in 15 places |
+| 1 | `/sourceatlas:pattern "repository"` | Found Repository pattern used in 15 places |
 ```
 
 ### Quality Requirements (Section 7.4-7.5)
@@ -501,7 +501,7 @@ fi
 
 ### Step V4: Verification Summary (Append to Output)
 
-Add to footer (before `🗺️ v2.9.6 │ Constitution v1.1`):
+Add to footer (before `🗺️ v2.10.1 │ Constitution v1.1`):
 
 **If all verifications passed:**
 ```

@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`plugin.json` repository format** - Changed from object to string per Claude Code spec
 
 ### Changed
+- **Simplified Command Names** - Plugin commands now use `/sourceatlas:XXX` format ⭐
+  - `/sourceatlas:overview` (was `/sourceatlas:atlas.overview`)
+  - `/sourceatlas:pattern` (was `/sourceatlas:atlas.pattern`)
+  - All 8 commands follow this simplified naming
 - Updated all documentation with official plugin installation method
 - Removed references to deprecated `install-global.sh`
 

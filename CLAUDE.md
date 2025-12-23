@@ -166,6 +166,23 @@ claude --plugin-dir ./plugin
 /plugin marketplace add ./
 ```
 
+### Command Naming Convention
+
+Commands have different names depending on the environment:
+
+| Environment | Command Format | Example |
+|-------------|----------------|---------|
+| **Local Development** (`.claude/commands/`) | `/atlas.XXX` | `/atlas.overview` |
+| **Plugin Installed** (`plugin/commands/`) | `/sourceatlas:XXX` | `/sourceatlas:overview` |
+
+**File Structure**:
+- `.claude/commands/atlas.overview.md` → `/atlas.overview`
+- `plugin/commands/overview.md` → `/sourceatlas:overview`
+
+**Why Different?**
+- Local: `atlas.` prefix provides namespace, avoids conflicts with generic names like `/overview`
+- Plugin: Plugin name `sourceatlas` already provides namespace, so command files use short names
+
 ### Using Analysis Prompts
 
 #### When to Run Analysis
@@ -570,13 +587,15 @@ After completing feature implementation, check and update before asking about ve
 | 6 | **Dev history** | `dev-notes/HISTORY.md` | Current week entry |
 | 7 | **Implementation notes** | `dev-notes/YYYY-MM/YYYY-MM-DD-*.md` | Detailed implementation doc |
 | 8 | **Command files sync** | `.claude/commands/` ↔ `plugin/commands/` | Ensure consistency |
-| 9 | **New scripts** | `scripts/atlas/*.sh` | Verify existence and executable |
+| 9 | **Command footers** | `.claude/commands/*.md`, `plugin/commands/*.md` | Update `🗺️ vX.Y.Z │ Constitution` |
+| 10 | **USAGE_GUIDE footers** | `USAGE_GUIDE.md`, `USAGE_GUIDE.zh-TW.md` | Update version + date in footer |
+| 11 | **New scripts** | `scripts/atlas/*.sh` | Verify existence and executable |
 
 ### Checklist Flow
 
 ```
 1. Feature implementation complete
-2. Execute all 9 checks above
+2. Execute all 11 checks above
 3. Fix any missing items
 4. Ask user: "Should we update the version to vX.Y.Z?"
 5. Only execute version changes after user confirmation

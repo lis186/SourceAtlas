@@ -8,12 +8,12 @@ SourceAtlas helps developers quickly understand any codebase through pattern lea
 
 ### Slash Commands (User-invoked)
 
-- **🔍 Project Overview** (`/atlas.overview`) - Quick project understanding (<5% file scan)
-- **🎯 Pattern Learning** (`/atlas.pattern`) - Learn design patterns from existing code
-- **📊 Impact Analysis** (`/atlas.impact`) - Analyze change impact with static dependency analysis
-- **📈 History Analysis** (`/atlas.history`) - Git history temporal analysis (Hotspots, Coupling, Contributors)
-- **🔄 Flow Analysis** (`/atlas.flow`) - Trace code execution and data flow (11 analysis modes)
-- **📦 Dependency Analysis** (`/atlas.deps`) - Library/framework upgrade analysis (iOS, Android, Python, React)
+- **🔍 Project Overview** (`/sourceatlas:overview`) - Quick project understanding (<5% file scan)
+- **🎯 Pattern Learning** (`/sourceatlas:pattern`) - Learn design patterns from existing code
+- **📊 Impact Analysis** (`/sourceatlas:impact`) - Analyze change impact with static dependency analysis
+- **📈 History Analysis** (`/sourceatlas:history`) - Git history temporal analysis (Hotspots, Coupling, Contributors)
+- **🔄 Flow Analysis** (`/sourceatlas:flow`) - Trace code execution and data flow (11 analysis modes)
+- **📦 Dependency Analysis** (`/sourceatlas:deps`) - Library/framework upgrade analysis (iOS, Android, Python, React)
 
 ### Agent Skills (Model-invoked)
 
@@ -21,12 +21,12 @@ Claude automatically triggers the right analysis based on your questions:
 
 | You Ask | Claude Runs |
 |---------|-------------|
-| "What's the architecture of this project?" | `/atlas.overview` |
-| "How do I add an API endpoint?" | `/atlas.pattern "api endpoint"` |
-| "What breaks if I change this file?" | `/atlas.impact` |
-| "How does login work?" | `/atlas.flow "login"` |
-| "Who knows this code best?" | `/atlas.history` |
-| "How much work to upgrade to iOS 17?" | `/atlas.deps "iOS 16 → 17"` |
+| "What's the architecture of this project?" | `/sourceatlas:overview` |
+| "How do I add an API endpoint?" | `/sourceatlas:pattern "api endpoint"` |
+| "What breaks if I change this file?" | `/sourceatlas:impact` |
+| "How does login work?" | `/sourceatlas:flow "login"` |
+| "Who knows this code best?" | `/sourceatlas:history` |
+| "How much work to upgrade to iOS 17?" | `/sourceatlas:deps "iOS 16 → 17"` |
 
 No need to remember commands — just ask naturally!
 
@@ -42,8 +42,8 @@ No need to remember commands — just ask naturally!
 /plugin install sourceatlas@lis186-SourceAtlas
 
 # Step 3: Start using in any project
-/atlas.overview
-/atlas.pattern "api endpoint"
+/sourceatlas:overview
+/sourceatlas:pattern "api endpoint"
 ```
 
 **Installation Scopes**:
@@ -63,16 +63,16 @@ claude --plugin-dir ./plugin
 
 ## 📖 Usage
 
-### `/atlas.overview` - Project Overview
+### `/sourceatlas:overview` - Project Overview
 
 Get a quick understanding of any codebase by scanning <5% of files.
 
 ```bash
 # Analyze entire project
-/atlas.overview
+/sourceatlas:overview
 
 # Analyze specific directory
-/atlas.overview src/api
+/sourceatlas:overview src/api
 ```
 
 **What you get:**
@@ -81,7 +81,7 @@ Get a quick understanding of any codebase by scanning <5% of files.
 - AI collaboration level detection (Level 0-4)
 - Recommended next steps
 
-### `/atlas.pattern` - Learn Design Patterns
+### `/sourceatlas:pattern` - Learn Design Patterns
 
 Learn how the current codebase implements specific patterns.
 
@@ -89,19 +89,19 @@ Learn how the current codebase implements specific patterns.
 
 ```bash
 # Learn API endpoint patterns
-/atlas.pattern "api endpoint"
+/sourceatlas:pattern "api endpoint"
 
 # Learn background job patterns
-/atlas.pattern "background job"
+/sourceatlas:pattern "background job"
 
 # Learn file upload patterns
-/atlas.pattern "file upload"
+/sourceatlas:pattern "file upload"
 
 # Learn authentication patterns
-/atlas.pattern "authentication"
+/sourceatlas:pattern "authentication"
 
 # Learn database query patterns
-/atlas.pattern "database query"
+/sourceatlas:pattern "database query"
 ```
 
 **What you get:**
@@ -112,19 +112,19 @@ Learn how the current codebase implements specific patterns.
 - 🧪 Testing patterns
 - 📚 Concrete implementation steps
 
-### `/atlas.impact` - Impact Analysis
+### `/sourceatlas:impact` - Impact Analysis
 
 Analyze the impact scope of code changes using static dependency analysis.
 
 ```bash
 # Analyze API change impact
-/atlas.impact "api /api/users/{id}"
+/sourceatlas:impact "api /api/users/{id}"
 
 # Analyze model change impact
-/atlas.impact "User model"
+/sourceatlas:impact "User model"
 
 # Analyze component change impact
-/atlas.impact "authentication"
+/sourceatlas:impact "authentication"
 ```
 
 **What you get:**
@@ -134,19 +134,19 @@ Analyze the impact scope of code changes using static dependency analysis.
 - 🧪 Test coverage gaps
 - ⚠️ Language-specific risks (Swift/ObjC interop for iOS)
 
-### `/atlas.history` - History Analysis
+### `/sourceatlas:history` - History Analysis
 
 Analyze git history to identify hotspots, temporal coupling, and knowledge distribution.
 
 ```bash
 # Analyze entire repository
-/atlas.history
+/sourceatlas:history
 
 # Analyze specific directory
-/atlas.history src/
+/sourceatlas:history src/
 
 # Analyze last 6 months
-/atlas.history . 6
+/sourceatlas:history . 6
 ```
 
 **What you get:**
@@ -160,27 +160,27 @@ Analyze git history to identify hotspots, temporal coupling, and knowledge distr
 - Detects shallow clone and offers one-click fix
 - Auto-installs code-maat dependency if needed
 
-### `/atlas.flow` - Flow Analysis
+### `/sourceatlas:flow` - Flow Analysis
 
 Trace code execution flow and data flow with natural language queries.
 
 ```bash
 # Trace user flow
-/atlas.flow "user login flow"
-/atlas.flow "What happens when user clicks submit"
+/sourceatlas:flow "user login flow"
+/sourceatlas:flow "What happens when user clicks submit"
 
 # Trace specific function
-/atlas.flow "handleSubmit"
-/atlas.flow "trace processOrder function"
+/sourceatlas:flow "handleSubmit"
+/sourceatlas:flow "trace processOrder function"
 
 # Error path analysis
-/atlas.flow "API error handling"
+/sourceatlas:flow "API error handling"
 
 # Data flow tracing
-/atlas.flow "where does userProfile data come from"
+/sourceatlas:flow "where does userProfile data come from"
 
 # Reverse tracing
-/atlas.flow "who calls validateToken"
+/sourceatlas:flow "who calls validateToken"
 ```
 
 **What you get:**
@@ -204,28 +204,28 @@ Trace code execution flow and data flow with natural language queries.
 - Terms explained with tooltips
 - Progressive disclosure (7±2 items per level)
 
-### `/atlas.deps` - Dependency Analysis
+### `/sourceatlas:deps` - Dependency Analysis
 
 Analyze library/framework dependencies for upgrade planning and migration.
 
 ```bash
 # iOS SDK upgrade
-/atlas.deps "iOS 16 → 17"
-/atlas.deps "Upgrade minimum iOS to 17, use iOS 26 SDK"
+/sourceatlas:deps "iOS 16 → 17"
+/sourceatlas:deps "Upgrade minimum iOS to 17, use iOS 26 SDK"
 
 # Android SDK upgrade
-/atlas.deps "Android API 35"
+/sourceatlas:deps "Android API 35"
 
 # Python library upgrade
-/atlas.deps "Flask 1.x → 3.x"
-/atlas.deps "Python 3.11 → 3.12"
+/sourceatlas:deps "Flask 1.x → 3.x"
+/sourceatlas:deps "Python 3.11 → 3.12"
 
 # React upgrade
-/atlas.deps "React 17 → 18"
+/sourceatlas:deps "React 17 → 18"
 
 # Pure inventory (no upgrade)
-/atlas.deps "kotlinx.coroutines"
-/atlas.deps "Check AFNetworking usage"
+/sourceatlas:deps "kotlinx.coroutines"
+/sourceatlas:deps "Check AFNetworking usage"
 ```
 
 **What you get:**
@@ -268,13 +268,13 @@ SourceAtlas includes 6 Agent Skills that let Claude automatically choose the rig
 ### Example Conversations
 
 **You**: "I just joined this project, can you help me understand it?"
-**Claude**: *automatically runs `/atlas.overview`*
+**Claude**: *automatically runs `/sourceatlas:overview`*
 
 **You**: "I need to add a new API endpoint, how does this project do it?"
-**Claude**: *automatically runs `/atlas.pattern "api endpoint"`*
+**Claude**: *automatically runs `/sourceatlas:pattern "api endpoint"`*
 
 **You**: "Is it safe to refactor UserService.ts?"
-**Claude**: *automatically runs `/atlas.impact "UserService.ts"`*
+**Claude**: *automatically runs `/sourceatlas:impact "UserService.ts"`*
 
 ### Skills Location
 
@@ -307,7 +307,7 @@ SourceAtlas uses **information theory principles** to understand codebases effic
 
 ## 🧪 Example Output
 
-When you run `/atlas.pattern "api endpoint"` in a Next.js project:
+When you run `/sourceatlas:pattern "api endpoint"` in a Next.js project:
 
 ```markdown
 # Pattern: REST API Endpoints (Next.js API Routes)
@@ -378,9 +378,9 @@ claude --plugin-dir ./plugin
 
 # Test in any project
 cd ~/your-project
-/atlas.overview
-/atlas.pattern "api endpoint"
-/atlas.impact "User model"
+/sourceatlas:overview
+/sourceatlas:pattern "api endpoint"
+/sourceatlas:impact "User model"
 
 # After making changes to plugin/
 /plugin uninstall sourceatlas@lis186-SourceAtlas
