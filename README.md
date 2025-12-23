@@ -51,7 +51,7 @@ SourceAtlas uses **information theory** to prioritize high-entropy files (config
 ### 1. "I just joined the project, where do I start?"
 
 ```bash
-/atlas.overview
+/sourceatlas:overview
 ```
 
 **In ~3 minutes, get**: Tech stack, architecture patterns, project scale, code quality signals
@@ -63,9 +63,9 @@ SourceAtlas uses **information theory** to prioritize high-entropy files (config
 ### 2. "I want to write an API, how does this project do it?"
 
 ```bash
-/atlas.pattern "api endpoint"
-/atlas.pattern "authentication"
-/atlas.pattern "database query"
+/sourceatlas:pattern "api endpoint"
+/sourceatlas:pattern "authentication"
+/sourceatlas:pattern "database query"
 ```
 
 **In 0.1-30 seconds, get**: 2-3 best example files with exact line numbers + implementation guide
@@ -79,8 +79,8 @@ SourceAtlas uses **information theory** to prioritize high-entropy files (config
 ### 3. "I want to change this file, what else will break?"
 
 ```bash
-/atlas.impact "src/api/users.ts"
-/atlas.impact api "/api/users/{id}"
+/sourceatlas:impact "src/api/users.ts"
+/sourceatlas:impact api "/api/users/{id}"
 ```
 
 **In 1-2 minutes, get**: All dependents, Breaking Change risks, test coverage, migration steps
@@ -92,8 +92,8 @@ SourceAtlas uses **information theory** to prioritize high-entropy files (config
 ### 4. "Who knows this code best? What's the danger zone?"
 
 ```bash
-/atlas.history
-/atlas.history src/
+/sourceatlas:history
+/sourceatlas:history src/
 ```
 
 **In 5-10 minutes, get**: Hotspots (files that change constantly), Hidden Coupling, Knowledge Distribution
@@ -105,8 +105,8 @@ SourceAtlas uses **information theory** to prioritize high-entropy files (config
 ### 5. "How does the login flow actually work?"
 
 ```bash
-/atlas.flow "user login"
-/atlas.flow "checkout process"
+/sourceatlas:flow "user login"
+/sourceatlas:flow "checkout process"
 ```
 
 **In 3-5 minutes, get**: Entry points, complete execution path, boundary identification (API/DB/Auth/Payment)
@@ -118,9 +118,9 @@ SourceAtlas uses **information theory** to prioritize high-entropy files (config
 ### 6. "We need to upgrade to iOS 17, how much work is that?"
 
 ```bash
-/atlas.deps "iOS 16 → 17"
-/atlas.deps "React 17 → 18"
-/atlas.deps "Python 3.11 → 3.12"
+/sourceatlas:deps "iOS 16 → 17"
+/sourceatlas:deps "React 17 → 18"
+/sourceatlas:deps "Python 3.11 → 3.12"
 ```
 
 **In 15-30 minutes, get**: Deprecated APIs, version checks to remove, third-party compatibility, effort estimate
@@ -135,12 +135,12 @@ SourceAtlas uses **information theory** to prioritize high-entropy files (config
 
 | Command | Key Metric | Result | Report |
 |---------|-----------|--------|--------|
-| `/atlas.overview` | Overall Accuracy | 93% (56/60) | [✓](./dev-notes/2025-12/2025-12-21-overview-e2e-verification.md) |
-| `/atlas.pattern` | Search Precision | 98.6% (7/7 cases) | [✓](./dev-notes/2025-12/2025-12-21-pattern-e2e-verification.md) |
-| `/atlas.impact` | Internal Consistency | 100% (5/5 projects) | [✓](./dev-notes/2025-12/2025-12-21-impact-e2e-verification.md) |
-| `/atlas.flow` | Entry Point Detection | 100% (5/5 projects) | [✓](./dev-notes/2025-12/2025-12-21-flow-e2e-verification.md) |
-| `/atlas.deps` | Mode Detection | 100% (2/2 cases) | [✓](./dev-notes/2025-12/2025-12-21-deps-e2e-verification.md) |
-| `/atlas.history` | Hotspots Detection | 100% (Top 10) | [✓](./dev-notes/2025-12/2025-12-21-history-e2e-verification.md) |
+| `overview` | Overall Accuracy | 93% (56/60) | [✓](./dev-notes/2025-12/2025-12-21-overview-e2e-verification.md) |
+| `pattern` | Search Precision | 98.6% (7/7 cases) | [✓](./dev-notes/2025-12/2025-12-21-pattern-e2e-verification.md) |
+| `impact` | Internal Consistency | 100% (5/5 projects) | [✓](./dev-notes/2025-12/2025-12-21-impact-e2e-verification.md) |
+| `flow` | Entry Point Detection | 100% (5/5 projects) | [✓](./dev-notes/2025-12/2025-12-21-flow-e2e-verification.md) |
+| `deps` | Mode Detection | 100% (2/2 cases) | [✓](./dev-notes/2025-12/2025-12-21-deps-e2e-verification.md) |
+| `history` | Hotspots Detection | 100% (Top 10) | [✓](./dev-notes/2025-12/2025-12-21-history-e2e-verification.md) |
 
 <sub>All E2E verified on 2025-12-21. Languages tested: Swift, Ruby, Python, TypeScript, Kotlin. Click ✓ for detailed reports.</sub>
 
@@ -173,7 +173,7 @@ claude --plugin-dir ./SourceAtlas/plugin
 
 ```bash
 cd ~/projects/any-project
-/atlas.overview  # Start understanding
+/sourceatlas:overview  # Start understanding
 ```
 
 ![Overview Output Example](./docs/images/atlas-overview-output.png)
@@ -186,14 +186,14 @@ With **Agent Skills**, Claude automatically suggests the right analysis based on
 
 | Command | Problem It Solves | Time |
 |---------|------------------|------|
-| `/atlas.overview` | New to project, need the big picture | ~3-15 min ✓ |
-| `/atlas.pattern "X"` | Need to implement X, want examples | ~seconds ✓ |
-| `/atlas.impact "file"` | About to change code, worried about side effects | ~1-2 min |
-| `/atlas.history` | Need to find hotspots and experts | ~5-10 min |
-| `/atlas.flow "feature"` | Need to understand a feature's execution path | ~3-5 min |
-| `/atlas.deps "upgrade"` | Planning framework/SDK upgrade | ~15-30 min |
-| `/atlas.list` | Check what analyses are cached | instant |
-| `/atlas.clear` | Clear outdated cache | instant |
+| `/sourceatlas:overview` | New to project, need the big picture | ~3-15 min ✓ |
+| `/sourceatlas:pattern "X"` | Need to implement X, want examples | ~seconds ✓ |
+| `/sourceatlas:impact "file"` | About to change code, worried about side effects | ~1-2 min |
+| `/sourceatlas:history` | Need to find hotspots and experts | ~5-10 min |
+| `/sourceatlas:flow "feature"` | Need to understand a feature's execution path | ~3-5 min |
+| `/sourceatlas:deps "upgrade"` | Planning framework/SDK upgrade | ~15-30 min |
+| `/sourceatlas:list` | Check what analyses are cached | instant |
+| `/sourceatlas:clear` | Clear outdated cache | instant |
 
 <sub>✓ = benchmarked. Times without ✓ are estimates.</sub>
 
@@ -253,9 +253,9 @@ With **Agent Skills**, Claude automatically suggests the right analysis based on
 All commands support `--save`:
 
 ```bash
-/atlas.overview --save          # → .sourceatlas/overview.yaml
-/atlas.pattern "api" --save     # → .sourceatlas/patterns/api.md
-/atlas.history --save           # → .sourceatlas/history.md
+/sourceatlas:overview --save          # → .sourceatlas/overview.yaml
+/sourceatlas:pattern "api" --save     # → .sourceatlas/patterns/api.md
+/sourceatlas:history --save           # → .sourceatlas/history.md
 ```
 
 **Benefits**:
@@ -265,8 +265,8 @@ All commands support `--save`:
 
 **Manage cache**:
 ```bash
-/atlas.list   # View all cached analyses
-/atlas.clear  # Clear all or specific caches
+/sourceatlas:list   # View all cached analyses
+/sourceatlas:clear  # Clear all or specific caches
 ```
 
 ---
@@ -296,8 +296,8 @@ SourceAtlas is built on these excellent open-source tools:
 
 | Tool | Purpose | Link |
 |------|---------|------|
-| **ast-grep** | AST-based code search for `/atlas.pattern` and `/atlas.deps` | [GitHub](https://github.com/ast-grep/ast-grep) |
-| **code-maat** | Git history analysis for `/atlas.history` | [GitHub](https://github.com/adamtornhill/code-maat) |
+| **ast-grep** | AST-based code search for `pattern` and `deps` commands | [GitHub](https://github.com/ast-grep/ast-grep) |
+| **code-maat** | Git history analysis for `history` command | [GitHub](https://github.com/adamtornhill/code-maat) |
 | **Claude Code** | AI-powered code assistant | [claude.ai/code](https://claude.ai/code) |
 
 ---
