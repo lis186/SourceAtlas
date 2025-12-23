@@ -17,16 +17,16 @@ Trigger this skill when the user:
 ## Instructions
 
 1. Identify the upgrade path or library to analyze
-2. Run `/atlas.deps "<upgrade>"` with the migration description
+2. Run `/sourceatlas:deps "<upgrade>"` with the migration description
 3. Returns deprecated APIs, breaking changes, and migration checklist
 
 ## Command Formats
 
-- iOS upgrade: `/atlas.deps "iOS 16 → 17"`
-- Android: `/atlas.deps "Android API 35"`
-- React: `/atlas.deps "React 17 → 18"`
-- Python: `/atlas.deps "Python 3.11 → 3.12"`
-- Library audit: `/atlas.deps "kotlinx.coroutines"`
+- iOS upgrade: `/sourceatlas:deps "iOS 16 → 17"`
+- Android: `/sourceatlas:deps "Android API 35"`
+- React: `/sourceatlas:deps "React 17 → 18"`
+- Python: `/sourceatlas:deps "Python 3.11 → 3.12"`
+- Library audit: `/sourceatlas:deps "kotlinx.coroutines"`
 
 ## What User Gets
 
