@@ -4,7 +4,7 @@
 
 **Complete usage instructions for all slash commands**
 
-For Claude Code | v2.10.0 | Constitution v1.1
+For Claude Code | v2.10.1 | Constitution v1.1
 
 ---
 
@@ -93,13 +93,18 @@ SourceAtlas is suitable for the following common scenarios:
 ### Quick Start
 
 ```bash
+# In Claude Code:
+/plugin marketplace add lis186/SourceAtlas
+/plugin install sourceatlas@lis186-sourceatlas
+```
+
+For local development/testing:
+```bash
 git clone https://github.com/lis186/SourceAtlas.git
 claude --plugin-dir ./SourceAtlas/plugin
 ```
 
-Or add to Claude Code settings for permanent use.
-
-**Agent Skills**: With v2.10.0, Claude automatically suggests the right analysis based on your questions — no commands to memorize!
+**Agent Skills**: With v2.10+, Claude automatically suggests the right analysis based on your questions — no commands to memorize!
 
 ---
 

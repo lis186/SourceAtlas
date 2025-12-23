@@ -1,4 +1,4 @@
-# SourceAtlas
+# 🗺️ SourceAtlas
 
 > [sourceatlas.io](https://www.sourceatlas.io) | [English](./README.md) | 🌐 **繁體中文**
 
@@ -6,7 +6,7 @@
 
 一組 [Claude Code](https://claude.ai/code) slash commands，幫助你快速理解任何 codebase。
 
-[![Version](https://img.shields.io/badge/version-v2.10.0-blue)](https://github.com/lis186/SourceAtlas/releases)
+[![Version](https://img.shields.io/badge/version-v2.10.1-blue)](https://github.com/lis186/SourceAtlas/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 ![Command Menu](./docs/images/atlas-command-menu.png)
@@ -46,7 +46,7 @@ SourceAtlas 使用**資訊理論**優先掃描高熵檔案（configs、READMEs�
 
 ---
 
-## 6 個命令解決 6 個真實問題
+## 核心命令
 
 ### 1.「我剛接手這個專案，要從哪裡開始？」
 
@@ -304,4 +304,4 @@ SourceAtlas 建立在這些優秀的開源工具之上：
 
 **SourceAtlas** — 用分鐘而不是天來理解任何 codebase。
 
-v2.10.0 | MIT License | Made with Claude Code
+v2.10.1 | MIT License | Made with Claude Code

@@ -15,7 +15,7 @@ SourceAtlas helps developers quickly understand any codebase through pattern lea
 - **🔄 Flow Analysis** (`/atlas.flow`) - Trace code execution and data flow (11 analysis modes)
 - **📦 Dependency Analysis** (`/atlas.deps`) - Library/framework upgrade analysis (iOS, Android, Python, React)
 
-### Agent Skills (Model-invoked) ⭐ NEW
+### Agent Skills (Model-invoked)
 
 Claude automatically triggers the right analysis based on your questions:
 
@@ -81,7 +81,7 @@ Get a quick understanding of any codebase by scanning <5% of files.
 - AI collaboration level detection (Level 0-4)
 - Recommended next steps
 
-### `/atlas.pattern` - Learn Design Patterns ⭐
+### `/atlas.pattern` - Learn Design Patterns
 
 Learn how the current codebase implements specific patterns.
 
@@ -112,7 +112,7 @@ Learn how the current codebase implements specific patterns.
 - 🧪 Testing patterns
 - 📚 Concrete implementation steps
 
-### `/atlas.impact` - Impact Analysis 🆕
+### `/atlas.impact` - Impact Analysis
 
 Analyze the impact scope of code changes using static dependency analysis.
 
@@ -134,7 +134,7 @@ Analyze the impact scope of code changes using static dependency analysis.
 - 🧪 Test coverage gaps
 - ⚠️ Language-specific risks (Swift/ObjC interop for iOS)
 
-### `/atlas.history` - History Analysis 🆕
+### `/atlas.history` - History Analysis
 
 Analyze git history to identify hotspots, temporal coupling, and knowledge distribution.
 
@@ -159,15 +159,14 @@ Analyze git history to identify hotspots, temporal coupling, and knowledge distr
 **Auto-features:**
 - Detects shallow clone and offers one-click fix
 - Auto-installs code-maat dependency if needed
-- Chinese/English bilingual prompts
 
-### `/atlas.flow` - Flow Analysis ⭐ NEW
+### `/atlas.flow` - Flow Analysis
 
 Trace code execution flow and data flow with natural language queries.
 
 ```bash
 # Trace user flow
-/atlas.flow "用戶登入流程"
+/atlas.flow "user login flow"
 /atlas.flow "What happens when user clicks submit"
 
 # Trace specific function
@@ -175,13 +174,13 @@ Trace code execution flow and data flow with natural language queries.
 /atlas.flow "trace processOrder function"
 
 # Error path analysis
-/atlas.flow "API 錯誤處理流程"
+/atlas.flow "API error handling"
 
 # Data flow tracing
-/atlas.flow "資料從哪裡來 userProfile"
+/atlas.flow "where does userProfile data come from"
 
 # Reverse tracing
-/atlas.flow "誰調用 validateToken"
+/atlas.flow "who calls validateToken"
 ```
 
 **What you get:**
@@ -205,14 +204,14 @@ Trace code execution flow and data flow with natural language queries.
 - Terms explained with tooltips
 - Progressive disclosure (7±2 items per level)
 
-### `/atlas.deps` - Dependency Analysis ⭐ NEW
+### `/atlas.deps` - Dependency Analysis
 
 Analyze library/framework dependencies for upgrade planning and migration.
 
 ```bash
 # iOS SDK upgrade
 /atlas.deps "iOS 16 → 17"
-/atlas.deps "iOS 最低版本改成 17，使用 iOS 26 SDK"
+/atlas.deps "Upgrade minimum iOS to 17, use iOS 26 SDK"
 
 # Android SDK upgrade
 /atlas.deps "Android API 35"
@@ -353,7 +352,7 @@ sourceatlas-plugin/
 │   ├── atlas.deps.md
 │   ├── atlas.list.md
 │   └── atlas.clear.md
-├── skills/                  # Agent Skills (model-invoked) ⭐ NEW
+├── skills/                  # Agent Skills (model-invoked)
 │   ├── codebase-overview/SKILL.md
 │   ├── pattern-finder/SKILL.md
 │   ├── impact-analyzer/SKILL.md
@@ -403,7 +402,7 @@ MIT License - see [LICENSE](LICENSE) for details
 
 ## 🙏 Acknowledgments
 
-Based on SourceAtlas v2.5 methodology:
+Built on SourceAtlas methodology:
 - Three-stage analysis framework
 - Information theory principles
 - High-entropy file prioritization
@@ -416,4 +415,4 @@ Based on SourceAtlas v2.5 methodology:
 
 ---
 
-**SourceAtlas v2.10.0** - Understanding codebases at the speed of thought 🚀
+**SourceAtlas v2.10.1** - Understanding codebases at the speed of thought 🚀
