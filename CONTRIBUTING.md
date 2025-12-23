@@ -63,7 +63,7 @@ claude --plugin-dir ./plugin
 # Option 2: Install via local marketplace
 # In Claude Code:
 /plugin marketplace add ./
-/plugin install sourceatlas@lis186-sourceatlas
+/plugin install sourceatlas@lis186-SourceAtlas
 ```
 
 ### Testing Your Changes
