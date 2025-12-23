@@ -4,7 +4,7 @@
 
 **所有斜線命令的完整使用說明**
 
-適用於 Claude Code | v2.10.0 | Constitution v1.1
+適用於 Claude Code | v2.10.1 | Constitution v1.1
 
 ---
 
@@ -93,13 +93,18 @@ SourceAtlas 適用於以下常見情境：
 ### 快速開始
 
 ```bash
+# 在 Claude Code 中執行：
+/plugin marketplace add lis186/SourceAtlas
+/plugin install sourceatlas@lis186-sourceatlas
+```
+
+本地開發/測試：
+```bash
 git clone https://github.com/lis186/SourceAtlas.git
 claude --plugin-dir ./SourceAtlas/plugin
 ```
 
-或加入 Claude Code 設定以永久使用。
-
-**Agent Skills**：v2.10.0 起，Claude 會根據你的問題自動建議合適的分析 — 不用記指令！
+**Agent Skills**：v2.10+ 起，Claude 會根據你的問題自動建議合適的分析 — 不用記指令！
 
 ---
 

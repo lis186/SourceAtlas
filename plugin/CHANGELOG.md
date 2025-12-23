@@ -5,6 +5,23 @@ All notable changes to SourceAtlas Plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.1] - 2025-12-23
+
+### Added
+- **Official Plugin Marketplace** - Now installable via Claude Code plugin system ⭐
+  ```bash
+  /plugin marketplace add lis186/SourceAtlas
+  /plugin install sourceatlas@lis186-sourceatlas
+  ```
+- **`.claude-plugin/marketplace.json`** - Marketplace manifest for plugin distribution
+
+### Fixed
+- **`plugin.json` repository format** - Changed from object to string per Claude Code spec
+
+### Changed
+- Updated all documentation with official plugin installation method
+- Removed references to deprecated `install-global.sh`
+
 ## [2.10.0] - 2025-12-22
 
 ### Added

@@ -62,7 +62,7 @@ argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3
 
 ## Your Task
 
-### Phase 0: Rule Confirmation ⭐ NEW
+### Phase 0: Rule Confirmation
 
 **IMPORTANT**: Before starting inventory, confirm analysis rules. This ensures results meet user needs.
 
