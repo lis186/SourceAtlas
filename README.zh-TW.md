@@ -276,7 +276,7 @@ cd ~/projects/any-project
 | 文件 | 說明 |
 |------|------|
 | [使用指南](./USAGE_GUIDE.zh-TW.md) | 完整命令參考、全部 221 種模式 |
-| [實戰案例](./docs/case-studies/) | 真實專案分析（Firefox iOS 等） |
+| [實戰案例](./docs/case-studies/) | 7 個框架分析（Gin、TCA、FastAPI、tRPC 等） |
 | [Plugin 指南](./plugin/README.md) | Plugin 安裝與功能 |
 | [分析憲法](./ANALYSIS_CONSTITUTION.md) | 所有分析遵循的品質原則 |
 | [CLAUDE.md](./CLAUDE.md) | 開發者指南、架構 |

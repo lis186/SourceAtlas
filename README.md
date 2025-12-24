@@ -276,7 +276,7 @@ All commands support `--save`:
 | Document | Description |
 |----------|-------------|
 | [Usage Guide](./USAGE_GUIDE.md) | Complete command reference, all 221 patterns |
-| [Case Studies](./docs/case-studies/) | Real-world analyses (Firefox iOS, etc.) |
+| [Case Studies](./docs/case-studies/) | 7 framework analyses (Gin, TCA, FastAPI, tRPC, etc.) |
 | [Plugin Guide](./plugin/README.md) | Plugin installation and features |
 | [Analysis Constitution](./ANALYSIS_CONSTITUTION.md) | Quality principles all analyses follow |
 | [CLAUDE.md](./CLAUDE.md) | Developer guide, architecture |
