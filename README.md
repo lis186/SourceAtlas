@@ -292,7 +292,7 @@ All commands support `--save`:
 
 ## Acknowledgments
 
-SourceAtlas is built on these excellent open-source tools:
+SourceAtlas is built with these excellent tools:
 
 | Tool | Purpose | Link |
 |------|---------|------|
