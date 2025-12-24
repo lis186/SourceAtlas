@@ -292,7 +292,7 @@ cd ~/projects/any-project
 
 ## 致謝
 
-SourceAtlas 建立在這些優秀的開源工具之上：
+SourceAtlas 建立在這些優秀的工具之上：
 
 | 工具 | 用途 | 連結 |
 |------|------|------|
