@@ -4,7 +4,32 @@
 
 ---
 
-## 2025-12（當前月份）
+## 2026-01（當前月份）
+
+### Week 1 (01/01): Context 優化與分層架構 ⭐⭐⭐⭐⭐
+
+**🎯 Context 大幅優化** (01/01):
+- **Memory 精簡**: CLAUDE.md 從 12.9k → 839 tokens (93% 減少)
+- **atlas.flow 分層**: 2,708 → 239 行 (91% 減少)，Tier 1-3 按需載入
+- **新建 Skills**: `multi-approach.md`, `dev-notes-guide.md`, `pre-release.md`
+→ [詳細記錄](./2026-01/2026-01-01-context-optimization-refactor.md)
+
+**Dead Code 清理** (01/01):
+- **刪除 5 個腳本**: benchmark.sh, compare-formats.sh, detect-project.sh (舊), history.sh, validate-constitution.sh
+- **重新命名**: detect-project-enhanced.sh → detect-project.sh
+- **新增 3 個模式**: Taint Analysis (12), Dead Code (13), Concurrency (14)
+→ [詳細記錄](./2026-01/2026-01-01-context-optimization-refactor.md)
+
+**atlas.flow v3.0 測試完成** (01/01-01/02):
+- **測試專案**: TTCA-iOS (Swift), cal.com (TypeScript), Express.js (JavaScript)
+- **通過率**: 15/15 (100%)
+- **Dispatch 驗證**: Tier 1-3 全部正確
+- **補充測試** (01/02): Permission Flow (cal.com PBAC), Flow Comparison (Express.js v5.2.0 vs v5.2.1)
+→ [測試報告](./2026-01/2026-01-01-atlas-flow-test-results.md)
+
+---
+
+## 2025-12
 
 ### Week 3 (12/21): Benchmark + Scale Detection Fix ⭐⭐⭐⭐⭐
 

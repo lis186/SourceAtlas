@@ -12,7 +12,7 @@
       "name": "sourceatlas",
       "source": "./plugin",
       "description": "AI-powered codebase understanding assistant. Learn design patterns, analyze impact, trace code flows, and understand any codebase through information theory principles.",
-      "version": "2.10.1"
+      "version": "2.11.0"
     }
   ]
 }
