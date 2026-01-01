@@ -169,6 +169,8 @@ git clone https://github.com/lis186/SourceAtlas.git
 claude --plugin-dir ./SourceAtlas/plugin
 ```
 
+> ⚠️ **已知問題**：若使用 `--scope project` 安裝後，在其他 repo 可能會遇到 "already installed" 錯誤。這是 [Claude Code 的 bug](https://github.com/anthropics/claude-code/issues/14202)。**解法**：使用預設的 user scope（不加 `--scope` 參數）。
+
 ### 第一次使用
 
 ```bash
