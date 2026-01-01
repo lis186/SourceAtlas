@@ -417,4 +417,4 @@ Built on SourceAtlas methodology:
 
 ---
 
-**SourceAtlas v2.10.1** - Understanding codebases at the speed of thought 🚀
+**SourceAtlas v2.11.0** - Understanding codebases at the speed of thought 🚀

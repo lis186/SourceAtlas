@@ -1,12 +1,12 @@
 # 🗺️ SourceAtlas
 
-> 🌐 [sourceatlas.io](https://www.sourceatlas.io) | **English** | [繁體中文](./README.zh-TW.md)
+> 🌐 [sourceatlas.io](https://sourceatlas.io) | **English** | [繁體中文](./README.zh-TW.md)
 
 **Get project overview in ~3 minutes by scanning <5% of files**
 
 A set of AI-powered slash commands for [Claude Code](https://claude.ai/code) that help you understand any codebase quickly.
 
-[![Version](https://img.shields.io/badge/version-v2.10.1-blue)](https://github.com/lis186/SourceAtlas/releases)
+[![Version](https://img.shields.io/badge/version-v2.11.0-blue)](https://github.com/lis186/SourceAtlas/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 ![Command Menu](./docs/images/atlas-command-menu.png)
@@ -306,4 +306,4 @@ SourceAtlas is built with these excellent tools:
 
 **SourceAtlas** — Understand any codebase in minutes, not days.
 
-v2.10.1 | MIT License | Made with Claude Code
+v2.11.0 | MIT License | Made with Claude Code

@@ -5,6 +5,31 @@ All notable changes to SourceAtlas Plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.0] - 2026-01-02
+
+### Added
+- **atlas.flow Tiered Architecture** - On-demand loading reduces context by 91% ⭐ Major Feature
+  - Tier 1: 5 built-in modes (Standard, Reverse, Error, Data Flow, Event)
+  - Tier 2-3: 9 external modes loaded only when needed
+  - 14 total analysis modes (was 5)
+- **3 New Analysis Modes**:
+  - Mode 12: Taint Analysis (security data flow)
+  - Mode 13: Dead Code Detection
+  - Mode 14: Concurrency Flow Analysis
+- **Permission Flow (Mode 10)** - RBAC/PBAC analysis for access control systems
+
+### Changed
+- **Context Optimization** - CLAUDE.md reduced from 12.9k → 839 tokens (93% reduction)
+- **atlas.flow.md** - Reduced from 2,708 → 239 lines with tiered dispatch
+- **External Mode Files** - 9 files in `scripts/atlas/flow-modes/` for on-demand loading
+
+### Fixed
+- **Dispatch Logic** - Imperative table format ensures Claude executes rather than outputs
+
+### Tested
+- 15/15 test cases passed (100%)
+- Test projects: TTCA-iOS (Swift), cal.com (TypeScript), Express.js (JavaScript)
+
 ## [2.10.1] - 2025-12-23
 
 ### Added
