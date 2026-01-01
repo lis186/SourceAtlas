@@ -50,6 +50,8 @@ No need to remember commands — just ask naturally!
 - **User scope** (default): Available across all your projects
 - **Project scope**: `--scope project` to share with collaborators
 
+> ⚠️ **Known Issue**: If you install with `--scope project` in one repo, you may get "already installed" errors in other repos. This is a [Claude Code bug](https://github.com/anthropics/claude-code/issues/14202). **Workaround**: Use default user scope (no `--scope` flag).
+
 ### Method 2: Local Development/Testing
 
 ```bash
