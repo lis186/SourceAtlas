@@ -12,7 +12,8 @@
 |------|---|
 | 測試專案 1 | TTCA-iOS (Swift TCA) |
 | 測試專案 2 | cal.com (TypeScript, Open Source) |
-| 測試案例總數 | 13 |
+| 測試專案 3 | Express.js (JavaScript, Open Source) |
+| 測試案例總數 | 15 |
 | 通過率 | 100% |
 
 ---
@@ -26,6 +27,7 @@
 | 03 | Error Path | "error" | TTCA-iOS | 5/5 ✅ |
 | 04 | Data Flow | "data flow" | TTCA-iOS | 5/5 ✅ |
 | 05 | Event Tracing | "event", "message" | TTCA-iOS | 5/5 ✅ |
+| 16 | Permission Flow | "permission", "role" | cal.com | 5/5 ✅ |
 
 **Tier 1 驗證**：✅ 全部正確識別，無需載入外部檔案
 
@@ -43,6 +45,7 @@
 | 13 | Cache Flow | "cache" | cal.com | ✅ mode-11 | 5/5 ✅ |
 | 14 | Dead Code | "dead code" | sourceatlas2 | ✅ mode-13 | 5/5 ✅ |
 | 15 | Concurrency | "async" | TTCA-iOS | ✅ mode-14 | 5/5 ✅ |
+| 17 | Flow Comparison | "compare", "vs" | Express.js | ✅ mode-05 | 5/5 ✅ |
 
 **Tier 2-3 驗證**：✅ 全部正確偵測關鍵字並載入對應外部檔案
 
@@ -67,6 +70,8 @@
 | "cache flow" | Tier 3 → mode-11 | ✅ 正確 |
 | "dead code" | Tier 3 → mode-13 | ✅ 正確 |
 | "async flow" | Tier 3 → mode-14 | ✅ 正確 |
+| "permission flow" | Tier 1 (Permission) | ✅ 正確 |
+| "compare X vs Y" | Tier 3 → mode-05 | ✅ 正確 |
 
 ---
 
@@ -111,18 +116,27 @@
 
 | 項目 | 結果 |
 |------|------|
-| Tier 1 模式 | 5/5 通過 |
-| Tier 2-3 模式 | 8/8 通過 |
+| Tier 1 模式 | 6/6 通過 |
+| Tier 2-3 模式 | 9/9 通過 |
 | Dispatch 正確率 | 100% |
 | 外部檔案載入 | 100% |
-| **整體評分** | **13/13 (100%)** |
+| **整體評分** | **15/15 (100%)** |
+
+---
+
+## 補充測試 (2026-01-02)
+
+| TC | 模式 | 專案 | 說明 |
+|----|------|------|------|
+| 16 | Permission Flow | cal.com | PBAC 系統，角色層級：OWNER > ADMIN > MEMBER |
+| 17 | Flow Comparison | Express.js | v5.2.0 vs v5.2.1 安全補丁比較 (CVE-2024-51999) |
 
 ---
 
 ## 建議後續
 
-1. **Flow Comparison (mode-05)** - 未測試，需要兩個版本的程式碼
-2. **Permission Flow (mode-10)** - Tier 1，需要有 RBAC 的專案測試
+1. ~~**Flow Comparison (mode-05)** - 未測試，需要兩個版本的程式碼~~ ✅ 已完成
+2. ~~**Permission Flow (mode-10)** - Tier 1，需要有 RBAC 的專案測試~~ ✅ 已完成
 3. **持續監控** - 確保新增模式時 dispatch 邏輯正確
 
 ---
