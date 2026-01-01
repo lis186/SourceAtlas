@@ -20,6 +20,12 @@
 - **新增 3 個模式**: Taint Analysis (12), Dead Code (13), Concurrency (14)
 → [詳細記錄](./2026-01/2026-01-01-context-optimization-refactor.md)
 
+**atlas.flow v3.0 測試完成** (01/01):
+- **測試專案**: TTCA-iOS (Swift), cal.com (TypeScript)
+- **通過率**: 13/13 (100%)
+- **Dispatch 驗證**: Tier 1-3 全部正確
+→ [測試報告](./2026-01/2026-01-01-atlas-flow-test-results.md)
+
 ---
 
 ## 2025-12
