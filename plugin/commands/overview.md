@@ -80,12 +80,12 @@ Execute **Stage 0 Analysis Only** - generate a project overview using informatio
 ```bash
 # Run enhanced detection script (RECOMMENDED)
 # Try global install first, then local
-if [ -f ~/.claude/scripts/atlas/detect-project-enhanced.sh ]; then
-    bash ~/.claude/scripts/atlas/detect-project-enhanced.sh ${ARGUMENTS:-.}
-elif [ -f scripts/atlas/detect-project-enhanced.sh ]; then
-    bash scripts/atlas/detect-project-enhanced.sh ${ARGUMENTS:-.}
+if [ -f ~/.claude/scripts/atlas/detect-project.sh ]; then
+    bash ~/.claude/scripts/atlas/detect-project.sh ${ARGUMENTS:-.}
+elif [ -f scripts/atlas/detect-project.sh ]; then
+    bash scripts/atlas/detect-project.sh ${ARGUMENTS:-.}
 else
-    echo "Warning: detect-project-enhanced.sh not found, using manual detection"
+    echo "Warning: detect-project.sh not found, using manual detection"
 fi
 ```
 
@@ -353,7 +353,7 @@ summary:
 💡 Enter a number (e.g., `1`) or copy the command to execute
 
 ───────────────────────────────
-🗺️ v2.10.1 │ Constitution v1.1
+🗺️ v2.11.0 │ Constitution v1.1
 ```
 
 ---
@@ -501,7 +501,7 @@ fi
 
 ### Step V4: Verification Summary (Append to Output)
 
-Add to footer (before `🗺️ v2.10.1 │ Constitution v1.1`):
+Add to footer (before `🗺️ v2.11.0 │ Constitution v1.1`):
 
 **If all verifications passed:**
 ```

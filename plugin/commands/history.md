@@ -393,7 +393,7 @@ Based on analysis findings, dynamically suggest 1-2 most relevant follow-up comm
 💡 Enter a number (e.g., `1`) or copy the command to execute
 
 ───────────────────────────────
-🗺️ v2.10.1 │ Constitution v1.1
+🗺️ v2.11.0 │ Constitution v1.1
 ```
 
 ---
@@ -575,7 +575,7 @@ done
 
 ### Step V4: Verification Summary (Append to Output)
 
-Add to footer (before `🗺️ v2.10.1 │ Constitution v1.1`):
+Add to footer (before `🗺️ v2.11.0 │ Constitution v1.1`):
 
 **If all verifications passed:**
 ```

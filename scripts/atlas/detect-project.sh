@@ -1,142 +1,410 @@
 #!/bin/bash
-# SourceAtlas - Project Type Detection Script
-#
-# Purpose: Collect raw project metadata for AI analysis
-# Philosophy: Scripts collect data, AI does reasoning
-#
-# Usage: ./detect-project.sh [target_directory]
+# Enhanced Project Detection with Scale-Aware Analysis
+# Based on ANALYSIS_CONSTITUTION.md v1.0
+# Updated: 2025-12-05 - Added methodology/documentation project support
+# Updated: 2025-12-05 - Added monorepo detection (workspaces, lerna, pnpm, nx)
 
-set -euo pipefail
+set -e
 
-TARGET_DIR="${1:-.}"
+PROJECT_PATH="${1:-.}"
 
-# Color output (optional)
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+echo "=== Enhanced Project Detection ==="
+echo "📁 Project: $PROJECT_PATH"
+echo "📜 Constitution: v1.0"
+echo ""
 
-main() {
-    echo "=== Project Detection ==="
-    echo "Target: $TARGET_DIR"
-    echo ""
+# Detect project type (order matters - more specific first)
+echo "🔍 Project Type Detection:"
 
-    detect_project_files
-    echo ""
+# Check for methodology/documentation projects first
+# These are primarily Markdown + scripts, with minimal code
+MD_COUNT=$(find "$PROJECT_PATH" -maxdepth 3 -type f -name "*.md" ! -path "*/.git/*" 2>/dev/null | wc -l | tr -d ' ')
+SH_COUNT=$(find "$PROJECT_PATH" -maxdepth 3 -type f \( -name "*.sh" -o -name "*.ps1" \) ! -path "*/.git/*" 2>/dev/null | wc -l | tr -d ' ')
+CODE_COUNT=$(find "$PROJECT_PATH" -maxdepth 3 -type f \( -name "*.py" -o -name "*.ts" -o -name "*.js" -o -name "*.go" -o -name "*.rs" -o -name "*.swift" -o -name "*.kt" -o -name "*.java" -o -name "*.php" \) ! -path "*/.git/*" ! -path "*/node_modules/*" ! -path "*/.venv/*" ! -path "*/vendor/*" 2>/dev/null | wc -l | tr -d ' ')
 
-    project_statistics
-    echo ""
+# Helper function: Check for monorepo markers
+check_monorepo() {
+    local path="$1"
 
-    detect_ai_indicators
-    echo ""
-
-    show_structure
-}
-
-detect_project_files() {
-    echo "--- Project Files ---"
-
-    # Check for language-specific files
-    local files=(
-        "package.json"          # Node.js
-        "composer.json"         # PHP
-        "Gemfile"               # Ruby
-        "go.mod"                # Go
-        "Cargo.toml"            # Rust
-        "requirements.txt"      # Python
-        "pyproject.toml"        # Python (modern)
-        "pom.xml"               # Java (Maven)
-        "build.gradle"          # Java (Gradle)
-        "*.csproj"              # C#/.NET
-        "mix.exs"               # Elixir
-        "pubspec.yaml"          # Dart/Flutter
-        "*.xcodeproj"           # iOS/macOS
-        "Package.swift"         # Swift Package Manager
-        "Project.swift"         # Tuist
-    )
-
-    for pattern in "${files[@]}"; do
-        if find "$TARGET_DIR" -maxdepth 2 -name "$pattern" 2>/dev/null | head -1 | grep -q .; then
-            echo "Found: $pattern"
-        fi
-    done
-}
-
-project_statistics() {
-    echo "--- Project Statistics ---"
-
-    # Total files
-    local total_files=$(find "$TARGET_DIR" -type f 2>/dev/null | wc -l | tr -d ' ')
-    echo "Total files: $total_files"
-
-    # Lines of code by language (top 5)
-    echo ""
-    echo "Lines of code by extension:"
-    find "$TARGET_DIR" -type f 2>/dev/null |
-        sed 's/.*\.//' |
-        sort |
-        uniq -c |
-        sort -rn |
-        head -10
-
-    # Directory count
-    local dir_count=$(find "$TARGET_DIR" -type d 2>/dev/null | wc -l | tr -d ' ')
-    echo ""
-    echo "Total directories: $dir_count"
-
-    # Git information (if available)
-    if [ -d "$TARGET_DIR/.git" ]; then
-        echo ""
-        echo "Git repository: Yes"
-        cd "$TARGET_DIR"
-        echo "Total commits: $(git rev-list --all --count 2>/dev/null || echo 'N/A')"
-        echo "Branches: $(git branch -a 2>/dev/null | wc -l | tr -d ' ')"
-        echo "Last commit: $(git log -1 --format='%ar' 2>/dev/null || echo 'N/A')"
-    else
-        echo ""
-        echo "Git repository: No"
+    # Check for explicit monorepo config files
+    if [ -f "$path/lerna.json" ]; then
+        echo "lerna"
+        return 0
     fi
+    if [ -f "$path/pnpm-workspace.yaml" ]; then
+        echo "pnpm"
+        return 0
+    fi
+    if [ -f "$path/nx.json" ]; then
+        echo "nx"
+        return 0
+    fi
+    if [ -f "$path/turbo.json" ]; then
+        echo "turborepo"
+        return 0
+    fi
+
+    # Check for workspaces in package.json
+    if [ -f "$path/package.json" ]; then
+        if grep -q '"workspaces"' "$path/package.json" 2>/dev/null; then
+            echo "npm-workspaces"
+            return 0
+        fi
+    fi
+
+    # Check for Go workspace
+    if [ -f "$path/go.work" ]; then
+        echo "go-workspace"
+        return 0
+    fi
+
+    return 1
 }
 
-detect_ai_indicators() {
-    echo "--- AI Collaboration Indicators ---"
+# Helper function: Detect type from subdirectories (for monorepo)
+detect_from_subdirs() {
+    local path="$1"
+    local found_type=""
 
-    # Check for AI configuration files
-    local ai_files=(
-        "CLAUDE.md"
-        ".claude/CLAUDE.md"
-        ".cursor/rules"
-        ".aider.conf.yml"
-        ".github/copilot.yml"
-    )
+    # Check immediate subdirectories for config files
+    for subdir in "$path"/*/; do
+        [ -d "$subdir" ] || continue
+        subdir_name=$(basename "$subdir")
 
-    for file in "${ai_files[@]}"; do
-        if [ -f "$TARGET_DIR/$file" ] || [ -d "$TARGET_DIR/$file" ]; then
-            echo "Found: $file"
+        # Skip common non-package directories
+        [[ "$subdir_name" =~ ^(node_modules|\.git|\.venv|vendor|build|dist|target)$ ]] && continue
+
+        if [ -f "$subdir/package.json" ]; then
+            found_type="nodejs"
+            break
+        elif [ -f "$subdir/go.mod" ]; then
+            found_type="go"
+            break
+        elif [ -f "$subdir/pyproject.toml" ] || [ -f "$subdir/setup.py" ]; then
+            found_type="python"
+            break
+        elif [ -f "$subdir/Cargo.toml" ]; then
+            found_type="rust"
+            break
         fi
     done
 
-    # Check for high comment density (AI indicator)
-    if command -v cloc &> /dev/null; then
-        echo ""
-        echo "Code metrics (via cloc):"
-        cloc "$TARGET_DIR" --quiet 2>/dev/null | grep -E "SUM:|Language" || echo "cloc analysis failed"
-    fi
+    echo "$found_type"
 }
 
-show_structure() {
-    echo "--- Directory Structure (2 levels) ---"
+# Helper: Count Swift files (for iOS detection priority)
+SWIFT_FILE_COUNT=$(find "$PROJECT_PATH" -type f -name "*.swift" ! -path "*/Pods/*" ! -path "*/.build/*" ! -path "*/.git/*" 2>/dev/null | wc -l | tr -d ' ')
 
-    # Use tree if available, otherwise fall back to find
-    if command -v tree &> /dev/null; then
-        tree -L 2 -d --charset ascii "$TARGET_DIR" 2>/dev/null | head -50
+# Methodology project: Markdown > Code, and has shell scripts
+if [ "$MD_COUNT" -gt 10 ] && [ "$MD_COUNT" -gt "$CODE_COUNT" ] && [ "$SH_COUNT" -gt 0 ]; then
+    echo "   ✓ Methodology/Documentation Project (Markdown-driven)"
+    echo "     (Markdown: $MD_COUNT, Scripts: $SH_COUNT, Code: $CODE_COUNT)"
+    PROJECT_TYPE="methodology"
+# PRIORITY 0: iOS/Swift projects (may have Gemfile for fastlane, check Swift count first)
+elif [ "$SWIFT_FILE_COUNT" -gt 50 ]; then
+    echo "   ✓ iOS/Swift (Swift files: $SWIFT_FILE_COUNT)"
+    PROJECT_TYPE="ios"
+# PRIORITY 1: Strong language markers (take precedence over monorepo)
+# These files indicate the PRIMARY language even if monorepo tools exist
+elif [ -f "$PROJECT_PATH/Gemfile" ]; then
+    echo "   ✓ Ruby/Rails (Gemfile found)"
+    PROJECT_TYPE="ruby"
+elif [ -f "$PROJECT_PATH/go.mod" ]; then
+    echo "   ✓ Go (go.mod found)"
+    PROJECT_TYPE="go"
+elif [ -f "$PROJECT_PATH/Cargo.toml" ]; then
+    echo "   ✓ Rust (Cargo.toml found)"
+    PROJECT_TYPE="rust"
+elif [ -f "$PROJECT_PATH/pyproject.toml" ] || [ -f "$PROJECT_PATH/requirements.txt" ]; then
+    echo "   ✓ Python (pyproject.toml or requirements.txt found)"
+    PROJECT_TYPE="python"
+elif [ -f "$PROJECT_PATH/build.gradle" ] || [ -f "$PROJECT_PATH/build.gradle.kts" ] || [ -f "$PROJECT_PATH/settings.gradle" ] || [ -f "$PROJECT_PATH/settings.gradle.kts" ]; then
+    echo "   ✓ Android/Kotlin (Gradle project found)"
+    PROJECT_TYPE="android"
+elif ls "$PROJECT_PATH"/*.xcodeproj 1>/dev/null 2>&1 || ls "$PROJECT_PATH"/*.xcworkspace 1>/dev/null 2>&1; then
+    echo "   ✓ iOS/Swift (Xcode project found)"
+    PROJECT_TYPE="ios"
+elif [ -f "$PROJECT_PATH/Package.swift" ]; then
+    echo "   ✓ Swift Package (Package.swift found)"
+    PROJECT_TYPE="swift"
+elif [ -f "$PROJECT_PATH/Project.swift" ] || [ -d "$PROJECT_PATH/Tuist" ]; then
+    echo "   ✓ Swift/Tuist (Tuist project found)"
+    PROJECT_TYPE="swift"
+elif [ -f "$PROJECT_PATH/composer.json" ]; then
+    echo "   ✓ PHP (composer.json found)"
+    PROJECT_TYPE="php"
+# PRIORITY 2: Monorepo detection (only for JS/TS projects without strong language markers)
+elif MONOREPO_TYPE=$(check_monorepo "$PROJECT_PATH"); then
+    echo "   ✓ Monorepo ($MONOREPO_TYPE)"
+    PROJECT_TYPE="monorepo"
+    MONOREPO_TOOL="$MONOREPO_TYPE"
+
+    # Try to detect primary language from packages
+    SUBDIR_TYPE=$(detect_from_subdirs "$PROJECT_PATH")
+    if [ -n "$SUBDIR_TYPE" ]; then
+        echo "     Primary package type: $SUBDIR_TYPE"
+        MONOREPO_PRIMARY="$SUBDIR_TYPE"
+    fi
+elif [ -f "$PROJECT_PATH/package.json" ]; then
+    echo "   ✓ Node.js/TypeScript (package.json found)"
+    PROJECT_TYPE="nodejs"
+else
+    # Last resort: check subdirectories for config files
+    SUBDIR_TYPE=$(detect_from_subdirs "$PROJECT_PATH")
+    if [ -n "$SUBDIR_TYPE" ]; then
+        echo "   ✓ $SUBDIR_TYPE (detected from subdirectory)"
+        echo "     Note: Config file in subdirectory, may be monorepo without explicit config"
+        PROJECT_TYPE="$SUBDIR_TYPE"
+        IS_IMPLICIT_MONOREPO="true"
     else
-        find "$TARGET_DIR" -maxdepth 2 -type d 2>/dev/null |
-            grep -v node_modules |
-            grep -v .git |
-            head -30
+        echo "   ? Unknown project type"
+        PROJECT_TYPE="unknown"
     fi
-}
+fi
 
-# Run main function
-main
+echo ""
+
+# Count actual content files (excluding .venv, node_modules, etc.)
+# Per Constitution Article II: Forced exclusion directories
+echo "📊 Content File Statistics:"
+
+case "$PROJECT_TYPE" in
+    methodology)
+        # Methodology projects: count Markdown, Shell, Python CLI, YAML/JSON configs
+        MD_FILES=$(find "$PROJECT_PATH" -type f -name "*.md" \
+            ! -path "*/.git/*" | wc -l | tr -d ' ')
+        SCRIPT_FILES=$(find "$PROJECT_PATH" -type f \( -name "*.sh" -o -name "*.ps1" \) \
+            ! -path "*/.git/*" | wc -l | tr -d ' ')
+        PY_FILES=$(find "$PROJECT_PATH" -type f -name "*.py" \
+            ! -path "*/.venv/*" ! -path "*/venv/*" ! -path "*/__pycache__/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
+        CONFIG_FILES=$(find "$PROJECT_PATH" -type f \( -name "*.yaml" -o -name "*.yml" -o -name "*.json" -o -name "*.toml" \) \
+            ! -path "*/.git/*" ! -path "*/node_modules/*" | wc -l | tr -d ' ')
+        TOTAL_FILES=$((MD_FILES + SCRIPT_FILES + PY_FILES + CONFIG_FILES))
+        echo "   Markdown files: $MD_FILES"
+        echo "   Script files (sh/ps1): $SCRIPT_FILES"
+        echo "   Python files: $PY_FILES"
+        echo "   Config files (yaml/json/toml): $CONFIG_FILES"
+        ;;
+    monorepo)
+        # Monorepo: count based on primary type, or all code files
+        if [ "$MONOREPO_PRIMARY" = "nodejs" ]; then
+            TOTAL_FILES=$(find "$PROJECT_PATH" -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) \
+                ! -path "*/node_modules/*" ! -path "*/.git/*" ! -path "*/dist/*" ! -path "*/build/*" | wc -l | tr -d ' ')
+            echo "   TypeScript/JavaScript files: $TOTAL_FILES"
+        elif [ "$MONOREPO_PRIMARY" = "go" ]; then
+            TOTAL_FILES=$(find "$PROJECT_PATH" -type f -name "*.go" \
+                ! -path "*/vendor/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
+            echo "   Go files: $TOTAL_FILES"
+        elif [ "$MONOREPO_PRIMARY" = "python" ]; then
+            TOTAL_FILES=$(find "$PROJECT_PATH" -type f -name "*.py" \
+                ! -path "*/.venv/*" ! -path "*/venv/*" ! -path "*/__pycache__/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
+            echo "   Python files: $TOTAL_FILES"
+        elif [ "$MONOREPO_PRIMARY" = "rust" ]; then
+            TOTAL_FILES=$(find "$PROJECT_PATH" -type f -name "*.rs" \
+                ! -path "*/target/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
+            echo "   Rust files: $TOTAL_FILES"
+        else
+            # Mixed or unknown: count all code files
+            TOTAL_FILES=$(find "$PROJECT_PATH" -type f \( \
+                -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \
+                -o -name "*.py" -o -name "*.go" -o -name "*.rs" \
+                \) ! -path "*/.git/*" ! -path "*/node_modules/*" ! -path "*/.venv/*" \
+                ! -path "*/vendor/*" ! -path "*/target/*" ! -path "*/dist/*" ! -path "*/build/*" | wc -l | tr -d ' ')
+            echo "   Total code files (mixed): $TOTAL_FILES"
+        fi
+        # Count packages
+        PKG_COUNT=$(find "$PROJECT_PATH" -maxdepth 2 -name "package.json" -o -name "go.mod" -o -name "Cargo.toml" -o -name "pyproject.toml" 2>/dev/null | wc -l | tr -d ' ')
+        echo "   Packages detected: $PKG_COUNT"
+        ;;
+    nodejs)
+        TOTAL_FILES=$(find "$PROJECT_PATH" -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) \
+            ! -path "*/node_modules/*" ! -path "*/.git/*" ! -path "*/dist/*" ! -path "*/build/*" ! -path "*/.next/*" ! -path "*/.nuxt/*" | wc -l | tr -d ' ')
+        echo "   TypeScript/JavaScript files: $TOTAL_FILES"
+        ;;
+    go)
+        TOTAL_FILES=$(find "$PROJECT_PATH" -type f -name "*.go" \
+            ! -path "*/vendor/*" ! -path "*/.git/*" ! -path "*/third-party/*" | wc -l | tr -d ' ')
+        echo "   Go files: $TOTAL_FILES"
+        ;;
+    python)
+        TOTAL_FILES=$(find "$PROJECT_PATH" -type f -name "*.py" \
+            ! -path "*/.venv/*" ! -path "*/venv/*" ! -path "*/__pycache__/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
+        echo "   Python files: $TOTAL_FILES"
+        ;;
+    rust)
+        TOTAL_FILES=$(find "$PROJECT_PATH" -type f -name "*.rs" \
+            ! -path "*/target/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
+        echo "   Rust files: $TOTAL_FILES"
+        ;;
+    ruby)
+        RUBY_FILES=$(find "$PROJECT_PATH" -type f -name "*.rb" \
+            ! -path "*/vendor/*" ! -path "*/.git/*" ! -path "*/tmp/*" | wc -l | tr -d ' ')
+        ERB_FILES=$(find "$PROJECT_PATH" -type f -name "*.erb" \
+            ! -path "*/vendor/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
+        TOTAL_FILES=$((RUBY_FILES + ERB_FILES))
+        echo "   Ruby files: $RUBY_FILES"
+        echo "   ERB templates: $ERB_FILES"
+        ;;
+    php)
+        TOTAL_FILES=$(find "$PROJECT_PATH" -type f -name "*.php" \
+            ! -path "*/vendor/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
+        echo "   PHP files: $TOTAL_FILES"
+        ;;
+    android)
+        KOTLIN_FILES=$(find "$PROJECT_PATH" -type f -name "*.kt" \
+            ! -path "*/build/*" ! -path "*/.gradle/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
+        JAVA_FILES=$(find "$PROJECT_PATH" -type f -name "*.java" \
+            ! -path "*/build/*" ! -path "*/.gradle/*" ! -path "*/.git/*" | wc -l | tr -d ' ')
+        TOTAL_FILES=$((KOTLIN_FILES + JAVA_FILES))
+        echo "   Kotlin files: $KOTLIN_FILES"
+        echo "   Java files: $JAVA_FILES"
+        ;;
+    ios|swift)
+        SWIFT_FILES=$(find "$PROJECT_PATH" -type f -name "*.swift" \
+            ! -path "*/Pods/*" ! -path "*/.build/*" ! -path "*/.git/*" ! -path "*/DerivedData/*" | wc -l | tr -d ' ')
+        OBJC_FILES=$(find "$PROJECT_PATH" -type f \( -name "*.m" -o -name "*.h" \) \
+            ! -path "*/Pods/*" ! -path "*/.git/*" ! -path "*/DerivedData/*" | wc -l | tr -d ' ')
+        TOTAL_FILES=$((SWIFT_FILES + OBJC_FILES))
+        echo "   Swift files: $SWIFT_FILES"
+        echo "   Objective-C files: $OBJC_FILES"
+        ;;
+    *)
+        # Fallback: count all content files
+        TOTAL_FILES=$(find "$PROJECT_PATH" -type f \( \
+            -name "*.md" -o -name "*.py" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \
+            -o -name "*.go" -o -name "*.rs" -o -name "*.php" -o -name "*.swift" -o -name "*.kt" -o -name "*.java" \
+            -o -name "*.sh" -o -name "*.ps1" -o -name "*.yaml" -o -name "*.yml" -o -name "*.json" -o -name "*.toml" \
+            \) ! -path "*/.git/*" ! -path "*/node_modules/*" ! -path "*/.venv/*" \
+            ! -path "*/vendor/*" ! -path "*/target/*" ! -path "*/dist/*" \
+            ! -path "*/build/*" ! -path "*/__pycache__/*" ! -path "*/Pods/*" \
+            ! -path "*/.next/*" ! -path "*/.nuxt/*" ! -path "*/DerivedData/*" | wc -l | tr -d ' ')
+        echo "   Total content files: $TOTAL_FILES"
+        ;;
+esac
+
+echo ""
+
+# Count ALL code files for accurate scale detection
+# This ensures scale is based on total codebase size, not just primary language
+ALL_CODE_FILES=$(find "$PROJECT_PATH" -type f \( \
+    -name "*.py" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \
+    -o -name "*.go" -o -name "*.rs" -o -name "*.rb" -o -name "*.erb" \
+    -o -name "*.php" -o -name "*.swift" -o -name "*.m" -o -name "*.h" \
+    -o -name "*.kt" -o -name "*.java" -o -name "*.cs" -o -name "*.cpp" -o -name "*.c" \
+    \) ! -path "*/.git/*" ! -path "*/node_modules/*" ! -path "*/.venv/*" ! -path "*/venv/*" \
+    ! -path "*/vendor/*" ! -path "*/target/*" ! -path "*/dist/*" ! -path "*/build/*" \
+    ! -path "*/__pycache__/*" ! -path "*/Pods/*" ! -path "*/.next/*" ! -path "*/.nuxt/*" \
+    ! -path "*/DerivedData/*" ! -path "*/.gradle/*" ! -path "*/tmp/*" 2>/dev/null | wc -l | tr -d ' ')
+
+echo "   All code files (for scale): $ALL_CODE_FILES"
+
+# Determine scale based on ALL code files
+# Per Constitution Article VI: Scale-Aware Policy
+# Updated 2025-12-21: Simplified to use file count only (LOC removed for cross-language consistency)
+# Thresholds based on benchmark validation: Firefox iOS (12K), Thunderbird (7K), Cal.com (9K), Prefect (4K), Discourse (21K)
+if [ "$ALL_CODE_FILES" -lt 100 ]; then
+    SCALE="TINY"
+    MAX_SCAN_RATIO="50%"
+    MAX_SCAN_FILES="10"
+    LOW_CONFIDENCE_LIMIT="2"
+    HYPOTHESIS_TARGET="5-8"
+elif [ "$ALL_CODE_FILES" -lt 500 ]; then
+    SCALE="SMALL"
+    MAX_SCAN_RATIO="20%"
+    MAX_SCAN_FILES="15"
+    LOW_CONFIDENCE_LIMIT="3"
+    HYPOTHESIS_TARGET="7-10"
+elif [ "$ALL_CODE_FILES" -lt 2000 ]; then
+    SCALE="MEDIUM"
+    MAX_SCAN_RATIO="10%"
+    MAX_SCAN_FILES="20"
+    LOW_CONFIDENCE_LIMIT="4"
+    HYPOTHESIS_TARGET="10-15"
+elif [ "$ALL_CODE_FILES" -lt 10000 ]; then
+    SCALE="LARGE"
+    MAX_SCAN_RATIO="5%"
+    MAX_SCAN_FILES="30"
+    LOW_CONFIDENCE_LIMIT="5"
+    HYPOTHESIS_TARGET="12-18"
+else
+    SCALE="VERY_LARGE"
+    MAX_SCAN_RATIO="3%"
+    MAX_SCAN_FILES="40"
+    LOW_CONFIDENCE_LIMIT="6"
+    HYPOTHESIS_TARGET="15-20"
+fi
+
+# Calculate recommended scan count
+RECOMMENDED_SCAN_COUNT=$((TOTAL_FILES * ${MAX_SCAN_RATIO%\%} / 100))
+if [ "$RECOMMENDED_SCAN_COUNT" -gt "$MAX_SCAN_FILES" ]; then
+    RECOMMENDED_SCAN_COUNT="$MAX_SCAN_FILES"
+fi
+if [ "$RECOMMENDED_SCAN_COUNT" -lt 1 ]; then
+    RECOMMENDED_SCAN_COUNT="1"
+fi
+
+echo "📏 Project Scale: $SCALE"
+echo "   Primary language files: $TOTAL_FILES"
+echo "   All code files: $ALL_CODE_FILES"
+echo ""
+
+echo "🎯 Recommended Scan Strategy (per Constitution Article I & VI):"
+echo "   Max scan ratio: $MAX_SCAN_RATIO (up to $MAX_SCAN_FILES files)"
+echo "   Recommended scan count: ~$RECOMMENDED_SCAN_COUNT files"
+echo "   Hypothesis target: $HYPOTHESIS_TARGET"
+echo "   Low-confidence hypothesis limit: $LOW_CONFIDENCE_LIMIT"
+echo ""
+
+# Branch-Aware Context Detection (spec-kit inspired)
+echo "🌿 Context Detection:"
+
+# Detect current Git branch
+if git rev-parse --git-dir > /dev/null 2>&1; then
+    GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+    GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+
+    if [ -n "$GIT_BRANCH" ]; then
+        echo "   Git branch: $GIT_BRANCH"
+    fi
+
+    # Detect relative position in repo (for monorepo awareness)
+    CURRENT_ABS=$(cd "$PROJECT_PATH" && pwd)
+    if [ -n "$GIT_ROOT" ] && [ "$CURRENT_ABS" != "$GIT_ROOT" ]; then
+        REL_PATH="${CURRENT_ABS#$GIT_ROOT/}"
+        echo "   Relative path: $REL_PATH"
+        CONTEXT_PATH="$REL_PATH"
+    else
+        CONTEXT_PATH=""
+    fi
+else
+    echo "   Git: Not a git repository"
+    GIT_BRANCH=""
+    CONTEXT_PATH=""
+fi
+
+# Detect package context (for monorepo subdirectories)
+PACKAGE_NAME=""
+if [ -f "$PROJECT_PATH/package.json" ]; then
+    PACKAGE_NAME=$(grep -o '"name"[[:space:]]*:[[:space:]]*"[^"]*"' "$PROJECT_PATH/package.json" 2>/dev/null | head -1 | sed 's/.*: *"\([^"]*\)".*/\1/')
+    if [ -n "$PACKAGE_NAME" ]; then
+        echo "   Package name: $PACKAGE_NAME"
+    fi
+elif [ -f "$PROJECT_PATH/Cargo.toml" ]; then
+    PACKAGE_NAME=$(grep -E '^\s*name\s*=' "$PROJECT_PATH/Cargo.toml" 2>/dev/null | head -1 | sed 's/.*= *"\([^"]*\)".*/\1/')
+    if [ -n "$PACKAGE_NAME" ]; then
+        echo "   Crate name: $PACKAGE_NAME"
+    fi
+elif [ -f "$PROJECT_PATH/go.mod" ]; then
+    PACKAGE_NAME=$(grep -E '^module ' "$PROJECT_PATH/go.mod" 2>/dev/null | head -1 | sed 's/module //')
+    if [ -n "$PACKAGE_NAME" ]; then
+        echo "   Module name: $PACKAGE_NAME"
+    fi
+elif [ -f "$PROJECT_PATH/pyproject.toml" ]; then
+    PACKAGE_NAME=$(grep -E '^\s*name\s*=' "$PROJECT_PATH/pyproject.toml" 2>/dev/null | head -1 | sed 's/.*= *"\([^"]*\)".*/\1/')
+    if [ -n "$PACKAGE_NAME" ]; then
+        echo "   Package name: $PACKAGE_NAME"
+    fi
+fi
+
+echo ""
+echo "✅ Detection Complete"
