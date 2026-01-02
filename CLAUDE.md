@@ -32,7 +32,7 @@ AI collaboration guide for SourceAtlas development.
 /atlas.clear     - Clear saved analyses
 ```
 
-All commands support `--save` (persist to `.sourceatlas/`) and `--force` (skip cache).
+All commands auto-save to `.sourceatlas/`. Use `--force` to skip cache and re-analyze.
 
 ## Must Follow
 

@@ -2,7 +2,7 @@
 description: Get project overview - scan <5% of files to achieve 70-80% understanding
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: [path] [--save] [--force] (e.g., "src/api" or ". --save")
+argument-hint: [path] [--force] (e.g., "src/api" or ". --force")
 ---
 
 # SourceAtlas: Project Overview (Stage 0 Fingerprint)
@@ -19,10 +19,9 @@ argument-hint: [path] [--save] [--force] (e.g., "src/api" or ". --save")
 
 **Arguments**: ${ARGUMENTS:-.}
 
-**Save Mode**: Check if `--save` is in arguments. If present:
-- Remove `--save` from path argument
-- After analysis, save YAML to `.sourceatlas/overview.yaml`
-- Create `.sourceatlas/` directory if needed
+**Auto-Save**: 分析完成後自動儲存到 `.sourceatlas/overview.yaml`
+- 建立 `.sourceatlas/` 目錄（如需要）
+- `--save` 參數已棄用，無需指定
 
 **Analysis Target**: Parse from arguments (default: current directory)
 
@@ -525,22 +524,31 @@ Before finalizing output, confirm:
 
 ---
 
-## Save Mode (--save)
+## 自動存儲（默認行為）
 
-If `--save` flag is present in arguments:
+分析完成後，自動執行：
 
-1. **Create directory** (if needed):
+1. **建立目錄**（如需要）:
 ```bash
 mkdir -p .sourceatlas
 ```
 
-2. **Save YAML output** to `.sourceatlas/overview.yaml`
+2. **儲存 YAML 輸出** 到 `.sourceatlas/overview.yaml`
 
-3. **Confirm save**:
+3. **確認儲存**:
 ```
-💾 Saved to .sourceatlas/overview.yaml
+💾 已儲存至 .sourceatlas/overview.yaml
 ```
 
 **File naming for subdirectory analysis**:
 - Root analysis: `.sourceatlas/overview.yaml`
 - Subdirectory (e.g., `src/api`): `.sourceatlas/overview-src-api.yaml`
+
+---
+
+## Deprecated: --save 參數
+
+If `--save` is in arguments:
+- 顯示: `⚠️ --save 已棄用，現在默認存儲`
+- 從 arguments 中移除 `--save`
+- 繼續正常執行（仍會自動存儲）

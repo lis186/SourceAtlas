@@ -2,7 +2,7 @@
 description: Learn design patterns from the current codebase
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--save] [--force] [--brief|--full]
+argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--force] [--brief|--full]
 ---
 
 # SourceAtlas: Pattern Learning Mode
@@ -28,7 +28,7 @@ argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--save] [
 
 **If `--force` is NOT in arguments**, check cache first:
 
-1. Extract pattern name from `$ARGUMENTS` (remove `--save`, `--force`)
+1. Extract pattern name from `$ARGUMENTS` (remove `--force`)
 2. Convert to filename: spaces→`-`, lowercase, remove special characters, **truncate to 50 characters**
    - Example: `"api endpoint"` → `api-endpoint.md`
    - Example: `"very long pattern name that exceeds limit"` → `very-long-pattern-name-that-exceeds-limit.md` (truncated)
@@ -556,15 +556,15 @@ Before finalizing output, confirm:
 
 ---
 
-## Save Mode (--save)
+## 自動存儲（默認行為）
 
-If `--save` is present in `$ARGUMENTS`:
+分析完成後，自動執行：
 
 ### Step 1: Parse pattern name
 
-Extract pattern name from arguments (remove `--save`):
-- `"repository" --save` → pattern name is `repository`
-- `"api endpoint" --save` → pattern name is `api-endpoint`
+Extract pattern name from arguments (remove `--force`):
+- `"repository"` → pattern name is `repository`
+- `"api endpoint"` → pattern name is `api-endpoint`
 
 Convert to filename:
 - Spaces → `-`
@@ -586,8 +586,17 @@ After generating the complete analysis, save the **entire output** (from `🗺�
 
 Add at the very end:
 ```
-💾 Saved to .sourceatlas/patterns/{name}.md
+💾 已儲存至 .sourceatlas/patterns/{name}.md
 ```
+
+---
+
+## Deprecated: --save 參數
+
+If `--save` is in arguments:
+- 顯示: `⚠️ --save 已棄用，現在默認存儲`
+- 從 arguments 中移除 `--save`
+- 繼續正常執行（仍會自動存儲）
 
 ---
 

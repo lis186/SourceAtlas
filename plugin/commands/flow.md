@@ -2,7 +2,7 @@
 description: Extract business logic flow from code, trace execution path from entry point
 model: opus
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: [flow description or entry point, e.g., "user checkout", "from OrderService.create()"] [--save] [--force]
+argument-hint: [flow description or entry point, e.g., "user checkout", "from OrderService.create()"] [--force]
 ---
 
 # SourceAtlas: Flow Analysis
@@ -227,12 +227,21 @@ Add to footer: `✅ Verified: [N] paths, [M] methods`
 
 ---
 
-## Save Mode
+## 自動存儲（默認行為）
 
-If `--save` in arguments:
+分析完成後，自動執行：
 1. `mkdir -p .sourceatlas/flows`
 2. Save to `.sourceatlas/flows/{name}.md`
-3. Append: `💾 Saved to .sourceatlas/flows/{name}.md`
+3. Append: `💾 已儲存至 .sourceatlas/flows/{name}.md`
+
+---
+
+## Deprecated: --save 參數
+
+If `--save` is in arguments:
+- 顯示: `⚠️ --save 已棄用，現在默認存儲`
+- 從 arguments 中移除 `--save`
+- 繼續正常執行（仍會自動存儲）
 
 ---
 
