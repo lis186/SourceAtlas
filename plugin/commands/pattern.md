@@ -556,9 +556,9 @@ Before finalizing output, confirm:
 
 ---
 
-## 自動存儲（默認行為）
+## Auto-Save (Default Behavior)
 
-分析完成後，自動執行：
+After analysis completes, automatically:
 
 ### Step 1: Parse pattern name
 
@@ -586,17 +586,17 @@ After generating the complete analysis, save the **entire output** (from `🗺�
 
 Add at the very end:
 ```
-💾 已儲存至 .sourceatlas/patterns/{name}.md
+💾 Saved to .sourceatlas/patterns/{name}.md
 ```
 
 ---
 
-## Deprecated: --save 參數
+## Deprecated: --save flag
 
 If `--save` is in arguments:
-- 顯示: `⚠️ --save 已棄用，現在默認存儲`
-- 從 arguments 中移除 `--save`
-- 繼續正常執行（仍會自動存儲）
+- Show: `⚠️ --save is deprecated, auto-save is now default`
+- Remove `--save` from arguments
+- Continue normal execution (still auto-saves)
 
 ---
 

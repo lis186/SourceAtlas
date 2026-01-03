@@ -19,9 +19,9 @@ argument-hint: [path] [--force] (e.g., "src/api" or ". --force")
 
 **Arguments**: ${ARGUMENTS:-.}
 
-**Auto-Save**: 分析完成後自動儲存到 `.sourceatlas/overview.yaml`
-- 建立 `.sourceatlas/` 目錄（如需要）
-- `--save` 參數已棄用，無需指定
+**Auto-Save**: Results automatically saved to `.sourceatlas/overview.yaml`
+- Creates `.sourceatlas/` directory if needed
+- `--save` flag is deprecated, no longer needed
 
 **Analysis Target**: Parse from arguments (default: current directory)
 
@@ -524,20 +524,20 @@ Before finalizing output, confirm:
 
 ---
 
-## 自動存儲（默認行為）
+## Auto-Save (Default Behavior)
 
-分析完成後，自動執行：
+After analysis completes, automatically:
 
-1. **建立目錄**（如需要）:
+1. **Create directory** (if needed):
 ```bash
 mkdir -p .sourceatlas
 ```
 
-2. **儲存 YAML 輸出** 到 `.sourceatlas/overview.yaml`
+2. **Save YAML output** to `.sourceatlas/overview.yaml`
 
-3. **確認儲存**:
+3. **Confirm save**:
 ```
-💾 已儲存至 .sourceatlas/overview.yaml
+💾 Saved to .sourceatlas/overview.yaml
 ```
 
 **File naming for subdirectory analysis**:
@@ -546,9 +546,9 @@ mkdir -p .sourceatlas
 
 ---
 
-## Deprecated: --save 參數
+## Deprecated: --save flag
 
 If `--save` is in arguments:
-- 顯示: `⚠️ --save 已棄用，現在默認存儲`
-- 從 arguments 中移除 `--save`
-- 繼續正常執行（仍會自動存儲）
+- Show: `⚠️ --save is deprecated, auto-save is now default`
+- Remove `--save` from arguments
+- Continue normal execution (still auto-saves)
