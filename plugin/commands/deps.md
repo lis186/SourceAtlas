@@ -2,7 +2,7 @@
 description: Analyze dependency usage for library/framework/SDK upgrades
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write, WebFetch, WebSearch, AskUserQuestion
-argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3.12"] [--save] [--force]
+argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3.12"] [--force]
 ---
 
 # SourceAtlas: Dependency Analysis
@@ -25,7 +25,7 @@ argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3
 
 **If `--force` is NOT in arguments**, check cache first:
 
-1. Extract dependency name from `$ARGUMENTS` (remove `--save`, `--force`)
+1. Extract dependency name from `$ARGUMENTS` (remove `--force`)
 2. Convert to filename: spaces→`-`, `→`→`to`, lowercase, remove special chars, **truncate to 50 chars**
    - Example: `"react"` → `react.md`
    - Example: `"iOS 16 → 17"` → `ios-16-to-17.md`
@@ -692,15 +692,15 @@ Before finalizing output, confirm:
 
 ---
 
-## Save Mode (--save)
+## Auto-Save (Default Behavior)
 
-If `--save` is present in `$ARGUMENTS`:
+After analysis completes, automatically:
 
 ### Step 1: Parse library/SDK name
 
-Extract name from arguments (remove `--save`):
-- `"react" --save` → name is `react`
-- `"iOS 16 → 17" --save` → name is `ios-16-to-17`
+Extract name from arguments (remove `--force`):
+- `"react"` → name is `react`
+- `"iOS 16 → 17"` → name is `ios-16-to-17`
 
 Convert to filename:
 - Spaces → `-`
@@ -725,3 +725,12 @@ Add at the very end:
 ```
 💾 Saved to .sourceatlas/deps/{name}.md
 ```
+
+---
+
+## Deprecated: --save flag
+
+If `--save` is in arguments:
+- Show: `⚠️ --save is deprecated, auto-save is now default`
+- Remove `--save` from arguments
+- Continue normal execution (still auto-saves)

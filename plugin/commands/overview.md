@@ -2,7 +2,7 @@
 description: Get project overview - scan <5% of files to achieve 70-80% understanding
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: [path] [--save] [--force] (e.g., "src/api" or ". --save")
+argument-hint: [path] [--force] (e.g., "src/api" or ". --force")
 ---
 
 # SourceAtlas: Project Overview (Stage 0 Fingerprint)
@@ -19,10 +19,9 @@ argument-hint: [path] [--save] [--force] (e.g., "src/api" or ". --save")
 
 **Arguments**: ${ARGUMENTS:-.}
 
-**Save Mode**: Check if `--save` is in arguments. If present:
-- Remove `--save` from path argument
-- After analysis, save YAML to `.sourceatlas/overview.yaml`
-- Create `.sourceatlas/` directory if needed
+**Auto-Save**: Results automatically saved to `.sourceatlas/overview.yaml`
+- Creates `.sourceatlas/` directory if needed
+- `--save` flag is deprecated, no longer needed
 
 **Analysis Target**: Parse from arguments (default: current directory)
 
@@ -525,9 +524,9 @@ Before finalizing output, confirm:
 
 ---
 
-## Save Mode (--save)
+## Auto-Save (Default Behavior)
 
-If `--save` flag is present in arguments:
+After analysis completes, automatically:
 
 1. **Create directory** (if needed):
 ```bash
@@ -544,3 +543,12 @@ mkdir -p .sourceatlas
 **File naming for subdirectory analysis**:
 - Root analysis: `.sourceatlas/overview.yaml`
 - Subdirectory (e.g., `src/api`): `.sourceatlas/overview-src-api.yaml`
+
+---
+
+## Deprecated: --save flag
+
+If `--save` is in arguments:
+- Show: `⚠️ --save is deprecated, auto-save is now default`
+- Remove `--save` from arguments
+- Continue normal execution (still auto-saves)

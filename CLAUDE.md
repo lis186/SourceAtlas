@@ -6,7 +6,7 @@ AI collaboration guide for SourceAtlas development.
 
 **AI-optimized codebase analysis tool** - scan <5% of files to achieve 70-95% understanding using information theory principles.
 
-**Current Version**: v2.11.0 (2026-01-02)
+**Current Version**: v2.12.0 (2026-01-03)
 
 ## Key Files
 
@@ -32,7 +32,7 @@ AI collaboration guide for SourceAtlas development.
 /atlas.clear     - Clear saved analyses
 ```
 
-All commands support `--save` (persist to `.sourceatlas/`) and `--force` (skip cache).
+All commands auto-save to `.sourceatlas/`. Use `--force` to skip cache and re-analyze.
 
 ## Must Follow
 

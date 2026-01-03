@@ -2,7 +2,7 @@
 description: Smart temporal analysis using git history - Hotspots, Coupling, and Recent Contributors
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: (optional) [path or scope, e.g., "src/", "frontend", "last 6 months"] [--save] [--force]
+argument-hint: (optional) [path or scope, e.g., "src/", "frontend", "last 6 months"] [--force]
 ---
 
 # SourceAtlas: Smart Temporal Analysis (Git History)
@@ -599,9 +599,9 @@ Before finalizing output, confirm:
 
 ---
 
-## Save Mode (--save)
+## Auto-Save (Default Behavior)
 
-If `--save` is present in `$ARGUMENTS`:
+After analysis completes, automatically:
 
 ### Step 1: Create directory
 
@@ -619,3 +619,12 @@ Add at the very end:
 ```
 💾 Saved to .sourceatlas/history.md
 ```
+
+---
+
+## Deprecated: --save flag
+
+If `--save` is in arguments:
+- Show: `⚠️ --save is deprecated, auto-save is now default`
+- Remove `--save` from arguments
+- Continue normal execution (still auto-saves)

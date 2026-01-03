@@ -6,6 +6,17 @@
 
 ## 2026-01（當前月份）
 
+### Week 1 (01/03): Default Persistence ⭐⭐⭐⭐
+
+**🎯 v2.12.0 - Default Persistence** (01/03):
+- **核心變更**: 移除 `--save`，所有命令默認自動存儲到 `.sourceatlas/`
+- **影響範圍**: 6 個命令 (overview, pattern, flow, history, impact, deps)
+- **棄用警告**: `--save` 仍可用但顯示 `⚠️ --save is deprecated, auto-save is now default`
+- **靈感來源**: MCP vs Skills 社群討論 - Skills 的核心優勢是「硬碟暫存」
+→ [Proposal](../proposals/default-persistence/README.md)
+
+---
+
 ### Week 1 (01/01): Context 優化與分層架構 ⭐⭐⭐⭐⭐
 
 **🎯 Context 大幅優化** (01/01):

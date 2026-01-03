@@ -986,8 +986,7 @@ cp scripts/atlas/patterns/ios/networking.sh scripts/atlas/patterns/ios/custom-pa
 
 **A**:
 - Output is displayed directly in Claude Code conversation
-- Add `--save` flag to persist results: `/sourceatlas:overview --save`
-- Saved analyses go to `.sourceatlas/` directory
+- **All analyses are automatically saved** to `.sourceatlas/` directory (no `--save` needed)
 - Use `/sourceatlas:list` to view cached analyses
 - Cached analyses are automatically loaded on re-run (add `--force` to re-analyze)
 
