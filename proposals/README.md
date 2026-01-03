@@ -39,7 +39,8 @@ SourceAtlas 未來功能的完整設計文檔。
   - **新增**: `.claude/rules/dev-notes-rules.md`
 
 - **[默認存儲](./default-persistence/README.md)**
-  - **完成日期**: 2026-01-02
+  - **實作為**: Default auto-save (v2.12.0)
+  - **完成日期**: 2026-01-03
   - **成果**: 移除 `--save` 參數，改為默認存儲
   - **來源**: MCP vs Skills 社群討論洞見
   - **變更**: 6 個命令自動存儲到 `.sourceatlas/`
