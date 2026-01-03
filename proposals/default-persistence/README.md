@@ -73,10 +73,10 @@ plugin/commands/
 
 ## 驗收標準
 
-- [ ] 6 個命令默認存儲
-- [ ] `--save` 參數已移除
-- [ ] `--force` 維持不變
-- [ ] 文檔更新
+- [x] 6 個命令默認存儲
+- [x] `--save` 參數顯示棄用警告
+- [x] `--force` 維持不變
+- [x] 文檔更新 (CLAUDE.md, USAGE_GUIDE.md)
 
 ---
 
