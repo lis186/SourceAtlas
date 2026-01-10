@@ -1,4 +1,5 @@
 ---
+name: history
 description: Smart temporal analysis using git history - Hotspots, Coupling, and Recent Contributors
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
@@ -7,7 +8,7 @@ argument-hint: (optional) [path or scope, e.g., "src/", "frontend", "last 6 mont
 
 # SourceAtlas: Smart Temporal Analysis (Git History)
 
-> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md) v1.0
+> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../../ANALYSIS_CONSTITUTION.md) v1.0
 >
 > Key principles enforced:
 > - Article II: Mandatory directory exclusions (git log filtering)

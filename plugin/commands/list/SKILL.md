@@ -1,4 +1,5 @@
 ---
+name: list
 description: List saved SourceAtlas analysis results
 model: haiku
 allowed-tools: Bash

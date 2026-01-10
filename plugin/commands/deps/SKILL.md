@@ -1,4 +1,5 @@
 ---
+name: deps
 description: Analyze dependency usage for library/framework/SDK upgrades
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write, WebFetch, WebSearch, AskUserQuestion
@@ -7,7 +8,7 @@ argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3
 
 # SourceAtlas: Dependency Analysis
 
-> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md) v1.1
+> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../../ANALYSIS_CONSTITUTION.md) v1.1
 >
 > Key principles enforced:
 > - Article IV: Evidence Format Requirements (file:line references)

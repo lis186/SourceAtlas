@@ -1,4 +1,5 @@
 ---
+name: clear
 description: Clear saved SourceAtlas analysis results
 model: haiku
 allowed-tools: Bash, Read

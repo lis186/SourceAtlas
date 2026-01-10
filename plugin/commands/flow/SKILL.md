@@ -1,4 +1,5 @@
 ---
+name: flow
 description: Extract business logic flow from code, trace execution path from entry point
 model: opus
 allowed-tools: Bash, Glob, Grep, Read, Write
