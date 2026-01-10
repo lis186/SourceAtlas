@@ -54,71 +54,173 @@ No need to remember commands — just ask naturally!
 
 ### Method 2: Via OpenSkills (For Cursor, Gemini CLI, Aider, Windsurf)
 
-SourceAtlas also works with non-Claude Code agents via [OpenSkills](https://github.com/numman-ali/openskills):
+SourceAtlas works with non-Claude Code agents via [OpenSkills](https://github.com/numman-ali/openskills).
+
+#### Prerequisites
+
+- **Node.js 18+** installed
+- **An AI coding agent**: Cursor, Gemini CLI, Aider, or Windsurf
+- **A project directory** where you want to use SourceAtlas
+
+#### Quick Start (TL;DR)
 
 ```bash
-# Step 1: Install openskills globally
 npm i -g openskills
-
-# Step 2: In your project directory, install SourceAtlas skills
 cd your-project
 openskills install lis186/SourceAtlas
+touch AGENTS.md && openskills sync -y
+```
 
-# Step 3: Create/update AGENTS.md (your AI agent reads this file)
+Then ask your AI agent: *"Help me understand this codebase"*
+
+#### Step-by-Step Installation
+
+**Step 1: Install OpenSkills CLI**
+
+```bash
+npm i -g openskills
+```
+
+Expected output:
+```
+added 50 packages in 9s
+```
+
+**Step 2: Install SourceAtlas skills in your project**
+
+```bash
+cd your-project
+openskills install lis186/SourceAtlas
+```
+
+Expected output:
+```
+Installing from: lis186/SourceAtlas
+✔ Repository cloned
+Found 14 skill(s)
+
+? Select skills to install (Press <space> to select)
+❯ ◉ overview   - Project architecture overview
+  ◉ pattern    - Learn design patterns from existing code
+  ◉ flow       - Trace code execution and data flow
+  ... (select the 8 SourceAtlas skills)
+
+✅ Installation complete: 8 skill(s) installed
+```
+
+> **Tip**: Select only the 8 skills starting with common names (overview, pattern, flow, history, impact, deps, list, clear). Skip agent skills like "codebase-overview" to avoid duplicates.
+
+**Step 3: Generate AGENTS.md**
+
+```bash
 touch AGENTS.md
-openskills sync
+openskills sync -y
+```
 
-# Step 4: Commit AGENTS.md to share with your team
+Expected output:
+```
+✅ Synced 8 skill(s) to AGENTS.md
+```
+
+**Step 4: Verify installation**
+
+```bash
+openskills list | grep -E "overview|pattern|flow"
+```
+
+You should see:
+```
+  overview    (project)   Get project overview...
+  pattern     (project)   Learn design patterns...
+  flow        (project)   Extract business logic flow...
+```
+
+**Step 5 (Optional): Commit to share with your team**
+
+```bash
 git add AGENTS.md .claude/
 git commit -m "Add SourceAtlas skills for AI agents"
 ```
 
 #### Using with Cursor
 
-After installation, Cursor will automatically detect skills from `AGENTS.md`. Just ask naturally:
+After installation, open Cursor and use the AI Chat (Cmd+L or Ctrl+L). Just ask naturally:
 
-| You Ask in Cursor | Cursor Executes |
-|-------------------|-----------------|
-| "Help me understand this codebase" | `openskills read overview` |
-| "How do I add an API endpoint here?" | `openskills read pattern` |
-| "What files are affected if I change UserService?" | `openskills read impact` |
-| "Trace the login flow" | `openskills read flow` |
-| "Show me the hotspots in this repo" | `openskills read history` |
-| "What's needed to upgrade to React 18?" | `openskills read deps` |
+| You Ask | What Happens |
+|---------|--------------|
+| "Help me understand this codebase" | Runs `openskills read overview` → Project architecture analysis |
+| "How do I add an API endpoint here?" | Runs `openskills read pattern` → Shows existing patterns to follow |
+| "What files are affected if I change UserService?" | Runs `openskills read impact` → Dependency impact analysis |
+| "Trace the login flow" | Runs `openskills read flow` → Execution path visualization |
+| "Show me the hotspots in this repo" | Runs `openskills read history` → Git history analysis |
+| "What's needed to upgrade to React 18?" | Runs `openskills read deps` → Migration checklist |
+
+> **Note**: If Cursor doesn't auto-detect skills, explicitly ask: *"Use `openskills read overview` to analyze this project"*
 
 #### Using with Gemini CLI
 
 ```bash
 gemini
-# Then ask: "Analyze this project's architecture"
-# Gemini will run: openskills read overview
 ```
+
+Then ask:
+```
+> Analyze this project's architecture using the overview skill
+```
+
+Gemini will execute `openskills read overview` and provide analysis.
 
 #### Using with Aider
 
 ```bash
 aider
-# Then ask: "What patterns does this codebase use for API endpoints?"
-# Aider will run: openskills read pattern
 ```
 
-#### Available Skills
+Then ask:
+```
+> What patterns does this codebase use for API endpoints? Use openskills read pattern
+```
 
-| Skill | Description |
-|-------|-------------|
-| `overview` | Project architecture overview (<5% file scan) |
-| `pattern` | Learn design patterns from existing code |
-| `impact` | Analyze change impact with dependency tracing |
-| `flow` | Trace code execution and data flow |
-| `history` | Git history analysis (hotspots, coupling, contributors) |
-| `deps` | Library/framework upgrade analysis |
-| `list` | List cached analysis results |
-| `clear` | Clear cached analysis results |
+#### Available Skills Reference
 
-**Note**: For full functionality, also install helper scripts:
+| Skill | Description | Use When |
+|-------|-------------|----------|
+| `overview` | Project architecture (<5% file scan) | Starting on a new codebase |
+| `pattern` | Learn design patterns | Implementing new features |
+| `impact` | Change impact analysis | Before refactoring |
+| `flow` | Code execution tracing | Understanding business logic |
+| `history` | Git history analysis | Finding hotspots & experts |
+| `deps` | Dependency analysis | Planning upgrades |
+| `list` | List cached results | Checking previous analyses |
+| `clear` | Clear cached results | Forcing fresh analysis |
+
+#### Troubleshooting
+
+**"SKILL.md not found at plugin/commands"**
+
+Use the repo root path (skills are discovered recursively):
 ```bash
-mkdir -p ~/.claude/scripts/atlas
-cp scripts/atlas/*.sh ~/.claude/scripts/atlas/
+openskills install lis186/SourceAtlas
+```
+
+**Skills not appearing in your AI agent**
+
+1. Check AGENTS.md exists and contains `<available_skills>`:
+   ```bash
+   grep "available_skills" AGENTS.md
+   ```
+
+2. Re-sync if needed:
+   ```bash
+   openskills sync -y
+   ```
+
+**"openskills: command not found"**
+
+Ensure global npm bin is in PATH:
+```bash
+npm bin -g  # Shows the path
+export PATH="$PATH:$(npm bin -g)"  # Add to PATH
 ```
 
 ### Method 3: Local Development/Testing
