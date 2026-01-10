@@ -5,6 +5,33 @@ All notable changes to SourceAtlas Plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.12.0] - 2026-01-10
+
+### Added
+- **OpenSkills Cross-Platform Support** - SourceAtlas now works with Cursor, Gemini CLI, Aider, Windsurf ⭐ Major Feature
+  - Commands converted to `{name}/SKILL.md` directory format
+  - Compatible with [OpenSkills](https://github.com/numman-ali/openskills) universal skills loader
+  - Install via: `openskills install lis186/SourceAtlas/plugin/commands`
+- **Detailed Cursor Usage Guide** - Step-by-step instructions for Cursor users in README
+
+### Changed
+- **Command Structure** - All 8 commands now use directory format for OpenSkills compatibility
+  - `overview.md` → `overview/SKILL.md`
+  - `pattern.md` → `pattern/SKILL.md`
+  - (and 6 more commands)
+- **SKILL.md Format** - Added `name:` field to frontmatter for OpenSkills discovery
+- **README.md** - Expanded Method 2 with Cursor, Gemini CLI, Aider examples
+
+### Technical
+- Single source of truth: One SKILL.md serves both Claude Code and OpenSkills
+- Extra Claude Code fields (`model`, `allowed-tools`, `argument-hint`) are ignored by OpenSkills
+- No breaking changes for existing Claude Code users
+
+### Tested
+- Claude Code: All 8 commands verified working
+- OpenSkills: install, list, read, sync all passed
+- AGENTS.md generation: 8 skills correctly listed
+
 ## [2.11.0] - 2026-01-02
 
 ### Added
