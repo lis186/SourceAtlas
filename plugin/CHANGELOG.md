@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **OpenSkills Cross-Platform Support** - SourceAtlas now works with Cursor, Gemini CLI, Aider, Windsurf ⭐ Major Feature
   - Commands converted to `{name}/SKILL.md` directory format
   - Compatible with [OpenSkills](https://github.com/numman-ali/openskills) universal skills loader
-  - Install via: `openskills install lis186/SourceAtlas/plugin/commands`
+  - Install via: `openskills install lis186/SourceAtlas`
 - **Detailed Cursor Usage Guide** - Step-by-step instructions for Cursor users in README
 
 ### Changed

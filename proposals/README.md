@@ -50,7 +50,7 @@ SourceAtlas 未來功能的完整設計文檔。
   - **完成日期**: 2026-01-10
   - **成果**: 8 個 commands 轉換為 `{name}/SKILL.md` 目錄格式
   - **支援**: Claude Code + Cursor + Gemini CLI + Windsurf + Aider
-  - **安裝**: `openskills install lis186/SourceAtlas/plugin/commands`
+  - **安裝**: `openskills install lis186/SourceAtlas`
 
 ### 🔵 待評估
 
