@@ -1,4 +1,5 @@
 ---
+name: pattern
 description: Learn design patterns from the current codebase
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
@@ -7,7 +8,7 @@ argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--force] 
 
 # SourceAtlas: Pattern Learning Mode
 
-> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md) v1.0
+> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../../ANALYSIS_CONSTITUTION.md) v1.0
 >
 > Key principles enforced:
 > - Article I: High-entropy priority (scan 2-3 best examples, not all)

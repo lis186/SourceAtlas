@@ -1,13 +1,14 @@
 ---
+name: overview
 description: Get project overview - scan <5% of files to achieve 70-80% understanding
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: [path] [--force] (e.g., "src/api" or ". --force")
+argument-hint: "[path] [--force] (e.g., 'src/api' or '. --force')"
 ---
 
 # SourceAtlas: Project Overview (Stage 0 Fingerprint)
 
-> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md) v1.0
+> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../../ANALYSIS_CONSTITUTION.md) v1.0
 >
 > Key principles enforced:
 > - Article I: High-entropy priority, scan ratio limits

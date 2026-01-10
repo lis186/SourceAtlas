@@ -1,0 +1,6 @@
+# Test artifacts
+.claude/
+AGENTS.md
+
+# OS files
+.DS_Store

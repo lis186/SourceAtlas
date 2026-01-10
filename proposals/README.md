@@ -45,6 +45,17 @@ SourceAtlas 未來功能的完整設計文檔。
   - **來源**: MCP vs Skills 社群討論洞見
   - **變更**: 6 個命令自動存儲到 `.sourceatlas/`
 
+- **[openskills 跨平台分發](./openskills-distribution/README.md)**
+  - **實作為**: OpenSkills 相容格式 (v2.12.0)
+  - **完成日期**: 2026-01-10
+  - **成果**: 8 個 commands 轉換為 `{name}/SKILL.md` 目錄格式
+  - **支援**: Claude Code + Cursor + Gemini CLI + Windsurf + Aider
+  - **安裝**: `openskills install lis186/SourceAtlas/plugin/commands`
+
+### 🔵 待評估
+
+（目前無）
+
 ### 🟢 已批准
 
 （目前無）
