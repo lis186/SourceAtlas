@@ -1,7 +1,7 @@
 # Proposal: openskills 跨平台分發
 
-**Status**: 🔵 待評估
-**Version**: 1.0
+**Status**: 🟢 已驗證（POC 通過）
+**Version**: 1.1
 **Author**: Claude & Justin
 **Created**: 2026-01-10
 
@@ -67,6 +67,67 @@ description: Get project overview - scan <5% of files to achieve 70-80% understa
 
 ---
 
+## POC 驗證結果（2026-01-10）
+
+### 測試環境
+
+```
+poc/
+├── AGENTS.md                         # openskills sync 生成
+├── .claude/skills/
+│   └── atlas-overview/
+│       └── SKILL.md                  # 統一格式 POC
+└── openskills-test/
+    └── atlas-overview/
+        └── SKILL.md                  # 原始測試檔
+```
+
+### 測試結果
+
+| 平台 | 測試項目 | 結果 |
+|------|----------|------|
+| **openskills** | `openskills list` | ✅ 正確識別 skill |
+| **openskills** | `openskills read atlas-overview` | ✅ 完整輸出 prompt |
+| **openskills** | `openskills sync` | ✅ 正確生成 AGENTS.md |
+| **Gemini CLI** | 讀取 AGENTS.md + 呼叫 skill | ✅ 正常運作 |
+| **Claude Code** | 識別 `.claude/skills/` 中的 skill | ✅ 正常運作 |
+
+### 關鍵發現
+
+1. **額外 YAML 欄位相容**
+   - SKILL.md 可同時包含 `name`, `description`（openskills 必要）和 `model`, `allowed-tools`, `argument-hint`（Claude Code 專用）
+   - 兩個系統都能正確解析，互不干擾
+
+2. **統一格式可行**
+   ```yaml
+   ---
+   name: atlas-overview
+   description: Get project overview...
+   model: sonnet                    # Claude Code 專用，openskills 忽略
+   allowed-tools: Bash, Glob...     # Claude Code 專用，openskills 忽略
+   argument-hint: "[path]"          # Claude Code 專用，openskills 忽略
+   ---
+   ```
+
+3. **分發流程驗證**
+   ```bash
+   # 使用者安裝
+   openskills install lis186/sourceatlas-skills
+   openskills sync
+
+   # 任何 agent 都可使用
+   openskills read atlas-overview
+   ```
+
+### POC 結論
+
+**策略 B（統一格式）可行**，風險已排除：
+- ✅ Claude Code 支援目錄格式 SKILL.md
+- ✅ 額外 frontmatter 欄位不影響解析
+- ✅ openskills 能正確讀取和分發
+
+---
+
 ## 需修改的檔案
 
 ### Phase 1: 格式轉換
@@ -99,22 +160,19 @@ plugin/commands/
 
 ## 驗證清單
 
-### Claude Code 相容性
+### POC 階段（已完成）
 
-- [ ] 轉換後 `/atlas.overview` 仍正常運作
-- [ ] 轉換後 `/atlas.pattern` 仍正常運作
-- [ ] 其他 4 個命令驗證
+- [x] SKILL.md 格式相容性測試
+- [x] openskills list/read/sync 測試
+- [x] Gemini CLI 測試
+- [x] Claude Code 測試
 
-### openskills 相容性
+### 實作階段（待執行）
 
-- [ ] `openskills install` 成功
-- [ ] `openskills read atlas.overview` 正確輸出 prompt
-- [ ] `openskills sync` 正確更新 AGENTS.md
-
-### 跨平台測試
-
-- [ ] Cursor 測試（如有環境）
-- [ ] Gemini CLI 測試（如有環境）
+- [ ] 轉換 6 個 commands 為 SKILL.md 格式
+- [ ] 驗證 Claude Code `/atlas.*` 命令仍正常
+- [ ] 建立 GitHub skills repo 或分支
+- [ ] 撰寫安裝文檔
 
 ---
 
@@ -131,11 +189,13 @@ plugin/commands/
 
 ## 風險評估
 
-| 風險 | 機率 | 影響 | 緩解 |
+| 風險 | 機率 | 影響 | 狀態 |
 |------|------|------|------|
-| Claude Code 不支援目錄格式 | 低 | 高 | 先測試一個命令 |
-| YAML frontmatter 影響 prompt 品質 | 低 | 中 | LLM 會忽略 metadata |
-| openskills 格式不相容 | 低 | 中 | 已分析 openskills 原始碼，格式相容 |
+| Claude Code 不支援目錄格式 | ~~低~~ | ~~高~~ | ✅ POC 已排除 |
+| YAML frontmatter 影響 prompt 品質 | ~~低~~ | ~~中~~ | ✅ POC 已排除 |
+| openskills 格式不相容 | ~~低~~ | ~~中~~ | ✅ POC 已排除 |
+
+**所有技術風險已透過 POC 驗證排除。**
 
 ---
 

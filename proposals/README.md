@@ -45,13 +45,18 @@ SourceAtlas 未來功能的完整設計文檔。
   - **來源**: MCP vs Skills 社群討論洞見
   - **變更**: 6 個命令自動存儲到 `.sourceatlas/`
 
-### 🔵 待評估
+### 🟢 已驗證（POC 通過）
 
 - **[openskills 跨平台分發](./openskills-distribution/README.md)**
   - **目標**: 透過 openskills 將 SourceAtlas 分發給非 Claude Code 使用者
   - **策略**: 統一 SKILL.md 格式，Claude Code 和其他 agents 共用
   - **受益者**: Cursor, Gemini CLI, Windsurf, Aider 使用者
-  - **風險**: 低（格式已驗證相容）
+  - **POC 結果**: ✅ openskills + Gemini CLI + Claude Code 全部通過
+  - **下一步**: 實作 6 個 commands 轉換
+
+### 🔵 待評估
+
+（目前無）
 
 ### 🟢 已批准
 
