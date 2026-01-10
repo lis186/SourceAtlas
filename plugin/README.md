@@ -52,23 +52,68 @@ No need to remember commands — just ask naturally!
 
 > ⚠️ **Known Issue**: If you install with `--scope project` in one repo, you may get "already installed" errors in other repos. This is a [Claude Code bug](https://github.com/anthropics/claude-code/issues/14202). **Workaround**: Use default user scope (no `--scope` flag).
 
-### Method 2: Via OpenSkills (For Cursor, Gemini CLI, Aider)
+### Method 2: Via OpenSkills (For Cursor, Gemini CLI, Aider, Windsurf)
 
 SourceAtlas also works with non-Claude Code agents via [OpenSkills](https://github.com/numman-ali/openskills):
 
 ```bash
-# Step 1: Install openskills
+# Step 1: Install openskills globally
 npm i -g openskills
 
-# Step 2: Install SourceAtlas skills
+# Step 2: In your project directory, install SourceAtlas skills
+cd your-project
 openskills install lis186/SourceAtlas/plugin/commands
 
-# Step 3: Generate AGENTS.md for your agent
+# Step 3: Create/update AGENTS.md (your AI agent reads this file)
+touch AGENTS.md
 openskills sync
 
-# Step 4: Use with your agent (Gemini CLI example)
-gemini  # Skills available via openskills read <skill-name>
+# Step 4: Commit AGENTS.md to share with your team
+git add AGENTS.md .claude/
+git commit -m "Add SourceAtlas skills for AI agents"
 ```
+
+#### Using with Cursor
+
+After installation, Cursor will automatically detect skills from `AGENTS.md`. Just ask naturally:
+
+| You Ask in Cursor | Cursor Executes |
+|-------------------|-----------------|
+| "Help me understand this codebase" | `openskills read overview` |
+| "How do I add an API endpoint here?" | `openskills read pattern` |
+| "What files are affected if I change UserService?" | `openskills read impact` |
+| "Trace the login flow" | `openskills read flow` |
+| "Show me the hotspots in this repo" | `openskills read history` |
+| "What's needed to upgrade to React 18?" | `openskills read deps` |
+
+#### Using with Gemini CLI
+
+```bash
+gemini
+# Then ask: "Analyze this project's architecture"
+# Gemini will run: openskills read overview
+```
+
+#### Using with Aider
+
+```bash
+aider
+# Then ask: "What patterns does this codebase use for API endpoints?"
+# Aider will run: openskills read pattern
+```
+
+#### Available Skills
+
+| Skill | Description |
+|-------|-------------|
+| `overview` | Project architecture overview (<5% file scan) |
+| `pattern` | Learn design patterns from existing code |
+| `impact` | Analyze change impact with dependency tracing |
+| `flow` | Trace code execution and data flow |
+| `history` | Git history analysis (hotspots, coupling, contributors) |
+| `deps` | Library/framework upgrade analysis |
+| `list` | List cached analysis results |
+| `clear` | Clear cached analysis results |
 
 **Note**: For full functionality, also install helper scripts:
 ```bash
