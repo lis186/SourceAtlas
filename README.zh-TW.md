@@ -6,7 +6,7 @@
 
 一組 [Claude Code](https://claude.ai/code) slash commands，幫助你快速理解任何 codebase。
 
-[![Version](https://img.shields.io/badge/version-v2.11.0-blue)](https://github.com/lis186/SourceAtlas/releases)
+[![Version](https://img.shields.io/badge/version-v2.12.0-blue)](https://github.com/lis186/SourceAtlas/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 ![Command Menu](./docs/images/atlas-command-menu.png)
@@ -170,6 +170,46 @@ claude --plugin-dir ./SourceAtlas/plugin
 ```
 
 > ⚠️ **已知問題**：若使用 `--scope project` 安裝後，在其他 repo 可能會遇到 "already installed" 錯誤。這是 [Claude Code 的 bug](https://github.com/anthropics/claude-code/issues/14202)。**解法**：使用預設的 user scope（不加 `--scope` 參數）。
+
+**方法 C：透過 OpenSkills（給 Cursor、Gemini CLI、Aider 使用者）**
+
+SourceAtlas 也支援非 Claude Code 的 AI agents，透過 [OpenSkills](https://github.com/numman-ali/openskills)。
+
+**前置條件**：Node.js 18+
+
+**快速安裝**：
+```bash
+npm i -g openskills
+cd your-project
+openskills install lis186/SourceAtlas
+touch AGENTS.md && openskills sync -y
+```
+
+**在 Cursor 中使用**：
+
+安裝後，在 Cursor 中開啟 AI Chat (Cmd+L)，直接用自然語言問：
+
+| 你問 | 效果 |
+|------|------|
+| "幫我了解這個專案的架構" | 執行 `openskills read overview` → 專案架構分析 |
+| "這個專案怎麼寫 API endpoint?" | 執行 `openskills read pattern` → 顯示現有慣例 |
+| "改 UserService 會影響什麼？" | 執行 `openskills read impact` → 依賴影響分析 |
+| "登入流程怎麼運作？" | 執行 `openskills read flow` → 執行路徑視覺化 |
+
+> **提示**：如果 Cursor 沒有自動觸發，可以明確說：*「用 `openskills read overview` 分析這個專案」*
+
+**驗證安裝**：
+```bash
+openskills list | grep overview
+# 應該看到：overview    (project)   Get project overview...
+```
+
+**疑難排解**：
+
+- **"SKILL.md not found"** → 使用 `openskills install lis186/SourceAtlas`（repo 根目錄路徑）
+- **Skills 沒出現** → 執行 `openskills sync -y` 重新生成 AGENTS.md
+
+詳細說明請參考 [plugin/README.md](./plugin/README.md#method-2-via-openskills-for-cursor-gemini-cli-aider-windsurf)。
 
 ### 第一次使用
 
