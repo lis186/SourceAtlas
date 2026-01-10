@@ -62,7 +62,7 @@ npm i -g openskills
 
 # Step 2: In your project directory, install SourceAtlas skills
 cd your-project
-openskills install lis186/SourceAtlas/plugin/commands
+openskills install lis186/SourceAtlas
 
 # Step 3: Create/update AGENTS.md (your AI agent reads this file)
 touch AGENTS.md
