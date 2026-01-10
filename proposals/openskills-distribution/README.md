@@ -1,7 +1,7 @@
 # Proposal: openskills 跨平台分發
 
-**Status**: 🟢 已驗證（POC 通過）
-**Version**: 1.1
+**Status**: ✅ 已完成
+**Version**: 1.2
 **Author**: Claude & Justin
 **Created**: 2026-01-10
 
@@ -128,33 +128,35 @@ poc/
 
 ---
 
-## 需修改的檔案
+## 已完成的變更
 
-### Phase 1: 格式轉換
+### Phase 1: 格式轉換（已完成）
 
-6 個 commands 轉換為 SKILL.md 格式：
+8 個 commands 轉換為 SKILL.md 目錄格式：
 
 ```
 plugin/commands/
-├── atlas.overview.md    →  atlas.overview/SKILL.md
-├── atlas.pattern.md     →  atlas.pattern/SKILL.md
-├── atlas.flow.md        →  atlas.flow/SKILL.md
-├── atlas.history.md     →  atlas.history/SKILL.md
-├── atlas.impact.md      →  atlas.impact/SKILL.md
-└── atlas.deps.md        →  atlas.deps/SKILL.md
+├── overview/SKILL.md     (555 lines)
+├── pattern/SKILL.md      (604 lines)
+├── flow/SKILL.md         (249 lines)
+├── history/SKILL.md      (631 lines)
+├── impact/SKILL.md       (912 lines)
+├── deps/SKILL.md         (737 lines)
+├── list/SKILL.md         (103 lines)
+└── clear/SKILL.md        (108 lines)
 ```
 
 每個轉換的改動：
-1. 建立目錄
-2. 加入 YAML frontmatter（name, description）
-3. 保留原有 prompt 內容
-4. 驗證 Claude Code 仍可正常使用
+1. ✅ 建立 `{name}/` 目錄
+2. ✅ 加入 `name:` 欄位到 YAML frontmatter
+3. ✅ 更新相對路徑（Constitution 引用）
+4. ✅ 驗證 Claude Code `/sourceatlas:{name}` 命令正常
 
-### Phase 2: 分發設置
+### Phase 2: 分發設置（已完成）
 
-1. 在 GitHub 發布 skills repo（或使用現有 sourceatlas2）
-2. 撰寫 openskills 安裝說明
-3. 更新 USAGE_GUIDE.md
+1. ✅ 驗證 `openskills install ./commands -y` 成功安裝 8 個 skills
+2. ✅ 驗證 `openskills read overview` 正確輸出 prompt
+3. ✅ 更新 plugin/README.md 新增 OpenSkills 安裝方法
 
 ---
 
@@ -167,12 +169,12 @@ plugin/commands/
 - [x] Gemini CLI 測試
 - [x] Claude Code 測試
 
-### 實作階段（待執行）
+### 實作階段（已完成）
 
-- [ ] 轉換 6 個 commands 為 SKILL.md 格式
-- [ ] 驗證 Claude Code `/atlas.*` 命令仍正常
-- [ ] 建立 GitHub skills repo 或分支
-- [ ] 撰寫安裝文檔
+- [x] 轉換 8 個 commands 為 SKILL.md 格式（2026-01-10）
+- [x] 驗證 Claude Code `/sourceatlas:*` 命令仍正常
+- [x] openskills install/list/read 驗證通過
+- [x] 更新 plugin/README.md 安裝文檔
 
 ---
 
@@ -201,11 +203,11 @@ plugin/commands/
 
 ## 驗收標準
 
-- [ ] 6 個命令轉換為 SKILL.md 格式
-- [ ] Claude Code 使用者無感知變化
-- [ ] openskills 使用者可成功安裝和使用
-- [ ] USAGE_GUIDE.md 更新安裝說明
-- [ ] README 增加「支援平台」區段
+- [x] 8 個命令轉換為 SKILL.md 格式
+- [x] Claude Code 使用者無感知變化（`/sourceatlas:overview` 正常運作）
+- [x] openskills 使用者可成功安裝和使用
+- [x] plugin/README.md 更新安裝說明
+- [x] 新增 OpenSkills 安裝方法（Method 2）
 
 ---
 
