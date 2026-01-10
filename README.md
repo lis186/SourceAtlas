@@ -171,6 +171,45 @@ claude --plugin-dir ./SourceAtlas/plugin
 
 > ⚠️ **Known Issue**: If you install with `--scope project` in one repo, you may get "already installed" errors in other repos. This is a [Claude Code bug](https://github.com/anthropics/claude-code/issues/14202). **Workaround**: Use default user scope (no `--scope` flag) or `--scope user`.
 
+**Option C: Via OpenSkills (For Cursor, Gemini CLI, Aider)**
+
+SourceAtlas also works with non-Claude Code AI agents via [OpenSkills](https://github.com/numman-ali/openskills).
+
+**Prerequisites**: Node.js 18+
+
+**Quick Install**:
+```bash
+npm i -g openskills
+cd your-project
+openskills install lis186/SourceAtlas
+touch AGENTS.md && openskills sync -y
+```
+
+**Using with Cursor**:
+
+After installation, open Cursor's AI Chat (Cmd+L) and ask naturally:
+
+| You Ask | What Happens |
+|---------|--------------|
+| "Help me understand this codebase" | Runs `openskills read overview` → Architecture analysis |
+| "How do I add an API endpoint here?" | Runs `openskills read pattern` → Shows existing patterns |
+| "What files are affected if I change UserService?" | Runs `openskills read impact` → Dependency analysis |
+| "Trace the login flow" | Runs `openskills read flow` → Execution path |
+
+> **Tip**: If Cursor doesn't auto-detect skills, explicitly ask: *"Use `openskills read overview` to analyze this project"*
+
+**Verify Installation**:
+```bash
+openskills list | grep overview
+# Should see: overview    (project)   Get project overview...
+```
+
+**Troubleshooting**:
+- **"SKILL.md not found"** → Use `openskills install lis186/SourceAtlas` (repo root path)
+- **Skills not appearing** → Run `openskills sync -y` to regenerate AGENTS.md
+
+See [plugin/README.md](./plugin/README.md#method-2-via-openskills-for-cursor-gemini-cli-aider-windsurf) for detailed instructions.
+
 ### First Use
 
 ```bash
