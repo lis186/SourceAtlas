@@ -322,7 +322,7 @@ Based on analysis findings, dynamically suggest 1-2 most relevant follow-up comm
 
 ```markdown
 ───────────────────────────────
-🗺️ v2.12.0 │ Constitution v1.1
+🗺️ v2.13.0 │ Constitution v1.1
 
 💾 Saved to .sourceatlas/history.md
 ```
@@ -393,7 +393,7 @@ Based on analysis findings, dynamically suggest 1-2 most relevant follow-up comm
 💡 Enter a number (e.g., `1`) or copy the command to execute
 
 ───────────────────────────────
-🗺️ v2.12.0 │ Constitution v1.1
+🗺️ v2.13.0 │ Constitution v1.1
 
 ✅ Verified: 10 hotspot files, 5 contributors, commit counts
 

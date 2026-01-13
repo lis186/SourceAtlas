@@ -345,4 +345,4 @@ SourceAtlas is built with these excellent tools:
 
 **SourceAtlas** — Understand any codebase in minutes, not days.
 
-v2.12.0 | MIT License | Made with Claude Code
+v2.13.0 | MIT License | Made with Claude Code
