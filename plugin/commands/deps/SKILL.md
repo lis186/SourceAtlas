@@ -2,340 +2,122 @@
 name: deps
 description: Analyze dependency usage for library/framework/SDK upgrades
 model: sonnet
-allowed-tools: Bash, Glob, Grep, Read, Write, WebFetch, WebSearch, AskUserQuestion
-argument-hint: [library or SDK name, e.g., "react", "axios", "iOS 18", "Python 3.12"] [--force]
+allowed-tools: Bash, Glob, Grep, Read, Write, WebSearch, WebFetch
+argument-hint: [target, e.g., "react 17 → 18", "iOS 16", "lodash"] [--force]
 ---
 
-# SourceAtlas: Dependency Analysis
+# SourceAtlas: Dependencies
 
-> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../../ANALYSIS_CONSTITUTION.md) v1.1
->
-> Key principles enforced:
-> - Article IV: Evidence Format Requirements (file:line references)
-> - Article V: Output Format (YAML)
+> **Constitution**: [ANALYSIS_CONSTITUTION.md](../../../ANALYSIS_CONSTITUTION.md) v1.1
 
 ## Context
 
-**Arguments**: ${ARGUMENTS}
+**Target:** $ARGUMENTS (library name, version upgrade, or iOS minimum version)
+**Goal:** Analyze dependency usage and provide upgrade guidance
+**Time Limit:** 5-15 minutes
 
-**Goal**: Analyze how a specific library, framework, or SDK is used in the codebase to facilitate upgrade planning.
+## Quick Start
 
----
-
-## Cache Check (Highest Priority)
-
-**If `--force` is NOT in arguments**, check cache first:
-
-1. Extract dependency name from `$ARGUMENTS` (remove `--force`)
-2. Convert to filename: spaces→`-`, `→`→`to`, lowercase, remove special chars, **truncate to 50 chars**
-   - Example: `"react"` → `react.md`
-   - Example: `"iOS 16 → 17"` → `ios-16-to-17.md`
-   - Example: `"Python 3.12"` → `python-3-12.md`
-3. Check cache:
-   ```bash
-   ls -la .sourceatlas/deps/{name}.md 2>/dev/null
-   ```
-
-4. **If cache exists**:
-   - Calculate days since creation
-   - Read cache content with Read tool
-   - Output:
-     ```
-     📁 Loaded from cache: .sourceatlas/deps/{name}.md (N days ago)
-     💡 To re-analyze, add --force
-     ```
-   - **If older than 30 days**, also show:
-     ```
-     ⚠️ Cache is older than 30 days, recommend re-analysis
-     ```
-   - Then output:
-     ```
-     ---
-     [Cache content]
-     ```
-   - **Stop here, do not proceed with analysis**
-
-5. **If cache does not exist**: Continue with analysis below
-
-**If `--force` is in arguments**: Skip cache check, proceed directly to analysis
-
----
+1. **Check cache** (skip if `--force` flag present)
+2. **Detect version** from manifest files (package.json, Podfile, etc.)
+3. **Search for upgrade rules** using WebSearch (if version upgrade)
+4. **Find all usage points** using grep/Glob
+5. **Categorize usage** by API type
+6. **Generate YAML report** following [output-template.md](output-template.md)
+7. **Verify output** using [verification-guide.md](verification-guide.md)
+8. **Auto-save** to `.sourceatlas/deps/`
 
 ## Your Task
 
-### Phase 0: Rule Confirmation
+You are analyzing dependency usage to help users understand:
+1. **Current state**: Which version is installed, where it's used
+2. **Upgrade impact**: What needs to change for version upgrades
+3. **Migration path**: Step-by-step upgrade checklist
+4. **Risk assessment**: How complex is the upgrade
 
-**IMPORTANT**: Before starting inventory, confirm analysis rules. This ensures results meet user needs.
+### Upgrade Types You Handle
 
-#### Step 0.1: Identify Upgrade Type
-
-Based on `${ARGUMENTS}`:
-
-| Input Pattern | Type | Rules to Confirm |
-|---------------|------|------------------|
-| `iOS 17`, `iOS 16 → 17` | **iOS Minimum Version Upgrade** | Removable #available, deprecated APIs, new API opportunities |
-| `iOS SDK 26`, `Xcode 16` | **SDK/Compiler Upgrade** | Compilation warnings, Swift version changes, new syntax |
-| `react 17 → 18`, `pandas 1.x → 2.x` | **Major Version Upgrade** | Breaking changes, deprecated APIs, new patterns |
-| `react`, `pandas` (no version) | **Usage Inventory** | Simply list usage points, no upgrade analysis |
-
-#### Step 0.2: Generate Rules Preview
-
-Output the following YAML for user confirmation:
-
-```yaml
-upgrade_rules_preview:
-  detected_upgrade_type: "[type from step 0.1]"
-  from_version: "[detected current version]"
-  to_version: "[target version from arguments]"
-
-  planned_checks:
-    # === For iOS Minimum Version Upgrade ===
-    removable_availability_checks:
-      description: "Version checks that can be removed after upgrade"
-      patterns:
-        - "#available(iOS [version below target]"
-        - "@available(iOS [version below target]"
-      action: "Scan and list removable code"
-
-    deprecated_apis:
-      description: "APIs deprecated in target version"
-      known_items:
-        # Fill based on target version
-        - api: "[API name]"
-          replacement: "[new API]"
-          source: "[official docs URL]"
-      action: "Scan usage points and flag"
-
-    new_api_opportunities:
-      description: "New APIs available after upgrade"
-      known_items:
-        - api: "[new API]"
-          benefit: "[benefits]"
-          requires: "[minimum version]"
-      action: "Identify code that can be modernized"
-
-    # === For Third-party Library Upgrade ===
-    breaking_changes:
-      description: "Known breaking changes"
-      known_items:
-        - change: "[change description]"
-          affected_api: "[API name]"
-          migration: "[migration approach]"
-      source: "[Changelog/Migration Guide URL]"
-
-    third_party_compatibility:
-      description: "Compatibility of related third-party dependencies"
-      items_to_check:
-        - "[dependency 1]"
-        - "[dependency 2]"
-
-  questions_for_user:
-    - "Are the above rules complete?"
-    - "Are there any project-specific considerations to add?"
-    - "Should I query the latest official documentation?"
-```
-
-#### Step 0.3: User Confirmation
-
-Use `AskUserQuestion` tool to ask user:
-
-```
-questions:
-  - header: "Rule Confirmation"
-    question: "Are the above upgrade rules sufficient?"
-    multiSelect: false
-    options:
-      - label: "Sufficient, start inventory"
-        description: "Use the above rules for analysis"
-      - label: "Help me check latest info"
-        description: "Use WebSearch to query official Release Notes"
-      - label: "I have additions"
-        description: "I will provide additional rules or considerations"
-```
-
-#### Step 0.4: Supplement Rules (If Needed)
-
-If user selects "Help me check latest info":
-- Use `WebSearch` to query "[target] release notes migration guide"
-- Use `WebFetch` to retrieve official documentation content
-- Integrate newly discovered rules into `planned_checks`
-
-If user selects "I have additions":
-- Wait for user input
-- Add supplemental content to `planned_checks.user_provided`
+| Input Pattern | Type | Focus |
+|--------------|------|-------|
+| `iOS 17`, `iOS 16 → 17` | iOS Minimum Version Upgrade | Removable `#available`, deprecated APIs, new opportunities |
+| `iOS SDK 26`, `Xcode 16` | SDK/Compiler Upgrade | Compilation warnings, Swift version, new syntax |
+| `react 17 → 18`, `pandas 1.x → 2.x` | Major Version Upgrade | Breaking changes, deprecated APIs, new patterns |
+| `react`, `pandas` (no version) | Usage Inventory | List usage points only |
 
 ---
 
-### Phase 1: Identify Target Type (30 seconds)
+## Core Workflow
 
-Determine what type of dependency is being analyzed:
+Execute these phases in order. See [workflow.md](workflow.md) for complete details.
 
-| Input Pattern | Type | Analysis Approach |
-|--------------|------|-------------------|
-| `react`, `axios`, `lodash`, `pandas` | **Library** | Search imports/requires |
-| `iOS 18`, `iOS SDK 18`, `UIKit` | **iOS SDK** | Search system framework APIs |
-| `Android API 35`, `Android 15` | **Android SDK** | Search Android API usage |
-| `Python 3.12`, `Node 20` | **Runtime** | Search language features |
-| `SwiftUI`, `Combine`, `Foundation` | **Apple Framework** | Search framework APIs |
+### Phase 0: Rule Confirmation (1-2 minutes)
 
-### Phase 2: Detect Current Version (1-2 minutes)
+**Purpose:** Identify upgrade type and confirm analysis rules with user before proceeding.
 
-**For Libraries**:
-```bash
-# JavaScript/TypeScript
-grep -E "\"${ARGUMENTS}\":" package.json 2>/dev/null
-grep -E "\"${ARGUMENTS}\":" package-lock.json 2>/dev/null | head -5
+**Steps:**
+1. Detect upgrade type from `$ARGUMENTS`
+2. Generate rules preview (what to check, where to search)
+3. Use `AskUserQuestion` to confirm rules
 
-# Python
-grep -i "${ARGUMENTS}" requirements.txt pyproject.toml setup.py 2>/dev/null
+→ See [workflow.md#phase-0](workflow.md#phase-0-rule-confirmation-1-2-minutes)
 
-# iOS (CocoaPods)
-grep -i "${ARGUMENTS}" Podfile Podfile.lock 2>/dev/null
+### Phase 1: Detect Current Version (1 minute)
 
-# iOS (SPM)
-grep -i "${ARGUMENTS}" Package.swift Package.resolved 2>/dev/null
+**Purpose:** Find current dependency version from manifest files.
 
-# Ruby
-grep -i "${ARGUMENTS}" Gemfile Gemfile.lock 2>/dev/null
-```
+**Manifest files by ecosystem:**
+- Node.js: `package.json`, `package-lock.json`
+- iOS: `Podfile`, `Package.swift`
+- Android: `build.gradle`, `build.gradle.kts`
 
-**For SDK/Runtime**:
-```bash
-# iOS SDK
-grep -E "IPHONEOS_DEPLOYMENT_TARGET|sdk" *.xcodeproj/project.pbxproj 2>/dev/null | head -3
+→ See [workflow.md#phase-1](workflow.md#phase-1-detect-current-version-1-minute)
 
-# Android SDK
-grep -E "compileSdk|targetSdk|minSdk" build.gradle* 2>/dev/null
+### Phase 2: Search for Upgrade Guide (2-3 minutes)
 
-# Python version
-cat .python-version pyproject.toml 2>/dev/null | grep -E "python|requires-python"
+**Purpose:** Find official migration guide using WebSearch.
 
-# Node version
-cat .nvmrc .node-version package.json 2>/dev/null | grep -E "node|engines"
-```
+**Search for:**
+1. Official migration guide
+2. Official changelog
+3. Community upgrade guides
+4. GitHub release notes
 
-### Phase 2.5: ast-grep Enhanced Search (Optional, P1 Enhancement)
-
-**When to use**: ast-grep provides more precise usage point search, excluding false positives in comments and strings.
-
-**Use unified script** (`ast-grep-search.sh`):
-
-```bash
-# Set script path (global priority, local fallback)
-AST_SCRIPT=""
-if [ -f ~/.claude/scripts/atlas/ast-grep-search.sh ]; then
-    AST_SCRIPT=~/.claude/scripts/atlas/ast-grep-search.sh
-elif [ -f scripts/atlas/ast-grep-search.sh ]; then
-    AST_SCRIPT=scripts/atlas/ast-grep-search.sh
-fi
-
-# React Hooks usage inventory
-$AST_SCRIPT usage "useEffect" --path .
-$AST_SCRIPT usage "useState" --path .
-
-# Swift async/await inventory
-$AST_SCRIPT async --lang swift --path .
-
-# Kotlin suspend function inventory
-$AST_SCRIPT pattern "suspend" --lang kotlin --path .
-
-# Get match count
-$AST_SCRIPT usage "useEffect" --count
-
-# If ast-grep not installed, get grep fallback command
-$AST_SCRIPT usage "useEffect" --fallback
-```
-
-**Value**: Based on integration testing, ast-grep achieves in dependency inventory:
-- TypeScript useEffect: 44% false positive elimination
-- Swift @available: 0% (grep already sufficiently precise)
-- Kotlin @Composable: 0% (grep already sufficiently precise)
-
-**Best Practices**:
-- For dedicated syntax (@available, @Composable), grep is sufficient
-- For common terms (useEffect, useState, ViewModel), prefer ast-grep
-- Script automatically handles fallback logic
-
----
+→ See [workflow.md#phase-2](workflow.md#phase-2-search-for-upgrade-guide-2-3-minutes)
 
 ### Phase 3: Find All Usage Points (3-5 minutes)
 
-**Execute scans based on Phase 0 confirmed rules**
+**Purpose:** Locate every place the dependency is used.
 
-**For iOS SDK Upgrade** (rule-based):
-```bash
-# Removable version checks
-grep -rn "#available(iOS" --include="*.swift" . | grep -v Pods | grep -v .build
+**Search patterns:**
+- JavaScript/TypeScript: `import` statements, API calls
+- Swift/iOS: `import` statements, `#available` checks
+- Android/Kotlin: `import` statements, API level checks
 
-# Deprecated APIs (based on planned_checks.deprecated_apis)
-# Dynamically generate search patterns
-
-# New API adoption opportunities (based on planned_checks.new_api_opportunities)
-# Search for old APIs that can be replaced
-```
-
-**For JavaScript/TypeScript Libraries**:
-```bash
-# Import statements
-grep -rn "from ['\"]${ARGUMENTS}" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" . | grep -v node_modules | head -50
-
-# Require statements
-grep -rn "require(['\"]${ARGUMENTS}" --include="*.js" --include="*.ts" . | grep -v node_modules | head -50
-
-# Dynamic imports
-grep -rn "import(['\"]${ARGUMENTS}" --include="*.ts" --include="*.tsx" . | grep -v node_modules | head -20
-```
-
-**For Python Libraries**:
-```bash
-# Import statements
-grep -rn "^import ${ARGUMENTS}\|^from ${ARGUMENTS}" --include="*.py" . | grep -v __pycache__ | grep -v .venv | head -50
-```
-
-**For iOS/Swift (System Frameworks)**:
-```bash
-# Import statements
-grep -rn "^import ${ARGUMENTS}\|import ${ARGUMENTS}$" --include="*.swift" . | grep -v Pods | grep -v .build | head -50
-
-# Specific API usage (for common frameworks)
-# UIKit
-grep -rn "UIView\|UIViewController\|UITableView\|UICollectionView" --include="*.swift" . | grep -v Pods | head -30
-
-# SwiftUI
-grep -rn "@State\|@Binding\|@Observable\|@Environment" --include="*.swift" . | grep -v Pods | head -30
-```
-
-**For Android/Kotlin**:
-```bash
-# Import statements
-grep -rn "^import.*${ARGUMENTS}" --include="*.kt" --include="*.java" . | grep -v build | head -50
-```
+→ See [workflow.md#phase-3](workflow.md#phase-3-find-all-usage-points-3-5-minutes)
 
 ### Phase 4: Categorize API Usage (2-3 minutes)
 
-From the usage points found, extract and categorize:
+**Purpose:** Group usage by category and match against upgrade rules.
 
-1. **Count unique APIs** used from the library
-2. **Group by category** (hooks, components, utilities, etc.)
-3. **Note usage frequency** for each API
-4. **Identify specific file:line** for each usage type
-5. **Match against Phase 0 rules** to flag deprecated/removable items
+**Categories:**
+- Hooks (React), Components, Utilities (JavaScript)
+- Frameworks, APIs (iOS/Android)
+- Availability checks (iOS)
+- Deprecated APIs (all platforms)
+
+→ See [workflow.md#phase-4](workflow.md#phase-4-categorize-api-usage-2-3-minutes)
 
 ### Phase 5: Generate Analysis Report
+
+**Purpose:** Output complete YAML analysis following template.
+
+→ See [output-template.md](output-template.md) for complete format
 
 ---
 
 ## Output Format
 
-Generate output with **branded header**, then **YAML format**:
-
-```markdown
-🗺️ SourceAtlas: Dependencies
-───────────────────────────────
-📦 [target] │ [N] APIs found
-```
-
-Then YAML content:
+Your analysis should follow this YAML structure:
 
 ```yaml
 dependency_analysis:
@@ -345,393 +127,168 @@ dependency_analysis:
   constitution_version: "1.1"
 
 version_info:
-  current: "[detected version or 'unknown']"
-  source: "[package.json|Podfile|build.gradle|etc.]"
+  current: "[detected version]"
+  source: "[manifest file]"
   target: "[target version if upgrade]"
 
 rules_applied:
   source: "[built-in|web_search|user_provided]"
   rule_count: [number]
-  # Reference to Phase 0 confirmed rules
 
-# ============================================
-# SECTION 1: Removable/Modifiable Code (Required for Upgrade)
-# ============================================
+# Required changes for upgrade
 required_changes:
-  removable_availability_checks:
-    description: "Version checks that can be removed after upgrade"
-    total: [number]
-    items:
-      - file: "[path:line]"
-        code: "[#available(...)]"
-        action: "Can be removed"
+  removable_availability_checks: [...]
+  deprecated_api_usages: [...]
+  breaking_change_impacts: [...]
 
-  deprecated_api_usages:
-    description: "Code using deprecated APIs"
-    total: [number]
-    items:
-      - file: "[path:line]"
-        api: "[deprecated API]"
-        replacement: "[new API]"
-        migration_effort: "[low|medium|high]"
-
-  breaking_change_impacts:
-    description: "Code affected by breaking changes"
-    total: [number]
-    items:
-      - file: "[path:line]"
-        change: "[breaking change description]"
-        action: "[required action]"
-
-# ============================================
-# SECTION 2: Modernization Opportunities (Optional for Upgrade)
-# ============================================
+# Optional modernization opportunities
 modernization_opportunities:
-  description: "New APIs/Patterns available after upgrade"
-  items:
-    - category: "[e.g., Observation Framework]"
-      current_pattern: "[e.g., ObservableObject + @Published]"
-      new_pattern: "[e.g., @Observable]"
-      affected_files: [number]
-      benefit: "[e.g., Reduce boilerplate code]"
-      effort: "[low|medium|high]"
-      files:
-        - "[path:line]"
+  items: [...]
 
-# ============================================
-# SECTION 3: Complete Usage Point Inventory
-# ============================================
-usage_summary:
-  total_imports: [number]
-  unique_files: [number]
-  unique_apis: [number]
+# Complete usage inventory
+usage_inventory:
+  total_files: [number]
+  total_usage_points: [number]
+  by_category: [...]
 
-api_usage:
-  # Group by category
-  hooks:
-    - api: "[function name]"
-      count: [number]
-      files:
-        - "[path:line]"
+# Step-by-step migration guide
+migration_checklist:
+  estimated_effort: "[low|medium|high]"
+  recommended_approach: "[description]"
+  steps: [...]
 
-  components:
-    - api: "[component name]"
-      count: [number]
-      status: "[ok|deprecated|needs_update]"
-      files:
-        - "[path:line]"
-
-# ============================================
-# SECTION 4: Third-party Dependencies
-# ============================================
-third_party_dependencies:
-  config_file: "[Podfile|package.json|etc.]"
-  items:
-    - name: "[dependency]"
-      current_version: "[version]"
-      compatible: "[yes|needs_update|unknown]"
-      note: "[any notes]"
-
-# ============================================
-# SECTION 5: Summary and Checklist
-# ============================================
-summary:
-  key_findings:
-    - "[finding 1]"
-    - "[finding 2]"
-
-  estimated_scope: "[small|medium|large]"
-
-  migration_checklist:
-    phase1_required:
-      - "[ ] [required change 1]"
-      - "[ ] [required change 2]"
-    phase2_recommended:
-      - "[ ] [modernization 1]"
-      - "[ ] [modernization 2]"
-    phase3_verification:
-      - "[ ] Compile test"
-      - "[ ] Run tests"
-
-## Next Steps
-
-Recommended to cross-reference with official documentation:
-- [Official documentation URL]
-
-───────────────────────────────
-🗺️ v2.11.0 │ Constitution v1.1
+# Risk evaluation
+risk_assessment:
+  overall_risk: "[🟢 low|🟡 medium|🔴 high]"
+  factors: [...]
+  recommendations: [...]
 ```
 
-For further analysis:
-- `/sourceatlas:impact "[specific API]"` - Assess impact scope of specific API
-- `/sourceatlas:pattern "[new pattern]"` - Learn new version patterns
-```
+→ See [output-template.md](output-template.md) for complete specification and examples
 
 ---
 
 ## Critical Rules
 
-1. **Phase 0 must be executed**: Unless user only wants "pure inventory", must confirm rules first
-2. **Focus on USED APIs**: List what the project actually uses, not all available APIs
-3. **Provide file:line references**: Every usage must have specific location (Constitution Article IV)
-4. **No guessing breaking changes**: Only analyze usage points, use confirmed rules to flag
-5. **Exclude dependencies**: Skip node_modules/, Pods/, .venv/, vendor/, build/
-6. **Reasonable limits**: Cap at 50 usages per category to avoid overwhelming output
-7. **Categorize meaningfully**: Group APIs by function (hooks, components, utilities)
+### 1. Rule Confirmation Required
+- **Always use `AskUserQuestion`** in Phase 0 to confirm rules before full analysis
+- Show user what you plan to check (availability patterns, deprecated APIs, etc.)
+- Get explicit approval before proceeding to Phase 1-5
 
----
+### 2. Version Detection Must Be Accurate
+- **Always grep manifest files** for current version
+- Use lock files (package-lock.json, Podfile.lock) for actual installed version
+- Never guess or estimate version numbers
 
-## Built-in Rules Library
+### 3. Evidence-Based Analysis Only
+- **Every usage point must have `file:line` reference**
+- All counts must be verifiable via grep
+- No assumptions about code you haven't seen
 
-### iOS Version Upgrade Rules
-
-#### iOS 16 → 17
+### 4. Upgrade Guide Source Transparency
 ```yaml
-removable_checks:
-  - "#available(iOS 16"
-  - "#available(iOS 15"
-  - "#available(iOS 14"
-  - "#available(iOS 13"
-
-deprecated_apis:
-  - api: "onChange(of:) { newValue in }"
-    replacement: "onChange(of:) { oldValue, newValue in }"
-    reason: "iOS 17 new signature"
-  - api: "@ObservedObject"
-    replacement: "@Observable (macro)"
-    reason: "Observation framework"
-  - api: "presentationMode"
-    replacement: "@Environment(\\.dismiss)"
-    reason: "Simplified API"
-
-new_features:
-  - feature: "@Observable"
-    min_version: "iOS 17.0"
-  - feature: "Interactive Widgets"
-    min_version: "iOS 17.0"
-  - feature: "TipKit"
-    min_version: "iOS 17.0"
-  - feature: "SwiftData"
-    min_version: "iOS 17.0"
+rules_applied:
+  source: "web_search"  # Or "built-in" if no guide found
+  rule_count: 12
 ```
+- Always disclose where upgrade rules came from
+- Prefer official docs over community guides
+- Note limitations if no official guide found
 
-#### iOS 17 → 18
-```yaml
-# To be supplemented after iOS 18 official release
-```
+### 5. Verification Required Before Output
+- Execute [verification-guide.md](verification-guide.md) after generating analysis
+- Verify version numbers, file paths, usage counts
+- Correct any discrepancies before final output
 
-### React Version Upgrade Rules
-
-#### React 17 → 18
-```yaml
-breaking_changes:
-  - api: "ReactDOM.render"
-    replacement: "createRoot().render()"
-    reason: "Concurrent rendering"
-  - api: "ReactDOM.hydrate"
-    replacement: "hydrateRoot()"
-    reason: "Concurrent rendering"
-
-new_features:
-  - feature: "useId"
-  - feature: "useDeferredValue"
-  - feature: "useTransition"
-  - feature: "Automatic batching"
-```
-
-### Python Version Upgrade Rules
-
-#### Python 3.11 → 3.12
-```yaml
-new_features:
-  - feature: "f-string improvements"
-  - feature: "TypedDict improvements"
-  - feature: "Per-interpreter GIL"
-```
+### 6. Constitutional Compliance
+Follow [ANALYSIS_CONSTITUTION.md](../../../ANALYSIS_CONSTITUTION.md):
+- **Article I**: Evidence-based (all claims reference actual code)
+- **Article III**: Verification (run V1-V4 checks)
+- **Article V**: Transparency (show cache age, source, limitations)
+- **Article VII**: User Empowerment (actionable checklist, effort estimates)
 
 ---
 
-## Tips for Efficient Analysis
+## Self-Verification
 
-- **Start with imports**: Import statements reveal the entry points
-- **Sample when large**: If >100 usages, show top 20 with "and N more..."
-- **Look for patterns**: Same API used similarly across files = lower risk
-- **Flag outliers**: Unusual usage patterns may indicate higher upgrade risk
-- **Note indirect usage**: Re-exports from internal modules count too
-- **Match against rules**: Use Phase 0 rules to categorize findings
-
----
-
-## Examples
-
-### Example 1: iOS Minimum Version Upgrade
-```bash
-/sourceatlas:deps "iOS 16 → 17"
-```
-
-Phase 0 outputs rules preview → User confirms → Scan #available, deprecated APIs → Generate migration checklist
-
-### Example 2: Library Major Upgrade
-```bash
-/sourceatlas:deps "react 17 → 18"
-```
-
-Phase 0 queries React 18 migration guide → Confirm rules → Scan ReactDOM.render etc. → Generate report
-
-### Example 3: Pure Usage Inventory
-```bash
-/sourceatlas:deps "pandas"
-```
-
-Skip Phase 0 rule confirmation → Directly scan usage points → Output API usage statistics
-
----
-
-## Handoffs
-
-Based on analysis results, may suggest:
-
-| Finding | Suggested Command |
-|---------|-------------------|
-| High-risk APIs concentrated in specific files | `/sourceatlas:impact "[file]"` |
-| Need to learn new version patterns | `/sourceatlas:pattern "[new pattern]"` |
-| Want to understand module's historical changes | `/sourceatlas:history "[module]"` |
-
----
-
-## Self-Verification Phase (REQUIRED)
-
-> **Purpose**: Prevent hallucinated dependency names, incorrect version numbers, and fictional API changes from appearing in output.
-> This phase runs AFTER output generation, BEFORE save.
+After generating your analysis, execute verification steps:
 
 ### Step V1: Extract Verifiable Claims
+Parse output for all quantifiable claims (counts, versions, file paths)
 
-After generating the dependency analysis output, extract all verifiable claims:
+### Step V2: Parallel Verification
+- Verify version detection
+- Verify API usage counts (±5% tolerance)
+- Verify file paths (sample 3-5 files)
+- Verify upgrade guide quality
 
-**Claim Types to Extract:**
+### Step V3: Handle Results
+- ✅ All checks pass → Proceed to output
+- ⚠️ Minor issues (1-2 checks) → Correct and note
+- ❌ Major issues (3+ checks) → Re-execute analysis
 
-| Type | Pattern | Verification Method |
-|------|---------|---------------------|
-| **Dependency Name** | Package names in inventory | Check package manifest |
-| **Current Version** | "react@18.2.0" | `grep "react" package.json` |
-| **File Path** | Usage location files | `test -f path` |
-| **Usage Count** | "used in 45 files" | `grep -r "import" \| wc -l` |
-| **Config File** | "package.json", "Podfile" | `test -f config_file` |
-
-### Step V2: Parallel Verification Execution
-
-Run **ALL** verification checks in parallel:
-
-```bash
-# Execute all verifications in a single parallel block
-
-# 1. Verify dependency exists in manifest
-if ! grep -q '"react"' package.json 2>/dev/null; then
-    echo "❌ DEPENDENCY_NOT_FOUND: react in package.json"
-fi
-
-# 2. Verify version matches
-claimed_version="18.2.0"
-actual_version=$(grep -o '"react": "[^"]*"' package.json 2>/dev/null | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+')
-if [ "$actual_version" != "$claimed_version" ]; then
-    echo "⚠️ VERSION_MISMATCH: claimed $claimed_version, actual $actual_version"
-fi
-
-# 3. Verify usage file paths
-for path in "src/components/App.tsx" "src/hooks/useAuth.ts"; do
-    if [ ! -f "$path" ]; then
-        echo "❌ FILE_NOT_FOUND: $path"
-    fi
-done
-
-# 4. Verify package manifest exists
-for manifest in "package.json" "Podfile" "build.gradle"; do
-    if [ -f "$manifest" ]; then
-        echo "✅ MANIFEST_FOUND: $manifest"
-        break
-    fi
-done
+### Step V4: Add Verification Summary
+```yaml
+verification_summary:
+  checks_performed: [...]
+  confidence_level: "high"  # high|medium|low
+  notes: [...]
 ```
 
-### Step V3: Handle Verification Results
-
-**If ALL checks pass:**
-- Continue to output/save
-
-**If ANY check fails:**
-1. **DO NOT output the uncorrected analysis**
-2. Fix each failed claim:
-   - `DEPENDENCY_NOT_FOUND` → Remove from inventory or find correct manifest
-   - `VERSION_MISMATCH` → Update with actual version from manifest
-   - `FILE_NOT_FOUND` → Search for correct usage locations
-3. Re-generate affected sections with corrected information
-4. Re-run verification on corrected sections
-
-### Step V4: Verification Summary (Append to Output)
-
-Add to footer (before `🗺️ v2.11.0 │ Constitution v1.1`):
-
-**If all verifications passed:**
-```
-✅ Verified: [N] dependencies, [M] versions, [K] usage files
-```
-
-**If corrections were made:**
-```
-🔧 Self-corrected: [list specific corrections made]
-✅ Verified: [N] dependencies, [M] versions, [K] usage files
-```
-
-### Verification Checklist
-
-Before finalizing output, confirm:
-- [ ] All dependencies verified to exist in package manifest
-- [ ] All version numbers match actual manifest entries
-- [ ] Usage file paths verified to exist
-- [ ] Breaking change examples verified in actual API docs (if claimed)
-- [ ] Migration code snippets verified to be syntactically correct
+→ See [verification-guide.md](verification-guide.md) for complete checklist
 
 ---
 
-## Auto-Save (Default Behavior)
+## Advanced
 
-After analysis completes, automatically:
+### Cache Behavior
+- **Default**: Use cache if exists and fresh
+- **Force flag**: Skip cache with `--force`
+- **Cache location**: `.sourceatlas/deps/${SANITIZED_TARGET}.md`
 
-### Step 1: Parse library/SDK name
+→ See [reference.md#cache-behavior](reference.md#cache-behavior)
 
-Extract name from arguments (remove `--force`):
-- `"react"` → name is `react`
-- `"iOS 16 → 17"` → name is `ios-16-to-17`
-
-Convert to filename:
-- Spaces → `-`
-- `→` → `to`
-- Remove special characters
-- Lowercase
-- Example: `"Python 3.12"` → `python-3-12.md`
-
-### Step 2: Create directory
-
-```bash
-mkdir -p .sourceatlas/deps
+### Auto-Save Mechanism
+Complete YAML report auto-saves after verification:
+```
+💾 Saved to .sourceatlas/deps/react-17-18.md
 ```
 
-### Step 3: Save output
+→ See [reference.md#auto-save-behavior](reference.md#auto-save-behavior)
 
-After generating the complete analysis, save the **entire YAML output** to `.sourceatlas/deps/{name}.md`
+### Handoffs to Next Commands
+After analysis, suggest appropriate next steps based on risk level.
 
-### Step 4: Confirm
+→ See [reference.md#handoffs](reference.md#handoffs)
 
-Add at the very end:
-```
-💾 Saved to .sourceatlas/deps/{name}.md
-```
+### Language-Specific Tips
+- JavaScript/TypeScript: Include all variants (.js, .jsx, .ts, .tsx)
+- Swift/iOS: Exclude Pods directory, check `#available` patterns
+- Android/Kotlin: Check compileSdk, minSdk, targetSdk
+
+→ See [reference.md#language-specific-best-practices](reference.md#language-specific-best-practices)
 
 ---
 
-## Deprecated: --save flag
+## Support Files
 
-If `--save` is in arguments:
-- Show: `⚠️ --save is deprecated, auto-save is now default`
-- Remove `--save` from arguments
-- Continue normal execution (still auto-saves)
+Detailed documentation available in:
+
+- **[workflow.md](workflow.md)** - Complete Phase 0-5 execution guide with bash commands and examples
+- **[output-template.md](output-template.md)** - Full YAML structure, field descriptions, and examples
+- **[verification-guide.md](verification-guide.md)** - Self-verification steps V1-V4 with verification scripts
+- **[reference.md](reference.md)** - Cache behavior, auto-save, handoffs, language-specific tips
+
+---
+
+## Output Header
+
+Start your output with:
+
+```markdown
+🗺️ SourceAtlas: Dependencies
+───────────────────────────────
+📦 [target] │ [N] APIs found
+```
+
+Then output complete YAML following [output-template.md](output-template.md).
