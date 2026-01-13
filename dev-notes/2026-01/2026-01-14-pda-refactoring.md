@@ -270,7 +270,7 @@ done
 
 ## 相關文件
 
-- **驗證報告**: [REFACTORING_VALIDATION_REPORT.md](../REFACTORING_VALIDATION_REPORT.md)
+- **驗證報告**: [2026-01-14-skill-pda-validation.md](../2026-01-14-skill-pda-validation.md)
 - **官方指南**: Claude Code Best Practices for Skills
 - **Constitution**: [ANALYSIS_CONSTITUTION.md](../../ANALYSIS_CONSTITUTION.md)
 

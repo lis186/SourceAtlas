@@ -13,7 +13,7 @@
 - **Token 節省**: 3,440 → 1,496 行 (-57%)，~37,500 → ~11,343 tokens (-70%)
 - **檔案結構**: SKILL.md (概覽) + 4 支持檔案 (workflow.md, output-template.md, verification-guide.md, reference.md)
 - **品質指標**: 100% 連結完整性，100% 格式規範，5/5 測試通過
-→ [驗證報告](./REFACTORING_VALIDATION_REPORT.md)
+→ [驗證報告](./2026-01-14-skill-pda-validation.md)
 
 **重構成果詳情**:
 - **impact**: 912 → 195 行 (-79%)
@@ -22,7 +22,7 @@
 - **pattern**: 604 → 363 行 (-40%)
 - **overview**: 555 → 319 行 (-43%)
 - **支持檔案**: 20 個新建，7,992 行（按需載入）
-→ [驗證報告](./REFACTORING_VALIDATION_REPORT.md)
+→ [驗證報告](./2026-01-14-skill-pda-validation.md)
 
 **Progressive Disclosure 優勢**:
 - **可讀性**: 2/5 → 5/5 (+3)
