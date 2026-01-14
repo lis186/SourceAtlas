@@ -223,6 +223,27 @@ npm bin -g  # Shows the path
 export PATH="$PATH:$(npm bin -g)"  # Add to PATH
 ```
 
+#### v2.13.0 Testing Note (Progressive Disclosure Architecture)
+
+**What changed**: Starting from v2.13.0, SKILL.md files are now more concise with detailed steps in separate support files (workflow.md, output-template.md, etc.). This follows Claude Code's Progressive Disclosure Architecture best practice.
+
+**For OpenSkills users**:
+- ✅ Core functionality should work normally - SKILL.md still contains all execution logic
+- ⚠️ If your AI agent cannot access support files, you may notice less detailed error handling instructions
+- 💬 **We need your feedback!** Please test and report issues at: https://github.com/lis186/SourceAtlas/issues
+
+**Quick Test**:
+```bash
+# In your project with SourceAtlas installed:
+cd your-project
+
+# Ask your AI agent:
+"Use openskills read overview to analyze this project"
+
+# Expected: Analysis completes successfully with proper output format
+# If you see issues: Please report with your AI agent name (Cursor/Gemini/Aider/Windsurf)
+```
+
 ### Method 3: Local Development/Testing
 
 ```bash
@@ -590,4 +611,4 @@ Built on SourceAtlas methodology:
 
 ---
 
-**SourceAtlas v2.12.0** - Understanding codebases at the speed of thought 🚀
+**SourceAtlas v2.13.0** - Understanding codebases at the speed of thought 🚀

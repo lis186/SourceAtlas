@@ -19,6 +19,9 @@ examples/*
 # Ideas (內部構想，不公開)
 ideas/
 
+# GitHub issues export
+issues/
+
 # Backup files
 *.backup*
 
