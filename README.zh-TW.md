@@ -6,7 +6,7 @@
 
 一組 [Claude Code](https://claude.ai/code) slash commands，幫助你快速理解任何 codebase。
 
-[![Version](https://img.shields.io/badge/version-v2.12.0-blue)](https://github.com/lis186/SourceAtlas/releases)
+[![Version](https://img.shields.io/badge/version-v2.13.0-blue)](https://github.com/lis186/SourceAtlas/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 ![Command Menu](./docs/images/atlas-command-menu.png)
@@ -346,4 +346,4 @@ SourceAtlas 建立在這些優秀的工具之上：
 
 **SourceAtlas** — 用分鐘而不是天來理解任何 codebase。
 
-v2.11.0 | MIT License | Made with Claude Code
+v2.13.0 | MIT License | Made with Claude Code

@@ -268,6 +268,80 @@ done
 
 ---
 
+## OpenSkills 跨平台考量
+
+### 影響評估（2026-01-14）
+
+**背景**：SourceAtlas 自 v2.12.0 起支援 [OpenSkills](https://github.com/numman-ali/openskills)，可在 Cursor、Gemini CLI、Aider、Windsurf 等非 Claude Code 平台使用。
+
+**潛在影響分析**：
+
+| 面向 | Claude Code | OpenSkills |
+|------|-------------|------------|
+| **檔案訪問** | ✅ 可讀取所有 .md 檔案 | ⚠️ 取決於 AI agent 實作 |
+| **連結解析** | ✅ 自動載入連結檔案 | ⚠️ 可能僅讀取 SKILL.md |
+| **執行邏輯** | ✅ 完整支援 | ✅ SKILL.md 保留核心邏輯 |
+| **輸出格式** | ✅ 完整範本 | ⚠️ 簡化範本在 SKILL.md |
+
+### 風險評估
+
+**高風險場景**（如果 OpenSkills AI agent 無法訪問支援檔案）：
+- 缺少 manual fallback 詳細步驟（在 workflow.md）
+- 缺少完整錯誤處理指引（在 workflow.md）
+- 缺少詳細輸出範本（在output-template.md）
+
+**低風險理由**：
+- ✅ SKILL.md 仍包含核心執行步驟（Phase 1-3）
+- ✅ 必要的 bash 程式碼範例完整保留
+- ✅ Critical Rules、Output Format 基本結構完整
+- ✅ Self-Verification Phase 完整保留
+
+### 處理方案
+
+**選擇方案 1：先發布，收集反饋**（✅ 已執行）
+
+**理由**：
+- SKILL.md 已包含 80%+ 核心邏輯
+- Progressive Disclosure 是正確的架構方向
+- 實測反饋比理論分析更準確
+
+**執行動作**：
+1. ✅ CHANGELOG.md 添加 "⚠️ OpenSkills Users Note" 段落
+2. ✅ plugin/README.md 添加 "v2.13.0 Testing Note" 段落
+3. ✅ 提供快速測試指引
+4. 📋 後續監控 GitHub Issues 中的反饋
+
+**測試建議**（給 OpenSkills 用戶）：
+```bash
+# 在專案中執行
+cd your-project
+# 讓 AI agent 執行
+"Use openskills read overview to analyze this project"
+
+# 預期：成功完成分析並輸出正確格式
+# 如遇問題：請回報 AI agent 名稱（Cursor/Gemini/Aider/Windsurf）
+```
+
+### Fallback 方案（如需要）
+
+**選項 2**：為 OpenSkills 創建完整版 SKILL-full.md
+
+如果測試發現 AI agent 確實無法訪問支援檔案：
+```bash
+# 為每個 command 創建完整版
+cat SKILL.md workflow.md output-template.md > SKILL-full.md
+```
+
+**狀態**：📋 待用戶反饋再決定是否執行
+
+### 參考連結
+
+- **OpenSkills 專案**: https://github.com/numman-ali/openskills
+- **v2.12.0 整合記錄**: CHANGELOG.md [2.12.0] - 2026-01-10
+- **用戶文檔**: plugin/README.md#method-2-via-openskills
+
+---
+
 ## 相關文件
 
 - **驗證報告**: [2026-01-14-skill-pda-validation.md](../2026-01-14-skill-pda-validation.md)

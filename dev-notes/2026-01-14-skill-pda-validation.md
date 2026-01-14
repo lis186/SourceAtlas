@@ -289,6 +289,65 @@ All commands follow the same PDA structure:
 
 ---
 
+## OpenSkills Compatibility Testing
+
+### Background
+
+SourceAtlas supports [OpenSkills](https://github.com/numman-ali/openskills) since v2.12.0, enabling usage with Cursor, Gemini CLI, Aider, and Windsurf. The PDA refactoring may impact these platforms if their AI agents cannot access support files (workflow.md, output-template.md, etc.).
+
+### Risk Assessment
+
+**Low-Risk Indicators:**
+- ✅ SKILL.md still contains core execution logic (Phase 1-3)
+- ✅ Essential bash code examples preserved
+- ✅ Critical Rules and basic Output Format structure intact
+- ✅ Self-Verification Phase complete
+
+**Potential Issues (if agent cannot access support files):**
+- ⚠️ Missing detailed manual fallback steps (in workflow.md)
+- ⚠️ Missing comprehensive error handling guides (in workflow.md)
+- ⚠️ Missing full output templates (in output-template.md)
+
+### User Communication
+
+**Documentation Updates (Completed):**
+1. ✅ `plugin/CHANGELOG.md` - Added "⚠️ OpenSkills Users Note" section
+2. ✅ `plugin/README.md` - Added "v2.13.0 Testing Note (Progressive Disclosure Architecture)"
+3. ✅ `dev-notes/2026-01/2026-01-14-pda-refactoring.md` - Full impact analysis
+
+**User Testing Guide:**
+```bash
+# OpenSkills users should test:
+cd your-project
+# Ask AI agent:
+"Use openskills read overview to analyze this project"
+
+# Expected: Successful analysis with proper format
+# If issues: Report at https://github.com/lis186/SourceAtlas/issues
+# Include: AI agent name (Cursor/Gemini/Aider/Windsurf)
+```
+
+### Monitoring Plan
+
+**Feedback Channels:**
+- GitHub Issues: https://github.com/lis186/SourceAtlas/issues
+- Specific labels: `openskills`, `pda-compatibility`
+
+**Success Criteria:**
+- No reports of broken functionality from OpenSkills users
+- Analysis output matches expected format
+- Core features (detection, analysis, output) work correctly
+
+**Fallback Option (if needed):**
+Create `SKILL-full.md` combining all files:
+```bash
+cat SKILL.md workflow.md output-template.md > SKILL-full.md
+```
+
+**Status**: 📋 Monitoring user feedback before deciding on fallback implementation
+
+---
+
 ## Conclusion
 
 ✅ **Refactoring SUCCESSFUL**

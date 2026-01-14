@@ -30,6 +30,12 @@
 - **維護性**: 2/5 → 5/5 (+3)
 - **學習曲線**: 3/5 → 4/5 (+1)
 
+**OpenSkills 跨平台考量** (01/14):
+- **影響評估**: PDA 可能影響 Cursor/Gemini/Aider/Windsurf 用戶（如 AI agent 無法訪問支援檔案）
+- **風險緩解**: SKILL.md 保留 80%+ 核心邏輯，添加用戶測試建議
+- **處理方案**: CHANGELOG + README 添加注意事項，監控用戶反饋
+→ [詳細分析](./2026-01/2026-01-14-pda-refactoring.md#openskills-跨平台考量)
+
 ---
 
 ### Week 1 (01/03): Default Persistence ⭐⭐⭐⭐
