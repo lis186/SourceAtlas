@@ -34,6 +34,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Format compliance: 5/5 YAML frontmatter correct (100%)
 - User experience: Significantly improved across all metrics
 
+### ⚠️ OpenSkills Users Note
+This version uses Progressive Disclosure Architecture - SKILL.md files are now more concise with detailed steps in separate files (workflow.md, output-template.md, etc.).
+
+**If you're using OpenSkills (Cursor, Gemini CLI, Aider, Windsurf):**
+- Core functionality should work normally (SKILL.md still contains all execution logic)
+- If you encounter any issues with detailed steps or error handling, please report at: https://github.com/lis186/SourceAtlas/issues
+- We're monitoring feedback to ensure the best experience across all platforms
+
 ## [2.12.0] - 2026-01-10
 
 ### Added
