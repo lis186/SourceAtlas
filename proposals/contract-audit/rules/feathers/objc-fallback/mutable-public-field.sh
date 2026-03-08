@@ -41,9 +41,9 @@ echo ""
 VIOLATIONS=0
 
 # 在 .h 檔中找 @property 宣告，排除 readonly 的
-find "$TARGET_DIR" -name "*.h" -not -path "*/Pods/*" -not -path "*/DerivedData/*" | while read -r header; do
+while read -r header; do
     # 找到所有 @property 宣告
-    grep -nE '@property\s*\(' "$header" 2>/dev/null | while read -r match; do
+    while read -r match; do
         line_num=$(echo "$match" | cut -d: -f1)
         prop_line=$(echo "$match" | cut -d: -f2-)
 
@@ -73,8 +73,8 @@ find "$TARGET_DIR" -name "*.h" -not -path "*/Pods/*" -not -path "*/DerivedData/*
 
         echo "VIOLATION: $header:$line_num — 公開可變屬性: $prop_name"
         ((VIOLATIONS++)) || true
-    done
-done
+    done < <(grep -nE '@property\s*\(' "$header" 2>/dev/null)
+done < <(find "$TARGET_DIR" -name "*.h" -not -path "*/Pods/*" -not -path "*/DerivedData/*")
 
 echo ""
 if [[ $VIOLATIONS -eq 0 ]]; then

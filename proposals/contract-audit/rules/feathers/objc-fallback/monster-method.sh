@@ -35,7 +35,7 @@ echo ""
 
 VIOLATIONS=0
 
-find "$TARGET_DIR" -name "*.m" -not -path "*/Pods/*" -not -path "*/DerivedData/*" | while read -r file; do
+while read -r file; do
     in_method=false
     method_name=""
     method_start=0
@@ -86,7 +86,7 @@ find "$TARGET_DIR" -name "*.m" -not -path "*/Pods/*" -not -path "*/DerivedData/*
             ((VIOLATIONS++)) || true
         fi
     fi
-done
+done < <(find "$TARGET_DIR" -name "*.m" -not -path "*/Pods/*" -not -path "*/DerivedData/*")
 
 if [[ $VIOLATIONS -eq 0 ]]; then
     echo "PASS: 無超過 $THRESHOLD 行的方法"

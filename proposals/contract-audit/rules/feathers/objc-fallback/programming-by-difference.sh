@@ -45,9 +45,9 @@ VIOLATIONS=0
 # 如果方法很少（<= MAX_OVERRIDES），可能是 programming by difference
 
 # 步驟 1: 從 .h 檔找出所有繼承關係
-find "$TARGET_DIR" -name "*.h" -not -path "*/Pods/*" -not -path "*/DerivedData/*" | while read -r header; do
+while read -r header; do
     # 匹配 @interface ClassName : ParentClass
-    grep -nE '@interface\s+[A-Za-z0-9_]+\s*:\s*[A-Za-z0-9_]+' "$header" 2>/dev/null | while read -r match; do
+    while read -r match; do
         class_name=$(echo "$match" | sed -E 's/.*@interface\s+([A-Za-z0-9_]+)\s*:.*/\1/')
         parent_name=$(echo "$match" | sed -E 's/.*:\s*([A-Za-z0-9_]+).*/\1/')
         line_num=$(echo "$match" | cut -d: -f1)
@@ -72,8 +72,8 @@ find "$TARGET_DIR" -name "*.h" -not -path "*/Pods/*" -not -path "*/DerivedData/*
             echo "VIOLATION: $header:$line_num — $class_name (繼承 $parent_name, 僅 $method_count 個方法)"
             ((VIOLATIONS++)) || true
         fi
-    done
-done
+    done < <(grep -nE '@interface\s+[A-Za-z0-9_]+\s*:\s*[A-Za-z0-9_]+' "$header" 2>/dev/null)
+done < <(find "$TARGET_DIR" -name "*.h" -not -path "*/Pods/*" -not -path "*/DerivedData/*")
 
 if [[ $VIOLATIONS -eq 0 ]]; then
     echo "PASS: 無 programming by difference 嫌疑的子類別"

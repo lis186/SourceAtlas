@@ -22,3 +22,8 @@ rule:
     - pattern: 'open var $NAME = $VALUE'
     - pattern: 'public var $NAME: $TYPE?'
     - pattern: 'public var $NAME: $TYPE!'
+    # 容器型別（Array / Dictionary）-- Effect Propagation 風險更高
+    - pattern: 'public var $NAME: [$TYPE]'
+    - pattern: 'public var $NAME: [String: $TYPE]'
+    - pattern: 'open var $NAME: [$TYPE]'
+    - pattern: 'open var $NAME: [String: $TYPE]'

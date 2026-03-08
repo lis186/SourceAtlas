@@ -41,10 +41,10 @@ trap 'rm -f "$TMPFILE"' EXIT
 # 排除系統 framework
 SYSTEM_FRAMEWORKS="UIKit|Foundation|CoreGraphics|CoreFoundation|QuartzCore|Security|SystemConfiguration|CoreData|MapKit|CoreLocation|AVFoundation|Photos|WebKit|SafariServices|StoreKit|MessageUI|Social|Accounts|EventKit|HealthKit|HomeKit|CloudKit|GameKit|SceneKit|SpriteKit|Metal|MetalKit|ARKit|CoreML|Vision|NaturalLanguage|CryptoKit|Combine|SwiftUI"
 
-find "$TARGET_DIR" \( -name "*.m" -o -name "*.h" \) \
-    -not -path "*/Pods/*" -not -path "*/DerivedData/*" | while read -r file; do
-    grep -oE '#import <[^>]+>' "$file" 2>/dev/null
-done | grep -vE "#import <($SYSTEM_FRAMEWORKS)/" | sort | uniq -c | sort -rn > "$TMPFILE"
+while read -r file; do
+    grep -oE '#import <[^>]+>' "$file" 2>/dev/null || true
+done < <(find "$TARGET_DIR" \( -name "*.m" -o -name "*.h" \) \
+    -not -path "*/Pods/*" -not -path "*/DerivedData/*") | grep -vE "#import <($SYSTEM_FRAMEWORKS)/" | sort | uniq -c | sort -rn > "$TMPFILE"
 
 VIOLATIONS=0
 

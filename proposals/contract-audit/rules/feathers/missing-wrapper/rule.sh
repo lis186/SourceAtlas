@@ -37,31 +37,23 @@ echo "=== Feathers Missing Wrapper 偵測 (閾值: $THRESHOLD 個檔案) ==="
 # ObjC: #import <Framework/Header.h> 或 #import "Path/Header.h"
 # Java/Kotlin: import com.package.sub.Class
 
-find "$TARGET_DIR" \( -name "*.swift" -o -name "*.m" -o -name "*.h" -o -name "*.java" -o -name "*.kt" \) \
-    -not -path "*/.build/*" -not -path "*/Pods/*" -not -path "*/node_modules/*" \
-    -not -path "*/__pycache__/*" -not -path "*/DerivedData/*" | while read -r file; do
+while read -r file; do
 
     # Swift deep imports (e.g., import Module.SubModule)
-    grep -oE '^import [A-Za-z0-9_]+\.[A-Za-z0-9_.]+' "$file" 2>/dev/null | while read -r imp; do
-        echo "$imp"
-    done
+    grep -oE '^import [A-Za-z0-9_]+\.[A-Za-z0-9_.]+' "$file" 2>/dev/null || true
 
     # ObjC framework imports (e.g., #import <AFNetworking/AFHTTPSessionManager.h>)
-    grep -oE '#import <[^>]+>' "$file" 2>/dev/null | while read -r imp; do
-        echo "$imp"
-    done
+    grep -oE '#import <[^>]+>' "$file" 2>/dev/null || true
 
     # ObjC quoted imports with path (e.g., #import "Vendor/SomeClass.h")
-    grep -oE '#import "[^"]*/"[^"]*"' "$file" 2>/dev/null | while read -r imp; do
-        echo "$imp"
-    done
+    grep -oE '#import "[^/"]*/[^"]*"' "$file" 2>/dev/null || true
 
     # Java/Kotlin imports (e.g., import com.google.firebase.auth.FirebaseAuth)
-    grep -oE '^import [a-z][a-z0-9_]*\.[a-z][a-z0-9_.]*\.[A-Z][A-Za-z0-9_]*' "$file" 2>/dev/null | while read -r imp; do
-        echo "$imp"
-    done
+    grep -oE '^import [a-z][a-z0-9_]*\.[a-z][a-z0-9_.]*\.[A-Z][A-Za-z0-9_]*' "$file" 2>/dev/null || true
 
-done | sort | uniq -c | sort -rn > "$TMPFILE"
+done < <(find "$TARGET_DIR" \( -name "*.swift" -o -name "*.m" -o -name "*.h" -o -name "*.java" -o -name "*.kt" \) \
+    -not -path "*/.build/*" -not -path "*/Pods/*" -not -path "*/node_modules/*" \
+    -not -path "*/__pycache__/*" -not -path "*/DerivedData/*") | sort | uniq -c | sort -rn > "$TMPFILE"
 
 VIOLATIONS=0
 

@@ -23,7 +23,7 @@
 
 ## CONTRACT TAXONOMY
 
-辨識以下八個類別的合約。為每個合約指定一個穩定的 ID。
+辨識以下八個類別的合約。為每個合約指定一個穩定的 ID，格式為 `{Category}-{三位數序號}`（例如 `M-001`、`N-002`、`D-001`），符合 `^[MLNSECDP]-[0-9]{3}$` 正規表示式。
 
 ### Category M -- Mutation Contracts
 在資料離開模組之前施加的副作用。
@@ -162,7 +162,7 @@ Pinch_Point: [true | false]
 對每一個發現的合約：
 
 ```
-[ID] [Category]-[N]: [Short title]
+{Category}-{NNN}: [Short title]
 
 Trigger:      [什麼觸發此合約的執行]
 Input:        [消費的資料及來源]
@@ -257,9 +257,9 @@ note: |
 
 | ID | Title | Verified By | File / Assertion |
 |----|-------|-------------|-----------------|
-| M1 | ... | grep script | `verify-contracts-X.sh` line N |
-| N1 | ... | ast-grep | `.ast-grep/rules/X/N1-slug.yml` |
-| L5 | ... | manual review | ordering cannot be expressed as pattern -- see note |
+| M-001 | ... | grep script | `verify-contracts-X.sh` line N |
+| N-001 | ... | ast-grep | `.ast-grep/rules/X/N-001-slug.yml` |
+| L-005 | ... | manual review | ordering cannot be expressed as pattern -- see note |
 
 將**無法**用 pattern 表達的順序/時序合約標記為 `manual review`，並包含審查者必須檢查的具體描述。
 
@@ -271,7 +271,7 @@ note: |
 
 | Line(s) | Classification | Contract ID(s) |
 |---------|---------------|----------------|
-| 96-109  | CONTRACT      | M1             |
+| 96-109  | CONTRACT      | M-001          |
 | 158     | INFRA         | --             |
 | 301     | SKIP          | -- (commented out) |
 

@@ -35,7 +35,7 @@ echo ""
 
 VIOLATIONS=0
 
-find "$TARGET_DIR" -name "*.m" -not -path "*/Pods/*" -not -path "*/DerivedData/*" | while read -r file; do
+while read -r file; do
     in_method=false
     method_name=""
     method_start=0
@@ -83,7 +83,7 @@ find "$TARGET_DIR" -name "*.m" -not -path "*/Pods/*" -not -path "*/DerivedData/*
             fi
         fi
     done < "$file"
-done
+done < <(find "$TARGET_DIR" -name "*.m" -not -path "*/Pods/*" -not -path "*/DerivedData/*")
 
 if [[ $VIOLATIONS -eq 0 ]]; then
     echo "PASS: 無超過深度 $MAX_DEPTH 的巢狀方法"

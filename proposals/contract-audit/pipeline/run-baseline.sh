@@ -15,6 +15,7 @@
 #
 # 管線步驟：
 #   Step 0:   邊界發現（rg 靜態掃描）
+#   Step 0.5: Feathers 規則掃描（可選，--skip-feathers 跳過）
 #   Step 1:   Gemini 盲掃
 #   Step 1.5: 依賴圖譜分析（Seam + Pinch Point）
 #   Step 2:   Claude 結構化審計
@@ -48,6 +49,7 @@ VERIFY_SECONDARY="none"
 IMPORT_PATTERNS=""
 SEAM_DETECTION="true"
 PINCH_POINT_THRESHOLD=3
+SKIP_FEATHERS="false"
 
 # ==============================================================================
 # 輔助函式
@@ -70,6 +72,7 @@ usage() {
   --verify-primary V  主要驗證：grep|ast-grep（預設 grep）
   --verify-secondary V 次要驗證：ast-grep|clang-ast-dump|none
   --no-seam           停用 Seam 識別
+  --skip-feathers     跳過 Step 0.5 Feathers 規則掃描
   --pinch-threshold N Pinch Point 閾值（預設 3）
   --help              顯示此說明
 
@@ -187,6 +190,9 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-seam)
       SEAM_DETECTION="false"; shift
+      ;;
+    --skip-feathers)
+      SKIP_FEATHERS="true"; shift
       ;;
     --pinch-threshold)
       PINCH_POINT_THRESHOLD="$2"; shift 2
@@ -337,6 +343,7 @@ verify_primary: $VERIFY_PRIMARY
 verify_secondary: $VERIFY_SECONDARY
 seam_detection: $SEAM_DETECTION
 pinch_point_threshold: $PINCH_POINT_THRESHOLD
+skip_feathers: $SKIP_FEATHERS
 config_file: ${CONFIG_FILE:-none}
 EOF
 
@@ -387,6 +394,59 @@ ALL_TARGET_FILES="$TARGET_FILES"
 for f in $EXTRA_FILES; do
   [[ -f "$f" ]] && ALL_TARGET_FILES="$ALL_TARGET_FILES $f"
 done
+
+# ==============================================================================
+# Step 0.5: Feathers 規則掃描（可選）
+# ==============================================================================
+
+FEATHERS_SCAN_FILE="$RUN_DIR/feathers-scan.txt"
+
+if [ "$SKIP_FEATHERS" = "false" ]; then
+  echo "[Step 0.5/6] Feathers 規則掃描..."
+
+  FEATHERS_RULES_DIR="$AUDIT_DIR/rules/feathers"
+  FEATHERS_HIT_COUNT=0
+
+  if [ -d "$FEATHERS_RULES_DIR" ]; then
+    echo "# Feathers 規則掃描結果" > "$FEATHERS_SCAN_FILE"
+    echo "# 掃描時間: $(TZ=Asia/Taipei date)" >> "$FEATHERS_SCAN_FILE"
+    echo "" >> "$FEATHERS_SCAN_FILE"
+
+    # 遍歷每個規則目錄，執行掃描
+    for rule_dir in "$FEATHERS_RULES_DIR"/*/; do
+      rule_name=$(basename "$rule_dir")
+      # 若規則目錄下有可執行的掃描腳本，則執行
+      if [ -x "$rule_dir/scan.sh" ]; then
+        echo "  執行規則: $rule_name"
+        echo "## $rule_name" >> "$FEATHERS_SCAN_FILE"
+        if bash "$rule_dir/scan.sh" $ALL_TARGET_FILES >> "$FEATHERS_SCAN_FILE" 2>&1; then
+          FEATHERS_HIT_COUNT=$((FEATHERS_HIT_COUNT + 1))
+        fi
+        echo "" >> "$FEATHERS_SCAN_FILE"
+      elif [ -f "$rule_dir/rule.yaml" ]; then
+        # 使用 rule.yaml 中的 pattern 進行 grep 掃描
+        echo "  規則（YAML）: $rule_name"
+        echo "## $rule_name" >> "$FEATHERS_SCAN_FILE"
+        PATTERNS=$(grep "pattern:" "$rule_dir/rule.yaml" | sed "s/.*pattern:[[:space:]]*['\"]\\(.*\\)['\"].*/\\1/" | sed 's/\$[A-Z_]*/.*/g')
+        for pat in $PATTERNS; do
+          for tf in $ALL_TARGET_FILES; do
+            rg "$pat" "$tf" 2>/dev/null >> "$FEATHERS_SCAN_FILE" || true
+          done
+        done
+        echo "" >> "$FEATHERS_SCAN_FILE"
+      fi
+    done
+
+    FEATHERS_LINE_COUNT=$(wc -l < "$FEATHERS_SCAN_FILE")
+    echo "  完成: $FEATHERS_LINE_COUNT 行輸出寫入 feathers-scan.txt"
+  else
+    echo "  WARN: Feathers 規則目錄不存在: $FEATHERS_RULES_DIR"
+    echo "# Feathers 規則目錄不存在" > "$FEATHERS_SCAN_FILE"
+  fi
+else
+  echo "[Step 0.5/6] SKIP: Feathers 規則掃描（--skip-feathers）"
+  echo "# Feathers scan skipped" > "$FEATHERS_SCAN_FILE"
+fi
 
 # ==============================================================================
 # Step 1: Gemini 盲掃
@@ -575,7 +635,7 @@ echo "  PASS: Unclassified: 0 確認"
 # ── Step 2.5: 結構完整性軟門檻 ──
 echo "[Step 2.5] 結構完整性檢查..."
 for prefix in N S L D P; do
-  COUNT=$(grep -c "^\[${prefix}[0-9]" "$RUN_DIR/claude-artifacts/all-artifacts.md" 2>/dev/null || echo 0)
+  COUNT=$(grep -c "^${prefix}-[0-9]\{3\}" "$RUN_DIR/claude-artifacts/all-artifacts.md" 2>/dev/null || echo 0)
   echo "  ${prefix}-contracts: $COUNT"
 done
 echo "  （軟門檻 -- 管線繼續執行）"
