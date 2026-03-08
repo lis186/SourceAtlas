@@ -265,6 +265,7 @@ analyze_hotspot() {
 
 # -- 階段 3：耦合度分析 --
 # 統計每個檔案被其他檔案引用的次數
+# 最佳化：先用 rg 一次性擷取所有 import/require 行，再用 awk 批次統計
 analyze_coupling() {
     local file_list="$1"
     local output="$2"
@@ -272,29 +273,34 @@ analyze_coupling() {
     local import_pattern
     import_pattern=$(get_import_pattern "$LANGUAGE")
 
+    # 建立檔名（不含副檔名）到完整路徑的對照表
+    local name_map="${output}.namemap"
     while IFS= read -r file; do
-        # 取得檔案名（不含副檔名）作為搜尋關鍵字
-        local basename_no_ext
-        basename_no_ext=$(basename "$file" | sed 's/\.[^.]*$//')
+        local bname
+        bname=$(basename "$file" | sed 's/\.[^.]*$//')
+        echo "$bname $file"
+    done < "$file_list" > "$name_map"
 
-        # 跳過太常見的名稱（index, main 等容易誤判）
-        if echo "$basename_no_ext" | grep -qE '^(index|main|app|server|mod|lib|init|__init__)$'; then
-            # 對這些檔案用完整檔名搜尋
-            local basename_full
-            basename_full=$(basename "$file")
-            local count
-            count=$(rg --count-matches --glob '!.git' -l "$basename_full" "$TARGET_DIR" 2>/dev/null | wc -l | tr -d ' ')
-            # 扣掉自身
-            count=$((count > 0 ? count - 1 : 0))
-            echo "$count $file"
+    # 一次性擷取所有 import/require/include 行
+    local all_imports="${output}.imports"
+    rg --no-filename --glob '!.git' --glob '!node_modules' --glob '!.venv' --glob '!__pycache__' \
+        "$import_pattern" "$TARGET_DIR" 2>/dev/null > "$all_imports" || true
+
+    # 對每個檔案名統計被引用次數
+    while IFS=' ' read -r bname file; do
+        local count
+        # 對常見名稱（index, main 等）用完整檔名搜尋
+        if echo "$bname" | grep -qE '^(index|main|app|server|mod|lib|init|__init__)$'; then
+            local fullname
+            fullname=$(basename "$file")
+            count=$(grep -c "$fullname" "$all_imports" 2>/dev/null || echo 0)
         else
-            local count
-            count=$(rg --count-matches --glob '!.git' --glob '!node_modules' --glob '!.venv' --glob '!__pycache__' -l "$basename_no_ext" "$TARGET_DIR" 2>/dev/null | wc -l | tr -d ' ')
-            # 扣掉自身
-            count=$((count > 0 ? count - 1 : 0))
-            echo "$count $file"
+            count=$(grep -c "$bname" "$all_imports" 2>/dev/null || echo 0)
         fi
-    done < "$file_list" | sort -rn > "$output"
+        echo "$count $file"
+    done < "$name_map" | sort -rn > "$output"
+
+    rm -f "$name_map" "$all_imports"
 }
 
 # -- 綜合排序 --
