@@ -252,6 +252,15 @@ analyze_hotspot() {
     local git_root
     git_root=$(git -C "$TARGET_DIR" rev-parse --show-toplevel 2>/dev/null)
 
+    # 偵測 shallow clone 並警告
+    local is_shallow
+    is_shallow=$(git -C "$git_root" rev-parse --is-shallow-repository 2>/dev/null)
+    if [ "$is_shallow" = "true" ]; then
+        echo "⚠️  WARN: 偵測到 shallow clone (--depth N)" >&2
+        echo "    Hotspot 分析（40% 權重）將不準確 — 所有檔案的 git 變動次數都會是 1" >&2
+        echo "    建議: git fetch --unshallow 以取得完整歷史" >&2
+    fi
+
     # 用 git log 統計每個檔案的 commit 次數
     # 限制搜尋範圍以提高效能（最近 1 年）
     git -C "$git_root" log --since="1 year ago" --pretty=format: --name-only 2>/dev/null \
