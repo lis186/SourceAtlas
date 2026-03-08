@@ -17,6 +17,11 @@ S|Task_unstructured|Task\s*\{|非結構化任務
 S|async_let|async let\b|結構化並行
 S|Sendable|Sendable\b|可跨並行邊界傳遞標記
 S|@unchecked_Sendable|@unchecked Sendable|手動繞過 Sendable 檢查
+S|DispatchQueue_create|DispatchQueue\(label:|自訂 serial/concurrent queue 建立
+S|withTaskGroup|withTaskGroup\b|結構化並行群組
+S|withThrowingTaskGroup|withThrowingTaskGroup\b|可拋出錯誤的結構化並行群組
+S|DispatchSemaphore|DispatchSemaphore|信號量（同 ObjC dispatch_semaphore）
+S|DispatchGroup|DispatchGroup|派發群組（等待多個非同步任務）
 
 # --- N: 通知/事件原語 (§1) ---
 N|NotificationCenter_post|NotificationCenter\.default\.post|通知發送
@@ -29,6 +34,7 @@ N|@Published|@Published\b|Combine published 屬性
 N|delegate_property|delegate[^s]|Delegate 存取
 N|for_await|for await\b|AsyncSequence 消費
 N|PassthroughSubject|PassthroughSubject|Combine 直通 Subject
+N|CurrentValueSubject|CurrentValueSubject|Combine 有當前值的 Subject
 
 # --- L: 生命週期 (§3) ---
 L|deinit|deinit\s*\{|物件銷毀
@@ -43,16 +49,22 @@ L|task_modifier|\.task\s*\{|SwiftUI async task（disappear 時自動取消）
 L|onChange|\.onChange|SwiftUI 狀態變更反應
 L|@StateObject|@StateObject\b|SwiftUI 狀態物件（僅初始化一次）
 L|@EnvironmentObject|@EnvironmentObject\b|SwiftUI 環境物件（缺失會 crash）
+L|@ObservedObject|@ObservedObject\b|SwiftUI 觀察物件（每次 body 重算可能重建）
+L|scenePhase|scenePhase|SwiftUI App 生命週期階段
 
 # --- D: 依賴 (§6-7) ---
 D|shared_singleton|\.shared[^A-Za-z]|單例存取
 D|protocol_decl|^protocol\b|Protocol 宣告（Object Seam）
 D|if_available|#available\b|API 可用性檢查
 D|@available|@available|API 可用性標記
+D|@Observable|@Observable\b|Swift 5.9 Macro（自動生成 observation 基礎設施）
+D|canImport|canImport\(|條件編譯——模組可用性檢查
+D|if_conditional|#if\b|條件編譯（#if DEBUG 等）
 
 # --- E: 例外 (§2) ---
 E|throws_decl|\bthrows\b|錯誤傳播合約
 E|do_catch|\bcatch\b|例外捕獲
+E|Codable|Codable\b|自動合成編解碼合約（欄位不匹配會 runtime 失敗）
 
 # --- C: 取消 ---
 C|Task_isCancelled|isCancelled\b|取消狀態檢查
