@@ -289,6 +289,8 @@ NSDictionary *info = @{@"token": self.authToken ?: @""};
 NSString *token = notification.userInfo[@"token"];
 ```
 
+**重構風險：** 如果發送端將 key 從 `@"token"` 改為 `@"accessToken"`，或將值型別從 `NSString` 改為 `NSDictionary`，觀察端不會產生任何編譯錯誤——`objectForKey:` 回傳 `id`，型別轉換錯誤只會在 runtime 暴露。多個觀察者可能分散在不同檔案中，遺漏任一處修改即導致靜默失敗。
+
 ### 8.2 dispatch_semaphore 將非同步轉為同步
 ```objc
 // 隱含合約：此方法在呼叫者的執行緒上阻塞直到 completion 執行
@@ -304,6 +306,8 @@ NSString *token = notification.userInfo[@"token"];
 }
 ```
 
+**重構風險：** 如果將 `fetchDataAsync:` 重構為在同一個 serial queue 上回呼（例如改用 `dispatch_async(self.serialQueue, ...)`），而 `fetchDataSync` 也在該 serial queue 上被呼叫，則 `dispatch_semaphore_wait` 永遠不會被 signal——造成死鎖。這種死鎖只在特定執行路徑下發生，單元測試很難覆蓋。
+
 ### 8.3 Singleton 初始化順序
 ```objc
 // 隱含合約：呼叫此方法前 [AppConfig sharedInstance] 必須已初始化
@@ -311,6 +315,8 @@ NSString *token = notification.userInfo[@"token"];
     self.baseURL = [AppConfig sharedInstance].apiBaseURL;  // crash if nil
 }
 ```
+
+**重構風險：** 如果重構 App 啟動流程（例如將 `AppConfig` 初始化延後到某個非同步操作之後），所有依賴 `[AppConfig sharedInstance]` 的模組可能在初始化完成前就存取它。由於 ObjC 對 nil 發送訊息回傳 0/nil 而非 crash，`self.baseURL` 會被靜默設為 nil，直到網路請求失敗才會發現問題。
 
 ### 8.4 Method Swizzling 隱含合約
 ```objc
@@ -322,9 +328,73 @@ NSString *token = notification.userInfo[@"token"];
 }
 ```
 
+**重構風險：** 如果移除或重新命名 `tracked_viewDidAppear:` 方法，`method_exchangeImplementations` 會靜默失敗（`class_getInstanceMethod` 回傳 NULL），原始方法行為不變但追蹤功能消失。更危險的情況是兩個不同的模組對同一方法進行 swizzling——第二次 swizzle 會將第一次的 swizzled 實作當作「原始」實作，形成脆弱的鏈式依賴，移除任一模組都可能導致呼叫鏈斷裂。
+
 ### 8.5 Delegate 的 nil 靜默失敗
 ```objc
 // 隱含合約：如果 delegate 為 nil，此通知被靜默吞掉——呼叫者可能依賴此行為
 [self.delegate networkClient:self didReceiveResponse:response];
 // ObjC 對 nil 發送訊息不會 crash，但也不會執行任何事
 ```
+
+**重構風險：** 如果將 delegate pattern 重構為 block/completion handler 模式，nil 的行為語義完全改變——block 為 nil 時呼叫會 crash（EXC_BAD_ACCESS）。此外，如果將 delegate property 從 `weak` 改為 `strong`（例如忘記標記），會產生 retain cycle；反之若原本是 `strong`（某些特殊設計）被改為 `weak`，delegate 可能在使用前被提前釋放。
+
+### 8.6 NSManagedObjectContext 的執行緒合約
+```objc
+// 隱含合約：NSManagedObjectContext 必須在建立它的執行緒/queue 上使用
+NSManagedObjectContext *context = [[NSManagedObjectContext alloc]
+    initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+
+// 正確用法——在 context 自己的 queue 上操作
+[context performBlock:^{
+    NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:@"User"];
+    NSArray *results = [context executeFetchRequest:request error:nil];
+    // 處理 results
+}];
+
+// 危險用法——在任意執行緒直接存取
+dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    // 違反執行緒合約！可能導致資料損壞或 crash
+    NSArray *results = [context executeFetchRequest:request error:nil];
+});
+```
+
+**重構風險：** 如果將同步操作重構為非同步（例如移到背景執行緒），但未使用 `performBlock:` 包裹 Core Data 操作，會違反 `NSManagedObjectContext` 的執行緒限制。這種錯誤不會產生編譯警告，且在低負載時可能不會觸發 crash，只在高並行場景下才以資料損壞或間歇性 crash 的形式出現——極難追蹤和重現。
+
+### 8.7 performSelector:withObject:afterDelay: 的 retain 語義
+```objc
+// 隱含合約：performSelector:withObject:afterDelay: 會 retain target 直到 selector 執行完畢
+[self performSelector:@selector(refreshUI) withObject:nil afterDelay:2.0];
+
+// 取消需要明確呼叫，否則即使物件「應該」被釋放，仍會被 run loop 持有
+- (void)dealloc {
+    [NSObject cancelPreviousPerformRequestsWithTarget:self];
+}
+
+// 危險用法——在 dealloc 中未取消
+- (void)startAutoRefresh {
+    [self performSelector:@selector(refreshUI) withObject:nil afterDelay:5.0];
+    // 如果物件在 5 秒內被釋放，selector 仍會執行——此時 self 已是 dangling pointer
+}
+```
+
+**重構風險：** 如果將 `performSelector:withObject:afterDelay:` 重構為 `dispatch_after`，retain 語義完全不同——`dispatch_after` 的 block 會 retain 被捕獲的變數，但 block 執行後立即釋放，不需要手動取消。反之，如果忘記在 `dealloc` 中呼叫 `cancelPreviousPerformRequestsWithTarget:`，延遲的 selector 會在物件已釋放後執行，導致 EXC_BAD_ACCESS。ARC 環境下這個問題更隱蔽，因為開發者容易誤以為 ARC 會自動處理所有記憶體管理。
+
+### 8.8 NSArray/NSDictionary 的 nil 處理差異
+```objc
+// 隱含合約：NSArray 不接受 nil 元素——插入 nil 會 crash
+NSString *name = [self getUserName];  // 可能回傳 nil
+NSArray *items = @[name];  // 如果 name 為 nil -> NSInvalidArgumentException crash
+
+// 隱含合約：NSDictionary 的 setObject:forKey: 不接受 nil value——會 crash
+NSMutableDictionary *params = [NSMutableDictionary dictionary];
+[params setObject:[self getToken] forKey:@"token"];  // getToken 回傳 nil -> crash
+
+// 安全替代——但語義不同
+[params setValue:[self getToken] forKey:@"token"];  // setValue:forKey: 接受 nil，會移除該 key
+
+// Literal 語法的陷阱
+NSDictionary *dict = @{@"key": [self getValue]};  // getValue 回傳 nil -> crash
+```
+
+**重構風險：** 如果將 `setValue:forKey:`（KVC 方法，接受 nil）重構為 `setObject:forKey:`（NSDictionary 方法，不接受 nil），或反過來，nil 處理語義完全改變。前者在 value 為 nil 時會移除該 key，後者會直接 crash。同樣地，如果將手動建構的 `NSArray` 重構為使用 literal 語法 `@[...]`，任何潛在的 nil 元素都會從靜默忽略（使用 `addObject:` 搭配 nil 檢查時）變成立即 crash。這類問題在重構大量集合操作時特別容易遺漏。

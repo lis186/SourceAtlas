@@ -477,6 +477,8 @@ struct User: Codable {
 }
 ```
 
+**重構風險：** 如果後端 API 將 `id` 欄位從 `Int` 改為 `String`（例如遷移至 UUID），或新增一個非 optional 欄位，整個 `Codable` 自動合成的 `init(from:)` 會解碼失敗並拋出 `DecodingError`。由於 Swift 的 `Codable` 採用全有或全無策略，單一欄位不匹配即導致整筆資料解碼失敗——不會產生編譯錯誤，只在 runtime 拋出例外。當多個 model 共用同一個 API 回應時，一處欄位變更可能導致不相關的資料也無法解析。
+
 ### 8.7 Protocol Extension 預設實作隱藏
 ```swift
 protocol Trackable {
