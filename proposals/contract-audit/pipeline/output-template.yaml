@@ -1,0 +1,247 @@
+# ==============================================================================
+# SourceAtlas Contract Audit -- 輸出模板
+# ==============================================================================
+# 檔案：output-template.yaml
+# 用途：定義 /atlas.audit 命令的 .sourceatlas/audit/{module}.yaml 輸出格式
+# 版本：1.0
+#
+# 此模板與 contract-output.schema.yaml 對齊，
+# 並遵循 SourceAtlas 現有的輸出風格（參見 overview.yaml 範例）。
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 頂層：metadata
+# 描述管線執行的基本資訊，與 overview.yaml 的 metadata 段落風格一致。
+# ------------------------------------------------------------------------------
+metadata:
+  module: "{module_name}"                    # 模組名稱，例如 "NYHTTPSClient"
+  language: "{language}"                     # 語言標識：objc | swift | typescript | go | kotlin | python | rust | java
+  timestamp: "{ISO 8601 timestamp}"          # 執行時間，例如 "2026-03-08T14:30:21+08:00"
+  version: "1.0"                             # Schema 版本號
+  pipeline_config:
+    run_id: "{YYYYMMDD-HHMMSS}"              # 管線執行 ID，例如 "20260308-143021"
+    refactoring_intent: "{description}"      # 重構意圖描述
+    source_files:                            # 分析的原始碼檔案清單
+      - "{path/to/file1}"
+      - "{path/to/file2}"
+    agents_used:                             # 參與的代理角色
+      - "auditor"                            # 主稽核者
+      - "blind_scout"                        # 盲掃者
+      - "adversary"                          # 對抗者
+      - "applier"                            # 合併者
+
+# ------------------------------------------------------------------------------
+# 頂層：feathers_analysis
+# Feathers Legacy Code 分析結果（F1、F2、F3）。
+# 此段落為合約清單提供上下文背景。
+# ------------------------------------------------------------------------------
+feathers_analysis:
+  # F1: Tell the Story -- 用三個核心概念描述模組職責
+  story: "{模組職責的一句話描述}"
+  lies:                                      # 為簡潔而省略的危險細節
+    - omission: "{省略 1}"
+      risk: "{為什麼這個省略在重構時很危險}"
+    - omission: "{省略 2}"
+      risk: "{風險描述}"
+
+  # F2: Scratch Refactoring -- 假想重構操作及其揭示的合約
+  scratch_refactoring:
+    - operation: "{操作描述}"
+      reveals:                               # 此操作會暴露的合約 ID
+        - "{Contract ID 或 NEW}"
+    - operation: "{操作描述}"
+      reveals:
+        - "{Contract ID}"
+
+  # F3: Effect Propagation Tracing -- 每個 public 方法的效應追蹤
+  effect_traces:
+    - method: "{method signature}"
+      return: "{回傳值鏈描述 或 void}"
+      mutates: "{被修改的參數 或 none}"
+      global: "{全域狀態變更 或 none}"
+      depth: "{傳播深度}"
+
+# ------------------------------------------------------------------------------
+# 頂層：contracts
+# 合約清單。每個合約代表一個隱含的行為約束。
+# 欄位定義請參見 contract-output.schema.yaml。
+# ------------------------------------------------------------------------------
+contracts:
+  - id: "{TYPE}-{NNN}"                       # 唯一識別碼，格式 ^[MLNSECDP]-[0-9]{3}$
+    type: "{M|L|N|S|E|C|D|P}"               # 合約類別（見 skeleton.md CONTRACT TAXONOMY）
+    description: >                           # 人類可讀描述：隱含行為及其對重構的影響
+      {合約的詳細描述，應清楚說明隱含行為。}
+    evidence:                                # 證據引用清單（至少一筆）
+      - file: "{relative/path/to/file}"      #   檔案路徑（相對於專案根目錄）
+        line: "{line 或 line-line}"           #   行號或範圍，例如 "42" 或 "120-135"
+        snippet: "{程式碼片段}"               #   相關程式碼（可選，便於人工審查）
+    severity: "{critical|high|medium|low}"   # 嚴重程度
+    scope: "{method|class|module}"           # 作用範圍
+    seam_type: "{object|preprocessing|link|none}"  # Seam 類型（Feathers）
+    pinch_point: false                       # 是否為 Pinch Point（多路徑收斂節點）
+    verification:                            # Phase B 驗證規則
+      grep_pattern: "{grep 斷言模式}"        #   grep 驗證（可選）
+      ast_grep_rule: "{rule-file.yml}"       #   ast-grep 規則檔名（可選）
+    adversary_status: "{CONFIRM|DISPUTE|ADD}" # Codex 對抗性評論結果
+    notes: "{補充說明}"                       # 可選：DISPUTE 理由、已知限制等
+
+# ------------------------------------------------------------------------------
+# 頂層：summary
+# 統計摘要，提供合約分析的整體視圖。
+# ------------------------------------------------------------------------------
+summary:
+  total_contracts: 0                         # 合約總數
+  by_category:                               # 按類別統計
+    M: 0                                     #   Mutation
+    L: 0                                     #   Lifecycle
+    N: 0                                     #   Notification
+    S: 0                                     #   Synchronization
+    E: 0                                     #   Error Handling
+    C: 0                                     #   Cancellation
+    D: 0                                     #   Dependency
+    P: 0                                     #   Propagation
+  by_severity:                               # 按嚴重程度統計
+    critical: 0
+    high: 0
+    medium: 0
+    low: 0
+  confirm_ratio: 0.0                         # CONFIRM 比率（不得超過 0.70）
+  pinch_points_count: 0                      # Pinch Point 合約數量
+  line_attribution:                          # 行歸因統計（來自 Artifact 4）
+    total_lines: 0
+    contract_lines: 0
+    infra_lines: 0
+    skip_lines: 0
+    unclassified: 0                          # 必須為 0 才通過完整性門檻
+  completeness: "{COMPLETE|INCOMPLETE}"      # 完整性宣告
+  completeness_note: ""                      # INCOMPLETE 時的說明
+
+# ------------------------------------------------------------------------------
+# 頂層：ci_rules
+# Phase B CI 驗證規則的路徑列表。
+# 這些規則由管線自動產出，用於持續整合中守護合約。
+# ------------------------------------------------------------------------------
+ci_rules:
+  grep_scripts:                              # grep 驗證腳本路徑
+    - ".sourceatlas/audit/rules/{module}/verify-contracts-{module}.sh"
+  ast_grep_rules:                            # ast-grep 規則檔路徑
+    - ".sourceatlas/audit/rules/{module}/{id}-{slug}.yml"
+
+# ==============================================================================
+# 範例：完整的輸出檔案
+# ==============================================================================
+# 以下為一個符合此模板的完整範例（僅供參考）。
+#
+# ---
+# metadata:
+#   module: "NYHTTPSClient"
+#   language: objc
+#   timestamp: "2026-03-08T14:30:21+08:00"
+#   version: "1.0"
+#   pipeline_config:
+#     run_id: "20260308-143021"
+#     refactoring_intent: "Replace with Swift async/await + interceptor chain"
+#     source_files:
+#       - "NYCore/Classes/Network/NYHTTPSClient.m"
+#       - "NYCore/Classes/Network/NYHTTPSClient.h"
+#     agents_used:
+#       - "auditor"
+#       - "blind_scout"
+#       - "adversary"
+#       - "applier"
+#
+# feathers_analysis:
+#   story: "請求攔截器，負責 (1) 注入認證標頭、(2) 管理冪等性、(3) 控制重試邏輯"
+#   lies:
+#     - omission: "CDN 查詢的同步阻塞特性"
+#       risk: "重構為 async/await 時可能忽略此阻塞行為，導致 deadlock"
+#     - omission: "Singleton shared request 的累積修改語義"
+#       risk: "新 interceptor 架構若不保留累積語義，會遺失跨請求的 header"
+#   scratch_refactoring:
+#     - operation: "將 addHTTPHeaderField 重構為 immutable request builder"
+#       reveals:
+#         - "M-001"
+#         - "NEW"
+#     - operation: "將 getCDNDomainSynchronously 替換為 async 版本"
+#       reveals:
+#         - "D-001"
+#         - "S-001"
+#   effect_traces:
+#     - method: "- (void)addHTTPHeaderField:(NSString *)field value:(NSString *)value"
+#       return: "void"
+#       mutates: "self.request (NSMutableURLRequest)"
+#       global: "none"
+#       depth: "1"
+#
+# contracts:
+#   - id: M-001
+#     type: M
+#     description: >
+#       addHTTPHeaderField 會修改 shared NSMutableURLRequest，
+#       所有後續請求繼承此修改。遷移時必須確保 header 的累積語義被保留。
+#     evidence:
+#       - file: "NYCore/Classes/Network/NYHTTPSClient.m"
+#         line: "42"
+#         snippet: "[self.request addValue:value forHTTPHeaderField:field];"
+#       - file: "NYCore/Classes/Network/NYHTTPSClient.m"
+#         line: "38-40"
+#     severity: high
+#     scope: class
+#     seam_type: object
+#     pinch_point: false
+#     verification:
+#       grep_pattern: "addValue.*forHTTPHeaderField"
+#     adversary_status: CONFIRM
+#     notes: ""
+#
+#   - id: D-001
+#     type: D
+#     description: >
+#       NYHTTPSClient 硬依賴 NYCDNManager.getCDNDomainSynchronously，
+#       此同步呼叫阻塞當前執行緒。遷移前需先透過 Protocol 抽象 CDN 查詢介面。
+#     evidence:
+#       - file: "NYCore/Classes/Network/NYHTTPSClient.m"
+#         line: "156"
+#         snippet: "NSString *cdn = [[NYCDNManager shared] getCDNDomainSynchronously];"
+#     severity: critical
+#     scope: module
+#     seam_type: object
+#     pinch_point: true
+#     verification:
+#       grep_pattern: "getCDNDomainSynchronously"
+#     adversary_status: CONFIRM
+#     notes: "Pinch Point: 5 個模組透過此方法取得 CDN domain"
+#
+# summary:
+#   total_contracts: 49
+#   by_category:
+#     M: 12
+#     L: 8
+#     N: 5
+#     S: 4
+#     E: 6
+#     C: 3
+#     D: 7
+#     P: 4
+#   by_severity:
+#     critical: 5
+#     high: 18
+#     medium: 16
+#     low: 10
+#   confirm_ratio: 0.65
+#   pinch_points_count: 3
+#   line_attribution:
+#     total_lines: 487
+#     contract_lines: 312
+#     infra_lines: 140
+#     skip_lines: 35
+#     unclassified: 0
+#   completeness: "COMPLETE"
+#   completeness_note: ""
+#
+# ci_rules:
+#   grep_scripts:
+#     - ".sourceatlas/audit/rules/NYHTTPSClient/verify-contracts-NYHTTPSClient.sh"
+#   ast_grep_rules:
+#     - ".sourceatlas/audit/rules/NYHTTPSClient/M-001-shared-request-mutation.yml"
+#     - ".sourceatlas/audit/rules/NYHTTPSClient/D-001-cdn-sync-dependency.yml"
