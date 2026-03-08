@@ -174,6 +174,49 @@ authService.on('auth:logout', () => router.push('/login'));
 
 **合約範例**：`AuthService 發射 auth:logout 事件時，CacheManager、AnalyticsService、Router 三個監聽者依序執行，任一監聯者拋出例外將阻斷後續監聽者`
 
+### 2.5 Express/NestJS middleware chain 的 next() 傳播
+
+middleware 的執行順序和 `next()` 呼叫構成隱含的效果傳播鏈。
+
+```typescript
+// next() 傳播：呼叫 next() 將控制權傳遞給下一個 middleware
+function authMiddleware(req: Request, res: Response, next: NextFunction) {
+  const token = req.headers.authorization;
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized' });  // 傳播中斷——後續 middleware 不執行
+  }
+  req.user = verifyToken(token);
+  next();  // 傳播繼續——控制權交給下一個 middleware
+}
+
+// next(error) vs next() 的行為差異
+function validationMiddleware(req: Request, res: Response, next: NextFunction) {
+  try {
+    validateBody(req.body);
+    next();       // 正常傳播——進入下一個 middleware 或路由處理器
+  } catch (err) {
+    next(err);    // 錯誤傳播——跳過所有後續一般 middleware，直接進入 error handler
+  }
+}
+
+// Error handler 必須是四參數函式，否則 Express 不會識別
+function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
+  logger.error(err);
+  res.status(500).json({ error: err.message });
+}
+
+// middleware 註冊順序是隱含合約
+app.use(cors());              // 1. CORS 必須最先
+app.use(express.json());      // 2. Body 解析必須在驗證之前
+app.use(authMiddleware);      // 3. 認證必須在路由之前
+app.use('/api', apiRouter);   // 4. 路由處理
+app.use(errorHandler);        // 5. Error handler 必須最後
+```
+
+**合約範例**：`authMiddleware 在驗證失敗時回傳 401 並中斷傳播鏈，驗證成功時呼叫 next() 將 req.user 傳播至後續 middleware 和路由處理器。validationMiddleware 在驗證失敗時呼叫 next(err) 跳過路由處理器直接進入 errorHandler`
+
+**middleware 順序作為隱含合約**：middleware 的註冊順序決定了請求處理流程。如果將 `authMiddleware` 移到 `apiRouter` 之後，所有 API 路由將不受認證保護。如果將 `express.json()` 移到 `authMiddleware` 之後，認證 middleware 無法讀取 request body。這些順序依賴不會產生任何編譯或啟動錯誤。
+
 ---
 
 ## 3. 品質標準
@@ -236,6 +279,7 @@ D/P 類別合約在總合約中的佔比反映模組的耦合程度：
 4. [ ] Promise/async 的錯誤傳播路徑是否已被 P 合約覆蓋
 5. [ ] 狀態管理的 mutation 傳播是否已被 P 合約覆蓋
 6. [ ] EventEmitter/Subject 的事件傳播鏈是否已被 P 合約覆蓋
-7. [ ] D/P 佔比是否在 15%-25% 範圍內
-8. [ ] 每個 D 合約是否標記了 seam_type
-9. [ ] 每個 P 合約是否追蹤了至少一種 effect 路徑
+7. [ ] middleware chain 的 next() 傳播路徑是否已被 P 合約覆蓋
+8. [ ] D/P 佔比是否在 15%-25% 範圍內
+9. [ ] 每個 D 合約是否標記了 seam_type
+10. [ ] 每個 P 合約是否追蹤了至少一種 effect 路徑
