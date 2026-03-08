@@ -127,16 +127,16 @@ detect_objc() {
 echo "=== Feathers Monster Method 偵測 (閾值: $THRESHOLD 行) ==="
 
 # Swift 檔案
-find "$TARGET_DIR" -name "*.swift" -not -path "*/.build/*" -not -path "*/Pods/*" | while read -r f; do
+while read -r f; do
     detect_swift "$f"
-done
+done < <(find "$TARGET_DIR" -name "*.swift" -not -path "*/.build/*" -not -path "*/Pods/*")
 
 # 非 Swift 檔案
 if ! $SWIFT_ONLY; then
-    find "$TARGET_DIR" \( -name "*.m" -o -name "*.java" -o -name "*.cs" \) \
-        -not -path "*/.build/*" -not -path "*/Pods/*" | while read -r f; do
+    while read -r f; do
         detect_objc "$f"
-    done
+    done < <(find "$TARGET_DIR" \( -name "*.m" -o -name "*.java" -o -name "*.cs" \) \
+        -not -path "*/.build/*" -not -path "*/Pods/*")
 fi
 
 if [[ $VIOLATIONS -eq 0 ]]; then
