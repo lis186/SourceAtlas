@@ -492,3 +492,5 @@ extension Trackable {
     }
 }
 ```
+
+**重構風險：** 如果將 protocol extension 中的預設實作移除或改為 `fatalError("Subclass must implement")`，所有未明確實作該方法的遵循者會從「靜默忽略」變為「編譯錯誤」或「runtime crash」。更微妙的情況是：當遵循者定義了同名方法但簽名略有不同（例如參數標籤不同），Swift 會靜默使用 extension 的預設實作而非遵循者的版本——這種分歧不會產生任何編譯警告。
