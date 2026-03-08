@@ -86,6 +86,11 @@ ext_to_language() {
     swift)     echo "swift" ;;
     ts|tsx)    echo "typescript" ;;
     js|jsx)    echo "typescript" ;;
+    go)        echo "go" ;;
+    kt|kts)    echo "kotlin" ;;
+    py)        echo "python" ;;
+    rs)        echo "rust" ;;
+    java)      echo "java" ;;
     *)         echo "" ;;
   esac
 }
@@ -103,6 +108,21 @@ project_type_to_language() {
       ;;
     nodejs)
       echo "typescript"
+      ;;
+    go)
+      echo "go"
+      ;;
+    kotlin|android)
+      echo "kotlin"
+      ;;
+    python)
+      echo "python"
+      ;;
+    rust)
+      echo "rust"
+      ;;
+    java)
+      echo "java"
       ;;
     *)
       echo ""
@@ -175,7 +195,7 @@ if [ -n "$FILE_MODE" ]; then
 
   if [ -z "$LANG" ]; then
     log "WARN: 無法從副檔名 '.${EXT}' 推斷語言"
-    log "WARN: 支援的副檔名：.m .h (objc), .swift (swift), .ts .tsx .js .jsx (typescript)"
+    log "WARN: 支援的副檔名：.m .h (objc), .swift (swift), .ts .tsx .js .jsx (typescript), .go (go), .kt .kts (kotlin), .py (python), .rs (rust), .java (java)"
     log "WARN: 請使用 --language 手動指定語言"
     echo "LANGUAGE="
     echo "PLUGIN="

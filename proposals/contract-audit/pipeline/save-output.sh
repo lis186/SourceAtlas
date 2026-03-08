@@ -13,7 +13,7 @@
 #
 # 行為：
 #   1. 建立 .sourceatlas/audit/ 目錄（如果不存在）
-#   2. 如果已存在舊結果，備份到 {module}.yaml.bak
+#   2. 如果已存在舊結果，備份到 {module}.yaml.{YYYYMMDD-HHMMSS}.bak
 #   3. 複製管線輸出到目標路徑
 #   4. 輸出存儲路徑供使用者確認
 #
@@ -85,8 +85,10 @@ fi
 # 備份舊結果
 # --------------------------------------------------------------------------
 if [ -f "$OUTPUT_FILE" ]; then
-  cp "$OUTPUT_FILE" "${OUTPUT_FILE}.bak"
-  echo "已備份舊結果：${OUTPUT_FILE}.bak"
+  BACKUP_TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
+  BACKUP_FILE="${OUTPUT_FILE}.${BACKUP_TIMESTAMP}.bak"
+  cp "$OUTPUT_FILE" "$BACKUP_FILE"
+  echo "已備份舊結果：${BACKUP_FILE}"
 fi
 
 # --------------------------------------------------------------------------

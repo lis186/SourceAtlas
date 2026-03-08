@@ -1,10 +1,14 @@
 #!/bin/bash
 # SourceAtlas - 審計目標推薦腳本
 #
-# 整合熵值掃描、git 變動頻率（hotspot）、耦合度分析，
+# 整合檔案複雜度、git 變動頻率（hotspot）、耦合度分析，
 # 綜合排序推薦最值得進行行為合約審計的檔案。
 #
-# 評分公式：score = entropy_rank * 0.4 + hotspot_rank * 0.4 + coupling_rank * 0.2
+# 注意：此腳本中的「熵值」是以行數作為複雜度的近似指標，
+# 並非資訊理論中的 Shannon 熵。若需真正的資訊理論熵值分析，
+# 請使用 scripts/atlas/scan-entropy.sh。
+#
+# 評分公式：score = complexity_rank * 0.4 + hotspot_rank * 0.4 + coupling_rank * 0.2
 # （排名越前面分數越高）
 #
 # 依賴：bash, git, rg, awk, sort
@@ -52,6 +56,9 @@ usage() {
     echo "                     支援: ts, js, py, go, swift, objc, java, kt, rs, rb, php"
     echo "  --path <dir>       指定掃描目錄"
     echo "  -h, --help         顯示此說明"
+    echo ""
+    echo "注意：複雜度分析使用行數作為近似指標，非資訊理論熵值。"
+    echo "      若需真正的熵值分析，請使用 scripts/atlas/scan-entropy.sh。"
 }
 
 # -- 參數解析 --
@@ -208,9 +215,11 @@ collect_files() {
     rg "${rg_args[@]}" "$TARGET_DIR" 2>/dev/null | sort > "$file_list"
 }
 
-# -- 階段 1：熵值分析 --
-# 用檔案行數作為複雜度近似指標（行數多 = 高熵 = 更需要審計）
-analyze_entropy() {
+# -- 階段 1：檔案複雜度分析 --
+# 此處使用行數作為複雜度近似指標，非資訊理論中的熵值。
+# 行數越多通常表示邏輯越複雜，越需要審計。
+# 若需真正的資訊理論熵值，可呼叫 scripts/atlas/scan-entropy.sh。
+analyze_complexity() {
     local file_list="$1"
     local output="$2"
 
@@ -305,13 +314,13 @@ analyze_coupling() {
 
 # -- 綜合排序 --
 compute_scores() {
-    local entropy_file="$1"
+    local complexity_file="$1"
     local hotspot_file="$2"
     local coupling_file="$3"
     local output="$4"
 
     local total_files
-    total_files=$(wc -l < "$entropy_file" | tr -d ' ')
+    total_files=$(wc -l < "$complexity_file" | tr -d ' ')
 
     if [ "$total_files" -eq 0 ]; then
         echo "錯誤：沒有找到任何原始碼檔案" >&2
@@ -321,8 +330,8 @@ compute_scores() {
     # 建立排名對照表（排名從 1 開始，第 1 名 = 最高值）
     # 標準化排名為 0~1 之間（第 1 名 = 1.0，最後一名 = 接近 0）
 
-    # 熵值排名
-    awk -v total="$total_files" '{rank=NR; score=(total - rank + 1) / total; print $2, score}' "$entropy_file" > "${output}.entropy_rank"
+    # 複雜度排名
+    awk -v total="$total_files" '{rank=NR; score=(total - rank + 1) / total; print $2, score}' "$complexity_file" > "${output}.complexity_rank"
 
     # hotspot 排名
     awk -v total="$total_files" '{rank=NR; score=(total - rank + 1) / total; print $2, score}' "$hotspot_file" > "${output}.hotspot_rank"
@@ -334,28 +343,28 @@ compute_scores() {
     # 使用 awk 讀取所有排名，計算加權分數
     awk '
     BEGIN { FS=" " }
-    FILENAME ~ /entropy_rank$/ { entropy[$1] = $2; next }
+    FILENAME ~ /complexity_rank$/ { complexity[$1] = $2; next }
     FILENAME ~ /hotspot_rank$/ { hotspot[$1] = $2; next }
     FILENAME ~ /coupling_rank$/ { coupling[$1] = $2; next }
     END {
-        for (file in entropy) {
-            e = (file in entropy) ? entropy[file] : 0
+        for (file in complexity) {
+            e = (file in complexity) ? complexity[file] : 0
             h = (file in hotspot) ? hotspot[file] : 0
             c = (file in coupling) ? coupling[file] : 0
             score = e * 0.4 + h * 0.4 + c * 0.2
             printf "%.4f %s\n", score, file
         }
-    }' "${output}.entropy_rank" "${output}.hotspot_rank" "${output}.coupling_rank" \
+    }' "${output}.complexity_rank" "${output}.hotspot_rank" "${output}.coupling_rank" \
         | sort -rn > "$output"
 
     # 清理暫存
-    rm -f "${output}.entropy_rank" "${output}.hotspot_rank" "${output}.coupling_rank"
+    rm -f "${output}.complexity_rank" "${output}.hotspot_rank" "${output}.coupling_rank"
 }
 
 # -- 格式化輸出 --
 format_output() {
     local scores_file="$1"
-    local entropy_file="$2"
+    local complexity_file="$2"
     local hotspot_file="$3"
     local coupling_file="$4"
     local total_files="$5"
@@ -373,21 +382,21 @@ format_output() {
         fi
 
         # 查詢該檔案的各項原始數值
-        local entropy_val
-        entropy_val=$(awk -v f="$file" '$2 == f {print $1; exit}' "$entropy_file")
+        local complexity_val
+        complexity_val=$(awk -v f="$file" '$2 == f {print $1; exit}' "$complexity_file")
         local hotspot_val
         hotspot_val=$(awk -v f="$file" '$2 == f {print $1; exit}' "$hotspot_file")
         local coupling_val
         coupling_val=$(awk -v f="$file" '$2 == f {print $1; exit}' "$coupling_file")
 
-        # 熵值等級
-        local entropy_level
-        if [ "${entropy_val:-0}" -gt 300 ]; then
-            entropy_level="高"
-        elif [ "${entropy_val:-0}" -gt 100 ]; then
-            entropy_level="中"
+        # 複雜度等級（基於行數）
+        local complexity_level
+        if [ "${complexity_val:-0}" -gt 300 ]; then
+            complexity_level="高"
+        elif [ "${complexity_val:-0}" -gt 100 ]; then
+            complexity_level="中"
         else
-            entropy_level="低"
+            complexity_level="低"
         fi
 
         # 顯示相對路徑
@@ -395,8 +404,8 @@ format_output() {
         display_path="${file#$TARGET_DIR/}"
 
         printf "%2d. %s  (score: %s)\n" "$rank" "$display_path" "$score"
-        printf "    熵值(行數): %s (%s) | git 變動: %s 次 | 被引用: %s 處\n" \
-            "$entropy_level" "${entropy_val:-0}" "${hotspot_val:-0}" "${coupling_val:-0}"
+        printf "    複雜度(行數): %s (%s) | git 變動: %s 次 | 被引用: %s 處\n" \
+            "$complexity_level" "${complexity_val:-0}" "${hotspot_val:-0}" "${coupling_val:-0}"
     done < "$scores_file"
 
     echo ""
@@ -409,7 +418,7 @@ main() {
     TMPDIR_WORK=$(mktemp -d)
 
     local file_list="${TMPDIR_WORK}/files.txt"
-    local entropy_result="${TMPDIR_WORK}/entropy.txt"
+    local complexity_result="${TMPDIR_WORK}/complexity.txt"
     local hotspot_result="${TMPDIR_WORK}/hotspot.txt"
     local coupling_result="${TMPDIR_WORK}/coupling.txt"
     local scores_result="${TMPDIR_WORK}/scores.txt"
@@ -441,9 +450,9 @@ main() {
         show_n=$total_files
     fi
 
-    # 階段 1：熵值分析
-    echo "-- 分析檔案複雜度（熵值）..."
-    analyze_entropy "$file_list" "$entropy_result"
+    # 階段 1：檔案複雜度分析（以行數近似）
+    echo "-- 分析檔案複雜度（行數近似）..."
+    analyze_complexity "$file_list" "$complexity_result"
 
     # 階段 2：hotspot 分析
     echo "-- 分析 git 變動頻率（hotspot）..."
@@ -455,13 +464,14 @@ main() {
 
     # 綜合排序
     echo "-- 計算綜合分數..."
-    compute_scores "$entropy_result" "$hotspot_result" "$coupling_result" "$scores_result"
+    compute_scores "$complexity_result" "$hotspot_result" "$coupling_result" "$scores_result"
 
     # 輸出結果
-    format_output "$scores_result" "$entropy_result" "$hotspot_result" "$coupling_result" "$total_files" "$show_n"
+    format_output "$scores_result" "$complexity_result" "$hotspot_result" "$coupling_result" "$total_files" "$show_n"
 
     echo "=== 分析完成 ==="
-    echo "評分公式: score = entropy_rank * 0.4 + hotspot_rank * 0.4 + coupling_rank * 0.2"
+    echo "評分公式: score = complexity_rank * 0.4 + hotspot_rank * 0.4 + coupling_rank * 0.2"
+    echo "（複雜度以行數近似，非資訊理論熵值）"
 }
 
 main "$@"

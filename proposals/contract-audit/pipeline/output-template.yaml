@@ -5,7 +5,18 @@
 # 用途：定義 /atlas.audit 命令的 .sourceatlas/audit/{module}.yaml 輸出格式
 # 版本：1.0
 #
-# 此模板與 contract-output.schema.yaml 對齊，
+# 此格式是 contract-output.schema.yaml 的擴展格式。
+# Schema 定義的基準欄位：version, module, language, run_id,
+#   refactoring_intent, total_contracts, pinch_points, contracts
+#
+# 本模板在基準之上增加了以下擴展：
+#   - metadata 嵌套結構（將 module/language/version 等收納於 metadata 下，
+#     並增加 timestamp、pipeline_config 子結構）
+#   - feathers_analysis 段落（F1 story/lies、F2 scratch_refactoring、
+#     F3 effect_traces 的完整結構）
+#   - summary 段落（by_category、by_severity、line_attribution、completeness）
+#   - ci_rules 段落（grep_scripts、ast_grep_rules 路徑清單）
+#
 # 並遵循 SourceAtlas 現有的輸出風格（參見 overview.yaml 範例）。
 # ==============================================================================
 
