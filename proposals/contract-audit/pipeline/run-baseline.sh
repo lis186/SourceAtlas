@@ -586,12 +586,18 @@ else
   fi
 fi
 
-# 附加語言插件
+# 替換 {language_plugin} 佔位符為實際語言插件檔名
 if [ -n "$LANGUAGE" ] && [ -f "$PROMPTS/languages/${LANGUAGE}.md" ]; then
+  AUDIT_PROMPT=$(echo "$AUDIT_PROMPT" | sed "s/{language_plugin}/languages\/${LANGUAGE}.md/g")
   AUDIT_PROMPT="${AUDIT_PROMPT}
 
-$(cat "$PROMPTS/languages/${LANGUAGE}.md")"
+--- LANGUAGE PLUGIN: ${LANGUAGE} ---
+$(cat "$PROMPTS/languages/${LANGUAGE}.md")
+--- END LANGUAGE PLUGIN ---"
   echo "  語言插件: ${LANGUAGE}.md"
+else
+  # 無語言插件時，清除佔位符避免混淆
+  AUDIT_PROMPT=$(echo "$AUDIT_PROMPT" | sed 's/{language_plugin}/（未指定語言插件）/g')
 fi
 
 # 附加依賴分析結果（如果有）
