@@ -11,6 +11,7 @@ note: |
   限制: ast-grep 無法跨方法計數，此規則偵測的是「子類別中僅有 1 個 override 方法」
   的極端情況。完整的 <= 2 個 override 計數需要搭配 grep fallback。
   誤報情境: UIViewController 子類別的 viewDidLoad override 是合理的。
+  ObjC 注意: ast-grep 不支援 Objective-C，ObjC 專案請使用 ../objc-fallback/programming-by-difference.sh
 
 # 偵測僅有單一 override 的子類別（最明確的 programming by difference 信號）
 rule:

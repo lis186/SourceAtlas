@@ -21,6 +21,13 @@
 #   Step 2:   Claude 結構化審計
 #   Step 3:   Codex 對抗性評論
 #   Step 4:   Claude 合併 + Pinch Point 標記
+#
+# 外部依賴：
+#   gemini  -- Google Gemini CLI（Step 1 盲掃）
+#   claude  -- Anthropic Claude Code CLI（Step 1.5, 2, 4）
+#   codex   -- OpenAI Codex CLI，使用 codex exec（Step 3 對抗性評論）
+#   rg      -- ripgrep，用於靜態文字搜尋（Step 0, 0.5）
+#   YAML 解析使用內建 awk/grep/sed，不需要 yq
 
 set -euo pipefail
 
@@ -351,7 +358,7 @@ EOF
 # Step 0: 邊界發現
 # ==============================================================================
 
-echo "[Step 0/6] 邊界發現..."
+echo "[Step 0] 邊界發現..."
 
 TARGET_DIR="$(dirname "${CLI_TARGETS[0]}")"
 EXTRA_FILES=""
@@ -402,7 +409,7 @@ done
 FEATHERS_SCAN_FILE="$RUN_DIR/feathers-scan.txt"
 
 if [ "$SKIP_FEATHERS" = "false" ]; then
-  echo "[Step 0.5/6] Feathers 規則掃描..."
+  echo "[Step 0.5] Feathers 規則掃描..."
 
   FEATHERS_RULES_DIR="$AUDIT_DIR/rules/feathers"
   FEATHERS_HIT_COUNT=0
@@ -438,13 +445,14 @@ if [ "$SKIP_FEATHERS" = "false" ]; then
     done
 
     FEATHERS_LINE_COUNT=$(wc -l < "$FEATHERS_SCAN_FILE")
+    echo "  Feathers 規則掃描完成: $FEATHERS_HIT_COUNT 個命中"
     echo "  完成: $FEATHERS_LINE_COUNT 行輸出寫入 feathers-scan.txt"
   else
     echo "  WARN: Feathers 規則目錄不存在: $FEATHERS_RULES_DIR"
     echo "# Feathers 規則目錄不存在" > "$FEATHERS_SCAN_FILE"
   fi
 else
-  echo "[Step 0.5/6] SKIP: Feathers 規則掃描（--skip-feathers）"
+  echo "[Step 0.5] SKIP: Feathers 規則掃描（--skip-feathers）"
   echo "# Feathers scan skipped" > "$FEATHERS_SCAN_FILE"
 fi
 
@@ -452,7 +460,7 @@ fi
 # Step 1: Gemini 盲掃
 # ==============================================================================
 
-echo "[Step 1/6] Gemini 盲掃..."
+echo "[Step 1] Gemini 盲掃..."
 
 GEMINI_EXTRA_HINT=""
 if [ -n "$(echo "$EXTRA_FILES" | tr -d '[:space:]')" ]; then
@@ -470,7 +478,7 @@ GEMINI_INTENT_HINT=""
 $REFACTORING_INTENT
 "
 
-{ cat "$PROMPTS/gemini-blind-scan.md"; echo "$GEMINI_INTENT_HINT"; echo "$GEMINI_EXTRA_HINT"; cat $TARGET_FILES; } \
+{ cat "$PROMPTS/gemini-blind-scan.md" | sed "s/{language}/${LANGUAGE}/g"; echo "$GEMINI_INTENT_HINT"; echo "$GEMINI_EXTRA_HINT"; cat $TARGET_FILES; } \
   | gemini -m gemini-2.5-pro -p - --sandbox false \
   > "$RUN_DIR/gemini-findings.md"
 
@@ -485,9 +493,9 @@ echo "  PASS: $GEMINI_LINES 行"
 # Step 1.5: 依賴圖譜分析（Feathers 第 3 步「打破依賴」）
 # ==============================================================================
 
-echo "[Step 1.5/6] 依賴圖譜分析..."
+echo "[Step 1.5] 依賴圖譜分析..."
 
-DEP_ANALYSIS_FILE="$RUN_DIR/dependency-analysis.md"
+DEP_ANALYSIS_FILE="$RUN_DIR/dependency-graph.json"
 
 if [ -n "$IMPORT_PATTERNS" ]; then
   echo "  import 模式: $IMPORT_PATTERNS"
@@ -542,10 +550,24 @@ $IMPORT_LIST
 === 反向依賴（誰 import 了目標模組）===
 $REVERSE_DEPS
 
-輸出格式為 Markdown，包含：
-- 依賴方向圖（ASCII）
-- Seam 類型表格
-- Pinch Point 清單及建議策略"
+輸出格式為 JSON，結構如下：
+{
+  \"dependency_graph\": [
+    { \"from\": \"ModuleA\", \"to\": \"ModuleB\", \"seam_type\": \"object|preprocessing|link|none\" }
+  ],
+  \"pinch_points\": [
+    {
+      \"node\": \"ModuleName\",
+      \"in_degree\": 5,
+      \"is_pinch_point\": true,
+      \"suggested_strategy\": \"Extract Interface / Sprout / Wrap\"
+    }
+  ],
+  \"seam_summary\": [
+    { \"dependency\": \"A -> B\", \"seam_type\": \"object\", \"reason\": \"...\" }
+  ]
+}
+只輸出合法的 JSON，不要包含 Markdown 或其他格式。"
 
     env -u CLAUDECODE claude \
       -p "$DEP_PROMPT" \
@@ -557,18 +579,18 @@ $REVERSE_DEPS
     echo "  PASS: 依賴分析完成（$DEP_LINES 行）"
   else
     echo "  SKIP: Seam 識別已停用"
-    echo "# Seam detection disabled" > "$DEP_ANALYSIS_FILE"
+    echo '{"dependency_graph":[],"pinch_points":[],"seam_summary":[]}' > "$DEP_ANALYSIS_FILE"
   fi
 else
   echo "  SKIP: 未設定 import_patterns，跳過依賴分析"
-  echo "# No import_patterns configured" > "$DEP_ANALYSIS_FILE"
+  echo '{"dependency_graph":[],"pinch_points":[],"seam_summary":[]}' > "$DEP_ANALYSIS_FILE"
 fi
 
 # ==============================================================================
 # Step 2: Claude 結構化審計
 # ==============================================================================
 
-echo "[Step 2/6] Claude 結構化審計..."
+echo "[Step 2] Claude 結構化審計..."
 
 # 組合 prompt：skeleton + 語言插件
 AUDIT_PROMPT=""
@@ -600,18 +622,29 @@ else
   AUDIT_PROMPT=$(echo "$AUDIT_PROMPT" | sed 's/{language_plugin}/（未指定語言插件）/g')
 fi
 
+# 附加 Feathers 掃描結果（如果有）
+FEATHERS_CONTEXT=""
+if [ -f "$FEATHERS_SCAN_FILE" ] && [ "$(wc -l < "$FEATHERS_SCAN_FILE")" -gt 3 ]; then
+  FEATHERS_CONTEXT="
+
+## Step 0.5 Feathers 規則掃描結果
+以下是 Feathers 規則對目標模組的靜態掃描結果，請在合約分析中參考這些結構性品質問題：
+$(cat "$FEATHERS_SCAN_FILE")
+"
+fi
+
 # 附加依賴分析結果（如果有）
 DEP_CONTEXT=""
-if [ -f "$DEP_ANALYSIS_FILE" ] && [ "$(wc -l < "$DEP_ANALYSIS_FILE")" -gt 1 ]; then
+if [ -f "$DEP_ANALYSIS_FILE" ] && ! grep -q '"dependency_graph":\[\]' "$DEP_ANALYSIS_FILE" 2>/dev/null; then
   DEP_CONTEXT="
 
-## Step 1.5 依賴分析結果
+## Step 1.5 依賴分析結果（JSON）
 $(cat "$DEP_ANALYSIS_FILE")
 
 請在合約中標記以下元資料：
 - scope: method / class / module
-- seam_type: object / preprocessing / link / none
-- pinch_point: true / false（Pinch Point 節點的合約標記為 true）
+- seam_type: object / preprocessing / link / none（參考 JSON 中的 seam_type）
+- pinch_point: true / false（參考 JSON 中的 pinch_points）
 "
 fi
 
@@ -623,7 +656,7 @@ $REFACTORING_INTENT
 "
 
 env -u CLAUDECODE claude \
-  -p "${AUDIT_PROMPT}${INTENT_CONTEXT}${DEP_CONTEXT}
+  -p "${AUDIT_PROMPT}${INTENT_CONTEXT}${FEATHERS_CONTEXT}${DEP_CONTEXT}
 
 $(cat $ALL_TARGET_FILES)" \
   --permission-mode bypassPermissions \
@@ -650,7 +683,7 @@ echo "  （軟門檻 -- 管線繼續執行）"
 # Step 3: Codex 對抗性評論
 # ==============================================================================
 
-echo "[Step 3/6] Codex 對抗性評論..."
+echo "[Step 3] Codex 對抗性評論..."
 
 codex exec \
   -o "$RUN_DIR/codex-review.md" \
@@ -675,16 +708,16 @@ fi
 # Step 4: Claude 合併 + Pinch Point 標記
 # ==============================================================================
 
-echo "[Step 4/6] Claude 合併 + Pinch Point 標記..."
+echo "[Step 4] Claude 合併 + Pinch Point 標記..."
 echo "DEGRADED=$DEGRADED" >> "$RUN_DIR/codex-review.md"
 
 # 組合 applier prompt，附加 Pinch Point 標記指令
 APPLIER_EXTRA=""
-if [ -f "$DEP_ANALYSIS_FILE" ] && [ "$(wc -l < "$DEP_ANALYSIS_FILE")" -gt 1 ]; then
+if [ -f "$DEP_ANALYSIS_FILE" ] && ! grep -q '"dependency_graph":\[\]' "$DEP_ANALYSIS_FILE" 2>/dev/null; then
   APPLIER_EXTRA="
 
 ## Pinch Point 標記指令
-參考以下依賴分析結果，在最終合約中為每個合約加入元資料：
+參考以下依賴分析結果（JSON 格式），在最終合約中為每個合約加入元資料：
 - scope: method | class | module
 - seam_type: object | preprocessing | link | none
 - pinch_point: true | false
@@ -725,7 +758,7 @@ fi
 # Step 5: 自我驗證
 # ==============================================================================
 
-echo "[Step 5/6] 自我驗證（Phase B 對當前原始碼）..."
+echo "[Step 5] 自我驗證（Phase B 對當前原始碼）..."
 chmod +x "$PHASE_B/verify-contracts-${MODULE_NAME}.sh"
 if ! bash "$PHASE_B/run-ci.sh"; then
   echo "ABORT: Phase B 自我檢查失敗。Applier 產出有問題。"
@@ -748,5 +781,5 @@ echo "Latest:         $OUTPUT/latest -> runs/$RUN_ID"
 echo "最終合約:       $OUTPUT/final-contracts.md"
 echo "CI 腳本:        $PHASE_B/verify-contracts-${MODULE_NAME}.sh"
 echo "ast-grep 規則:  $PHASE_B/rules/"
-echo "依賴分析:       $RUN_DIR/dependency-analysis.md"
+echo "依賴分析:       $RUN_DIR/dependency-graph.json"
 echo "管線設定:       $RUN_DIR/pipeline-config.log"

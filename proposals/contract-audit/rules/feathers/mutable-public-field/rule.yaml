@@ -13,6 +13,7 @@ note: |
     - 簡單 DTO/Model struct 的屬性
     - Protocol conformance 要求的 var
   建議: 搭配人工審查過濾 DTO 和 UIKit 屬性
+  ObjC 注意: ast-grep 不支援 Objective-C，ObjC 專案請使用 ../objc-fallback/mutable-public-field.sh
 
 rule:
   any:

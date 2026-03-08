@@ -9,6 +9,7 @@ note: |
   偵測目標: 巢狀 if/for/while/switch 超過 3 層的方法
   限制: ast-grep 無法直接計算巢狀深度，此規則以 pattern matching 偵測
   具體 4 層巢狀的結構模式。實務上建議搭配 grep fallback 做更精確的計算。
+  ObjC 注意: ast-grep 不支援 Objective-C，ObjC 專案請使用 ../objc-fallback/snarled-method.sh
 
 # 偵測 4 層巢狀 if（最常見的 snarled pattern）
 rule:
