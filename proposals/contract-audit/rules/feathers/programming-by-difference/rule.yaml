@@ -1,0 +1,29 @@
+id: feathers-programming-by-difference
+message: >
+  [FEATHERS Ch.20] Programming by Difference -- 子類別僅 override 極少數方法。
+  當子類別只覆寫 1-2 個方法時，可能是 "Programming by Difference" 的徵兆，
+  考慮改用組合（Composition）或策略模式（Strategy Pattern）。
+severity: hint
+language: Swift
+note: |
+  來源: Working Effectively with Legacy Code, Ch.20 "This Class Is Too Big and I Don't Want It to Get Any Bigger"
+  偵測目標: 子類別中 override 方法數量 <= 2
+  限制: ast-grep 無法跨方法計數，此規則偵測的是「子類別中僅有 1 個 override 方法」
+  的極端情況。完整的 <= 2 個 override 計數需要搭配 grep fallback。
+  誤報情境: UIViewController 子類別的 viewDidLoad override 是合理的。
+
+# 偵測僅有單一 override 的子類別（最明確的 programming by difference 信號）
+rule:
+  pattern: |
+    class $NAME: $PARENT {
+      $$$
+      override func $METHOD($$$) $$$RETURN {
+        $$$
+      }
+      $$$
+    }
+constraints:
+  # 排除常見合理的單一 override（如 viewDidLoad）
+  METHOD:
+    not:
+      regex: '^(viewDidLoad|viewWillAppear|viewDidAppear|viewWillDisappear|viewDidDisappear|layoutSubviews|awakeFromNib|prepareForReuse)$'

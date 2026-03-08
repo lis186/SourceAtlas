@@ -1,0 +1,24 @@
+id: feathers-mutable-public-field
+message: >
+  [FEATHERS Ch.11] 公開可變欄位 -- Effect Propagation 風險。
+  公開的 var 屬性允許外部任意修改，造成狀態變更的影響難以追蹤。
+  考慮使用 private(set) 或改為唯讀計算屬性。
+severity: warning
+language: Swift
+note: |
+  來源: Working Effectively with Legacy Code, Ch.11 "I Need to Make a Change. What Methods Should I Test?"
+  偵測目標: public var 或 open var 宣告（非 private(set)）
+  誤報情境:
+    - @IBOutlet 屬性（UIKit 要求 var）
+    - 簡單 DTO/Model struct 的屬性
+    - Protocol conformance 要求的 var
+  建議: 搭配人工審查過濾 DTO 和 UIKit 屬性
+
+rule:
+  any:
+    - pattern: 'public var $NAME: $TYPE'
+    - pattern: 'public var $NAME = $VALUE'
+    - pattern: 'open var $NAME: $TYPE'
+    - pattern: 'open var $NAME = $VALUE'
+    - pattern: 'public var $NAME: $TYPE?'
+    - pattern: 'public var $NAME: $TYPE!'
