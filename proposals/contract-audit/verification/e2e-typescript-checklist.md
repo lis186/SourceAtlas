@@ -20,6 +20,7 @@
 - [ ] `language` 欄位值為 `typescript`
 - [ ] `target_files` 中列出的所有 `.ts` 檔案皆存在於專案中
 - [ ] `refactoring_intent` 非空字串
+- [ ] `.d.ts` 處理規則明確：`target_files` 中由使用者明確指定的 `.d.ts` 檔案應被納入分析範圍，不受邊界發現（Step 0）排除規則影響。邊界發現的 `.d.ts` 排除僅適用於自動掃描發現的非目標宣告檔
 
 ### 1.3 語言插件
 
@@ -36,7 +37,7 @@
 - **處理**：使用 `rg` 搜尋 `observer_patterns` 和 `sync_patterns`，限定 `file_types: [ts, js]`
 - **輸出**：相關檔案清單（最多 `max_files` 個），格式為純文字路徑列表
 - **驗收標準**：
-  - [ ] 搜尋範圍正確排除 `node_modules`、`dist`、`.d.ts`（非目標宣告檔）
+  - [ ] 搜尋範圍正確排除 `node_modules`、`dist`、`.d.ts`（非目標宣告檔）、`build/`、`coverage/`、`.next/`、`.nuxt/`、`__tests__/`、`jest.config.*`
   - [ ] 輸出檔案數量 <= `max_files`（預設 5）
   - [ ] 每個輸出檔案都至少匹配一個 pattern
 
@@ -44,7 +45,7 @@
 
 - **輸入**：`target_files` + Step 0 發現的邊界檔案 + `refactoring_intent`
 - **處理**：LLM 分析原始碼，提取行為合約候選
-- **輸出**：YAML 格式合約清單，每筆含 `id`、`type`（I/O/S/L/E/D/P）、`description`、`evidence`
+- **輸出**：YAML 格式合約清單，每筆含 `id`、`type`（M/L/N/S/E/C/D/P）、`description`、`evidence`
 - **驗收標準**：
   - [ ] 至少產出 10 個合約候選
   - [ ] 每個合約至少有一筆 `evidence`（含 `file:line` 參照）
@@ -72,12 +73,23 @@
 ### Step 3：交叉驗證（Cross-Validation）
 
 - **輸入**：分類後的合約清單
-- **處理**：第二個 LLM 獨立驗證，標記 CONFIRM / CHALLENGE / EXTEND
+- **處理**：第二個 LLM 獨立驗證，標記 CONFIRM / DISPUTE / ADD
 - **輸出**：驗證結果，含 CONFIRM_RATIO
 - **驗收標準**：
   - [ ] CONFIRM_RATIO <= 70%（若高於此值，表示第一輪可能遺漏重要合約或驗證流於形式）
-  - [ ] 每個 CHALLENGE 和 EXTEND 項目含理由說明
-  - [ ] EXTEND 項目被回饋至合約清單
+  - [ ] 每個 DISPUTE 和 ADD 項目含理由說明
+  - [ ] ADD 項目被回饋至合約清單
+
+### Step 4：Claude 合併（Contract Merge）
+
+- **輸入**：Step 1-2 的合約清單 + Step 3 的交叉驗證結果（CONFIRM / DISPUTE / ADD）
+- **處理**：Claude 機械性地合併 Auditor 與 Adversary 的結果，產出最終合約
+- **輸出**：最終合約文件 + 驗證規則 + Pinch Point 標記
+- **驗收標準**：
+  - [ ] 合約去重完成——無重複 ID 或語義重複的合約
+  - [ ] 所有 DISPUTE 項目已被移除，或保留者附有明確理由（`[DISPUTED -- evidence inconclusive]`）
+  - [ ] 每個合約的 `pinch_point` 欄位已標記完成（`true` 或 `false`）
+  - [ ] 所有合約 ID 格式符合 `{Category}-{NNN}`（例如 `M-001`、`D-002`），匹配正規表示式 `^[MLNSECDP]-[0-9]{3}$`
 
 ---
 
@@ -93,6 +105,8 @@
   - async function 簽名
   - decorator（如適用）
   - generic type constraint
+  - useEffect cleanup（驗證 `useEffect` 中的 cleanup return 函式存在，參照語言插件 `l1-useeffect-cleanup` 範例）
+  - EventEmitter pattern（驗證 `emit` / `on` / `removeListener` 的配對使用，參照語言插件 `n1-event-emitter-emit` 範例）
 
 ### 3.2 grep 回退規則
 
