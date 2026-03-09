@@ -640,9 +640,9 @@ JQEOF
             # 用 objc 模式搜尋 ObjC 部分
             local saved_lang="$LANG"
             LANG="objc"
-            objc_result=$(op_pattern "$pattern_name" 2>/dev/null) || objc_result="[]"
+            objc_result=$(op_pattern "$pattern_name" 2>/dev/null || echo "[]")
             LANG="swift"
-            swift_result=$(op_pattern "$pattern_name" 2>/dev/null) || swift_result="[]"
+            swift_result=$(op_pattern "$pattern_name" 2>/dev/null || echo "[]")
             LANG="$saved_lang"
 
             echo -e "$objc_result\n$swift_result" | jq -s 'add // []'
@@ -858,7 +858,12 @@ JQEOF
             LANG="objc"
             objc_result=$(op_usage "$api_name" 2>/dev/null) || objc_result="[]"
             LANG="$saved_lang"
-            # Swift 部分走正常 ast-grep 路徑（繼續往下）
+            # Swift 部分：使用 ast-grep
+            if detect_ast_grep; then
+                swift_result=$($AST_GREP_CMD --pattern "$api_name(\$\$\$)" --lang swift --json "$PROJECT_PATH" 2>/dev/null || echo "[]")
+            fi
+            echo -e "$objc_result\n$swift_result" | jq -s 'add // []'
+            return 0
             ;;
     esac
 
@@ -1247,7 +1252,7 @@ JQEOF
             # ObjC 部分
             local saved_lang="$LANG"
             LANG="objc"
-            objc_result=$(op_definition "$name" 2>/dev/null) || objc_result="[]"
+            objc_result=$(op_definition "$name" 2>/dev/null || echo "[]")
             LANG="$saved_lang"
             # Swift 部分
             if detect_ast_grep; then
