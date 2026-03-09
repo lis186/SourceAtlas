@@ -4,7 +4,19 @@
 
 ---
 
-## 2026-01（當前月份）
+## 2026-03（當前月份）
+
+### Week 1 (03/09): Rename /atlas.clear → /atlas.reset
+
+**🐛 指令衝突修正 - /atlas.reset** (03/09):
+- **問題**: `/atlas.clear` 與 Claude Code 內建 `/clear`（清除對話歷史）命名衝突
+- **解法**: 全面改名為 `/atlas.reset`，修正 13 個檔案
+- **影響**: plugin/commands, .claude/commands, README, USAGE_GUIDE 全部同步
+→ [實作筆記](./2026-03/2026-03-09-atlas-reset-rename.md)
+
+---
+
+## 2026-01
 
 ### Week 2 (01/14): Progressive Disclosure Architecture ⭐⭐⭐⭐⭐
 

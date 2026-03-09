@@ -223,7 +223,7 @@ verification_notes:
 
 ### Step V4: Verification Summary
 
-Add to footer (before `🗺️ v2.11.0 │ Constitution v1.1`):
+Add to footer (before `🗺️ v2.13.1 │ Constitution v1.1`):
 
 #### If All Verifications Passed
 
@@ -236,7 +236,7 @@ Add to footer (before `🗺️ v2.11.0 │ Constitution v1.1`):
 ✅ Verified: 8 scanned files, 2 config paths, file count
 
 ───────────────────────────────
-🗺️ v2.11.0 │ Constitution v1.1
+🗺️ v2.13.1 │ Constitution v1.1
 ```
 
 #### If Corrections Were Made
@@ -252,7 +252,7 @@ Add to footer (before `🗺️ v2.11.0 │ Constitution v1.1`):
 ✅ Verified: 8 scanned files, 2 config paths, file count
 
 ───────────────────────────────
-🗺️ v2.11.0 │ Constitution v1.1
+🗺️ v2.13.1 │ Constitution v1.1
 ```
 
 ---

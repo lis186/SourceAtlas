@@ -5,6 +5,14 @@ All notable changes to SourceAtlas Plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.1] - 2026-03-09
+
+### Changed
+- **Rename `/atlas.clear` to `/atlas.reset`** - Avoid conflict with Claude Code built-in `/clear` command
+  - `/clear` is a built-in Claude Code command for clearing conversation history
+  - Old command name caused confusion and potential conflicts
+  - All documentation, README, and command references updated
+
 ## [2.13.0] - 2026-01-14
 
 ### Changed

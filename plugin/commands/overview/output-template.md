@@ -467,7 +467,7 @@ When project scale is large enough or there are clear next steps:
 
 ```markdown
 ───────────────────────────────
-🗺️ v2.11.0 │ Constitution v1.1
+🗺️ v2.13.1 │ Constitution v1.1
 ```
 
 ---
@@ -602,5 +602,5 @@ summary:
 💡 Enter a number (e.g., `1`) or copy the command to execute
 
 ───────────────────────────────
-🗺️ v2.11.0 │ Constitution v1.1
+🗺️ v2.13.1 │ Constitution v1.1
 ```

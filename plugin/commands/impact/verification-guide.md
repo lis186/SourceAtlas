@@ -89,7 +89,7 @@ fi
 
 ## Step V4: Verification Summary
 
-Add to footer (before `🗺️ v2.11.0 │ Constitution v1.1`):
+Add to footer (before `🗺️ v2.13.1 │ Constitution v1.1`):
 
 ### If all verifications passed
 
