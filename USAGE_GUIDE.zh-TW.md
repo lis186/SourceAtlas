@@ -20,7 +20,7 @@
 8. [/sourceatlas:flow](#atlasflow) - 執行流程追蹤
 9. [/sourceatlas:deps](#atlasdeps) - 依賴分析
 10. [/sourceatlas:list](#atlaslist) - 列出快取分析
-11. [/sourceatlas:clear](#atlasclear) - 清除快取分析
+11. [/sourceatlas:reset](#atlasreset) - 清除快取分析
 12. [常見問題](#常見問題)
 
 ---
@@ -904,7 +904,7 @@ CartViewController.swift:100
 
 ---
 
-## /sourceatlas:clear
+## /sourceatlas:reset
 
 **清除快取的分析結果**
 
@@ -912,12 +912,12 @@ CartViewController.swift:100
 
 ```bash
 # 清除所有快取分析
-/sourceatlas:clear
+/sourceatlas:reset
 
 # 清除特定類型
-/sourceatlas:clear overview
-/sourceatlas:clear patterns
-/sourceatlas:clear history
+/sourceatlas:reset overview
+/sourceatlas:reset patterns
+/sourceatlas:reset history
 ```
 
 ### 支援的目標

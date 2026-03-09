@@ -1,5 +1,5 @@
 ---
-name: clear
+name: reset
 description: Clear saved SourceAtlas analysis results
 model: haiku
 allowed-tools: Bash, Read

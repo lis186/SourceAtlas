@@ -22,9 +22,9 @@ SourceAtlas 未來功能的完整設計文檔。
   - **文檔保留供參考**
 
 - **[探索結果持久化](./persistence/README.md)**
-  - **實作為**: `--save` 參數 + `/atlas.clear` (v2.9.1)
+  - **實作為**: `--save` 參數 + `/atlas.reset` (v2.9.1)
   - **完成日期**: 2025-12-12
-  - **成果**: 所有分析命令支援 `--save`，新增 `/atlas.clear` 清空命令
+  - **成果**: 所有分析命令支援 `--save`，新增 `/atlas.reset` 清空命令
   - **文檔保留供參考**
 
 - **[/atlas.list 過期標記](./atlas-list-expiry/README.md)**

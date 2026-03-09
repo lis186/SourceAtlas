@@ -248,4 +248,4 @@ Continue? (y/n)
 
 - [Persistence v2.0 實作](../../dev-notes/2025-12/)
 - [/atlas.list](../../.claude/commands/atlas.list.md)
-- [/atlas.clear](../../.claude/commands/atlas.clear.md)
+- [/atlas.reset](../../.claude/commands/atlas.reset.md)

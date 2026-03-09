@@ -234,7 +234,7 @@ With **Agent Skills**, Claude automatically suggests the right analysis based on
 | `/sourceatlas:flow "feature"` | Need to understand a feature's execution path | ~3-5 min |
 | `/sourceatlas:deps "upgrade"` | Planning framework/SDK upgrade | ~15-30 min |
 | `/sourceatlas:list` | Check what analyses are cached | instant |
-| `/sourceatlas:clear` | Clear outdated cache | instant |
+| `/sourceatlas:reset` | Clear outdated cache | instant |
 
 <sub>✓ = benchmarked. Times without ✓ are estimates.</sub>
 
@@ -307,7 +307,7 @@ All commands support `--save`:
 **Manage cache**:
 ```bash
 /sourceatlas:list   # View all cached analyses
-/sourceatlas:clear  # Clear all or specific caches
+/sourceatlas:reset  # Clear all or specific caches
 ```
 
 ---

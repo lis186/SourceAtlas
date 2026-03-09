@@ -54,7 +54,7 @@
 💡 提示：
 - 重新分析過期項目：加 `--force`（如 `/atlas.pattern "api" --force`）
 - 批次刷新：`/atlas.refresh`（如已安裝）
-- 清空快取：`/atlas.clear`
+- 清空快取：`/atlas.reset`
 ```
 
 ### 狀態定義

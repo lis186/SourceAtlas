@@ -235,7 +235,7 @@ cd ~/projects/any-project
 | `/sourceatlas:flow "feature"` | 需要理解功能的執行路徑 | ~3-5 分鐘 |
 | `/sourceatlas:deps "upgrade"` | 規劃框架/SDK 升級 | ~15-30 分鐘 |
 | `/sourceatlas:list` | 查看快取了哪些分析 | 即時 |
-| `/sourceatlas:clear` | 清除過期快取 | 即時 |
+| `/sourceatlas:reset` | 清除過期快取 | 即時 |
 
 <sub>✓ = 已 benchmark。無 ✓ 的時間為估計值。</sub>
 
@@ -308,7 +308,7 @@ cd ~/projects/any-project
 **管理快取**：
 ```bash
 /sourceatlas:list   # 查看所有快取分析
-/sourceatlas:clear  # 清除全部或特定快取
+/sourceatlas:reset  # 清除全部或特定快取
 ```
 
 ---
