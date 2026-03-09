@@ -537,7 +537,7 @@ fi
 
 ## Version History
 
-- **v2.12.0**: Current version with Constitution v1.1
+- **v2.13.1**: Current version with Constitution v1.1
 - **v2.8.2**: Added branch-aware context
 - **v2.8.0**: Auto-save default, deprecated --save flag
 - **v2.5.0**: Added scale-aware analysis

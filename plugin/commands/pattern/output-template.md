@@ -407,7 +407,7 @@ Project-specific quirks or important context.
 
 ```markdown
 ───────────────────────────────
-🗺️ v2.12.0 │ Constitution v1.0
+🗺️ v2.13.1 │ Constitution v1.1
 
 ✅ Verified: [N] file paths, [M] directories, [K] code snippets
 
@@ -464,7 +464,7 @@ export class UserController extends BaseController {
 [... rest of sections ...]
 
 ───────────────────────────────
-🗺️ v2.12.0 │ Constitution v1.0
+🗺️ v2.13.1 │ Constitution v1.1
 
 ✅ Verified: 3 file paths, 4 directories, 5 code snippets
 

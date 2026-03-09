@@ -99,7 +99,7 @@ Add at the end of output:
 💡 Enter number (e.g., `1`) or copy command to execute
 
 ───────────────────────────────
-🗺️ v2.11.0 │ Constitution v1.1
+🗺️ v2.13.1 │ Constitution v1.1
 ```
 
 ### End Conditions vs Recommendations (choose one, mutually exclusive)

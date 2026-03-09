@@ -361,7 +361,7 @@ To implement similar functionality following this codebase's pattern:
 💡 Enter a number (e.g., `1`) or copy the command to execute
 
 ───────────────────────────────
-🗺️ v2.11.0 │ Constitution v1.1
+🗺️ v2.13.1 │ Constitution v1.1
 
 ---
 
@@ -532,7 +532,7 @@ fi
 
 ### Step V4: Verification Summary (Append to Output)
 
-Add to footer (before `🗺️ v2.11.0 │ Constitution v1.1`):
+Add to footer (before `🗺️ v2.13.1 │ Constitution v1.1`):
 
 **If all verifications passed:**
 ```

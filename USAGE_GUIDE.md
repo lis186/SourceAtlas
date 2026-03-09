@@ -4,7 +4,7 @@
 
 **Complete usage instructions for all slash commands**
 
-For Claude Code | v2.11.0 | Constitution v1.1
+For Claude Code | v2.13.1 | Constitution v1.1
 
 ---
 
@@ -1193,4 +1193,4 @@ echo -e "\n=== Check Complete ==="
 ---
 
 **SourceAtlas** - Code analysis assistant for Claude Code
-v2.11.0 | Updated: 2026-01-02
+v2.13.1 | Updated: 2026-03-09
