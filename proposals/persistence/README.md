@@ -38,7 +38,7 @@
 | 功能 | 用途 |
 |------|------|
 | `--save` | 執行時儲存結果 |
-| `/atlas.clear` | 清空已儲存的分析 |
+| `/atlas.reset` | 清空已儲存的分析 |
 
 ---
 
@@ -83,18 +83,18 @@
 
 ---
 
-### 2. `/atlas.clear` 命令
+### 2. `/atlas.reset` 命令
 
 **用法**：
 ```bash
-/atlas.clear              # 清空全部
-/atlas.clear patterns     # 清空 patterns/
+/atlas.reset              # 清空全部
+/atlas.reset patterns     # 清空 patterns/
 ```
 
 **行為**：對話式確認，不需要 `y/N` prompt
 
 ```
-使用者：/atlas.clear
+使用者：/atlas.reset
 
 Claude：找到以下已儲存的分析：
 - overview.yaml
@@ -169,9 +169,9 @@ mkdir -p .sourceatlas/patterns
 
 ---
 
-#### `/atlas.clear` 完整 prompt
+#### `/atlas.reset` 完整 prompt
 
-**新檔案**：`.claude/commands/atlas.clear.md`
+**新檔案**：`.claude/commands/atlas.reset.md`
 
 ```markdown
 ---
@@ -261,7 +261,7 @@ rm -rf .sourceatlas/deps/         # for "deps"
 | `/atlas.history` | ✅ 已完成 | Markdown |
 | `/atlas.impact` | ✅ 已完成 | Markdown |
 | `/atlas.deps` | ✅ 已完成 | Markdown |
-| `/atlas.clear` | ✅ 已建立 | - |
+| `/atlas.reset` | ✅ 已建立 | - |
 
 ---
 
@@ -280,9 +280,9 @@ rm -rf .sourceatlas/deps/         # for "deps"
 4. `/atlas.impact`
 5. `/atlas.deps`
 
-### Phase 2：建立 `/atlas.clear`（20min）
+### Phase 2：建立 `/atlas.reset`（20min）
 
-建立 `.claude/commands/atlas.clear.md`
+建立 `.claude/commands/atlas.reset.md`
 
 ### Phase 3：文檔更新（20min）
 
@@ -296,7 +296,7 @@ rm -rf .sourceatlas/deps/         # for "deps"
 | 項目 | 工作量 |
 |------|--------|
 | Phase 1：5 個命令加 `--save` | 1h |
-| Phase 2：`/atlas.clear` | 20min |
+| Phase 2：`/atlas.reset` | 20min |
 | Phase 3：文檔更新 | 20min |
 | **總計** | **~1.5-2h** |
 
@@ -311,7 +311,7 @@ rm -rf .sourceatlas/deps/         # for "deps"
 - 實作複雜度與價值不成比例
 - 忘了加 `--save` 就重跑，只要 2-3 分鐘
 
-### `/atlas.clear` 簡化
+### `/atlas.reset` 簡化
 
 **原因**：
 - 不需要 `--force`（對話式確認更自然）
@@ -323,7 +323,7 @@ rm -rf .sourceatlas/deps/         # for "deps"
 ## 驗收標準（Phase 1）
 
 - [x] 6 個命令支援 `--save`
-- [x] `/atlas.clear` 可清空 `.sourceatlas/`
+- [x] `/atlas.reset` 可清空 `.sourceatlas/`
 - [x] 文檔已更新
 - [x] QA 測試通過（9.7/10）
 
@@ -484,7 +484,7 @@ find .sourceatlas -type f -exec ls -la {} \; 2>/dev/null
 
 💡 提示：
 - 重新分析：`/atlas.pattern "api" --force`
-- 清空快取：`/atlas.clear`
+- 清空快取：`/atlas.reset`
 ```
 ```
 

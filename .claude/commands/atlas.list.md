@@ -55,8 +55,8 @@ Format results into a table, calculate days since modification, and mark expired
 📊 Stats: 7 cached, 2 expired (>30 days)
 
 💡 Tips:
-- Clear cache: `/atlas.clear`
-- Clear specific type: `/atlas.clear patterns`
+- Clear cache: `/atlas.reset`
+- Clear specific type: `/atlas.reset patterns`
 ```
 
 ### Step 4: List expired items with refresh commands

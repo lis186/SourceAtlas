@@ -29,7 +29,7 @@ AI collaboration guide for SourceAtlas development.
 /atlas.impact    - Change impact analysis
 /atlas.deps      - Dependency analysis
 /atlas.list      - List saved analyses
-/atlas.clear     - Clear saved analyses
+/atlas.reset     - Clear saved analyses
 ```
 
 All commands auto-save to `.sourceatlas/`. Use `--force` to skip cache and re-analyze.

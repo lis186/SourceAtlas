@@ -56,8 +56,8 @@ Format results into a table, calculate days since modification, and mark expired
 📊 Stats: 7 cached, 2 expired (>30 days)
 
 💡 Tips:
-- Clear cache: `/sourceatlas:clear`
-- Clear specific type: `/sourceatlas:clear patterns`
+- Clear cache: `/sourceatlas:reset`
+- Clear specific type: `/sourceatlas:reset patterns`
 ```
 
 ### Step 4: List expired items with refresh commands

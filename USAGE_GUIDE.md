@@ -20,7 +20,7 @@ For Claude Code | v2.11.0 | Constitution v1.1
 8. [/sourceatlas:flow](#atlasflow) - Execution flow tracing
 9. [/sourceatlas:deps](#atlasdeps) - Dependency analysis
 10. [/sourceatlas:list](#atlaslist) - List cached analyses
-11. [/sourceatlas:clear](#atlasclear) - Clear cached analyses
+11. [/sourceatlas:reset](#atlasreset) - Clear cached analyses
 12. [FAQ](#faq)
 
 ---
@@ -904,7 +904,7 @@ A table showing all cached analyses in `.sourceatlas/`:
 
 ---
 
-## /sourceatlas:clear
+## /sourceatlas:reset
 
 **Clear cached analysis results**
 
@@ -912,12 +912,12 @@ A table showing all cached analyses in `.sourceatlas/`:
 
 ```bash
 # Clear all cached analyses
-/sourceatlas:clear
+/sourceatlas:reset
 
 # Clear specific type
-/sourceatlas:clear overview
-/sourceatlas:clear patterns
-/sourceatlas:clear history
+/sourceatlas:reset overview
+/sourceatlas:reset patterns
+/sourceatlas:reset history
 ```
 
 ### Supported Targets
