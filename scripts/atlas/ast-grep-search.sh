@@ -42,7 +42,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # 預設值
 PROJECT_PATH="."
-LANG=""
+SEARCH_LANG=""
 OUTPUT_JSON=false
 OUTPUT_COUNT=false
 FALLBACK_MODE=false
@@ -197,8 +197,8 @@ detect_language() {
     local path="$1"
 
     # 如果已指定語言，直接返回
-    if [[ -n "$LANG" ]]; then
-        echo "$LANG"
+    if [[ -n "$SEARCH_LANG" ]]; then
+        echo "$SEARCH_LANG"
         return
     fi
 
@@ -638,12 +638,12 @@ JQEOF
             local objc_result="[]" swift_result="[]"
 
             # 用 objc 模式搜尋 ObjC 部分
-            local saved_lang="$LANG"
-            LANG="objc"
+            local saved_lang="$SEARCH_LANG"
+            SEARCH_LANG="objc"
             objc_result=$(op_pattern "$pattern_name" 2>/dev/null || echo "[]")
-            LANG="swift"
+            SEARCH_LANG="swift"
             swift_result=$(op_pattern "$pattern_name" 2>/dev/null || echo "[]")
-            LANG="$saved_lang"
+            SEARCH_LANG="$saved_lang"
 
             echo -e "$objc_result\n$swift_result" | jq -s 'add // []'
             ;;
@@ -854,10 +854,10 @@ JQEOF
             ;;
         objc_swift)
             local objc_result="[]" swift_result="[]"
-            local saved_lang="$LANG"
-            LANG="objc"
+            local saved_lang="$SEARCH_LANG"
+            SEARCH_LANG="objc"
             objc_result=$(op_usage "$api_name" 2>/dev/null) || objc_result="[]"
-            LANG="$saved_lang"
+            SEARCH_LANG="$saved_lang"
             # Swift 部分：使用 ast-grep
             if detect_ast_grep; then
                 swift_result=$($AST_GREP_CMD --pattern "$api_name(\$\$\$)" --lang swift --json "$PROJECT_PATH" 2>/dev/null || echo "[]")
@@ -1250,10 +1250,10 @@ JQEOF
         objc_swift)
             local objc_result="[]" swift_result="[]"
             # ObjC 部分
-            local saved_lang="$LANG"
-            LANG="objc"
+            local saved_lang="$SEARCH_LANG"
+            SEARCH_LANG="objc"
             objc_result=$(op_definition "$name" 2>/dev/null || echo "[]")
-            LANG="$saved_lang"
+            SEARCH_LANG="$saved_lang"
             # Swift 部分
             if detect_ast_grep; then
                 swift_result=$({
@@ -1502,7 +1502,7 @@ TARGET=""
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --lang)
-            LANG="$2"
+            SEARCH_LANG="$2"
             shift 2
             ;;
         --path)
