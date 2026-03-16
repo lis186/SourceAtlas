@@ -1,0 +1,10 @@
+module: RoomBubbleCellData
+language: objc
+target_files: Riot/Modules/Room/CellData/RoomBubbleCellData.m Riot/Modules/Room/CellData/RoomBubbleCellData.h
+refactoring_intent: Migrate RoomBubbleCellData from ObjC to Swift, preserving thread-safety contracts (@synchronized, dispatch_sync/async) and notification patterns (URLPreviewDidUpdateNotification)
+verify_primary: grep
+verify_secondary: none
+seam_detection: true
+pinch_point_threshold: 3
+skip_feathers: false
+config_file: audit.config.yml
