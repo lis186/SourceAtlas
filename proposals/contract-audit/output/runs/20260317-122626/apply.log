@@ -1,0 +1,47 @@
+完整性驗證完成。以下為最終結果：
+
+---
+
+## Completeness Check
+
+逐一確認 `final-contracts.md` 中每個合約的覆蓋狀況：
+
+| Contract ID | assert_match | ast-grep rule | 狀態 |
+|-------------|:---:|:---:|:---:|
+| S-001 | ✓ | ✓ `S-001-cancellables-store.yml` | OK |
+| S-002 | ✓ | ✓ `S-002-unspecified-scheduler.yml` | OK |
+| N-001 | ✓ | ✓ `N-001-sink-pattern.yml` | OK |
+| N-002 | ✓ | -- (grep sufficient) | OK |
+| N-003 | SKIP | -- (file unavailable) | SKIP |
+| D-001 | ✓ | ✓ `D-001-singleton.yml` | OK |
+| D-002 | ✓ (a+b) | ✓ `D-002-ten-seconds-timeout.yml` | OK |
+| D-003 | ✓ | -- (grep sufficient) | OK |
+| D-004 | ✓ | -- (grep sufficient) | OK |
+| D-005 | ✓ | -- (grep sufficient) | OK |
+| E-001 | ✓ | ✓ `E-001-error-forward.yml` | OK |
+| E-002 | SKIP | -- (file unavailable) | SKIP |
+| C-001 | ✓ (absence) | ✓ `C-001-no-cancellation.yml` | OK |
+| M-001 | ✓ | -- (grep sufficient) | OK |
+| M-002 | ✓ | ✓ `M-002-subscription-mutation.yml` | OK |
+| P-001 | ✓ | ✓ `P-001-result-propagation.yml` | OK |
+| P-002 | ✓ | ✓ `P-002-idempotency-key.yml` | OK |
+| P-003 | ✓ | -- (grep sufficient) | OK |
+| L-001 | ✓ | -- (grep sufficient) | OK |
+
+所有合約均包含 Scope、Seam_Type、Pinch_Point 元資料。所有 ID 均遵循 `{Category}-{NNN}` 格式。
+
+**`COMPLETENESS: 19 contracts, 19 assertions (2 SKIP), 10 rules, 8 pinch_points -- COMPLETE`**
+
+---
+
+## 合併決策摘要
+
+| 決策 | 數量 | 細節 |
+|------|------|------|
+| CONFIRM 直接保留 | 9 | S-001, N-001, N-002, D-001, D-003, E-001, C-001, M-001, P-001 |
+| DISPUTE 已修正 | 4 | S-002（執行緒描述修正）、D-002（60 秒描述修正）、D-005（風險描述修正、Scope 修正為 class）、P-002（傳播範圍修正） |
+| DISPUTE 保留+標記 | 3 | N-003、D-004、E-002（證據不確定，加 `[DISPUTED]` 註記） |
+| ADD 已採納 | 3 | M-002、L-001、P-003（均有有效 filename:line） |
+| ADD 已拒絕 | 1 | D-006（無有效 filename:line，僅 `[inferred]`） |
+| META_ISSUE 已修正 | 2 | N-003 Seam_Type `none`→`link`；D-005 Scope `method`→`class` |
+| META_ISSUE 保留 | 1 | N-003 Pinch_Point 保留 `false`（合約本身證據不足） |

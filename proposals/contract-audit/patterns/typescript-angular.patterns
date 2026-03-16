@@ -1,0 +1,15 @@
+# TypeScript-Angular 錨定模式
+# 格式：類別<TAB>名稱<TAB>grep pattern<TAB>說明
+# 來源：從 typescript.patterns 拆分，Angular 框架特定模式
+#
+# 類別：S=同步, N=通知/事件, L=生命週期, D=依賴, E=例外, C=取消
+
+# --- L: 生命週期 (Angular Lifecycle Hooks) ---
+L	ngOnInit	ngOnInit	Angular 初始化
+L	ngOnDestroy	ngOnDestroy	Angular 銷毀
+L	ngOnChanges	ngOnChanges	Angular 輸入變更
+
+# --- D: 依賴 (Angular DI) ---
+D	providedIn	providedIn	Angular DI scope
+D	Injectable	@Injectable	Angular/NestJS DI 可注入標記
+D	Component_decorator	@Component	Angular 元件宣告

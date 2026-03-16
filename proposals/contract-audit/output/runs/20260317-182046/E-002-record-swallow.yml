@@ -1,0 +1,14 @@
+id: E-002-record-swallow
+message: "E-002: recordOperation() must catch and swallow errors -- contract must be present"
+severity: error
+language: TypeScript
+rule:
+  kind: method_definition
+  all:
+    - has:
+        regex: "recordOperation"
+    - has:
+        kind: try_statement
+note: |
+  Contract source: EventHistory.ts:80-104
+  Refactoring requirement: recordOperation must NOT throw -- errors are logged and swallowed

@@ -1,0 +1,10 @@
+id: S-002-cleanup-interval
+message: "S-002: Cleanup timer using setInterval -- contract must be present"
+severity: error
+language: TypeScript
+rule:
+  pattern: |
+    setInterval($$$)
+note: |
+  Contract source: EventHistory.ts:214
+  Refactoring requirement: periodic cleanup must be scheduled; interval value is 60000ms

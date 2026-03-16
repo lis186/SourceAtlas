@@ -1,0 +1,66 @@
+# Node.js 錨定模式
+# 格式：類別<TAB>名稱<TAB>grep pattern<TAB>說明
+# 來源：Node.js 特定 patterns
+#
+# 類別：S=同步, N=通知/事件, L=生命週期, D=依賴, E=例外, C=取消
+
+# --- S: 同步原語 ---
+S	child_process_exec	exec\(	child_process.exec 執行外部命令（buffered）
+S	child_process_execSync	execSync\(	child_process 同步執行（阻塞）
+S	child_process_spawn	spawn\(	child_process.spawn 串流式執行
+S	child_process_fork	fork\(	child_process.fork 建立子程序（IPC 通道）
+S	cluster_fork	cluster\.fork\(	cluster 建立 worker 程序
+S	cluster_worker	cluster\.worker\b	cluster worker 存取
+S	cluster_isMaster	cluster\.isMaster\b|cluster\.isPrimary\b	cluster 主程序判斷
+S	Worker_threads	new Worker\(	worker_threads 建立工作執行緒
+S	workerData	workerData\b	worker_threads 資料傳遞
+S	parentPort	parentPort\b	worker_threads 父執行緒通訊埠
+
+# --- N: 通知/事件原語 ---
+N	process_on	process\.on\(	程序事件監聯
+N	EventEmitter_extends	extends EventEmitter	EventEmitter 繼承
+N	EventEmitter_new	new EventEmitter\(	EventEmitter 建立
+N	stream_data	\.on\(['"]data['"]	Stream data 事件（資料區塊到達）
+N	stream_end	\.on\(['"]end['"]	Stream end 事件（資料傳輸完成）
+N	stream_error	\.on\(['"]error['"]	Stream error 事件（串流錯誤）
+N	stream_pipe	\.pipe\(	Stream 管線串接
+N	ipc_message	\.on\(['"]message['"]	IPC 訊息事件（fork/cluster 通訊）
+N	ipc_send	\.send\(	IPC 訊息傳送
+N	process_send	process\.send\(	子程序向父程序發送訊息
+
+# --- L: 生命週期 ---
+L	process_exit	process\.exit\(	程序退出
+L	SIGTERM	['"]SIGTERM['"]	程序終止信號處理
+L	SIGINT	['"]SIGINT['"]	中斷信號處理
+L	SIGHUP	['"]SIGHUP['"]	掛起信號處理
+L	beforeExit	['"]beforeExit['"]	程序退出前事件（可排程非同步工作）
+L	uncaughtException	['"]uncaughtException['"]	未捕獲例外處理
+L	unhandledRejection	['"]unhandledRejection['"]	未處理 Promise rejection
+L	process_nextTick	process\.nextTick\(	微任務排程（優先於 I/O）
+L	setImmediate	setImmediate\(	I/O 回調後立即執行
+
+# --- D: 依賴 ---
+D	createRequire	createRequire\(	ESM 中建立 require 函式
+D	dirname	__dirname\b	當前模組目錄路徑
+D	filename	__filename\b	當前模組檔案路徑
+D	import_meta_url	import\.meta\.url	ESM 模組 URL
+D	process_env	process\.env\.	環境變數存取
+D	process_cwd	process\.cwd\(	工作目錄存取
+D	process_argv	process\.argv	命令列參數存取
+
+# --- E: 例外/錯誤處理 ---
+E	process_exitCode	process\.exitCode	程序退出碼設定
+E	domain_create	domain\.create\(	Domain 錯誤處理（已棄用）
+E	domain_run	\.run\(	Domain 執行區段（已棄用）
+E	stream_error_handler	\.on\(['"]error['"]	Stream 錯誤處理（必須處理避免 crash）
+E	pipeline_func	pipeline\(	Stream pipeline（自動錯誤傳播與清理）
+E	finished_func	finished\(	Stream finished（偵測串流結束或錯誤）
+E	err_first_callback	function\s*\(err[,)]	Error-first callback 慣例
+
+# --- C: 取消 ---
+C	process_kill	process\.kill\(	發送信號給程序
+C	server_close	\.close\(	Server/連線關閉
+C	socket_destroy	\.destroy\(	Socket/Stream 銷毀
+C	stream_destroy	stream\.destroy\(	Stream 強制銷毀
+C	child_kill	\.kill\(	子程序終止
+C	unref	\.unref\(	計時器/socket 取消參考（不阻止程序退出）

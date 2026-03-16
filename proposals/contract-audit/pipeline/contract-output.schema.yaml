@@ -1,0 +1,305 @@
+# contract-output.schema.yaml
+# 合約輸出元資料格式 JSON Schema（YAML 格式）
+#
+# 定義 Phase A 產出的最終合約結構。
+# 每個合約包含識別資訊、分類、證據引用和依賴分析元資料。
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://sourceatlas.dev/schemas/contract-output.schema.yaml"
+title: "SourceAtlas Contract Output"
+description: >
+  行為合約審計的最終輸出格式。
+  包含所有提取的隱含合約及其元資料，供 Phase B CI 驗證使用。
+
+type: object
+required:
+  - version
+  - module
+  - language
+  - run_id
+  - contracts
+
+properties:
+  version:
+    type: string
+    description: "Schema 版本號"
+    const: "1.0"
+
+  module:
+    type: string
+    description: "模組名稱"
+    examples:
+      - "NYHTTPSClient"
+
+  language:
+    type: string
+    description: "語言標識"
+    enum:
+      - objc
+      - swift
+      - typescript
+      - go
+      - kotlin
+      - python
+      - rust
+      - java
+
+  run_id:
+    type: string
+    description: "管線執行 ID（格式：YYYYMMDD-HHMMSS）"
+    pattern: "^[0-9]{8}-[0-9]{6}$"
+    examples:
+      - "20260308-143021"
+
+  refactoring_intent:
+    type: string
+    description: "重構意圖描述"
+
+  total_contracts:
+    type: integer
+    description: "合約總數"
+    minimum: 0
+
+  pinch_points:
+    type: integer
+    description: "Pinch Point 合約數量"
+    minimum: 0
+
+  contracts:
+    type: array
+    description: "合約清單"
+    items:
+      $ref: "#/$defs/contract"
+
+$defs:
+  contract:
+    type: object
+    required:
+      - id
+      - type
+      - description
+      - evidence
+      - severity
+    properties:
+      id:
+        type: string
+        description: >
+          合約唯一識別碼。格式為 {type_prefix}-{序號}。
+          例如 M-001、L-003、D-002。
+        pattern: "^[MLNSECDP]-[0-9]{3}$"
+        examples:
+          - "M-001"
+          - "L-003"
+          - "D-002"
+          - "P-001"
+
+      type:
+        type: string
+        description: >
+          合約類別（語言無關的行為分類法）。
+        enum:
+          - M   # Mutation: 對請求或資料的副作用修改
+          - L   # Lifecycle: 隱含狀態轉換
+          - N   # Notification: 發布/訂閱耦合
+          - S   # Synchronization: 阻塞、鎖定、排序保證
+          - E   # Error Handling: 錯誤吞沒 vs 傳播
+          - C   # Cancellation: 取消範圍與殘留狀態
+          - D   # Dependency: 依賴外部實體，遷移時需先分離
+          - P   # Propagation: effect 傳播路徑
+
+      description:
+        type: string
+        description: >
+          合約的人類可讀描述。
+          應清楚說明隱含行為及其對重構的影響。
+        examples:
+          - "addHTTPHeaderField 會修改 shared NSMutableURLRequest，所有後續請求繼承此修改"
+          - "logout 狀態機必須按 L5->L6->L7->...->L13 順序執行，跳過任何步驟會導致殘留狀態"
+
+      evidence:
+        type: array
+        description: >
+          證據引用清單。每個證據指向原始碼中的具體位置。
+          格式為 file:line 或 file:line-line。
+        items:
+          $ref: "#/$defs/evidence"
+        minItems: 1
+
+      severity:
+        type: string
+        description: >
+          嚴重程度。
+          - critical: 違反將導致資料遺失、安全漏洞或系統崩潰
+          - high: 違反將導致功能錯誤或迴歸
+          - medium: 違反可能導致邊緣情況問題
+          - low: 違反影響程式碼品質但不影響功能
+        enum:
+          - critical
+          - high
+          - medium
+          - low
+
+      scope:
+        type: string
+        description: >
+          合約作用範圍。
+          - method: 僅影響單一方法內部
+          - class: 影響整個類別/結構體的行為
+          - module: 影響跨檔案/跨模組的行為
+        enum:
+          - method
+          - class
+          - module
+        default: method
+
+      seam_type:
+        type: string
+        description: >
+          Seam 類型（來自 Feathers《Working Effectively with Legacy Code》）。
+          標記此合約涉及的依賴可透過哪種 Seam 打破。
+          - object: 可透過物件替換改變行為（依賴注入、Protocol/Interface）
+          - preprocessing: 編譯期可替換（宏、條件編譯、build config）
+          - link: 連結期可替換（動態連結庫、module alias）
+          - none: 硬依賴或不涉及外部依賴
+        enum:
+          - object
+          - preprocessing
+          - link
+          - none
+        default: none
+
+      pinch_point:
+        type: boolean
+        description: >
+          是否為 Pinch Point。
+          Pinch Point 是多條依賴路徑收斂的節點，
+          其合約具有最高 ROI（一條 CI 規則保護多條路徑）。
+        default: false
+
+      verification:
+        type: object
+        description: "Phase B 驗證規則"
+        properties:
+          grep_pattern:
+            type: string
+            description: "grep 斷言模式（用於 verify-contracts-*.sh）"
+            examples:
+              - 'addHTTPHeaderField.*:.*@"X-Custom-Header"'
+          ast_grep_rule:
+            type: string
+            description: "ast-grep 規則檔案名（用於 Phase B rules/ 目錄）"
+            examples:
+              - "contract-M001-shared-request-mutation.yml"
+        additionalProperties: false
+
+      adversary_status:
+        type: string
+        description: >
+          Codex 對抗性評論的結果。
+          - CONFIRM: 確認此合約有效
+          - DISPUTE: 質疑此合約（附帶理由）
+          - ADD: 此合約由對抗性評論新增
+        enum:
+          - CONFIRM
+          - DISPUTE
+          - ADD
+
+      notes:
+        type: string
+        description: "補充說明（如 DISPUTE 理由、已知限制等）"
+
+    additionalProperties: false
+
+  evidence:
+    type: object
+    required:
+      - file
+      - line
+    properties:
+      file:
+        type: string
+        description: "檔案路徑（相對於專案根目錄）"
+        examples:
+          - "NYCore/Classes/Network/NYHTTPSClient.m"
+      line:
+        type: string
+        description: "行號或行號範圍"
+        pattern: "^[0-9]+(-[0-9]+)?$"
+        examples:
+          - "42"
+          - "120-135"
+      snippet:
+        type: string
+        description: "相關程式碼片段（可選，便於人工審查）"
+    additionalProperties: false
+
+# ==============================================================================
+# 輸出範例
+# ==============================================================================
+# 以下為符合此 schema 的合約輸出範例（僅供參考，非 schema 的一部分）。
+#
+# ---
+# version: "1.0"
+# module: NYHTTPSClient
+# language: objc
+# run_id: "20260308-143021"
+# refactoring_intent: "Replace with Swift async/await + interceptor chain"
+# total_contracts: 49
+# pinch_points: 3
+#
+# contracts:
+#   - id: M-001
+#     type: M
+#     description: >
+#       addHTTPHeaderField 會修改 shared NSMutableURLRequest，
+#       所有後續請求繼承此修改。遷移時必須確保 header 的累積語義被保留。
+#     evidence:
+#       - file: "NYCore/Classes/Network/NYHTTPSClient.m"
+#         line: "42"
+#         snippet: "[self.request addValue:value forHTTPHeaderField:field];"
+#       - file: "NYCore/Classes/Network/NYHTTPSClient.m"
+#         line: "38-40"
+#     severity: high
+#     scope: class
+#     seam_type: object
+#     pinch_point: false
+#     verification:
+#       grep_pattern: "addValue.*forHTTPHeaderField"
+#     adversary_status: CONFIRM
+#
+#   - id: D-001
+#     type: D
+#     description: >
+#       NYHTTPSClient 硬依賴 NYCDNManager.getCDNDomainSynchronously，
+#       此同步呼叫阻塞當前執行緒。遷移前需先透過 Protocol 抽象 CDN 查詢介面。
+#     evidence:
+#       - file: "NYCore/Classes/Network/NYHTTPSClient.m"
+#         line: "156"
+#         snippet: "NSString *cdn = [[NYCDNManager shared] getCDNDomainSynchronously];"
+#     severity: critical
+#     scope: module
+#     seam_type: object
+#     pinch_point: true
+#     verification:
+#       grep_pattern: "getCDNDomainSynchronously"
+#     adversary_status: CONFIRM
+#     notes: "Pinch Point: 5 個模組透過此方法取得 CDN domain"
+#
+#   - id: P-001
+#     type: P
+#     description: >
+#       requestWithURL: 的回傳值被呼叫者假設為非 nil，
+#       但 URL 無效時會回傳 nil。所有 8 個呼叫點均未做 nil 檢查。
+#     evidence:
+#       - file: "NYCore/Classes/Network/NYHTTPSClient.m"
+#         line: "78"
+#       - file: "NYCore/Classes/Network/NYHTTPSClient.m"
+#         line: "92"
+#     severity: high
+#     scope: module
+#     seam_type: none
+#     pinch_point: false
+#     verification:
+#       grep_pattern: "requestWithURL:"
+#     adversary_status: ADD
+#     notes: "由 Codex 對抗性評論補充"

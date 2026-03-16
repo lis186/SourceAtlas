@@ -1,0 +1,38 @@
+# audit.config.example-swift.yml
+# 合約審計配置範例 — Swift（PaymentService）
+#
+# 使用方式：
+#   cp audit.config.example-swift.yml audit.config.yml
+#   # 修改 target_files 為實際路徑
+#   bash pipeline/run-baseline.sh
+
+module: PaymentService
+language: swift
+
+target_files:
+  - Sources/Payment/PaymentService.swift
+  - Sources/Payment/PaymentTransaction.swift
+  - Sources/Payment/PaymentError.swift
+
+refactoring_intent: "Extract protocol for testability, migrate to async/await from completion handlers"
+
+boundary_discovery:
+  # 觀察者模式：Combine publisher、NotificationCenter
+  observer_patterns: 'NotificationCenter\.default\.(addObserver|post).*payment|\.sink\s*\{.*payment|paymentDidComplete|paymentDidFail'
+  # 同步原語：DispatchSemaphore、actor isolation、lock
+  sync_patterns: "DispatchSemaphore|NSLock|os_unfair_lock|@MainActor|actor\\s+"
+  file_types:
+    - swift
+  max_files: 5
+
+verification:
+  # Swift 完整支援 ast-grep
+  primary: ast-grep
+  # grep 作為輔助，捕捉 ast-grep 規則未覆蓋的模式
+  secondary: none
+
+dependency_analysis:
+  # Swift import 模式
+  import_patterns: 'import\s+(?:Foundation|UIKit|SwiftUI|Combine|StoreKit)'
+  seam_detection: true
+  pinch_point_threshold: 3

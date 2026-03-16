@@ -1,0 +1,11 @@
+id: D-003-singleton
+message: "D-003: PaymentsNetworkManager singleton -- contract must be present"
+severity: error
+language: Swift
+rule:
+  pattern: |
+    static let shared = PaymentsNetworkManager()
+note: |
+  Contract source: PaymentsNetworkManager.swift:16
+  Refactoring requirement: singleton access pattern must be preserved or explicitly replaced with DI.
+  Class is non-public; only module-internal code can create additional instances.

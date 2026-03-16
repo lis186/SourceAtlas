@@ -1,0 +1,11 @@
+id: S-001-cancellables-decl
+message: "S-001: cancellables declaration must exist (or replaced with thread-safe alternative)"
+severity: error
+language: Swift
+rule:
+  pattern: |
+    private var cancellables: Set<AnyCancellable> = []
+note: |
+  Contract source: PaymentsNetworkManager.swift:19
+  CRITICAL: inout access to this Set is not thread-safe under concurrent callers.
+  Refactoring requirement: if retained, must add synchronization; if removed, verify all subscription management migrated.

@@ -1,0 +1,39 @@
+# audit.config.example-objc.yml
+# 合約審計配置範例 — Objective-C（NYHTTPSClient）
+#
+# 使用方式：
+#   cp audit.config.example-objc.yml audit.config.yml
+#   # 修改 target_files 為實際路徑
+#   bash pipeline/run-baseline.sh
+
+module: NYHTTPSClient
+language: objc
+
+target_files:
+  - NYCore/Classes/Network/NYHTTPSClient.m
+  - NYCore/Classes/Network/NYHTTPSClient.h
+
+refactoring_intent: "Replace with Swift async/await + interceptor chain"
+
+boundary_discovery:
+  # 觀察者模式：ObjC 字串形式通知名 + Swift 常數形式
+  observer_patterns: '"apiRequest"|"apiResponse"|"apiTimeout"|\.apiRequest|\.apiResponse|\.apiTimeout|\.launchTimeout'
+  # 同步原語：dispatch_semaphore 和同步存取方法
+  sync_patterns: "dispatch_semaphore_create|dispatch_barrier_sync|getCDNDomainSynchronously"
+  file_types:
+    - objc
+    - swift
+  max_files: 5
+
+verification:
+  # ObjC 不在 ast-grep 支援列表中，使用 grep 作為主要工具
+  primary: grep
+  # clang-ast-dump 可作為 ObjC 的進階結構化分析替代方案
+  secondary: clang-ast-dump
+
+dependency_analysis:
+  # ObjC import/include 模式
+  import_patterns: '#import\s+["<]|@import\s+'
+  seam_detection: true
+  # NYHTTPSClient 是核心網路層，收斂路徑多，設較低閾值
+  pinch_point_threshold: 3

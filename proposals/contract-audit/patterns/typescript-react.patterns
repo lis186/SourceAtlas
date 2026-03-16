@@ -1,0 +1,15 @@
+# TypeScript-React 錨定模式
+# 格式：類別<TAB>名稱<TAB>grep pattern<TAB>說明
+# 來源：從 typescript.patterns 拆分，React 框架特定模式
+#
+# 類別：S=同步, N=通知/事件, L=生命週期, D=依賴, E=例外, C=取消
+
+# --- L: 生命週期 (React Hooks & Class Lifecycle) ---
+L	useEffect	useEffect\(	React effect hook
+L	useState	useState[<(]	React 狀態 hook
+L	useCallback	useCallback\(	React callback memo
+L	useMemo	useMemo\(	React 計算 memo
+L	useRef	useRef[<(]	React ref hook（跨 render 持久）
+L	componentDidMount	componentDidMount	React class 掛載
+L	componentWillUnmount	componentWillUnmount	React class 卸載
+L	componentDidUpdate	componentDidUpdate	React class 更新

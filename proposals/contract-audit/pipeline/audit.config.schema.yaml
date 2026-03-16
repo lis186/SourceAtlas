@@ -1,0 +1,194 @@
+# audit.config.schema.yaml
+# 合約審計配置檔 JSON Schema（YAML 格式）
+# 用於驗證 audit.config.yml 的結構正確性
+#
+# 參考：JSON Schema Draft 2020-12
+# 使用方式：可透過 ajv、yajsv 等工具驗證
+
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://sourceatlas.dev/schemas/audit.config.schema.yaml"
+title: "SourceAtlas Contract Audit Configuration"
+description: >
+  行為合約審計管線的配置檔 schema。
+  定義目標模組、語言、邊界發現策略、驗證方式及依賴分析設定。
+
+type: object
+required:
+  - module
+  - language
+  - target_files
+
+properties:
+  module:
+    type: string
+    description: >
+      模組名稱，用於命名輸出檔案和 Phase B 驗證腳本。
+      例如 "NYHTTPSClient"、"NetworkManager"。
+    pattern: "^[A-Za-z][A-Za-z0-9_.-]*$"
+    examples:
+      - "NYHTTPSClient"
+      - "PaymentService"
+
+  language:
+    type: string
+    description: >
+      語言標識，對應 prompts/languages/{language}.md 插件。
+      決定邊界發現的預設模式、驗證策略和 prompt 組合方式。
+    enum:
+      - objc
+      - swift
+      - typescript
+      - go
+      - kotlin
+      - python
+      - rust
+      - java
+
+  target_files:
+    type: array
+    description: >
+      目標檔案列表（相對於專案根目錄的路徑）。
+      這些檔案將被送入 LLM 進行合約提取。
+    items:
+      type: string
+    minItems: 1
+    examples:
+      - - "NYCore/Classes/NYHTTPSClient.m"
+        - "NYCore/Classes/NYHTTPSClient.h"
+
+  refactoring_intent:
+    type: string
+    description: >
+      重構意圖描述。提供給 LLM 作為上下文，
+      幫助識別與重構目標相關的隱含合約。
+    examples:
+      - "Replace with Swift async/await + interceptor chain"
+      - "Migrate to Kotlin coroutines with Retrofit"
+
+  boundary_discovery:
+    type: object
+    description: >
+      邊界發現設定（Step 0）。
+      定義如何透過靜態掃描找到與目標檔案相關的上下游檔案。
+    properties:
+      observer_patterns:
+        type: string
+        description: >
+          觀察者/通知模式的 regex（傳給 rg）。
+          用於找出訂閱目標模組事件的下游檔案。
+        examples:
+          - '"apiRequest"|"apiResponse"|"apiTimeout"|\.apiRequest|\.apiResponse'
+          - 'NotificationCenter\.default\.addObserver.*"payment'
+
+      sync_patterns:
+        type: string
+        description: >
+          同步原語模式的 regex（傳給 rg）。
+          用於找出與目標模組共用同步機制的檔案。
+        examples:
+          - "dispatch_semaphore_create|dispatch_barrier_sync"
+          - "DispatchSemaphore|NSLock|@synchronized"
+
+      file_types:
+        type: array
+        description: >
+          搜尋檔案類型（傳給 rg --type）。
+          限制邊界發現的搜尋範圍，避免雜訊。
+        items:
+          type: string
+          enum:
+            - objc
+            - swift
+            - ts
+            - go
+            - kotlin
+            - python
+            - rust
+            - java
+            - js
+            - c
+            - cpp
+        minItems: 1
+        examples:
+          - ["objc", "swift"]
+          - ["ts", "js"]
+
+      max_files:
+        type: integer
+        description: >
+          邊界發現最多納入的相關檔案數量。
+          過多會導致 LLM 上下文超限。
+        default: 5
+        minimum: 1
+        maximum: 20
+
+    additionalProperties: false
+
+  verification:
+    type: object
+    description: >
+      驗證策略設定。
+      決定 Phase B CI 使用哪些工具驗證合約。
+    properties:
+      primary:
+        type: string
+        description: >
+          主要驗證工具。grep 適用於所有語言，
+          ast-grep 提供結構化匹配但不支援所有語言。
+        enum:
+          - grep
+          - ast-grep
+        default: grep
+
+      secondary:
+        type: string
+        description: >
+          次要驗證工具。用於補充主要工具的不足。
+          clang-ast-dump 僅適用於 ObjC/C/C++。
+        enum:
+          - ast-grep
+          - clang-ast-dump
+          - none
+        default: none
+
+    additionalProperties: false
+
+  dependency_analysis:
+    type: object
+    description: >
+      依賴分析設定（Step 1.5）。
+      對應 Feathers 五步法第 3 步「打破依賴」。
+      從 import/include 建立依賴方向圖，識別 Seam 和 Pinch Point。
+    properties:
+      import_patterns:
+        type: string
+        description: >
+          語言特定的 import/include regex（傳給 rg）。
+          用於建立模組間的依賴方向圖。
+        examples:
+          - '#import\s+["<]|@import\s+'
+          - 'import\s+(?:Foundation|UIKit|SwiftUI)'
+          - 'import\s+\{.*\}\s+from\s+'
+          - 'import\s+\('
+
+      seam_detection:
+        type: boolean
+        description: >
+          是否啟用 Seam 識別。
+          啟用後，LLM 會標記每個依賴的 Seam 類型
+          （Object / Preprocessing / Link）。
+        default: true
+
+      pinch_point_threshold:
+        type: number
+        description: >
+          收斂路徑數閾值。
+          當某節點的入邊數量 >= 此值時，標記為 Pinch Point。
+          Pinch Point 的合約具有最高 ROI（一條 CI 規則保護多條路徑）。
+        default: 3
+        minimum: 2
+        maximum: 20
+
+    additionalProperties: false
+
+additionalProperties: false

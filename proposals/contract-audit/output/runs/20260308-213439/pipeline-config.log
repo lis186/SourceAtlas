@@ -1,0 +1,11 @@
+module: LightNetworkClient
+language: swift
+target_files: clip-extension/Network Client/LightNetworkClient.swift clip-extension/Network Client/TrackingLightNetworkClient.swift 91Modules/payments91app/Sources/Payments91App/PaymentsCore/Networking/PaymentsNetworkDispatcher.swift NYCore/NYCore/Classes/Swift/Network/NetworkClientProtocol.swift
+refactoring_intent: 
+verify_primary: grep
+verify_secondary: none
+seam_detection: true
+pinch_point_threshold: 3
+skip_feathers: true
+agent_mode: true
+config_file: none

@@ -1,0 +1,16 @@
+id: N-001-db-option-warning
+message: "N-001: updateOptions must warn on databaseName/databaseVersion changes -- contract must be present"
+severity: error
+language: TypeScript
+rule:
+  kind: method_definition
+  all:
+    - has:
+        regex: "updateOptions"
+    - has:
+        kind: if_statement
+        has:
+          regex: "databaseName|databaseVersion"
+note: |
+  Contract source: EventHistory.ts:266-268
+  Added from Adversary review: logger.warn must fire when sensitive DB options are changed.

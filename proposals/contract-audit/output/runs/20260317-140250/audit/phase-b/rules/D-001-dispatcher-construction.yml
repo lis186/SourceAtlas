@@ -1,0 +1,11 @@
+id: D-001-dispatcher-construction
+message: "D-001: PaymentsNetworkDispatcher construction contract must exist"
+severity: error
+language: Swift
+rule:
+  pattern: |
+    let dispatcher = PaymentsNetworkDispatcher(urlSession: $SESSION)
+note: |
+  Contract source: PaymentsNetworkManager.swift:37
+  Each method creates new dispatcher/apiClient instances (no connection reuse).
+  Refactoring requirement: if switching to shared dispatcher, verify thread safety.

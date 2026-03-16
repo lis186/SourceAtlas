@@ -1,0 +1,10 @@
+id: M-004-shallow-merge-options
+message: "M-004: updateOptions shallow merge without re-initialization -- contract must be present"
+severity: error
+language: TypeScript
+rule:
+  pattern: |
+    this.options = { ...this.options, ...$NEW_OPTIONS }
+note: |
+  Contract source: EventHistory.ts:264
+  Refactoring requirement: options merge must NOT trigger automatic dbManager re-initialization
