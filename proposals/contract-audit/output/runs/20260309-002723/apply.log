@@ -1,0 +1,35 @@
+Now let me do the completeness check.
+
+`★ Insight ─────────────────────────────────────`
+ast-grep 不支援 Objective-C，所以只產出 grep 驗證腳本，不產出 `.yml` 規則檔。這是正確的——ast-grep 的語言支援清單中沒有 ObjC。
+`─────────────────────────────────────────────────`
+
+## Completeness Check
+
+逐一確認：
+
+| 檢查項目 | 結果 |
+|---------|------|
+| final-contracts.md 中的合約數量 | **46** 個合約 (M:8, L:8, N:3, S:3, E:5, C:1, D:12, P:5, 含 4 個 ADD) |
+| 對應的 assert_match 或驗證邏輯 | **46** 個（P-003 與 S-002/D-001 共用驗證） |
+| ast-grep rules | **0**（Objective-C 不支援 ast-grep） |
+| 所有 ID 使用 `{Category}-{NNN}` 格式 | YES |
+| 所有合約有 Scope, Seam_Type, Pinch_Point | YES |
+| Pinch Points 數量 | **14** |
+
+**COMPLETENESS: 46 contracts, 46 assertions, 0 rules, 14 pinch_points -- COMPLETE**
+
+### 合併摘要
+
+| 分類 | 數量 |
+|------|------|
+| CONFIRM（原樣保留） | 28 |
+| DISPUTE（有修改） | 12 |
+| ADD（新增合約） | 4 (L-008, E-005, P-004, P-005) |
+| META_ISSUE（metadata 修正） | 7 (M-005/M-006/L-002/L-004/L-005 scope→method, N-001 scope→method + seam→link) |
+
+### DISPUTE 處理結果
+
+- **風險降級 (4)**: M-006 CRITICAL→HIGH, L-002 CRITICAL→HIGH, C-001 HIGH→MEDIUM, D-004 MEDIUM→LOW
+- **描述修正 (6)**: L-003, N-002, E-001, D-001, D-002, D-011
+- **保留+標記 (2)**: L-004, P-003（evidence 明確但風險描述合理，僅標記 DISPUTED）

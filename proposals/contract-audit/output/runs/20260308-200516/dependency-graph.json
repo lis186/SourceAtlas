@@ -1,0 +1,138 @@
+{
+  "dependency_graph": [
+    { "from": "RoomBubbleCellData", "to": "MatrixKit", "seam_type": "link" },
+    { "from": "RoomBubbleCellData", "to": "MXKRoomBubbleCellDataWithAppendingMode", "seam_type": "none" },
+    { "from": "RoomBubbleCellData", "to": "MXBeaconInfoSummaryProtocol", "seam_type": "object" },
+    { "from": "RoomBubbleCellData", "to": "EventFormatter", "seam_type": "none" },
+    { "from": "RoomBubbleCellData", "to": "AvatarGenerator", "seam_type": "none" },
+    { "from": "RoomBubbleCellData", "to": "Tools", "seam_type": "none" },
+    { "from": "RoomBubbleCellData", "to": "RoomReactionsViewSizer", "seam_type": "none" },
+    { "from": "RoomBubbleCellData", "to": "GeneratedInterface-Swift", "seam_type": "link" },
+    { "from": "MXKRoomBubbleTableViewCell+Riot", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomViewController", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomDataSource", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomSearchDataSource", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomMessagesSearchViewController", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "HomeMessagesSearchDataSource", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "HomeMessagesSearchViewController", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "Riot-Bridging-Header", "to": "RoomBubbleCellData", "seam_type": "link" },
+    { "from": "RoomMembershipBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomMembershipExpandedBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomMembershipCollapsedBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomMembershipWithPaginationTitleBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomMembershipExpandedWithPaginationTitleBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomMembershipCollapsedWithPaginationTitleBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomCreationCollapsedBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomCreationWithPaginationCollapsedBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomIncomingEncryptedTextMsgBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomIncomingEncryptedTextMsgWithPaginationTitleBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomIncomingEncryptedTextMsgWithoutSenderInfoBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomIncomingEncryptedTextMsgWithoutSenderNameBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomIncomingEncryptedTextMsgWithPaginationTitleWithoutSenderNameBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomOutgoingEncryptedTextMsgBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomOutgoingEncryptedTextMsgWithPaginationTitleBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomOutgoingEncryptedTextMsgWithoutSenderInfoBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomOutgoingEncryptedTextMsgWithoutSenderNameBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomOutgoingEncryptedTextMsgWithPaginationTitleWithoutSenderNameBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "RoomOutgoingAttachmentWithoutSenderInfoBubbleCell", "to": "RoomBubbleCellData", "seam_type": "none" },
+    { "from": "MXKRoomBubbleCellDataWithAppendingMode", "to": "MXKRoomBubbleCellData", "seam_type": "none" },
+    { "from": "MXKRoomBubbleCellData", "to": "MXKRoomBubbleCellDataStoring", "seam_type": "object" }
+  ],
+  "pinch_points": [
+    {
+      "node": "RoomBubbleCellData",
+      "in_degree": 27,
+      "is_pinch_point": true,
+      "suggested_strategy": "Extract Interface: Define a Swift protocol (RoomBubbleCellDataProtocol) that captures the public API surface of RoomBubbleCellData.h. All 27 consuming files should depend on the protocol instead of the concrete class. This enables parallel Swift migration — a new Swift implementation can conform to the protocol while the ObjC version remains for untouched consumers. Thread-safety contracts (main-thread-only property access, atomic flags like isKeyVerificationOperationPending) should be documented as protocol requirements."
+    },
+    {
+      "node": "MXKRoomBubbleCellData",
+      "in_degree": 7,
+      "is_pinch_point": true,
+      "suggested_strategy": "Extract Interface: MXKRoomBubbleCellData is already partially abstracted via MXKRoomBubbleCellDataStoring protocol. Complete the extraction by ensuring all consumers reference MXKRoomBubbleCellDataStoring rather than the concrete class. For Swift migration, create a Swift protocol mirroring MXKRoomBubbleCellDataStoring and use Wrap Method to add Swift-native thread-safety (actor isolation or @MainActor) without modifying existing ObjC consumers."
+    },
+    {
+      "node": "MatrixKit",
+      "in_degree": 3,
+      "is_pinch_point": true,
+      "suggested_strategy": "Sprout Class: MatrixKit is an umbrella import aggregating many types. Create focused Swift modules (e.g., MatrixKitRoomModels, MatrixKitFormatters) that expose only the needed symbols. Replace umbrella #import \"MatrixKit.h\" with targeted imports to reduce coupling surface. This also helps the compiler with incremental builds during migration."
+    }
+  ],
+  "seam_summary": [
+    {
+      "dependency": "RoomBubbleCellData -> MatrixKit",
+      "seam_type": "link",
+      "reason": "MatrixKit.h is an umbrella header for a framework/module. The dependency is resolved at link time, making it a Link Seam. Can be replaced by swapping the linked framework or using module aliases in the build system."
+    },
+    {
+      "dependency": "RoomBubbleCellData -> MXKRoomBubbleCellDataWithAppendingMode",
+      "seam_type": "none",
+      "reason": "Direct class inheritance (RoomBubbleCellData : MXKRoomBubbleCellDataWithAppendingMode). Cannot be replaced without modifying the class hierarchy — this is a hard structural dependency."
+    },
+    {
+      "dependency": "RoomBubbleCellData -> MXBeaconInfoSummaryProtocol",
+      "seam_type": "object",
+      "reason": "Declared as @property id<MXBeaconInfoSummaryProtocol> — a protocol-typed property enabling dependency injection. Any conforming object can be substituted at runtime, making this an Object Seam."
+    },
+    {
+      "dependency": "RoomBubbleCellData -> EventFormatter",
+      "seam_type": "none",
+      "reason": "Direct #import and concrete class usage in the .m file. No protocol abstraction or injection point. Hard dependency requiring Extract Interface to break."
+    },
+    {
+      "dependency": "RoomBubbleCellData -> AvatarGenerator",
+      "seam_type": "none",
+      "reason": "Direct #import of concrete utility class with static/class method calls. No abstraction layer. Hard dependency."
+    },
+    {
+      "dependency": "RoomBubbleCellData -> Tools",
+      "seam_type": "none",
+      "reason": "Direct #import of utility class. Concrete usage with no protocol or injection mechanism. Hard dependency."
+    },
+    {
+      "dependency": "RoomBubbleCellData -> RoomReactionsViewSizer",
+      "seam_type": "none",
+      "reason": "Direct #import of concrete class for view sizing calculations. No abstraction layer. Hard dependency."
+    },
+    {
+      "dependency": "RoomBubbleCellData -> GeneratedInterface-Swift",
+      "seam_type": "link",
+      "reason": "Auto-generated bridging header that exposes Swift types to ObjC. Resolved at link time by the Swift compiler. The actual Swift types behind it can be changed independently — a Link Seam."
+    },
+    {
+      "dependency": "Riot-Bridging-Header -> RoomBubbleCellData",
+      "seam_type": "link",
+      "reason": "The bridging header exposes ObjC types to Swift code at compile/link time. Removing or replacing the import changes what Swift code can access. This is a Link Seam controlled by build configuration."
+    },
+    {
+      "dependency": "RoomDataSource -> RoomBubbleCellData",
+      "seam_type": "none",
+      "reason": "Direct concrete class instantiation and usage. RoomDataSource creates RoomBubbleCellData instances directly without factory abstraction. Hard dependency."
+    },
+    {
+      "dependency": "RoomViewController -> RoomBubbleCellData",
+      "seam_type": "none",
+      "reason": "Direct #import and concrete type casting (e.g., (RoomBubbleCellData *)cellData). No protocol abstraction at the consumer side. Hard dependency."
+    },
+    {
+      "dependency": "RoomMembership*BubbleCell -> RoomBubbleCellData",
+      "seam_type": "none",
+      "reason": "All 6 RoomMembership bubble cell variants directly import and cast to RoomBubbleCellData for accessing tag and display properties. Hard dependency with no abstraction."
+    },
+    {
+      "dependency": "RoomCreation*BubbleCell -> RoomBubbleCellData",
+      "seam_type": "none",
+      "reason": "Both RoomCreation bubble cell variants directly import and cast to RoomBubbleCellData. Hard dependency."
+    },
+    {
+      "dependency": "Room*EncryptedTextMsg*BubbleCell -> RoomBubbleCellData",
+      "seam_type": "none",
+      "reason": "All 10 encrypted text message bubble cell variants (incoming and outgoing) directly import and cast to RoomBubbleCellData. Hard dependency repeated across the cell type matrix."
+    },
+    {
+      "dependency": "MXKRoomBubbleCellData -> MXKRoomBubbleCellDataStoring",
+      "seam_type": "object",
+      "reason": "MXKRoomBubbleCellData conforms to the MXKRoomBubbleCellDataStoring protocol. Consumers that reference the protocol rather than the class benefit from an Object Seam — any conforming type can be substituted."
+    }
+  ]
+}
