@@ -1,0 +1,12 @@
+id: D-003-interface-impl
+message: "D-003: EventHistory must implement IEventHistory -- contract must be present"
+severity: error
+language: TypeScript
+rule:
+  pattern: |
+    class EventHistory implements IEventHistory {
+      $$$
+    }
+note: |
+  Contract source: EventHistory.ts:18
+  Refactoring requirement: EventHistory must satisfy IEventHistory interface from @91app/trinity-kernel

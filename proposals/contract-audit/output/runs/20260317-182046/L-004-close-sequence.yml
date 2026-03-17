@@ -1,0 +1,17 @@
+id: L-004-close-sequence
+message: "L-004: close() must stop timer then close dbManager -- contract must be present"
+severity: error
+language: TypeScript
+rule:
+  kind: method_definition
+  all:
+    - has:
+        regex: "close"
+    - has:
+        kind: expression_statement
+        has:
+          pattern: this.stopCleanupTimer()
+note: |
+  Contract source: EventHistory.ts:236-244
+  Refactoring requirement: close must (1) stop timer, (2) close dbManager, (3) set isInitialized=false.
+  LIMITATION: ast-grep cannot verify ordering of statements within the body. Manual review required.

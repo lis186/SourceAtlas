@@ -1,0 +1,10 @@
+id: D-002-timeout-config
+message: "D-002: tenSecondsTimeout config must be preserved for multipassLogin/getThemeConfiguration/getSettings"
+severity: error
+language: Swift
+rule:
+  pattern: |
+    .tenSecondsTimeout
+note: |
+  Contract source: PaymentsNetworkManager.swift:37
+  3 methods use 10s timeout, remaining 22 use 60s (.default). Do not unify without confirming business requirements.

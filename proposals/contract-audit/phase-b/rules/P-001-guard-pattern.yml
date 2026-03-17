@@ -1,0 +1,13 @@
+id: P-001-guard-pattern
+message: "P-001: Guard pattern returns empty values when disabled/uninitialized -- contract must be present"
+severity: error
+language: TypeScript
+rule:
+  pattern: |
+    if (!this.isInitialized || !this.options.enabled) {
+      $$$
+    }
+note: |
+  Contract source: EventHistory.ts:76,111,130,146,168,185
+  Refactoring requirement: guard pattern must exist in every public method that accesses dbManager.
+  Return values vary per method -- see contract P-001 for specifics.

@@ -1,0 +1,11 @@
+id: L-001-subscription-lifetime
+message: "L-001: Subscription lifetime bound to manager instance via cancellables Set"
+severity: error
+language: Swift
+rule:
+  pattern: |
+    cancellables: Set<AnyCancellable> = []
+note: |
+  Contract source: PaymentsNetworkManager.swift:18
+  Added from Adversary review. Subscription lifetime is tied to the manager instance.
+  If manager deallocates, all in-flight requests are cancelled.

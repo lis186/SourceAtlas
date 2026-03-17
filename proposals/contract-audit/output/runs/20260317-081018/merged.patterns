@@ -1,0 +1,74 @@
+# Swift 錨定模式（通用）
+# 格式：類別<TAB>名稱<TAB>grep pattern<TAB>說明
+# 來源：語言插件 swift.md §1-3, §5-7
+# 框架專用模式已拆分至 swift-combine.patterns 及 swift-swiftui.patterns
+#
+# 類別：S=同步, N=通知/事件, L=生命週期, D=依賴, E=例外, C=取消
+
+# --- S: 同步原語 (§2) ---
+S	actor_decl	^actor 	Actor 宣告（自動序列化）
+S	@MainActor	@MainActor	主執行緒隔離標記
+S	nonisolated	nonisolated\b	非隔離方法標記
+S	DispatchQueue_main	DispatchQueue\.main	主佇列存取
+S	dispatch_sync	\.sync\s*\{	同步執行，潛在死鎖
+S	dispatch_async	\.async\s*\{	非同步執行
+S	NSLock	NSLock\b	NSLock 鎖
+S	os_unfair_lock	os_unfair_lock	unfair lock
+S	Task_unstructured	Task\s*\{	非結構化任務
+S	async_let	async let\b	結構化並行
+S	Sendable	Sendable\b	可跨並行邊界傳遞標記
+S	@unchecked_Sendable	@unchecked Sendable	手動繞過 Sendable 檢查
+S	DispatchQueue_create	DispatchQueue\(label:	自訂 serial/concurrent queue 建立
+S	withTaskGroup	withTaskGroup\b	結構化並行群組
+S	withThrowingTaskGroup	withThrowingTaskGroup\b	可拋出錯誤的結構化並行群組
+S	DispatchSemaphore	DispatchSemaphore	信號量（同 ObjC dispatch_semaphore）
+S	DispatchGroup	DispatchGroup	派發群組（等待多個非同步任務）
+
+# --- N: 通知/事件原語 (§1) ---
+N	NotificationCenter_post	NotificationCenter\.default\.post	通知發送
+N	NotificationCenter_addObserver	NotificationCenter\.default\.addObserver	觀察者註冊
+N	NotificationCenter_removeObserver	NotificationCenter\.default\.removeObserver	觀察者移除
+N	delegate_property	delegate[^s]	Delegate 存取
+N	for_await	for await\b	AsyncSequence 消費
+
+# --- L: 生命週期 (§3) ---
+L	deinit	deinit\s*\{	物件銷毀
+L	viewDidLoad	viewDidLoad	UIViewController 載入完成
+L	viewWillAppear	viewWillAppear	UIViewController 即將顯示
+L	viewDidAppear	viewDidAppear	UIViewController 已顯示
+L	viewWillDisappear	viewWillDisappear	UIViewController 即將消失
+L	viewDidDisappear	viewDidDisappear	UIViewController 已消失
+
+# --- D: 依賴 (§6-7) ---
+D	shared_singleton	\.shared[^A-Za-z]	單例存取
+D	protocol_decl	^protocol\b	Protocol 宣告（Object Seam）
+D	if_available	#available\b	API 可用性檢查
+D	@available	@available	API 可用性標記
+D	@Observable	@Observable\b	Swift 5.9 Macro（自動生成 observation 基礎設施）
+D	canImport	canImport\(	條件編譯——模組可用性檢查
+D	if_conditional	#if\b	條件編譯（#if DEBUG 等）
+
+# --- E: 例外 (§2) ---
+E	throws_decl	\bthrows\b	錯誤傳播合約
+E	do_catch	\bcatch\b	例外捕獲
+E	Codable	Codable\b	自動合成編解碼合約（欄位不匹配會 runtime 失敗）
+
+# --- C: 取消 ---
+C	Task_isCancelled	isCancelled\b	取消狀態檢查
+C	Task_cancel	\.cancel\(\)	任務取消
+C	checkCancellation	checkCancellation	取消檢查點
+
+# --- framework: combine ---
+# Swift Combine 錨定模式
+# 格式：類別<TAB>名稱<TAB>grep pattern<TAB>說明
+# 來源：從 swift.patterns 拆分出的 Combine 框架專用模式
+#
+# 類別：S=同步, N=通知/事件, L=生命週期, D=依賴, E=例外, C=取消
+
+# --- N: 通知/事件原語 ---
+N	combine_sink	\.sink\s*\{	Combine 訂閱
+N	combine_store	\.store\(in:	Combine cancellable 儲存
+N	combine_receive_on	\.receive\(on:	Combine scheduler 指定
+N	@Published	@Published\b	Combine published 屬性
+N	PassthroughSubject	PassthroughSubject	Combine 直通 Subject
+N	CurrentValueSubject	CurrentValueSubject	Combine 有當前值的 Subject

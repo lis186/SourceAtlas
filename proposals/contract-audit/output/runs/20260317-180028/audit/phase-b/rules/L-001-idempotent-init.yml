@@ -1,0 +1,11 @@
+id: L-001-idempotent-init
+message: "L-001: init() idempotency guard -- contract must be present"
+severity: error
+language: TypeScript
+rule:
+  kind: if_statement
+  has:
+    pattern: this.isInitialized
+note: |
+  Contract source: EventHistory.ts:44-46
+  Refactoring requirement: init() must be idempotent -- early return when already initialized

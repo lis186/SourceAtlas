@@ -1,0 +1,11 @@
+id: N-002-store-cancellables
+message: "N-002: .store(in: &self.cancellables) shared storage -- contract must exist"
+severity: error
+language: Swift
+rule:
+  pattern: |
+    .store(in: &self.cancellables)
+note: |
+  Contract source: PaymentsNetworkManager.swift:49
+  Completed subscriptions accumulate in the Set (no automatic removal).
+  Refactoring requirement: consider local cancellable or automatic cleanup mechanism.

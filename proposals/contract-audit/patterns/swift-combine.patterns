@@ -1,0 +1,13 @@
+# Swift Combine 錨定模式
+# 格式：類別<TAB>名稱<TAB>grep pattern<TAB>說明
+# 來源：從 swift.patterns 拆分出的 Combine 框架專用模式
+#
+# 類別：S=同步, N=通知/事件, L=生命週期, D=依賴, E=例外, C=取消
+
+# --- N: 通知/事件原語 ---
+N	combine_sink	\.sink\s*\{	Combine 訂閱
+N	combine_store	\.store\(in:	Combine cancellable 儲存
+N	combine_receive_on	\.receive\(on:	Combine scheduler 指定
+N	@Published	@Published\b	Combine published 屬性
+N	PassthroughSubject	PassthroughSubject	Combine 直通 Subject
+N	CurrentValueSubject	CurrentValueSubject	Combine 有當前值的 Subject

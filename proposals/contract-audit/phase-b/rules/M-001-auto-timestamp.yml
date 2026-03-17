@@ -1,0 +1,10 @@
+id: M-001-auto-timestamp
+message: "M-001: Record creation with auto-timestamp -- contract must be present"
+severity: error
+language: TypeScript
+rule:
+  pattern: |
+    timestamp: Date.now()
+note: |
+  Contract source: EventHistory.ts:86
+  Refactoring requirement: timestamp must be injected at record creation time

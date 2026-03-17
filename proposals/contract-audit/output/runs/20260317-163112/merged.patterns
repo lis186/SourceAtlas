@@ -1,0 +1,52 @@
+# TypeScript 通用錨定模式
+# 格式：類別<TAB>名稱<TAB>grep pattern<TAB>說明
+# 來源：語言插件 typescript.md §1-3, §5-7
+# 框架特定模式已拆分至：typescript-react.patterns, typescript-angular.patterns, typescript-rxjs.patterns
+#
+# 類別：S=同步, N=通知/事件, L=生命週期, D=依賴, E=例外, C=取消
+
+# --- S: 同步原語 (§2) ---
+S	Promise_all	Promise\.all\(	並行等待全部
+S	Promise_race	Promise\.race\(	競速等待
+S	Promise_allSettled	Promise\.allSettled\(	等待全部完成（含失敗）
+S	async_function	async function\b	非同步函式宣告
+S	forEach_async	\.forEach\(async	forEach + async（常見陷阱，不等待結果）
+S	Worker_thread	new Worker\(	Worker 執行緒建立
+S	SharedArrayBuffer	SharedArrayBuffer	共享記憶體
+S	Mutex	new Mutex\(	非同步互斥鎖
+
+# --- N: 通知/事件原語 (§1) ---
+N	EventEmitter_extends	extends EventEmitter	EventEmitter 繼承
+N	emit	\.emit\(	事件發送
+N	on_event	\.on\(	事件監聽
+N	once_event	\.once\(	一次性事件監聽
+N	addEventListener	addEventListener\(	DOM 事件監聽
+N	removeEventListener	removeEventListener\(	DOM 事件移除
+N	dispatchEvent	dispatchEvent\(	DOM 事件派發
+N	WebSocket_new	new WebSocket\(	WebSocket 連線建立
+N	onmessage	onmessage\b	WebSocket 訊息處理
+N	removeListener	\.removeListener\(	Node.js EventEmitter 移除監聽器
+N	CustomEvent	new CustomEvent\(	自訂 DOM 事件建立
+
+# --- L: 生命週期 (§3) ---
+L	app_use	app\.use\(	Express middleware 註冊（順序是合約）
+L	process_on	process\.on\(	Node.js 程序事件監聽
+L	SIGTERM	SIGTERM	程序終止信號處理
+L	uncaughtException	uncaughtException	未捕獲例外處理
+L	unhandledRejection	unhandledRejection	未處理 Promise rejection（Node 15+ 終止程序）
+L	SIGINT	SIGINT	中斷信號處理
+
+# --- D: 依賴 (§6-7) ---
+D	process_env	process\.env\.	環境變數依賴
+D	import_meta_env	import\.meta\.env	Vite 環境變數依賴
+D	container_bind	container\.bind	IoC 容器綁定
+D	abstract_class	abstract class\b	抽象類別宣告（Object Seam）
+
+# --- E: 例外 (§2, §8) ---
+E	try_block	try\s*\{	try-catch 例外處理
+E	throw_new	throw new\b	例外拋出
+E	JSON_parse	JSON\.parse\(	JSON 解析（可能拋出例外）
+
+# --- C: 取消 ---
+C	AbortController	new AbortController	請求取消控制器建立
+C	abort_call	\.abort\(\)	請求取消執行

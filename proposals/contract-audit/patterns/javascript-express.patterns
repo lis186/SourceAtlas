@@ -1,0 +1,69 @@
+# Express.js 錨定模式
+# 格式：類別<TAB>名稱<TAB>grep pattern<TAB>說明
+# 來源：Express.js 框架特定 patterns
+#
+# 類別：S=同步, N=通知/事件, L=生命週期, D=依賴, E=例外, C=取消
+
+# --- S: 同步原語 (Middleware Chain) ---
+S	next_call	next\(	middleware next() 回調（順序保證）
+S	next_error	next\(err	middleware 錯誤傳遞（跳至 error handler）
+S	next_route	next\(['"]route['"]\)	跳過剩餘 route callback
+S	res_send	res\.send\(	回應傳送（結束 req-res cycle）
+S	res_json	res\.json\(	JSON 回應傳送
+S	res_redirect	res\.redirect\(	重導向回應
+S	res_render	res\.render\(	模板渲染回應
+S	res_status	res\.status\(	設定 HTTP 狀態碼
+
+# --- N: 通知/事件原語 ---
+N	app_use	app\.use\(	應用層 middleware 掛載
+N	router_use	router\.use\(	路由層 middleware 掛載
+N	app_get	app\.get\(['"/]	GET 路由註冊
+N	app_post	app\.post\(['"/]	POST 路由註冊
+N	app_put	app\.put\(['"/]	PUT 路由註冊
+N	app_delete	app\.delete\(['"/]	DELETE 路由註冊
+N	app_all	app\.all\(	所有 HTTP 方法路由註冊
+N	req_on	req\.on\(	請求物件事件監聽
+N	res_on	res\.on\(	回應物件事件監聽
+N	app_param	app\.param\(	路由參數前處理 hook
+N	app_route	app\.route\(	鏈式路由定義
+
+# --- L: 生命週期 ---
+L	app_listen	app\.listen\(	伺服器啟動監聽
+L	server_close	server\.close\(	伺服器優雅關閉
+L	SIGTERM_handler	process\.on\(['"]SIGTERM['"]	SIGTERM 信號處理（graceful shutdown）
+L	SIGINT_handler	process\.on\(['"]SIGINT['"]	SIGINT 信號處理（graceful shutdown）
+L	app_set	app\.set\(	應用設定配置
+L	app_engine	app\.engine\(	模板引擎註冊
+L	app_locals	app\.locals\b	應用層共享變數
+
+# --- D: 依賴 ---
+D	require_express	require\(['"]express['"]\)	Express 模組匯入
+D	import_express	import\s.*from\s+['"]express['"]	Express ESM 匯入
+D	express_Router	express\.Router\(	路由器建立（模組化路由）
+D	express_static	express\.static\(	靜態檔案 middleware
+D	body_parser	require\(['"]body-parser['"]\)|bodyParser	body-parser middleware
+D	cors_middleware	require\(['"]cors['"]\)|import.*['"]cors['"]	CORS middleware
+D	helmet_middleware	require\(['"]helmet['"]\)|import.*['"]helmet['"]	Helmet 安全 middleware
+D	morgan_middleware	require\(['"]morgan['"]\)|import.*['"]morgan['"]	Morgan 日誌 middleware
+D	express_json	express\.json\(	內建 JSON body 解析 middleware
+D	express_urlencoded	express\.urlencoded\(	內建 URL-encoded body 解析 middleware
+D	cookie_parser	require\(['"]cookie-parser['"]\)	Cookie 解析 middleware
+D	express_session	require\(['"]express-session['"]\)	Session middleware
+
+# --- E: 例外/錯誤處理 ---
+E	error_middleware	function\s*\(err,\s*req,\s*res,\s*next\)	Express 錯誤處理 middleware（4 參數簽名）
+E	error_arrow_mw	\(err,\s*req,\s*res,\s*next\)\s*=>	錯誤處理 middleware（箭頭函式）
+E	async_wrap	asyncHandler\(|catchAsync\(	非同步路由包裝器（捕獲 rejection）
+E	try_catch_next	catch\s*\(.*\)\s*\{[^}]*next\(	try-catch 中呼叫 next(err) 傳遞錯誤
+E	unhandled_rejection	process\.on\(['"]unhandledRejection['"]	未處理 Promise rejection（async route 洩漏）
+E	res_status_500	res\.status\(500\)	伺服器錯誤回應
+
+# --- C: 取消 ---
+C	req_abort	req\.abort\(	請求中止
+C	req_destroy	req\.destroy\(	請求銷毀
+C	res_end	res\.end\(	回應結束（手動關閉）
+C	req_timeout	req\.setTimeout\(	請求超時設定
+C	res_timeout	res\.setTimeout\(	回應超時設定
+C	server_timeout	server\.timeout\b|server\.setTimeout\(	伺服器層級超時設定
+C	connection_close	['"]close['"]	連線關閉事件
+C	req_aborted	req\.aborted\b|req\.on\(['"]aborted['"]	請求中止偵測

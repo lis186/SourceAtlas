@@ -1,0 +1,11 @@
+id: M-002-idempotency
+message: "M-002: idempotencyKey parameter must exist in payment methods"
+severity: error
+language: Swift
+rule:
+  pattern: |
+    idempotencyKey: $KEY
+note: |
+  Contract source: PaymentsNetworkManager.swift:590, 697, 732
+  postPayments, postPaymentCodes, postStoredValues must retain idempotency key parameter.
+  This module only passes through the key; backend enforcement is an external contract.

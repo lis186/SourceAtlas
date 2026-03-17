@@ -1,0 +1,75 @@
+# JavaScript 錨定模式
+# 格式：類別<TAB>名稱<TAB>grep pattern<TAB>說明
+# 來源：JavaScript 通用（不含框架特定）
+#
+# 類別：S=同步, N=通知/事件, L=生命週期, D=依賴, E=例外, C=取消
+
+# --- S: 同步原語 ---
+S	Promise_new	new Promise\(	Promise 建立
+S	Promise_all	Promise\.all\(	並行等待全部
+S	Promise_race	Promise\.race\(	競速等待
+S	Promise_allSettled	Promise\.allSettled\(	等待全部完成（含失敗）
+S	Promise_any	Promise\.any\(	任一成功即解決
+S	async_function	async function\b	非同步函式宣告
+S	await_expr	await\s	await 等待非同步結果
+S	setTimeout	setTimeout\(	延遲執行
+S	setInterval	setInterval\(	週期執行
+S	requestAnimationFrame	requestAnimationFrame\(	動畫幀回調
+S	Worker_new	new Worker\(	Web Worker 建立
+S	postMessage	\.postMessage\(	Worker/Window 訊息傳送
+S	SharedArrayBuffer	SharedArrayBuffer	共享記憶體
+S	Atomics	Atomics\.	原子操作（共享記憶體同步）
+
+# --- N: 通知/事件原語 ---
+N	EventEmitter_on	\.on\(	EventEmitter 事件監聽
+N	EventEmitter_emit	\.emit\(	EventEmitter 事件發送
+N	EventEmitter_once	\.once\(	一次性事件監聽
+N	removeListener	\.removeListener\(	EventEmitter 移除監聽器
+N	removeAllListeners	\.removeAllListeners\(	EventEmitter 移除全部監聽器
+N	addEventListener	addEventListener\(	DOM 事件監聽
+N	removeEventListener	removeEventListener\(	DOM 事件移除
+N	CustomEvent_new	new CustomEvent\(	自訂 DOM 事件建立
+N	dispatchEvent	dispatchEvent\(	DOM 事件派發
+N	callback_param	, callback\)	回調函式參數（回調模式）
+N	onmessage	onmessage\b	訊息事件處理（Worker/WebSocket）
+N	WebSocket_new	new WebSocket\(	WebSocket 連線建立
+
+# --- L: 生命週期 ---
+L	DOMContentLoaded	DOMContentLoaded	DOM 載入完成事件
+L	window_onload	window\.onload	頁面完全載入事件
+L	beforeunload	beforeunload	頁面卸載前事件
+L	unload_event	['"]unload['"]	頁面卸載事件
+L	MutationObserver	new MutationObserver\(	DOM 變更觀察者建立
+L	IntersectionObserver	new IntersectionObserver\(	交集觀察者建立（可見性偵測）
+L	ResizeObserver	new ResizeObserver\(	尺寸變更觀察者建立
+L	PerformanceObserver	new PerformanceObserver\(	效能觀察者建立
+L	observer_disconnect	\.disconnect\(	觀察者斷開連線
+
+# --- D: 依賴 ---
+D	import_static	^import\s	ES Module 靜態匯入
+D	import_dynamic	import\(	動態匯入（code splitting）
+D	require_call	require\(	CommonJS 模組匯入
+D	module_exports	module\.exports	CommonJS 模組匯出
+D	export_decl	^export\s	ES Module 匯出
+D	globalThis	globalThis\b	全域物件存取（跨環境）
+D	window_access	window\.	瀏覽器全域物件存取
+D	document_access	document\.	DOM 文件存取
+
+# --- E: 例外/錯誤處理 ---
+E	try_block	try\s*\{	try-catch 例外處理
+E	catch_block	catch\s*\(	catch 區塊
+E	promise_catch	\.catch\(	Promise 錯誤捕獲
+E	Promise_reject	Promise\.reject\(	Promise 拒絕
+E	throw_expr	throw\s	例外拋出
+E	window_onerror	window\.onerror	全域錯誤處理
+E	unhandledrejection	unhandledrejection	未處理 Promise rejection 事件
+E	error_event	['"]error['"]	錯誤事件監聽
+
+# --- C: 取消 ---
+C	AbortController	new AbortController	請求取消控制器建立
+C	AbortSignal	AbortSignal\.	取消信號靜態方法（timeout/any）
+C	abort_call	\.abort\(	請求取消執行
+C	clearTimeout	clearTimeout\(	取消延遲執行
+C	clearInterval	clearInterval\(	取消週期執行
+C	cancelAnimationFrame	cancelAnimationFrame\(	取消動畫幀回調
+C	removeEventListener_cancel	removeEventListener\(	移除事件監聽（資源清理）
