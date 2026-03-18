@@ -1,0 +1,18 @@
+module: "{module_name}"
+file: "{file_path}"
+language: "{language}"
+language_group: "A|B|C"
+file_hash: "{sha256}"
+created: "{iso_date}"
+updated: "{iso_date}"
+current_step: 1
+zone_id: null  # set in Step 2a when user selects a zone
+steps:
+  1_target:    { status: pending, completed_at: null }
+  2a_zones:    { status: pending, completed_at: null }
+  2_contracts: { status: pending, completed_at: null }
+  3_seams:     { status: pending, completed_at: null }
+  4_tests:     { status: pending, completed_at: null }
+  5_interface: { status: pending, completed_at: null }
+  6_adapter:   { status: pending, completed_at: null }
+  7_gate:      { status: pending, completed_at: null }

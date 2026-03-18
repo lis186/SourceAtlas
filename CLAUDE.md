@@ -28,6 +28,8 @@ AI collaboration guide for SourceAtlas development.
 /atlas.history   - Git temporal analysis
 /atlas.impact    - Change impact analysis
 /atlas.deps      - Dependency analysis
+/atlas.audit     - Extract behavior contracts (multi-LLM cross-validation)
+/atlas.refactor  - Guided legacy code migration (13-step Playbook, Steps 1-7 tool-assisted)
 /atlas.list      - List saved analyses
 /atlas.reset     - Clear saved analyses
 ```
