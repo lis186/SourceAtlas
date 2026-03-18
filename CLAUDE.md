@@ -38,10 +38,9 @@ All commands auto-save to `.sourceatlas/`. Use `--force` to skip cache and re-an
 
 ## Must Follow
 
-### GitButler Workflow
-- **Never use `git commit`** - GitButler manages all commits
-- Focus on code, let GitButler handle version control
-- When done, stop and let GitButler hooks execute
+### Git Workflow
+- Use standard `git` CLI for version control
+- Commit related changes together with descriptive messages
 
 ### Analysis Principles (from Constitution)
 1. **Information Theory** - High-entropy files first (configs, docs, models)
