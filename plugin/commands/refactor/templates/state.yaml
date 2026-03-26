@@ -7,11 +7,18 @@ created: "{iso_date}"
 updated: "{iso_date}"
 current_step: 1
 zone_id: null  # set in Step 2a when user selects a zone
+session_boundaries: [2, 5]  # steps that force a new session after completion
 steps:
+  # Status lifecycle: pending → produced → verified
+  # produced = artifact file exists
+  # verified = deterministic gate passed (or no gate required)
+  # Next step can only start when previous step is "verified"
   1_target:    { status: pending, completed_at: null }
   2a_zones:    { status: pending, completed_at: null }
-  2_contracts: { status: pending, completed_at: null }
+  2_contracts: { status: pending, completed_at: null, audit_mode: null }  # audit_mode: full|degraded
+  2_gate:      { status: pending, completed_at: null, rules_total: 0, rules_passed: 0 }
   3_seams:     { status: pending, completed_at: null }
+  3_gate:      { status: pending, completed_at: null, candidates_total: 0, candidates_verified: 0 }
   4_tests:     { status: pending, completed_at: null }
   5_interface: { status: pending, completed_at: null }
   6_adapter:   { status: pending, completed_at: null }

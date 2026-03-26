@@ -36,6 +36,76 @@ for arg in $ARGUMENTS; do
 done
 ```
 
+### No Arguments: Discovery Mode
+
+If `$FILE_PATH` is empty and `--status` is not set, enter **Discovery Mode** — help the user find the best refactoring target.
+
+#### Step A: Check In-Progress Refactors
+
+```bash
+# Check for existing state files
+if ls .sourceatlas/refactor/*/state.yaml 1>/dev/null 2>&1; then
+    # Show in-progress refactors with current step
+    echo "🔄 In-progress refactors:"
+    for state in .sourceatlas/refactor/*/state.yaml; do
+        module=$(grep 'module:' "$state" | awk '{print $2}' | tr -d '"')
+        step=$(grep 'current_step:' "$state" | awk '{print $2}')
+        file=$(grep 'file:' "$state" | awk '{print $2}' | tr -d '"')
+        echo "  - $module (Step $step/7): $file"
+        echo "    Resume: /atlas.refactor $file"
+    done
+    echo ""
+fi
+```
+
+#### Step B: Auto-Discover Candidates
+
+Run `/atlas.history` on the project to find hotspot files, then filter for refactoring candidates:
+
+1. **Run history analysis** — get files ranked by change frequency × co-change coupling
+2. **Filter candidates**:
+   - File size > 200 lines (God Class threshold)
+   - High change frequency (top quartile)
+   - Multiple responsibility signals (diverse import types, many methods)
+3. **Check existing analyses** — if `.sourceatlas/audit/` or `.sourceatlas/seam/` have cached results for a file, note it (head start)
+
+#### Step C: Present Ranked Candidates
+
+```
+🔧 SourceAtlas: Refactor — Discovery Mode
+───────────────────────────────────────────
+
+🔄 In-progress (1):
+  NYHTTPSClient (Step 3/7) — resume: /atlas.refactor NYCore/.../NYHTTPSClient.m
+
+📊 Recommended targets (by hotspot × complexity):
+
+  #1 ⚡ NYHTTPSClient.m (842 lines, 47 commits/6mo, 12 co-change partners)
+     Group A (ObjC) │ audit ✅ cached │ seam ✅ cached
+     /atlas.refactor NYCore/NYCore/Classes/NYHTTPSClient.m
+
+  #2   NYDataManager.swift (310 lines, 23 commits/6mo, 8 co-change partners)
+     Group A (Swift) │ no prior analysis
+     /atlas.refactor NYCore/NYCore/Classes/NYDataManager.swift
+
+  #3   api-gateway.ts (280 lines, 19 commits/6mo, 6 co-change partners)
+     Group B (TypeScript) │ audit ✅ cached
+     /atlas.refactor src/services/api-gateway.ts
+
+Select a target to begin, or run:
+  /atlas.history           — full hotspot analysis
+  /atlas.refactor --status — show all in-progress refactors
+```
+
+**Key DX principles**:
+- Zero-arg = smart discovery, not help page
+- Show resumable work first (respect user's existing investment)
+- Every candidate has a copy-pasteable command
+- Prior analysis is an asset, surface it ("audit ✅ cached" = head start)
+- Ranked by actionable signal (hotspot × complexity), not alphabetical
+
+After the user selects a target, proceed to Step 1 below.
+
 ### Language Detection
 
 Same as `/atlas.audit` — detect from file extension or `detect-language.sh`.
@@ -67,6 +137,52 @@ fi
 # If --step N, set current_step = N and continue
 # Otherwise, auto-detect current_step from state
 ```
+
+### Step Status Lifecycle
+
+Each step follows a **three-state lifecycle**:
+
+```
+pending → produced → verified
+```
+
+- **pending**: Not yet started
+- **produced**: Artifact file exists in `.sourceatlas/refactor/{module}/`
+- **verified**: Deterministic gate passed (or no gate required for this step)
+
+**Rule: A step can only start when the previous step is `verified`.**
+
+Steps without a deterministic gate transition directly from `produced` to `verified` (Steps 1, 2a, 4, 5, 6).
+
+Steps WITH a deterministic gate require passing before reaching `verified`:
+- **Step 2 (contracts)** → Gate 2: contract verification rules dry-run
+- **Step 3 (seams)** → Gate 3: enabling point existence check
+- **Step 7 (final)** → Gate 7: all tests + contract CI
+
+### Session Boundaries
+
+To prevent confirmation bias (same agent writing and verifying in one session), certain steps **force a session break**:
+
+```yaml
+session_boundaries: [2, 5]
+```
+
+After completing Step 2 (with gate), the workflow **stops** and outputs:
+
+```
+✅ Step 2 complete — contracts extracted and verified.
+   {rules_passed}/{rules_total} verification rules passed.
+
+⏸️ Session boundary — start a new session to continue:
+   /atlas.refactor {file_path} --step 3
+
+   Why: Step 3 (seam analysis) reads contracts as input.
+   A fresh session prevents anchoring to Step 2's reasoning.
+```
+
+After completing Step 5 (interface, user-approved), the same pattern applies before Step 6.
+
+This is automatic — the agent does NOT continue past a session boundary.
 
 ### File Hash Check
 
@@ -163,20 +279,106 @@ Run `/atlas.audit {file_path} --zone {zone_id}` on the selected zone.
 
 - If zone was selected, audit only those lines
 - If no zone (small file), audit the entire file
+- **IMPORTANT**: This MUST invoke the actual `/atlas.audit` command (which runs the multi-LLM pipeline: Gemini blind scan → Claude structured audit → Codex adversarial review). Do NOT perform inline contract analysis as a substitute.
 
 Save result as `2_contracts.yaml`.
 
-### 2.3 Update State
+Record `audit_mode` in state:
+- `full` — all three LLMs ran (gemini + codex available)
+- `degraded` — one or more LLMs unavailable, Claude-only analysis
 
-Set `2a_zones`, `2_contracts` to completed. Set `zone_id` in state. Set `current_step: 3`.
+### 2.3 Verify: Check Audit Artifact
+
+Before proceeding, verify the audit artifact exists and was produced by the pipeline:
+
+```bash
+AUDIT_FILE=".sourceatlas/audit/${MODULE_NAME}.yaml"
+if [ ! -f "$AUDIT_FILE" ]; then
+    echo "❌ Audit artifact not found: $AUDIT_FILE"
+    echo "Step 2b requires /atlas.audit to produce this file."
+    echo "Run: /atlas.audit $FILE_PATH --zone $ZONE_ID"
+    exit 1
+fi
+```
+
+Copy or symlink to `2_contracts.yaml`:
+```bash
+cp "$AUDIT_FILE" "${STATE_DIR}/2_contracts.yaml"
+```
+
+Set `2_contracts: { status: produced }`.
+
+### Gate 2: Contract Verification Dry-Run
+
+**Purpose**: Verify that contracts describe behaviors that actually exist in the code.
+**Method**: Run each contract's verification rules (grep/ast-grep) against the source file.
+**Equivalent to**: nineyiappshop Phase A Step 5 (self-verification dry-run).
+
+**Execute the gate script** — this is a deterministic check, not an LLM judgment:
+
+```bash
+bash plugin/commands/refactor/scripts/gate-contracts.sh \
+    "${STATE_DIR}/2_contracts.yaml" \
+    "${STATE_DIR}"
+```
+
+The script:
+1. Looks for an existing `verify-contracts-*.sh` from `/atlas.audit` pipeline output (gold standard)
+2. Falls back to extracting `verification_grep` fields from the contracts YAML
+3. Runs each rule against the source file
+4. Updates `state.yaml` with `2_gate: { status: pass|fail, rules_total: N, rules_passed: N }`
+5. Exits 0 (pass) or 1 (fail)
+
+**Gate pass** (exit 0): ALL verification rules match → `2_contracts: { status: verified }`
+
+**Gate fail** (exit 1): Any rule fails → stop, suggest re-running audit with `--force`.
+
+**Degraded** (exit 0 with `status: degraded`): No verification rules found in contracts. Proceed with caution.
+
+### 2.4 Session Boundary
+
+After Gate 2 passes, **STOP**. Output session boundary message and do not continue to Step 3.
+
+```
+✅ Step 2 complete — {rules_passed}/{rules_total} contract rules verified.
+   audit_mode: {full|degraded}
+
+⏸️ Session boundary — start a new session to continue:
+   /atlas.refactor {file_path} --step 3
+```
+
+Set `current_step: 3` in state, but do NOT execute Step 3 in this session.
 
 ---
 
 ## Step 3: Find Seams
 
-**Input**: `2_contracts.yaml`, `2a_zones.yaml` (if exists)
+**Input**: `2_contracts.yaml` (must be `verified`), `2a_zones.yaml` (if exists)
 **Action**: Analyze dependencies and identify seam points
 **Output**: `3_seams.yaml`
+
+### 3.0 Prerequisite Check
+
+Before starting, verify Step 2 artifacts exist and are verified:
+
+```bash
+if [ ! -f "${STATE_DIR}/2_contracts.yaml" ]; then
+    echo "❌ Cannot start Step 3: 2_contracts.yaml not found"
+    echo "Run: /atlas.refactor $FILE_PATH --step 2"
+    exit 1
+fi
+
+# Check state — 2_contracts must be "verified" (gate passed)
+CONTRACT_STATUS=$(grep -A1 '2_contracts:' "$STATE_FILE" | grep 'status:' | awk '{print $2}')
+if [ "$CONTRACT_STATUS" != "verified" ]; then
+    echo "❌ Cannot start Step 3: contracts not verified"
+    echo "Gate 2 (contract dry-run) must pass first"
+    echo "Run: /atlas.refactor $FILE_PATH --step 2"
+    exit 1
+fi
+```
+
+**Only read the artifact file. Do NOT re-derive contracts from source code.**
 
 ### 3.1 Build Dependency Graph
 
@@ -217,6 +419,8 @@ Present ranked list with recommended seam.
 
 ### 3.4 Output
 
+Each seam candidate MUST include a `verification_grep` field — a grep/ast-grep command that proves the enabling point exists in source code.
+
 ```yaml
 # 3_seams.yaml
 module: "{module_name}"
@@ -231,6 +435,7 @@ seam_candidates:
   - seam_type: "object|module|preprocessing|monkey_patch"
     target_dependency: "{dep_name}"
     enabling_point: "{description}"
+    verification_grep: "grep -n '{pattern}' {file_path}"  # REQUIRED
     feasibility: {0-100}
     contracts_covered: ["C-001", "C-002"]
     risk: "{low|medium|high}"
@@ -242,18 +447,46 @@ recommended_seam:
   reason: "{why this is the best seam}"
 ```
 
+Set `3_seams: { status: produced }`.
+
+### Gate 3: Enabling Point Existence Check
+
+**Purpose**: Verify that each seam candidate's enabling point actually exists in source code. Eliminates hallucinated seams.
+**Method**: Run the `verification_grep` for each candidate.
+
+**Execute the gate script**:
+
+```bash
+bash plugin/commands/refactor/scripts/gate-seams.sh \
+    "${STATE_DIR}/3_seams.yaml" \
+    "${STATE_DIR}"
+```
+
+The script:
+1. Parses each `seam_candidate` from `3_seams.yaml`
+2. Runs its `verification_grep` against the source file
+3. Eliminates candidates whose enabling point doesn't exist
+4. Updates `state.yaml` with `3_gate: { status: pass|fail, candidates_total: N, candidates_verified: N }`
+5. Exits 0 (≥1 candidate verified) or 1 (zero verified)
+
+**Gate pass** (exit 0): At least 1 candidate verified → auto-select highest-feasibility verified candidate as `recommended_seam`.
+
+**Gate fail** (exit 1): Zero candidates verified → stop, suggest re-running Step 3 with `--force`.
+
+Update state: `3_seams: { status: verified }`, `3_gate: { status: pass, candidates_total: N, candidates_verified: N }`
+
 ### 3.5 Update State
 
-Set `3_seams: { status: completed }`, `current_step: 4`.
+Set `current_step: 4`.
 
 ---
 
 ## Step 4: Record Behavior
 
-**Input**: `3_seams.yaml`, `2_contracts.yaml`
+**Input**: `3_seams.yaml` (must be `verified`), `2_contracts.yaml`
 **Action**: Generate tests to capture current behavior
 **Output**: `4_tests.{ext}`
-**Gate**: Layer A spike tests must pass
+**Gate**: Layer A spike tests must pass (runtime gate, not deterministic)
 
 ### 4.1 Determine Test Framework
 
@@ -318,7 +551,7 @@ Mark these as **skipped/pending** — they cannot run until Step 5+6 provide the
 
 ### 4.5 Update State
 
-Set `4_tests: { status: completed }`, `current_step: 5`.
+Set `4_tests: { status: verified }` (spike tests passing = verified), `current_step: 5`.
 
 ---
 
@@ -412,7 +645,20 @@ Display the proposed interface with:
 
 ### 5.4 Update State
 
-Set `5_interface: { status: completed }`, `current_step: 6`.
+Set `5_interface: { status: verified }` (user approval = verified), `current_step: 6`.
+
+### 5.5 Session Boundary
+
+After user approves the interface, **STOP**. Output session boundary message.
+
+```
+✅ Step 5 complete — interface approved by user.
+
+⏸️ Session boundary — start a new session to continue:
+   /atlas.refactor {file_path} --step 6
+```
+
+This prevents the adapter (Step 6) from being generated by the same agent that proposed the interface. A fresh session reads only the approved artifact.
 
 ---
 
@@ -487,7 +733,7 @@ def crypto_mock():
 
 ### 6.2 Update State
 
-Set `6_adapter: { status: completed }`, `current_step: 7`.
+Set `6_adapter: { status: verified }` (no deterministic gate, produced = verified), `current_step: 7`.
 
 ---
 
@@ -564,7 +810,7 @@ overall: "pass|fail"
 
 ### 7.6 Update State
 
-Set `7_gate: { status: completed }` (only if passed), `current_step: 8`.
+Set `7_gate: { status: verified }` (only if passed), `current_step: 8`.
 
 ---
 
@@ -582,10 +828,40 @@ find . -name "*$(basename "$FILE_PATH" .${FILE_PATH##*.})*" -type f \
 ### Missing Previous Artifact
 
 ```
-Cannot execute Step {N}: artifact from Step {N-1} not found.
-Expected: .sourceatlas/refactor/{module}/{artifact_name}
+Cannot execute Step {N}: previous step not verified.
+Expected: .sourceatlas/refactor/{module}/{artifact_name} with status: verified
 
 Run: /atlas.refactor {file} --step {N-1}
+```
+
+### Gate 2 Failure (Contract Dry-Run)
+
+```
+Gate 2 FAILED — {rules_passed}/{rules_total} verification rules passed.
+
+Failed rules:
+- grep -n 'aesEncryptWithData:' NYHTTPSClient.m  (contract M15)
+- grep -n 'hmacSha512:' NYHTTPSClient.m  (contract M16)
+
+This means these contracts describe behaviors not found in source code.
+The contracts may be hallucinated or the source file has changed.
+
+Fix: /atlas.audit {file} --zone {zone_id} --force
+Then: /atlas.refactor {file} --step 2
+```
+
+### Gate 3 Failure (Enabling Point Check)
+
+```
+Gate 3 FAILED — 0/{n} seam candidates have verifiable enabling points.
+
+Eliminated:
+- Object Seam (CocoaSecurity): grep found no constructor injection point
+- Module Seam (dispatch_semaphore): no import statement to mock
+
+This likely means the seam analysis hallucinated enabling points.
+
+Fix: /atlas.refactor {file} --step 3 --force
 ```
 
 ### Step 7 Gate Failure

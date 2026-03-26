@@ -36,6 +36,7 @@ argument-hint: "<file-path> [--zone <zone-id>] [--step <1-7>] [--zones-only] [--
 
 ## Quick Start
 
+0. **No arguments?** → Discovery Mode: auto-find hotspots, show in-progress refactors, suggest candidates
 1. **Select target** → history hotspot + impact analysis → `1_target.yaml`
 2. **Inventory contracts** → seam zones + audit → `2_contracts.yaml`
 3. **Find seams** → dependency graph + seam recommendations → `3_seams.yaml`
@@ -50,15 +51,15 @@ argument-hint: "<file-path> [--zone <zone-id>] [--step <1-7>] [--zones-only] [--
 
 Each step produces an **artifact** stored in `.sourceatlas/refactor/{module}/`.
 
-| Step | Name | Tool Used | Artifact | Gate |
-|------|------|-----------|----------|------|
-| 1 | Select Target | `/atlas.history` + `/atlas.impact` | `1_target.yaml` | — |
-| 2 | Inventory Contracts | `/atlas.seam` + `/atlas.audit` | `2a_zones.yaml`, `2_contracts.yaml` | — |
-| 3 | Find Seams | Dependency analysis | `3_seams.yaml` | — |
-| 4 | Record Behavior | Test generation | `4_tests.{ext}` | Spike tests green |
-| 5 | Define Interface | Language-group dispatch | `5_interface.{ext}` or `5_message_contract.md` | User approval |
-| 6 | Legacy Adapter | Language-group dispatch | `6_adapter.{ext}`, `6_diff.patch` | — |
-| 7 | Verification Gate | Test runner + contract CI | `7_gate_results.yaml` | **Hard gate**: all green |
+| Step | Name | Tool Used | Artifact | Gate | Session |
+|------|------|-----------|----------|------|---------|
+| 1 | Select Target | `/atlas.history` + `/atlas.impact` | `1_target.yaml` | — | |
+| 2 | Inventory Contracts | `/atlas.seam` + `/atlas.audit` | `2a_zones.yaml`, `2_contracts.yaml` | **Gate 2**: contract rules dry-run | ⏸️ STOP |
+| 3 | Find Seams | Dependency analysis | `3_seams.yaml` | **Gate 3**: enabling point grep | |
+| 4 | Record Behavior | Test generation | `4_tests.{ext}` | Spike tests green | |
+| 5 | Define Interface | Language-group dispatch | `5_interface.{ext}` or `5_message_contract.md` | User approval | ⏸️ STOP |
+| 6 | Legacy Adapter | Language-group dispatch | `6_adapter.{ext}`, `6_diff.patch` | — | |
+| 7 | Verification Gate | Test runner + contract CI | `7_gate_results.yaml` | **Hard gate**: all green | |
 
 > See [workflow.md](workflow.md) for detailed step-by-step execution.
 
@@ -68,7 +69,7 @@ Each step produces an **artifact** stored in `.sourceatlas/refactor/{module}/`.
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `<file-path>` | Target file to refactor | Required |
+| `<file-path>` | Target file to refactor | Optional (Discovery Mode if omitted) |
 | `--zone <zone-id>` | Focus on a specific zone from `/atlas.seam` | All zones |
 | `--step <1-7>` | Resume from a specific step | Auto-detect from state |
 | `--zones-only` | Run only Step 2a (zone discovery) and stop | false |
@@ -97,6 +98,20 @@ Progress is tracked in `.sourceatlas/refactor/{module}/state.yaml`.
 ```
 
 > See [templates/state.yaml](templates/state.yaml) for the state schema.
+
+### Status Lifecycle
+
+```
+pending → produced → verified
+          (file exists)  (gate passed)
+```
+
+Steps without a deterministic gate: `produced` = `verified` (auto-promote).
+Steps with a gate (2, 3, 7): must pass deterministic check to reach `verified`.
+
+### Session Boundaries
+
+The workflow forces a new session after Steps 2 and 5 to prevent confirmation bias. The agent MUST stop and output a resume command. This is automatic, not optional.
 
 When `--status` is passed, read and display the state file without executing any step.
 
@@ -127,7 +142,8 @@ This skill orchestrates existing tools. Each tool can also be used independently
 
 The Playbook Navigator adds:
 - **Artifact bridging** — output of Step N becomes input of Step N+1
-- **State tracking** — resume from where you left off
+- **Three-state lifecycle** — `pending → produced → verified` with deterministic gates
+- **Session boundaries** — forced breaks after Steps 2 and 5 to prevent confirmation bias
 - **Language-group dispatch** — Steps 4-6 adapt to language
 - **Steps 4-7** — test generation, interface design, adapter creation, verification gate
 
@@ -135,14 +151,16 @@ The Playbook Navigator adds:
 
 ## Critical Rules
 
-1. **Every step produces an artifact** — no step is complete without a saved file
-2. **Step 7 is a hard gate** — do NOT proceed to Step 8 until all tests pass
-3. **Claude proposes, user decides** — especially for Step 5 (interface design)
-4. **One module at a time** — do not batch-process multiple files
-5. **Evidence-based** — every contract and seam references file:line
-6. **Language-aware** — respect the 3-group dispatch for Steps 4-6
-7. **Artifact bridging** — each step reads the previous step's artifact, never re-computes
-8. **Seam Interfaces are temporary** — label them clearly (see language-groups.md)
+1. **Three-state lifecycle** — every step: `pending → produced → verified`. Next step requires previous `verified`
+2. **Trust artifacts, not prompts** — each step reads ONLY the previous step's artifact file, never re-derives from source
+3. **Deterministic gates over LLM review** — Gate 2 (grep dry-run) and Gate 3 (enabling point check) are automated, zero human involvement
+4. **Session boundaries are mandatory** — STOP after Step 2 and Step 5. New session reads artifacts, not prior reasoning
+5. **Step 2 must use /atlas.audit** — inline contract analysis is NOT acceptable. Check for `.sourceatlas/audit/` artifact
+6. **Step 7 is a hard gate** — do NOT proceed to Step 8 until all tests pass
+7. **Claude proposes, user decides** — Step 5 (interface design) is the only human decision point
+8. **One module at a time** — do not batch-process multiple files
+9. **Evidence-based** — every contract and seam references file:line with `verification_grep`
+10. **Seam Interfaces are temporary** — label them clearly (see language-groups.md)
 
 ---
 
@@ -173,8 +191,9 @@ Steps 8-13 are **user-driven** without tool assistance. After Step 7 passes, out
 $STEP_OUTPUT
 
 📊 Progress
-✅ Step 1: Select Target
-✅ Step 2: Inventory Contracts
+✅ Step 1: Select Target (verified)
+✅ Step 2: Inventory Contracts (verified — 14/14 rules passed)
+  ⏸️ session boundary
 🔄 Step 3: Find Seams  ← current
 ⬚ Step 4: Record Behavior
 ⬚ Step 5: Define Interface
@@ -210,3 +229,5 @@ $STEP_OUTPUT
 - **[references/playbook-overview.md](references/playbook-overview.md)** — Complete 13-step Playbook overview
 - **[../seam/references/language-groups.md](../seam/references/language-groups.md)** — Language group decision matrix
 - **[../seam/references/seam-types.md](../seam/references/seam-types.md)** — Seam type taxonomy
+- **scripts/gate-contracts.sh** — Gate 2: deterministic contract verification dry-run
+- **scripts/gate-seams.sh** — Gate 3: deterministic enabling point existence check

@@ -29,7 +29,6 @@ AI collaboration guide for SourceAtlas development.
 /atlas.impact    - Change impact analysis
 /atlas.deps      - Dependency analysis
 /atlas.audit     - Extract behavior contracts (multi-LLM cross-validation)
-/atlas.refactor  - Guided legacy code migration (13-step Playbook, Steps 1-7 tool-assisted)
 /atlas.list      - List saved analyses
 /atlas.reset     - Clear saved analyses
 ```
@@ -39,8 +38,8 @@ All commands auto-save to `.sourceatlas/`. Use `--force` to skip cache and re-an
 ## Must Follow
 
 ### Git Workflow
-- Use standard `git` CLI for version control
-- Commit related changes together with descriptive messages
+- Use standard `git` CLI for all version control operations
+- Commit messages: imperative mood, concise summary
 
 ### Analysis Principles (from Constitution)
 1. **Information Theory** - High-entropy files first (configs, docs, models)

@@ -14,6 +14,7 @@ SourceAtlas helps developers quickly understand any codebase through pattern lea
 - **📈 History Analysis** (`/sourceatlas:history`) - Git history temporal analysis (Hotspots, Coupling, Contributors)
 - **🔄 Flow Analysis** (`/sourceatlas:flow`) - Trace code execution and data flow (11 analysis modes)
 - **📦 Dependency Analysis** (`/sourceatlas:deps`) - Library/framework upgrade analysis (iOS, Android, Python, React)
+- **🔍 Contract Audit** (`/sourceatlas:audit`) - Extract behavior contracts from legacy code (multi-LLM cross-validation)
 
 ### Agent Skills (Model-invoked)
 
