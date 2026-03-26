@@ -1,0 +1,77 @@
+# Java 錨定模式
+# 格式：類別<TAB>名稱<TAB>grep pattern<TAB>說明
+# 來源：語言插件 java.md §1-3, §5-7
+#
+# 類別：S=同步, N=通知/事件, L=生命週期, D=依賴, E=例外, C=取消
+
+# --- S: 同步原語 (§2) ---
+S	synchronized	synchronized\b	內建互斥鎖（可重入，virtual thread 會 pin carrier）
+S	ReentrantLock	ReentrantLock\b	顯式可重入鎖（支援 tryLock/timeout）
+S	ReadWriteLock	ReadWriteLock\b	讀寫鎖
+S	StampedLock	StampedLock\b	樂觀讀取鎖
+S	volatile	volatile\s	可見性保證（不保證原子性）
+S	AtomicInteger	Atomic\w+\b	原子操作類別
+S	ExecutorService	ExecutorService\b	Thread pool 管理
+S	newFixedThreadPool	newFixedThreadPool|newCachedThreadPool	Thread pool 建立
+S	CompletableFuture	CompletableFuture\b	非同步計算組合
+S	submit	\.submit\(	Task 提交到 thread pool
+S	Future_get	\.get\(	阻塞等待 Future 結果
+S	newVirtualThread	newVirtualThread|startVirtualThread	Virtual thread 建立（Java 21+）
+S	virtual_executor	newVirtualThreadPerTaskExecutor	Virtual thread executor
+S	CountDownLatch	CountDownLatch\b	倒計數同步（一次性使用）
+S	CyclicBarrier	CyclicBarrier\b	循環屏障（可重用）
+S	Semaphore	Semaphore\b	信號量（並行度控制）
+
+# --- N: 通知/事件原語 (§1) ---
+N	BlockingQueue	BlockingQueue\b|LinkedBlockingQueue|ArrayBlockingQueue	阻塞佇列
+N	put_take	\.put\(|\.take\(\)	佇列阻塞操作
+N	setOnClickListener	setOnClickListener	Click listener（replace 語義）
+N	addListener	addListener|addObserver|addPropertyChangeListener	Listener 註冊（add 語義）
+N	removeListener	removeListener|removeObserver|removePropertyChangeListener	Listener 移除
+N	publishEvent	publishEvent\(	Spring ApplicationEvent 發布
+N	EventListener	@EventListener	Spring 事件監聽
+N	TransactionalEventListener	@TransactionalEventListener	Transaction-bound 事件監聽
+N	thenApply	\.thenApply|\.thenAccept|\.thenCompose	CompletableFuture 回調鏈
+N	exceptionally	\.exceptionally\(	CompletableFuture 例外處理
+
+# --- L: 生命週期 (§3) ---
+L	AutoCloseable	AutoCloseable|Closeable	資源釋放 interface
+L	try_with_resources	try\s*\(	try-with-resources（自動 close）
+L	PostConstruct	@PostConstruct	Spring Bean 初始化
+L	PreDestroy	@PreDestroy	Spring Bean 銷毀
+L	InitializingBean	InitializingBean|afterPropertiesSet	Spring Bean 初始化 interface
+L	DisposableBean	DisposableBean\b	Spring Bean 銷毀 interface
+L	finalize	void finalize	已棄用 Finalizer（不保證呼叫）
+L	onCreate	onCreate\b	Android Activity/Fragment 建立
+L	onDestroy	onDestroy\b	Android Activity/Fragment 銷毀
+L	Servlet_init	void init\(	Servlet 初始化（一次性）
+L	shutdown	\.shutdown\(\)|\.shutdownNow	ExecutorService 關閉
+L	awaitTermination	awaitTermination	ExecutorService 等待關閉完成
+
+# --- D: 依賴 (§6-7) ---
+D	interface_decl	interface\s+\w+	Interface 宣告（Object Seam）
+D	abstract_class	abstract\s+class	Abstract class 宣告
+D	Autowired	@Autowired	Spring 依賴注入
+D	Qualifier	@Qualifier	Spring 注入限定
+D	Primary	@Primary	Spring 預設實作標記
+D	Profile	@Profile	Spring 環境 profile（Preprocessing Seam）
+D	ConditionalOn	@ConditionalOn	Spring Boot 條件組裝
+D	ComponentScan	@ComponentScan	Spring classpath 掃描
+D	ServiceLoader	ServiceLoader\.load	SPI 動態載入（Link Seam）
+D	Class_forName	Class\.forName	Reflection 動態載入
+D	Proxy_newProxyInstance	Proxy\.newProxyInstance	Dynamic proxy
+D	sealed	sealed\s+class|sealed\s+interface	Sealed type（Java 17+）
+
+# --- E: 例外 (§8) ---
+E	throws_decl	throws\s+\w+	Checked exception 宣告
+E	try_catch	catch\s*\(	例外捕獲
+E	catch_Exception	catch\s*\(Exception\b	廣泛捕獲（可能吞掉重要例外）
+E	throw_new	throw\s+new	例外拋出
+E	Optional	Optional\b	Null-safe 包裝（回傳合約）
+
+# --- C: 取消 ---
+C	interrupt	\.interrupt\(\)	Thread 中斷
+C	isInterrupted	isInterrupted\(\)	中斷狀態檢查
+C	InterruptedException	InterruptedException	中斷例外（必須正確處理）
+C	cancel_future	\.cancel\(	Future/Task 取消
+C	Thread_sleep	Thread\.sleep	Thread 暫停（可被 interrupt）

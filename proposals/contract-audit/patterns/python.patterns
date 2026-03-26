@@ -1,0 +1,72 @@
+# Python 錨定模式
+# 格式：類別<TAB>名稱<TAB>grep pattern<TAB>說明
+# 來源：語言插件 python.md §1-3, §5-7
+#
+# 類別：S=同步, N=通知/事件, L=生命週期, D=依賴, E=例外, C=取消
+
+# --- S: 同步原語 (§2) ---
+S	threading_Thread	threading\.Thread	Thread 建立（daemon=True 時不執行 cleanup）
+S	threading_Lock	threading\.Lock	互斥鎖（不可重入）
+S	threading_RLock	threading\.RLock	可重入鎖
+S	Lock_acquire	\.acquire\(	取得鎖
+S	Lock_release	\.release\(	釋放鎖
+S	asyncio_run	asyncio\.run\(	Event loop 啟動（不能在已有 loop 中呼叫）
+S	create_task	create_task\(	Asyncio task 建立（未 await 時例外被靜默丟棄）
+S	asyncio_gather	asyncio\.gather\(	多 task 並行（return_exceptions 影響錯誤傳播）
+S	await	await\s	Coroutine 等待點
+S	async_def	async\s+def	Async 函式宣告
+S	multiprocessing	multiprocessing\.Process|multiprocessing\.Pool	多 process 建立
+S	to_thread	asyncio\.to_thread	同步函式放到 thread pool（GIL 仍存在）
+S	wait_for	asyncio\.wait_for	限時等待（超時取消 coroutine）
+S	Semaphore	asyncio\.Semaphore|threading\.Semaphore	信號量（並行度控制）
+
+# --- N: 通知/事件原語 (§1) ---
+N	signal_signal	signal\.signal\(	Signal handler 註冊（replace 語義）
+N	Queue	Queue\(	Thread-safe 佇列（不能在 asyncio 中使用）
+N	asyncio_Queue	asyncio\.Queue	Asyncio 佇列
+N	asyncio_Event	asyncio\.Event	Asyncio 事件（set/clear 廣播語義）
+N	emit	\.emit\(	自訂事件發送
+N	on_event	\.on\(|\.on_event\(	事件監聽器註冊
+N	callback	callback\b	回調參數
+N	Observer	Observer\b|observer\b	觀察者模式
+
+# --- L: 生命週期 (§3) ---
+L	__enter__	def __enter__	Context manager 進入
+L	__exit__	def __exit__	Context manager 退出（回傳 True 吞掉例外）
+L	contextmanager	@contextmanager	Generator-based context manager
+L	__del__	def __del__	Finalizer（不保證被呼叫）
+L	atexit	atexit\.register	程式退出 callback（os._exit 不觸發）
+L	before_request	@.*before_request	Flask request 前置 hook
+L	after_request	@.*after_request	Flask request 後置 hook
+L	teardown	teardown_request|teardown_appcontext	Flask cleanup hook
+L	lifespan	lifespan\b	FastAPI/Starlette 生命週期管理
+L	on_startup	on_startup\b|@.*startup	ASGI startup event
+L	on_shutdown	on_shutdown\b|@.*shutdown	ASGI shutdown event
+L	__init__	def __init__	初始化方法
+L	__new__	def __new__	實例建立方法（在 __init__ 之前）
+
+# --- D: 依賴 (§6-7) ---
+D	ABC	ABC\b|abstractmethod	Abstract Base Class（Object Seam）
+D	Protocol	Protocol\b	結構化子型別（類似 Go interface）
+D	import_module	importlib\.import_module	動態匯入（Link Seam）
+D	entry_points	entry_points\(	Plugin 發現機制
+D	mock_patch	mock\.patch|@patch	測試替換（暫時 Link Seam）
+D	monkey_patch	setattr\(.*,\s*['\"]	Monkey patching（永久 Link Seam）
+D	env_var	os\.environ|os\.getenv	環境變數依賴（Preprocessing Seam）
+D	__name_guard	__name__.*__main__	Script/module 區分
+D	conditional_import	except ImportError	條件匯入（Preprocessing Seam）
+D	decorator	@\w+	Decorator（Wrap Seam）
+
+# --- E: 例外 (§8) ---
+E	bare_except	except:	裸 except（吞掉所有例外，包括 KeyboardInterrupt）
+E	except_Exception	except Exception	捕獲所有非系統例外
+E	raise_from	raise.*from	Exception chaining（保留/切斷 chain）
+E	try_block	try:	例外捕獲
+E	assert	assert\s	斷言（-O 模式下被移除）
+
+# --- C: 取消 ---
+C	task_cancel	\.cancel\(\)	Asyncio task 取消
+C	CancelledError	CancelledError	取消例外
+C	shield	asyncio\.shield	防止取消傳播
+C	wait_for_timeout	wait_for\(.*timeout	限時等待（超時取消）
+C	KeyboardInterrupt	KeyboardInterrupt	Ctrl+C 中斷

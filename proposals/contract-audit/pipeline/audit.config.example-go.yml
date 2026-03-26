@@ -1,0 +1,39 @@
+# audit.config.example-go.yml
+# 合約審計配置範例 — Go / net/http（HTTPHandler）
+#
+# 使用方式：
+#   cp audit.config.example-go.yml audit.config.yml
+#   # 修改 target_files 為實際路徑
+#   bash pipeline/run-baseline.sh
+
+module: HTTPHandler
+language: go
+
+target_files:
+  - internal/handler/user_handler.go
+  - internal/service/user_service.go
+  - internal/repository/user_repo.go
+
+refactoring_intent: "Extract middleware chain, replace global state with dependency injection via constructor"
+
+boundary_discovery:
+  # 觀察者模式：channel 操作、signal 監聽、HTTP handler 註冊
+  observer_patterns: 'make\(chan\b|<-|close\(|signal\.Notify|HandleFunc\(|\.Handle\('
+  # 同步原語：goroutine、mutex、waitgroup、select
+  sync_patterns: "go func|sync\\.Mutex|sync\\.WaitGroup|sync\\.Once|select\\s*\\{"
+  file_types:
+    - go
+  max_files: 5
+
+verification:
+  # Go 完整支援 ast-grep，可進行結構化匹配
+  primary: ast-grep
+  # grep 作為輔助，捕捉 init()、blank import 等字串模式
+  secondary: none
+
+dependency_analysis:
+  # Go import 模式：標準 import、grouped import
+  import_patterns: 'import\s+\(|import\s+"'
+  seam_detection: true
+  # HTTP handler 為入口層，多處依賴
+  pinch_point_threshold: 3

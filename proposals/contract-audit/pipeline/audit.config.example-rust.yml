@@ -1,0 +1,40 @@
+# audit.config.example-rust.yml
+# 合約審計配置範例 — Rust / Axum（UserService）
+#
+# 使用方式：
+#   cp audit.config.example-rust.yml audit.config.yml
+#   # 修改 target_files 為實際路徑
+#   bash pipeline/run-baseline.sh
+
+module: UserService
+language: rust
+
+target_files:
+  - src/handlers/user.rs
+  - src/services/user_service.rs
+  - src/repositories/user_repo.rs
+  - src/models/user.rs
+
+refactoring_intent: "Extract trait-based repository layer, replace unwrap() with proper error handling"
+
+boundary_discovery:
+  # 觀察者模式：channel 操作、callback trait、通知
+  observer_patterns: 'mpsc::channel|broadcast::channel|oneshot::channel|watch::channel|Notify::new|\.send\(|\.recv\('
+  # 同步原語：Mutex、Arc、spawn、select
+  sync_patterns: "Mutex::new|Arc::new|tokio::spawn|spawn_blocking|select!|thread::spawn"
+  file_types:
+    - rust
+  max_files: 5
+
+verification:
+  # Rust 完整支援 ast-grep，可進行結構化匹配
+  primary: ast-grep
+  # grep 作為輔助，捕捉 unsafe、unwrap、macro 等模式
+  secondary: none
+
+dependency_analysis:
+  # Rust import 模式：use、extern crate、mod
+  import_patterns: '^use\s+|^extern\s+crate|^mod\s+'
+  seam_detection: true
+  # Service 層為核心業務邏輯
+  pinch_point_threshold: 3

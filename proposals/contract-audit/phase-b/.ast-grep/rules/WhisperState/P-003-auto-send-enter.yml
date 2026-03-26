@@ -1,0 +1,14 @@
+id: P-003-auto-send-enter
+message: "P-003: Auto-Send pressEnter contract must be preserved when refactoring paste path"
+severity: error
+language: Swift
+rule:
+  pattern: |
+    CursorPaster.pressEnter()
+note: |
+  Contract source: WhisperState.swift:451
+  Refactoring requirement: When extracting the text pasting pipeline (P-001),
+  the CursorPaster.pressEnter() call must remain conditional on isAutoSendEnabled
+  AND must execute 200ms after pasteAtCursor. If the paste pipeline is extracted
+  to a separate service, it must accept an autoSend: Bool parameter.
+  Risk: HIGH — unintended form submission if condition is accidentally removed.

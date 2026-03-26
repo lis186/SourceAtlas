@@ -1,0 +1,39 @@
+# audit.config.example-javascript.yml
+# 合約審計配置範例 — JavaScript / Node.js（AuthController）
+#
+# 使用方式：
+#   cp audit.config.example-javascript.yml audit.config.yml
+#   # 修改 target_files 為實際路徑
+#   bash pipeline/run-baseline.sh
+
+module: AuthController
+language: javascript
+
+target_files:
+  - src/controllers/auth.js
+  - src/middleware/auth.js
+  - src/services/tokenService.js
+
+refactoring_intent: "Migrate from callback-based to async/await, replace var with const/let"
+
+boundary_discovery:
+  # 觀察者模式：EventEmitter、addEventListener、自訂 on() 回呼
+  observer_patterns: 'EventEmitter|addEventListener\s*\(|\.on\s*\(|\.emit\s*\(|\.once\s*\('
+  # 同步原語：Promise、async/await、callback pattern
+  sync_patterns: "new\\s+Promise|async\\s+function|await\\s+|setTimeout|setInterval|process\\.nextTick"
+  file_types:
+    - js
+  max_files: 5
+
+verification:
+  # JavaScript 支援 ast-grep，可進行結構化匹配
+  primary: ast-grep
+  # grep 作為輔助，捕捉動態特性（eval、動態 require）
+  secondary: none
+
+dependency_analysis:
+  # JavaScript import 模式：require、ES module import、dynamic import
+  import_patterns: 'require\s*\(|import\s+.*\s+from\s+|import\s*\('
+  seam_detection: true
+  # AuthController 為核心認證模組，多處依賴
+  pinch_point_threshold: 3

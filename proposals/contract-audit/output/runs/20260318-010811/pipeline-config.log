@@ -1,0 +1,11 @@
+module: WhisperState
+language: swift
+target_files: /Users/justinlee/src/tries/2026-02-21-voiceink/VoiceInk/VoiceInk/Whisper/WhisperState.swift
+refactoring_intent: 重構 God Object WhisperState：拆分錄音狀態、模型管理、後處理鏈三個職責
+verify_primary: grep
+verify_secondary: none
+seam_detection: true
+pinch_point_threshold: 3
+skip_feathers: false
+agent_mode: false
+config_file: none

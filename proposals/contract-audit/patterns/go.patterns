@@ -1,0 +1,67 @@
+# Go 錨定模式
+# 格式：類別<TAB>名稱<TAB>grep pattern<TAB>說明
+# 來源：語言插件 go.md §1-3, §5-7
+#
+# 類別：S=同步, N=通知/事件, L=生命週期, D=依賴, E=例外, C=取消
+
+# --- S: 同步原語 (§2) ---
+S	go_func	go func\(	Goroutine 啟動（需回答「何時結束？」）
+S	go_named	go [a-z]	具名函式 goroutine 啟動
+S	sync_Mutex	sync\.Mutex\b	互斥鎖（不可重入，值型別勿複製）
+S	sync_RWMutex	sync\.RWMutex\b	讀寫鎖
+S	Lock	\.Lock\(\)	取得鎖
+S	Unlock	\.Unlock\(\)	釋放鎖
+S	RLock	\.RLock\(\)	取得讀鎖
+S	sync_WaitGroup	sync\.WaitGroup\b	等待群組（Add/Done 必須配對）
+S	wg_Add	\.Add\(	WaitGroup 計數增加
+S	wg_Done	\.Done\(\)	WaitGroup 計數減少
+S	wg_Wait	\.Wait\(\)	WaitGroup 等待
+S	sync_Once	sync\.Once\b	一次性初始化（panic 也算「已執行」）
+S	sync_Map	sync\.Map\b	並發安全 map（有限適用場景）
+S	atomic	atomic\.	原子操作（只保證單一變數）
+S	select_block	select\s*\{	多路復用（多 case 同時就緒時隨機選擇）
+
+# --- N: 通知/事件原語 (§1) ---
+N	make_chan	make\(chan\b	Channel 建立（無緩衝=同步點）
+N	chan_send	<-	Channel send/receive（nil channel 永久阻塞）
+N	close_chan	close\(	Channel 關閉（close 後 send 會 panic）
+N	signal_Notify	signal\.Notify	OS 信號監聽
+N	HandleFunc	HandleFunc\(	HTTP handler 註冊（replace 語義）
+N	Handle	\.Handle\(	HTTP handler 註冊
+N	RegisterOnShutdown	RegisterOnShutdown	Server shutdown callback
+
+# --- L: 生命週期 (§3) ---
+L	ListenAndServe	ListenAndServe\b	HTTP server 啟動
+L	Shutdown	\.Shutdown\(	HTTP server graceful shutdown
+L	context_WithCancel	context\.WithCancel	可取消 context 建立
+L	context_WithTimeout	context\.WithTimeout	限時 context 建立
+L	context_WithDeadline	context\.WithDeadline	限期 context 建立
+L	context_Background	context\.Background	頂層 context（只應在 main/init/test 使用）
+L	context_TODO	context\.TODO	暫時標記（context 傳播鏈未完成）
+L	defer	defer\s	延遲執行（LIFO 順序，引數宣告時求值）
+L	sql_Open	sql\.Open\(	資料庫連線池建立（不立即連線）
+L	SetMaxOpenConns	SetMaxOpenConns	連線池上限
+L	ConnMaxLifetime	ConnMaxLifetime	連線最長存活時間
+
+# --- D: 依賴 (§6-7) ---
+D	interface_decl	type\s+\w+\s+interface	Interface 宣告（隱式實作 = Object Seam）
+D	blank_import	import\s+_\s+	Blank import（觸發 init 副作用 = Link Seam）
+D	init_func	func init\(\)	Package 初始化（執行順序依賴 import 順序）
+D	build_tag	//go:build\b	Build tag（Preprocessing Seam）
+D	go_generate	//go:generate\b	程式碼生成指令
+D	plugin_Open	plugin\.Open	Plugin 動態載入（Link Seam）
+D	func_option	func\(\*\w+\)\s*$	Functional options pattern
+
+# --- E: 例外/錯誤處理 ---
+E	errors_Is	errors\.Is\(	Error chain 比對（%w 才能被找到）
+E	errors_As	errors\.As\(	Error chain 型別斷言
+E	fmt_Errorf_w	Errorf\(.*%w	Error wrapping（建立 error chain）
+E	panic	panic\(	Panic（未 recover 會終止程式）
+E	recover	recover\(\)	Panic 恢復（只能在 defer 中使用）
+
+# --- C: 取消 ---
+C	ctx_Done	ctx\.Done\(\)|\.Done\(\)	Context 取消監聽
+C	ctx_Err	ctx\.Err\(\)	Context 取消原因
+C	cancel_call	cancel\(\)	Context cancel 呼叫
+C	time_After	time\.After\(	Timeout（迴圈中使用會洩漏 timer）
+C	time_NewTimer	time\.NewTimer\(	可重用 timer

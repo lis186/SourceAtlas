@@ -1,0 +1,13 @@
+id: E-001-enhancement-error-as-string
+message: "E-001: Enhancement failure writes error string to enhancedText field"
+severity: error
+language: Swift
+rule:
+  pattern: |
+    transcription.enhancedText = "Enhancement failed: $$$"
+note: |
+  Contract source: WhisperState.swift:411
+  Refactoring requirement: When extracting the AI enhancement service, the error
+  handling contract must be preserved OR migrated to a typed Result<String, Error>.
+  Callers currently distinguish "failed" state by checking if enhancedText starts
+  with "Enhancement failed:" — a brittle string-matching contract.

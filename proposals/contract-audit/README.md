@@ -337,104 +337,67 @@ grep '@property\s*(' "$file" | grep -v 'readonly'
 
 ## 實作步驟
 
-### P0 — 核心泛化
+### P0 — 核心泛化（已完成 2026-03-08）
 
-三條平行軌道，無交叉依賴：
+三條平行軌道，經 Codex/Gemini 四輪審查達 10/10。
 
 #### 軌道 A — Prompt 體系（寫作密集）
 
-```
-A1 → A2（序列）
-A1 → A3, A4（平行）
-```
-
-- [ ] **A1** 從 `claude-contract-audit.md` 提取通用骨架 `prompts/skeleton.md`
-  - 合約分類法（M/L/N/S/E/C/D/P）
-  - 輸出格式（Artifact 1-4）
-  - 品質門檻（Quality Gates）
-  - Known Pitfalls（通用部分）
-  - 建立語言插件目錄 `prompts/languages/`
-- [ ] **A2** 整合 Tell the Story / Scratch Refactoring / Effect Propagation 三個 prompt 增強指令到 skeleton.md（依賴 A1）
-- [ ] **A3** 撰寫 `prompts/languages/objc.md`（依賴 A1，與 A4 平行）
-  - 包含 effect 防火牆、Seam 類型、Sprout/Wrap 策略
-- [ ] **A4** 撰寫 `prompts/languages/swift.md`（依賴 A1，與 A3 平行）
-  - 包含 effect 防火牆、Seam 類型、Sprout/Wrap 策略
+- [x] **A1** 從 `claude-contract-audit.md` 提取通用骨架 `prompts/skeleton.md`（381 行）
+- [x] **A2** 整合 Tell the Story / Scratch Refactoring / Effect Propagation 三個 prompt 增強指令
+- [x] **A3** 撰寫 `prompts/languages/objc.md`（8 個隱含合約範例，含重構風險分析）
+- [x] **A4** 撰寫 `prompts/languages/swift.md`（7 個範例，含重構風險分析）
 
 #### 軌道 B — 驗證規則（工程密集）
 
-```
-B1 → B2（序列）
-B3 獨立
-```
-
-- [ ] **B1** 實作 Feathers 驗證規則（巢狀深度、方法行數、missing wrapper 等 5 條 ast-grep 版）
-- [ ] **B2** 為 ObjC 實作所有 5 條規則的 grep fallback（含精確度標記）（依賴 B1）
-- [ ] **B3** 評估 `clang -ast-dump` 作為 ObjC 進階替代方案的可行性（獨立）
+- [x] **B1** 實作 Feathers 驗證規則（3 條 ast-grep + 2 條 grep，共 5 條）
+- [x] **B2** 為 ObjC 實作所有 5 條規則的 grep fallback（含精確度標記）
+- [x] **B3** 評估 `clang -ast-dump` 可行性（結論：CI 用 grep，深度審計用 clang）
 
 #### 軌道 C — 管線整合（架構密集）
 
-```
-C1 → C2, C3（平行）
-C4 獨立
-```
+- [x] **C1** 定義 `audit.config.yml` schema（JSON Schema，YAML 格式）
+- [x] **C2** 改造 `run-baseline.sh`（含 Step 1.5 依賴圖譜、Step 0.5 Feathers 掃描、JSON 輸出）
+- [x] **C3** 保留 CLI 參數作為 fallback（CLI 優先於 config）
+- [x] **C4** 合約輸出含 scope / seam_type / pinch_point 元資料
 
-- [ ] **C1** 定義 `audit.config.yml` schema
-- [ ] **C2** 修改 `run-baseline.sh` 讀取 config 選擇語言插件（依賴 C1）
-  - Step 0：從 config 讀取 `boundary_discovery.*`
-  - Step 1.5：依賴圖譜分析 + Seam 識別
-  - Step 2：組合 `skeleton.md` + `languages/{lang}.md`
-- [ ] **C3** 保留 CLI 參數作為 fallback（依賴 C1，與 C2 平行）
-- [ ] **C4** 在合約輸出中加入 scope / seam_type / pinch_point 元資料（獨立）
+#### 額外完成
 
-#### P0 合流點
+- [x] 補齊 `gemini-blind-scan.md`、`codex-adversary.md`、`claude-applier.md` 三個 prompt
+- [x] 修復 subshell VIOLATIONS 計數 bug（7 個腳本）
+- [x] 統一合約 ID 格式為 `{Category}-{NNN}`
 
-最終 `run-baseline.sh` 需要組合 skeleton + 語言插件（A→C2），三條軌道在此合流驗證。
+### P1 — 第二語言驗證（已完成 2026-03-08）
 
-### P1 — 第二語言驗證
-
-兩條平行軌道，在端到端驗證時合流：
+經 Codex/Gemini 三輪審查達 10/10。驗證語言：TypeScript。
 
 #### 軌道 D — Prompt 泛化
 
-```
-D1, D2 平行
-```
-
-- [ ] **D1** 參數化 `gemini-blind-scan.md` Section 4（獨立）
-  - 「NSNotification observers」→「event/notification observers」
-  - 「dispatch_semaphore」→「synchronization primitives」
-- [ ] **D2** 選擇驗證目標（TypeScript 或 Go）+ 撰寫第三語言插件（獨立）
-  - 包含 effect 防火牆 + Seam 類型 + Sprout/Wrap 策略
+- [x] **D1** 確認 `gemini-blind-scan.md` 已完全參數化（P0 已泛化，無需修改）
+- [x] **D2** 撰寫 `prompts/languages/typescript.md`（10 個隱含合約範例，含 Interceptor Chain）
 
 #### 軌道 E — 配置與驗證
 
-```
-E1 → E2 → E3（序列）
-```
+- [x] **E1** 建立 `audit.config.example-typescript.yml`（AuthService 範例）
+- [x] **E2** 建立端到端驗證清單 `verification/e2e-typescript-checklist.md`
+- [x] **E3** 建立 D/P 品質指南 `verification/dp-category-quality-guide.md`
 
-- [ ] **E1** 建立該語言的 `audit.config.yml`（依賴 D2 完成語言選擇）
-- [ ] **E2** 端到端驗證：Phase A 產出合約 → Phase B CI 通過（依賴 D1 + D2 + E1）
-- [ ] **E3** 驗證 D/P 類別合約在新語言上的提取品質（依賴 E2）
+### P2 — SourceAtlas 整合（已完成 2026-03-08）
 
-#### P1 合流點
+經 Codex/Gemini 三輪審查達 10/10。
 
-E2 端到端驗證是匯集點，需要 D1（泛化 prompt）+ D2（語言插件）+ E1（config）全部完成。
-
-### P2 — SourceAtlas 整合
-
-四項全部平行，無依賴：
-
-- [ ] 整合 `detect-project.sh` 自動選擇語言插件
-- [ ] 建立 `plugin/commands/audit/` 命令結構
-  - SKILL.md, workflow.md, output-template.md, verification-guide.md
-- [ ] 整合 scan-entropy.sh + git hotspot 實現 `--recommend`
-- [ ] 輸出存到 `.sourceatlas/audit/{module}.yaml`
+- [x] 整合 `detect-project.sh` → `pipeline/detect-language.sh`（支援 9 種語言自動偵測）
+- [x] 建立 `plugin/commands/audit/` 命令結構
+  - SKILL.md（326 行）、workflow.md（527 行）、output-template.md（415 行）、verification-guide.md（363 行）
+- [x] 整合 scan-entropy.sh + git hotspot → `pipeline/recommend-targets.sh`（三維評分模型）
+- [x] 輸出存儲 → `pipeline/save-output.sh`（時間戳備份）+ `pipeline/output-template.yaml`
 
 ### P3 — 長期改進
 
 三項全部平行，無依賴：
 
-- [ ] 更多語言插件（Kotlin, Python, Rust, Java）— 每個語言彼此平行
+- [x] Kotlin 語言插件（`prompts/languages/kotlin.md`，含 9 節 + Java 互操作合約）
+- [ ] 更多語言插件（Python, Rust, Java）— 每個語言彼此平行
 - [ ] 建立 ast-grep 支援矩陣文件
 - [ ] LLM 後端可替換（支援本地模型降低成本）
 

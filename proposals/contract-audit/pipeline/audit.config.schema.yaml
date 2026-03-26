@@ -38,6 +38,7 @@ properties:
       - objc
       - swift
       - typescript
+      - javascript
       - go
       - kotlin
       - python

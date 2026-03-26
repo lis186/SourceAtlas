@@ -1,59 +1,67 @@
 # Objective-C 錨定模式
-# 格式：類別|名稱|grep pattern|說明
+# 格式：類別<TAB>名稱<TAB>grep pattern<TAB>說明
 # 來源：語言插件 objc.md §1-3, §5-7
 #
 # 類別：S=同步, N=通知/事件, L=生命週期, D=依賴, E=例外, C=取消
 
 # --- S: 同步原語 (§2) ---
-S|dispatch_semaphore_create|dispatch_semaphore_create\(|信號量建立
-S|dispatch_semaphore_wait|dispatch_semaphore_wait\(|信號量等待，潛在阻塞
-S|dispatch_semaphore_signal|dispatch_semaphore_signal\(|信號量釋放
-S|@synchronized|@synchronized\(|互斥鎖區段
-S|dispatch_sync|dispatch_sync\(|同步派發，潛在死鎖
-S|dispatch_async|dispatch_async\(|非同步派發
-S|dispatch_queue_create|dispatch_queue_create\(|自訂佇列建立
-S|NSLock_lock|NSLock\b|NSLock 鎖
-S|NSRecursiveLock|NSRecursiveLock\b|遞迴鎖（支援重入）
-S|dispatch_barrier|dispatch_barrier|柵欄同步
-S|dispatch_once|dispatch_once\(|一次性初始化（執行緒安全單例）
-S|DISPATCH_TIME_FOREVER|DISPATCH_TIME_FOREVER|信號量永久等待，阻塞風險最高
+S	dispatch_semaphore_create	dispatch_semaphore_create\(	信號量建立
+S	dispatch_semaphore_wait	dispatch_semaphore_wait\(	信號量等待，潛在阻塞
+S	dispatch_semaphore_signal	dispatch_semaphore_signal\(	信號量釋放
+S	@synchronized	@synchronized\(	互斥鎖區段
+S	dispatch_sync	dispatch_sync\(	同步派發，潛在死鎖
+S	dispatch_async	dispatch_async\(	非同步派發
+S	dispatch_queue_create	dispatch_queue_create\(	自訂佇列建立
+S	NSLock_lock	NSLock\b	NSLock 鎖
+S	NSRecursiveLock	NSRecursiveLock\b	遞迴鎖（支援重入）
+S	dispatch_barrier	dispatch_barrier	柵欄同步
+S	dispatch_once	dispatch_once\(	一次性初始化（執行緒安全單例）
+S	DISPATCH_TIME_FOREVER	DISPATCH_TIME_FOREVER	信號量永久等待，阻塞風險最高
+S	dispatch_after	dispatch_after\(	延遲執行（block 被 retain 到觸發）
+S	dispatch_group	dispatch_group|dispatch_group_enter|dispatch_group_leave	派發群組（enter/leave 必須配對）
 
 # --- N: 通知/事件原語 (§1) ---
-N|postNotificationName|postNotificationName:|NSNotificationCenter 通知發送
-N|addObserver_selector|addObserver:.*selector:|通知觀察者註冊（selector 模式）
-N|addObserver_forKeyPath|addObserver:.*forKeyPath:|KVO 觀察者註冊
-N|removeObserver|removeObserver:|觀察者移除
-N|respondsToSelector|respondsToSelector:|Delegate 方法存在檢查
-N|delegate_property|\.delegate\b|Delegate 存取
-N|defaultCenter|defaultCenter\]|NSNotificationCenter 存取
-N|performSelector|performSelector:|動態方法呼叫
-N|addObserverForName|addObserverForName:|Block-based 通知觀察者（回傳 token 需保留）
-N|performBlock|performBlock:|Core Data 執行緒安全存取
+N	postNotificationName	postNotificationName:	NSNotificationCenter 通知發送
+N	addObserver_selector	addObserver:.*selector:	通知觀察者註冊（selector 模式）
+N	addObserver_forKeyPath	addObserver:.*forKeyPath:	KVO 觀察者註冊
+N	removeObserver	removeObserver:	觀察者移除
+N	respondsToSelector	respondsToSelector:	Delegate 方法存在檢查
+N	delegate_property	\.delegate\b	Delegate 存取
+N	defaultCenter	defaultCenter\b	NSNotificationCenter 存取
+N	performSelector	performSelector:	動態方法呼叫
+N	addObserverForName	addObserverForName:	Block-based 通知觀察者（回傳 token 需保留）
+N	performBlock	performBlock:	Core Data 執行緒安全存取
+N	completionHandler	completionHandler:	非同步完成回調（回調合約）
+N	success_failure_block	success:|failure:	成功/失敗回調模式（AFNetworking 等）
 
 # --- L: 生命週期 (§3) ---
-L|dealloc|- \(void\)dealloc|物件銷毀，需驗證 removeObserver
-L|viewDidLoad|viewDidLoad|UIViewController 載入完成
-L|viewWillAppear|viewWillAppear|UIViewController 即將顯示
-L|viewDidAppear|viewDidAppear|UIViewController 已顯示
-L|viewWillDisappear|viewWillDisappear|UIViewController 即將消失
-L|viewDidDisappear|viewDidDisappear|UIViewController 已消失
-L|applicationDidFinishLaunching|applicationDidFinishLaunching|AppDelegate 啟動入口
-L|applicationDidEnterBackground|applicationDidEnterBackground|App 進入背景，狀態保存合約
-L|performSelector_afterDelay|afterDelay:|延遲執行，retain 語義與 dispatch_after 不同
+L	dealloc	- \(void\)dealloc	物件銷毀，需驗證 removeObserver
+L	viewDidLoad	viewDidLoad	UIViewController 載入完成
+L	viewWillAppear	viewWillAppear	UIViewController 即將顯示
+L	viewDidAppear	viewDidAppear	UIViewController 已顯示
+L	viewWillDisappear	viewWillDisappear	UIViewController 即將消失
+L	viewDidDisappear	viewDidDisappear	UIViewController 已消失
+L	applicationDidFinishLaunching	applicationDidFinishLaunching	AppDelegate 啟動入口
+L	applicationDidEnterBackground	applicationDidEnterBackground	App 進入背景，狀態保存合約
+L	performSelector_afterDelay	afterDelay:	延遲執行，retain 語義與 dispatch_after 不同
+L	init_method	- \(instancetype\)init|- \(id\)init	初始化方法宣告
 
 # --- D: 依賴 (§6-7) ---
-D|sharedInstance|sharedInstance\]|單例存取（ObjC 慣例）
-D|shared_dot|\.shared[^A-Za-z]|單例存取（.shared 慣例）
-D|protocol_decl|@protocol\b|Protocol 宣告（Object Seam）
-D|ifdef_feature|#ifdef\b|條件編譯（Preprocessing Seam）
-D|if_conditional|#if\b|條件編譯（#if DEBUG 等）
-D|category_interface|@interface.*\(|Category 宣告（Link Seam，同名方法 = UB）
-D|method_exchangeImplementations|method_exchangeImplementations|Method swizzling（最危險的 Link Seam）
+D	sharedInstance	sharedInstance[].]	單例存取（ObjC 慣例，dot 或 bracket syntax）
+D	shared_dot	\.shared[^A-Za-z]	單例存取（.shared 慣例）
+D	protocol_decl	@protocol\b	Protocol 宣告（Object Seam）
+D	ifdef_feature	#ifdef\b	條件編譯（Preprocessing Seam）
+D	if_conditional	#if\b	條件編譯（#if DEBUG 等）
+D	category_interface	@interface.*\(	Category 宣告（Link Seam，同名方法 = UB）
+D	method_exchangeImplementations	method_exchangeImplementations	Method swizzling（最危險的 Link Seam）
 
-# --- E: 例外 (§8) ---
-E|try_block|@try\b|ObjC 例外處理
-E|throw_exception|@throw\b|ObjC 例外拋出
+# --- E: 例外/錯誤處理 (§8) ---
+E	try_block	@try\b	ObjC 例外處理
+E	throw_exception	@throw\b	ObjC 例外拋出
+E	NSError_param	NSError \*\)	NSError callback 參數（錯誤傳播合約）
+E	errorWithDomain	errorWithDomain:	自訂 NSError 建立
+E	NSError_out_param	NSError \*\*\)	NSError out-parameter（Cocoa 錯誤慣例）
 
 # --- C: 取消 ---
-C|cancel_operation|cancel\]|NSOperation/NSURLSession 取消
-C|cancelPreviousPerform|cancelPreviousPerformRequestsWithTarget|取消延遲 performSelector
+C	cancel_operation	cancel\]	NSOperation/NSURLSession 取消
+C	cancelPreviousPerform	cancelPreviousPerformRequestsWithTarget	取消延遲 performSelector

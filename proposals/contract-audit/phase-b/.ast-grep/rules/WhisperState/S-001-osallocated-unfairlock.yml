@@ -1,0 +1,13 @@
+id: S-001-osallocated-unfairlock
+message: "S-001: pendingChunks must be protected by OSAllocatedUnfairLock"
+severity: error
+language: Swift
+rule:
+  pattern: |
+    OSAllocatedUnfairLock(initialState: $$$)
+note: |
+  Contract source: WhisperState.swift:199
+  Refactoring requirement: If the audio chunk buffering is moved to a separate
+  actor or struct, the OSAllocatedUnfairLock can be replaced with actor isolation.
+  However, the non-reentrancy property must be preserved — do not use NSLock
+  from within the same thread that holds the lock.

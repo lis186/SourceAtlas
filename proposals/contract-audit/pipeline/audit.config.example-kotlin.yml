@@ -1,0 +1,40 @@
+# audit.config.example-kotlin.yml
+# 合約審計配置範例 — Kotlin / Android（UserViewModel）
+#
+# 使用方式：
+#   cp audit.config.example-kotlin.yml audit.config.yml
+#   # 修改 target_files 為實際路徑
+#   bash pipeline/run-baseline.sh
+
+module: UserViewModel
+language: kotlin
+
+target_files:
+  - app/src/main/java/com/app/viewmodel/UserViewModel.kt
+  - app/src/main/java/com/app/repository/UserRepository.kt
+  - app/src/main/java/com/app/di/AppModule.kt
+
+refactoring_intent: "Migrate from LiveData to StateFlow + Compose, replace Dagger with Hilt"
+
+boundary_discovery:
+  # 觀察者模式：LiveData observe、StateFlow collect、SharedFlow emit
+  observer_patterns: '\.observe\s*\(|\.collect\b|MutableLiveData|MutableStateFlow|MutableSharedFlow|\.emit\('
+  # 同步原語：coroutine scope launch、withContext、Mutex、runBlocking
+  sync_patterns: "viewModelScope\\.launch|lifecycleScope\\.launch|withContext\\(|Mutex|runBlocking"
+  file_types:
+    - kotlin
+    - java
+  max_files: 5
+
+verification:
+  # Kotlin 完整支援 ast-grep，可進行結構化匹配
+  primary: ast-grep
+  # grep 作為輔助，捕捉 ast-grep 規則未覆蓋的字串模式
+  secondary: none
+
+dependency_analysis:
+  # Kotlin import 模式：標準 import、Java 互操作
+  import_patterns: 'import\s+\w+(\.\w+)+'
+  seam_detection: true
+  # ViewModel 為核心 UI 邏輯層，多處依賴，設較低閾值
+  pinch_point_threshold: 3

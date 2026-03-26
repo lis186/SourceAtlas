@@ -1,0 +1,76 @@
+# Kotlin 錨定模式
+# 格式：類別<TAB>名稱<TAB>grep pattern<TAB>說明
+# 來源：語言插件 kotlin.md §1-3, §5-7
+#
+# 類別：S=同步, N=通知/事件, L=生命週期, D=依賴, E=例外, C=取消
+
+# --- S: 同步原語 (§2) ---
+S	viewModelScope_launch	viewModelScope\.launch	ViewModel coroutine 啟動（onCleared 時自動取消）
+S	lifecycleScope_launch	lifecycleScope\.launch	Lifecycle-aware coroutine 啟動
+S	withContext	withContext\(	Dispatcher 切換（IO/Main/Default）
+S	Dispatchers	Dispatchers\.	Dispatcher 存取（Main/IO/Default/Unconfined）
+S	async_block	async\s*\{	結構化並行（例外延遲到 await）
+S	runBlocking	runBlocking\s*\{	阻塞式 coroutine——主執行緒使用會導致 ANR
+S	coroutineScope	coroutineScope\s*\{	結構化 scope（任一子失敗全部取消）
+S	supervisorScope	supervisorScope\s*\{	監督 scope（子失敗不傳播）
+S	SupervisorJob	SupervisorJob\b	監督 Job（配合 CoroutineScope 使用）
+S	Mutex	Mutex\b	Coroutine-aware 互斥鎖（同 coroutine 重入會死鎖）
+S	Semaphore	Semaphore\(	並行度控制（限制 API 呼叫頻率）
+S	synchronized	synchronized\(|@Synchronized	JVM intrinsic monitor——不適用於 coroutine
+S	withLock	withLock\s*\{	Mutex try/finally 安全釋放包裝
+S	withTaskGroup	withTaskGroup\b	結構化並行群組（Kotlin 未來 API / KMP）
+
+# --- N: 通知/事件原語 (§1) ---
+N	MutableLiveData	MutableLiveData\b	LiveData 可變源（暴露為 LiveData 是封裝合約）
+N	MutableStateFlow	MutableStateFlow\b	StateFlow 可變源（conflated，新 collector 立即收到最新值）
+N	MutableSharedFlow	MutableSharedFlow\b	SharedFlow 可變源（預設 replay=0）
+N	emit	\.emit\(	Flow/Channel 發送
+N	collect	\.collect\b	Flow 收集（suspend，阻塞直到 Flow 完成）
+N	collectLatest	collectLatest\s*\{	新值到來時取消前一個 block
+N	observe	\.observe\(	LiveData 觀察（綁定 LifecycleOwner）
+N	Channel	Channel\b	Hot stream（單一消費者，多 consumer 會 fan-out）
+N	callbackFlow	callbackFlow\s*\{	將 callback API 轉為 Flow
+N	setOnClickListener	setOnClickListener	Click listener（replace 語義，非 add）
+N	addOnScrollListener	addOnScrollListener	Scroll listener（add 語義，不移除會累積）
+
+# --- L: 生命週期 (§3) ---
+L	onCreate	onCreate\b	Activity/Fragment 建立
+L	onDestroy	onDestroy\b	Activity/Fragment 銷毀
+L	onCleared	onCleared\b	ViewModel 清除（viewModelScope 自動取消）
+L	onDestroyView	onDestroyView\b	Fragment view 銷毀（view reference 變 stale）
+L	LaunchedEffect	LaunchedEffect\b	Compose effect（key 變更時取消並重新啟動）
+L	DisposableEffect	DisposableEffect\b	Compose cleanup effect（離開 Composition 時觸發）
+L	onDispose	onDispose\s*\{	DisposableEffect 清除回調
+L	remember	remember\b	Compose 記憶化（忘記 key 導致 stale 值）
+L	rememberUpdatedState	rememberUpdatedState\b	安全引用最新值，避免 stale closure
+L	SideEffect	SideEffect\s*\{	每次 recomposition 後同步執行
+L	produceState	produceState\b	外部狀態轉 Compose State（離開時自動取消）
+L	snapshotFlow	snapshotFlow\s*\{	Compose State 轉 Flow
+
+# --- D: 依賴 (§6-7) ---
+D	Inject	@Inject\b	Hilt/Dagger 依賴注入
+D	Module	@Module\b	Dagger Module 宣告
+D	Provides	@Provides\b	Dagger Provider 方法
+D	InstallIn	@InstallIn\b	Hilt Component scope（Singleton/Activity/Fragment）
+D	by_viewModels	by viewModels\b	Fragment-scoped ViewModel 委託
+D	by_activityViewModels	by activityViewModels\b	Activity-scoped ViewModel 委託
+D	by_inject	by inject\b	Koin 依賴注入
+D	expect_actual	expect\s+fun|actual\s+fun	KMP expect/actual 跨平台 Seam
+D	BuildConfig	BuildConfig\.	Build variant 條件分支（Preprocessing Seam）
+D	companion_object	companion\s+object	Companion object（lazy 初始化，副作用時機不確定）
+D	by_delegation	:\s+\w+\s+by\s+	Interface delegation（Decorator pattern）
+D	ServiceLoader	ServiceLoader\.load	動態載入（Link Seam）
+
+# --- E: 例外 (§2, §8) ---
+E	CoroutineExceptionHandler	CoroutineExceptionHandler\b	Coroutine 例外處理器（只在 root coroutine 生效）
+E	runCatching	runCatching\s*\{	Result 包裝（吞掉 CancellationException 是常見錯誤）
+E	try_block	try\s*\{	例外捕獲
+E	require	require\(	前置條件檢查（失敗拋 IllegalArgumentException）
+E	check	check\(	狀態條件檢查（失敗拋 IllegalStateException）
+
+# --- C: 取消 ---
+C	cancel	\.cancel\(\)	Job/Scope 取消
+C	ensureActive	ensureActive\b	取消檢查點（已取消則拋 CancellationException）
+C	isActive	isActive\b	取消狀態檢查
+C	Job_cancel	Job\.cancel|job\.cancel	明確取消 Job
+C	yield	yield\(\)	Coroutine 讓步（同時檢查取消）

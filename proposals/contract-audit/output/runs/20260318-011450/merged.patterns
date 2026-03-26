@@ -57,3 +57,20 @@ E	Codable	Codable\b	自動合成編解碼合約（欄位不匹配會 runtime 失
 C	Task_isCancelled	isCancelled\b	取消狀態檢查
 C	Task_cancel	\.cancel\(\)	任務取消
 C	checkCancellation	checkCancellation	取消檢查點
+
+# --- framework: swiftui ---
+# Swift SwiftUI 錨定模式
+# 格式：類別<TAB>名稱<TAB>grep pattern<TAB>說明
+# 來源：從 swift.patterns 拆分出的 SwiftUI 框架專用模式
+#
+# 類別：S=同步, N=通知/事件, L=生命週期, D=依賴, E=例外, C=取消
+
+# --- L: 生命週期 ---
+L	onAppear	\.onAppear	SwiftUI view 出現
+L	onDisappear	\.onDisappear	SwiftUI view 消失
+L	task_modifier	\.task\s*\{	SwiftUI async task（disappear 時自動取消）
+L	onChange	\.onChange	SwiftUI 狀態變更反應
+L	@StateObject	@StateObject\b	SwiftUI 狀態物件（僅初始化一次）
+L	@EnvironmentObject	@EnvironmentObject\b	SwiftUI 環境物件（缺失會 crash）
+L	@ObservedObject	@ObservedObject\b	SwiftUI 觀察物件（每次 body 重算可能重建）
+L	scenePhase	scenePhase	SwiftUI App 生命週期階段

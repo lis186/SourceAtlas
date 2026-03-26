@@ -36,6 +36,33 @@
 - `context` 參數用於區分多重觀察，nil 是常見但危險的做法
 - KVO 觸發執行緒與 property 設定執行緒相同
 
+### KVO 進階（手動通知與依賴 key）
+```objc
+// 關閉自動 KVO 通知
++ (BOOL)automaticallyNotifiesObserversForKey:(NSString *)key {
+    if ([key isEqualToString:@"fullName"]) return NO;
+    return [super automaticallyNotifiesObserversForKey:key];
+}
+
+// 宣告依賴 key——firstName 或 lastName 改變時，自動觸發 fullName 的 KVO 通知
++ (NSSet<NSString *> *)keyPathsForValuesAffectingFullName {
+    return [NSSet setWithObjects:@"firstName", @"lastName", nil];
+}
+
+// 手動 KVO 通知
+- (void)setFullName:(NSString *)fullName {
+    [self willChangeValueForKey:@"fullName"];
+    _fullName = fullName;
+    [self didChangeValueForKey:@"fullName"];
+}
+```
+
+稽核要點：
+- `automaticallyNotifiesObserversForKey:` 回傳 NO 但未配對手動 `willChange/didChange` = KVO 靜默失效
+- `keyPathsForValuesAffectingValueForKey:` 定義的依賴關係是隱含合約——移除依賴 property 不會產生編譯錯誤
+- 手動 KVO 的 `willChangeValueForKey:` 和 `didChangeValueForKey:` 必須成對呼叫，否則觀察者行為不可預測
+- 對 to-many relationship 需使用 `willChange:valuesAt:forKey:` / `didChange:valuesAt:forKey:`
+
 ### Delegate / Protocol Callback
 ```objc
 [self.delegate didFinishWithResult:result];
@@ -45,6 +72,30 @@
 - delegate 是否為 `weak` property（retain cycle 風險）
 - 是否在呼叫前檢查 `respondsToSelector:`
 - callback 的執行緒假設
+
+### Block Capture 語義
+```objc
+// Retain cycle 陷阱
+[self.manager fetchDataWithCompletion:^(NSData *data) {
+    self.data = data;  // block 強引用 self，self 強引用 manager，manager 強引用 block
+}];
+
+// 正確的 weak-strong dance
+__weak typeof(self) weakSelf = self;
+[self.manager fetchDataWithCompletion:^(NSData *data) {
+    __strong typeof(weakSelf) strongSelf = weakSelf;
+    if (!strongSelf) return;
+    strongSelf.data = data;
+}];
+```
+
+稽核要點：
+- `__weak` 修飾符使 block 不 retain 該變數——但 block 執行時物件可能已被釋放（nil）
+- `__strong` 在 block 內部重新 retain——確保 block 執行期間物件不被釋放
+- `__block` 修飾符允許 block 修改外部變數——ARC 下 `__block` 對 object 會 retain（與 MRC 不同）
+- 未使用 `__weak` 的 self 參考在非同步 block 中幾乎必然是 retain cycle
+- `dispatch_async` 會 retain block，block 會 retain 被捕獲的變數——整條鏈都是合約
+- 巢狀 block 的捕獲語義更複雜——內部 block 捕獲外部 block 的 `strongSelf` 仍可能導致 retain cycle
 
 ---
 
@@ -94,6 +145,98 @@ dispatch_sync(queue, ^{ ... });
 - `NSLock` 不支援重入；同一執行緒二次 lock 會死鎖
 - `NSRecursiveLock` 支援重入但效能較差
 
+### dispatch_group
+```objc
+dispatch_group_t group = dispatch_group_create();
+
+dispatch_group_enter(group);
+[self fetchUserWithCompletion:^(User *user) {
+    self.user = user;
+    dispatch_group_leave(group);
+}];
+
+dispatch_group_enter(group);
+[self fetchOrdersWithCompletion:^(NSArray *orders) {
+    self.orders = orders;
+    dispatch_group_leave(group);
+}];
+
+dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+    [self updateUI];
+});
+```
+
+稽核要點：
+- `enter` 和 `leave` 必須**嚴格配對**——少一個 `leave` 會導致 `notify` / `wait` 永遠不觸發
+- 多一個 `leave` 會 crash（EXC_BAD_INSTRUCTION）
+- 錯誤路徑（early return、exception）中遺漏 `leave` 是最常見的 bug
+- `dispatch_group_wait` 阻塞當前執行緒；`dispatch_group_notify` 非阻塞——混用需注意語義差異
+- `dispatch_group_enter` 在非同步操作開始**前**呼叫，`leave` 在 completion handler **內**呼叫
+
+### dispatch_barrier（Reader-Writer Pattern）
+```objc
+// 用 concurrent queue + barrier 實現 reader-writer lock
+dispatch_queue_t queue = dispatch_queue_create("com.app.rwlock", DISPATCH_QUEUE_CONCURRENT);
+
+// 讀取（並行）
+- (NSString *)name {
+    __block NSString *result;
+    dispatch_sync(queue, ^{
+        result = _name;
+    });
+    return result;
+}
+
+// 寫入（獨占）
+- (void)setName:(NSString *)name {
+    dispatch_barrier_async(queue, ^{
+        _name = name;
+    });
+}
+```
+
+稽核要點：
+- `dispatch_barrier_async` 只在**自訂 concurrent queue** 上有效——對 global queue 使用 barrier 等同於普通 async
+- barrier block 等待所有先前提交的 block 完成後才執行，且阻止後續 block 開始
+- 讀用 `dispatch_sync`、寫用 `dispatch_barrier_async` 的配對是合約——顛倒會破壞一致性
+- 對同一 queue 同時使用 `dispatch_sync` 讀取和 `dispatch_barrier_sync` 寫入可能死鎖
+
+### dispatch_once
+```objc
++ (instancetype)sharedInstance {
+    static MyClass *instance;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        instance = [[MyClass alloc] init];
+    });
+    return instance;
+}
+```
+
+稽核要點：
+- `dispatch_once` 保證 block 只執行一次且線程安全——但 block 內部的死鎖（如存取自身 singleton）會永久掛起
+- `onceToken` 必須是 `static` 或 `global`——stack 上的 token 行為未定義
+- Singleton 的初始化順序依賴是隱含合約（參見 8.3 範例）
+
+### NSOperationQueue / NSOperation
+```objc
+NSOperationQueue *queue = [[NSOperationQueue alloc] init];
+queue.maxConcurrentOperationCount = 3;
+
+NSBlockOperation *op1 = [NSBlockOperation blockOperationWithBlock:^{ /* fetch */ }];
+NSBlockOperation *op2 = [NSBlockOperation blockOperationWithBlock:^{ /* parse */ }];
+[op2 addDependency:op1];  // op2 等待 op1 完成才開始
+
+[queue addOperations:@[op1, op2] waitUntilFinished:NO];
+```
+
+稽核要點：
+- `addDependency:` 建立的依賴鏈是合約——移除依賴會改變執行順序
+- 循環依賴（op1 → op2 → op1）不會 crash，但兩個 operation 都永遠不會開始
+- `cancel` 只設置 `isCancelled` 標誌——operation 必須自行檢查並提前結束，不會強制停止
+- NSOperation 的 KVO 屬性（`isFinished`、`isExecuting`、`isCancelled`）必須符合 KVO 合規——自訂 subclass 必須手動觸發 KVO 通知
+- `maxConcurrentOperationCount = 1` 使 queue 變為 serial——但不保證同一執行緒
+
 ---
 
 ## 3. 生命週期模式
@@ -117,16 +260,55 @@ application:didFinishLaunchingWithOptions: -> applicationDidBecomeActive: -> app
 - 初始化順序依賴（哪些 singleton 必須先初始化）
 - 背景進入時的狀態保存合約
 
+### NSTimer
+```objc
+// 建立 repeating timer——target 會被 retain
+self.timer = [NSTimer scheduledTimerWithTimeInterval:1.0
+                                              target:self
+                                            selector:@selector(timerFired:)
+                                            userInfo:nil
+                                             repeats:YES];
+```
+
+稽核要點：
+- `NSTimer` 會**強引用 target**——若 target 也強引用 timer = retain cycle（`dealloc` 永遠不會被呼叫）
+- `invalidate` 是唯一的停止方式——必須在 timer 所在的 run loop 執行緒上呼叫
+- Timer 綁定到 run loop——`scheduledTimerWithTimeInterval:` 自動加入當前 run loop 的 `NSDefaultRunLoopMode`
+- 在 scroll 期間 run loop 切換到 `UITrackingRunLoopMode`——預設 mode 下的 timer 不會觸發
+- 解法：`[[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes]`
+- `tolerance` 屬性允許系統合併 timer 以節省電力——設定 tolerance 是效能合約
+- iOS 10+ 提供 block-based API（`scheduledTimerWithTimeInterval:repeats:block:`），避免 target retain 問題
+
+### @autoreleasepool
+```objc
+// 在緊密迴圈中手動管理 autorelease pool
+for (int i = 0; i < 100000; i++) {
+    @autoreleasepool {
+        NSString *temp = [NSString stringWithFormat:@"item_%d", i];
+        [self processItem:temp];
+    }
+}
+```
+
+稽核要點：
+- 背景執行緒（`dispatch_async`、`NSThread`）不自動建立 autorelease pool——未包裝的 autorelease 物件會洩漏
+- GCD dispatch block 自動包裝 autorelease pool（`autoreleaseFrequency` 控制頻率）
+- 緊密迴圈中大量建立臨時物件不加 `@autoreleasepool` = 記憶體尖峰
+- ARC 下 `@autoreleasepool` 仍然必要——ARC 只管理 retain/release，autorelease 的 drain 時機仍由 pool 控制
+
 ### NSObject dealloc
 ```objc
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [_timer invalidate];  // timer 必須在 dealloc 前 invalidate
 }
 ```
 
 稽核要點：
 - ARC 下 `dealloc` 不呼叫 `[super dealloc]`，但 MRC 下必須
 - `dealloc` 中不可呼叫非同步操作
+- `dealloc` 中必須 invalidate timer、removeObserver、取消 KVO——遺漏任一項都是潛在 crash
+- 但若 timer retain self（常見情況），`dealloc` 根本不會被呼叫——形成死結，需在 `viewWillDisappear` 或明確的 teardown 方法中 invalidate
 
 ---
 

@@ -1,0 +1,70 @@
+# Rust 錨定模式
+# 格式：類別<TAB>名稱<TAB>grep pattern<TAB>說明
+# 來源：語言插件 rust.md §1-3, §5-7
+#
+# 類別：S=同步, N=通知/事件, L=生命週期, D=依賴, E=例外, C=取消
+
+# --- S: 同步原語 (§2) ---
+S	Mutex	Mutex::new|Mutex<	Mutex 建立（poisoned 狀態需處理）
+S	RwLock	RwLock::new|RwLock<	讀寫鎖
+S	lock	\.lock()|\.read()|\.write()	取得鎖（回傳 Result）
+S	Arc	Arc::new|Arc<|Arc::clone	原子引用計數（跨 thread 共享）
+S	atomic	Atomic\w+\b|Ordering::	原子操作（Ordering 選擇是合約）
+S	tokio_spawn	tokio::spawn\b	Tokio task 啟動（必須 Send + 'static）
+S	spawn_blocking	spawn_blocking\b	同步任務放到專用 thread pool
+S	thread_spawn	thread::spawn	OS thread 啟動
+S	async_fn	async fn|async move	Async 函式/closure
+S	await	\.await\b	Async 等待點（取消在此生效）
+S	select	select!\s*\{	多路復用（其他 branch 被取消）
+S	join	tokio::join!|join_all	多 task 並行等待
+S	Semaphore	Semaphore::new	並行度控制
+
+# --- N: 通知/事件原語 (§1) ---
+N	mpsc_channel	mpsc::channel|mpsc::sync_channel	標準庫 channel 建立
+N	tokio_mpsc	tokio::sync::mpsc	Tokio mpsc channel
+N	broadcast	broadcast::channel	Tokio 廣播 channel
+N	oneshot	oneshot::channel	Tokio 一次性 channel
+N	watch	watch::channel	Tokio watch channel（只保留最新值）
+N	send	\.send(	Channel send（close 後 panic/Err）
+N	recv	\.recv(	Channel receive
+N	Notify	Notify::new	Tokio 通知原語
+N	notify_one	notify_one|notify_waiters	觸發通知
+N	Fn_trait	Fn\b|FnMut|FnOnce	Closure trait bound（呼叫合約）
+
+# --- L: 生命週期 (§3) ---
+L	Drop	impl Drop|fn drop	RAII 資源清理（離開 scope 自動呼叫）
+L	mem_forget	mem::forget|ManuallyDrop	跳過 drop（資源洩漏）
+L	lifetime	<'[a-z]	Lifetime annotation（借用合約）
+L	static_lifetime	'static	靜態 lifetime（整個程式執行期間）
+L	tokio_main	tokio::main\b	Tokio runtime 啟動
+L	Runtime_new	Runtime::new	手動建立 runtime
+L	shutdown_timeout	shutdown_timeout	Runtime 關閉等待上限
+L	build	\.build()\b	Builder pattern 最終建構
+L	with_state	with_state|State<	Axum shared state 注入
+L	layer	\.layer(	Middleware/Service 層包裝
+L	route	\.route(	HTTP route 註冊
+
+# --- D: 依賴 (§6-7) ---
+D	trait_decl	trait\s+\w+	Trait 宣告（Object Seam）
+D	impl_for	impl\s+\w+\s+for	Trait 實作
+D	dyn_trait	dyn\s+\w+	動態分派（vtable）
+D	cfg_attr	#\[cfg(	條件編譯（Preprocessing Seam）
+D	cfg_feature	feature\s*=\s*"	Cargo feature gate
+D	cfg_test	cfg(test)	測試條件編譯
+D	extern_C	extern\s+"C"	FFI 邊界宣告
+D	no_mangle	#\[no_mangle\]	防止 symbol name mangling
+D	libloading	Library::new|Symbol<	動態載入（Link Seam）
+
+# --- E: 例外/錯誤處理 ---
+E	unwrap	\.unwrap()\b	Panic on None/Err（最常見的 panic 源）
+E	expect	\.expect(	Panic with message
+E	question_mark	\?;	Error propagation（改變錯誤處理策略）
+E	panic	panic!\b	明確 panic
+E	catch_unwind	catch_unwind\b	Panic 捕獲（FFI 邊界必須使用）
+E	unsafe	unsafe\s	Unsafe block/fn（繞過所有編譯器保證）
+
+# --- C: 取消 ---
+C	CancellationToken	CancellationToken\b	Tokio 取消 token
+C	abort	\.abort()\b	強制取消 task
+C	timeout	tokio::time::timeout	限時等待
+C	drop_guard	drop(	提前觸發 drop（釋放資源/鎖）

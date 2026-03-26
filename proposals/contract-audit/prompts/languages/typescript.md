@@ -186,6 +186,54 @@ useEffect(() => {
 - dependency array 為空 `[]` 表示只在 mount 執行一次，省略則每次 render 執行
 - dependency array 的內容是合約——遺漏 dependency 會導致 stale closure
 - `AbortController` 的 abort 呼叫是取消合約——fetch 和其他支援 signal 的 API 會拋出 `AbortError`
+- `AbortController.signal` 可串接傳遞——外部 abort 會取消所有綁定該 signal 的操作，傳播路徑是合約
+
+### React Memoization Hooks
+```typescript
+// useCallback -- 快取函式參考，避免子元件不必要的 re-render
+const handleSubmit = useCallback((data: FormData) => {
+  api.save(productId, data);
+}, [productId]); // productId 變更時重建函式
+
+// useMemo -- 快取計算結果
+const filtered = useMemo(() => {
+  return items.filter(item => item.category === category);
+}, [items, category]);
+```
+
+稽核要點：
+- `useCallback` / `useMemo` 的 dependency array 是合約——遺漏 dependency 導致 stale closure（捕獲到舊值）
+- `useCallback` 快取的是**函式本身**，`useMemo` 快取的是**函式回傳值**——混用會導致行為差異
+- 過度使用 `useMemo`/`useCallback` 反而降低效能（快取比較的成本 > 重新計算的成本）
+- `useMemo` 不保證快取永遠有效——React 可能在記憶體壓力下丟棄快取值
+
+### React useRef
+```typescript
+const inputRef = useRef<HTMLInputElement>(null);
+const latestCallback = useRef(callback);
+latestCallback.current = callback; // 每次 render 更新，不觸發 re-render
+```
+
+稽核要點：
+- `useRef` 的 `.current` 變更不觸發 re-render——這是 escape hatch，繞過 React 的響應式系統
+- 常用於保存「最新的 callback」避免 stale closure，但 `.current` 的更新時機是隱含合約
+- DOM ref（`useRef<HTMLElement>`）在元件 mount 後才有值——在 render 中讀取 `.current` 可能是 null
+
+### React Suspense / ErrorBoundary
+```typescript
+<ErrorBoundary fallback={<ErrorUI />}>
+  <Suspense fallback={<Loading />}>
+    <AsyncComponent />
+  </Suspense>
+</ErrorBoundary>
+```
+
+稽核要點：
+- `Suspense` 邊界決定 loading 狀態的 UI 範圍——巢狀 Suspense 的粒度是 UX 合約
+- `ErrorBoundary` 只捕獲 render/lifecycle 中的同步錯誤——不捕獲 event handler 或 async 錯誤
+- React 18+ `useTransition` 讓 state 更新變為「非阻塞」——transition 中的 UI 不觸發 Suspense fallback
+- `useDeferredValue` 延遲非關鍵 UI 更新——延遲值與當前值不同步期間的 UI 一致性是合約
+- StrictMode 在開發環境下會雙重呼叫 effect——副作用必須是幂等的
 
 ### React Lifecycle (Class Components)
 ```typescript
@@ -470,6 +518,39 @@ import { UserService } from "@api/user-service";
 - `process.env` 的值在 runtime 是 `string | undefined`——型別假設是隱含合約
 - `DefinePlugin` 在編譯時進行字串替換——替換後的程式碼行為可能與原始碼不同
 - 環境變數的存在性是隱含合約——缺少環境變數通常產生 `undefined` 而非明確錯誤
+
+### Declaration Merging / Module Augmentation
+```typescript
+// Interface Merging -- 同名 interface 自動合併
+interface User {
+  name: string;
+}
+interface User {
+  email: string;
+}
+// User 同時有 name 和 email
+
+// Module Augmentation -- 擴充第三方模組的型別
+declare module "express" {
+  interface Request {
+    user?: AuthUser;  // 為 Express Request 新增 user 屬性
+  }
+}
+
+// Global Augmentation -- 擴充全域型別
+declare global {
+  interface Array<T> {
+    toSorted(): T[];
+  }
+}
+```
+
+稽核要點：
+- Interface merging 是靜默的——不同檔案中同名 interface 會自動合併，不會警告或報錯
+- Module augmentation 只影響型別——runtime 行為必須另外透過 prototype 擴充或 polyfill 實現
+- 如果 augmentation 宣告的型別與實際 runtime 不一致，會產生型別安全假象
+- `declare global` 擴充全域型別——任何 import 此檔案的模組都受影響，scope 是隱含合約
+- 重構時移除包含 augmentation 的檔案不會產生即時錯誤——直到使用擴充屬性的程式碼被執行
 
 ### Link Seam（模組別名 / 模組替換）
 

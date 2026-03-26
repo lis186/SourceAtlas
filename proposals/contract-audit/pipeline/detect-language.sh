@@ -85,7 +85,7 @@ ext_to_language() {
     m|h)       echo "objc" ;;
     swift)     echo "swift" ;;
     ts|tsx)    echo "typescript" ;;
-    js|jsx)    echo "typescript" ;;
+    js|jsx|mjs|cjs) echo "javascript" ;;
     go)        echo "go" ;;
     kt|kts)    echo "kotlin" ;;
     py)        echo "python" ;;
@@ -107,7 +107,7 @@ project_type_to_language() {
       echo "swift"
       ;;
     nodejs)
-      echo "typescript"
+      echo "nodejs-mixed"
       ;;
     go)
       echo "go"
@@ -195,7 +195,7 @@ if [ -n "$FILE_MODE" ]; then
 
   if [ -z "$LANG" ]; then
     log "WARN: 無法從副檔名 '.${EXT}' 推斷語言"
-    log "WARN: 支援的副檔名：.m .h (objc), .swift (swift), .ts .tsx .js .jsx (typescript), .go (go), .kt .kts (kotlin), .py (python), .rs (rust), .java (java)"
+    log "WARN: 支援的副檔名：.m .h (objc), .swift (swift), .ts .tsx (typescript), .js .jsx .mjs .cjs (javascript), .go (go), .kt .kts (kotlin), .py (python), .rs (rust), .java (java)"
     log "WARN: 請使用 --language 手動指定語言"
     echo "LANGUAGE="
     echo "PLUGIN="
@@ -259,8 +259,26 @@ if echo "$DETECT_OUTPUT" | grep -q "iOS/Swift\|Swift Package\|Swift/Tuist"; then
     emit_result "swift"
   fi
 
-elif echo "$DETECT_OUTPUT" | grep -q "Node.js/TypeScript"; then
-  emit_result "typescript"
+elif echo "$DETECT_OUTPUT" | grep -q "Node.js/TypeScript\|Node.js"; then
+  # Node.js 專案：檢查是否有 TypeScript 檔案來區分 TS / JS
+  TS_COUNT=$(find "$PROJECT_PATH" -type f \( -name "*.ts" -o -name "*.tsx" \) \
+    ! -path "*/node_modules/*" ! -path "*/.git/*" ! -path "*/dist/*" ! -path "*/build/*" \
+    2>/dev/null | wc -l | tr -d ' ')
+  JS_COUNT=$(find "$PROJECT_PATH" -type f \( -name "*.js" -o -name "*.jsx" -o -name "*.mjs" -o -name "*.cjs" \) \
+    ! -path "*/node_modules/*" ! -path "*/.git/*" ! -path "*/dist/*" ! -path "*/build/*" \
+    2>/dev/null | wc -l | tr -d ' ')
+
+  if [ "$TS_COUNT" -gt 0 ]; then
+    # 有 TS 檔案則判定為 typescript（TS 專案通常也包含 JS 檔案）
+    log "INFO: Node.js 專案偵測到 TypeScript (TS: ${TS_COUNT}, JS: ${JS_COUNT})"
+    emit_result "typescript"
+  elif [ "$JS_COUNT" -gt 0 ]; then
+    log "INFO: Node.js 專案偵測到純 JavaScript (JS: ${JS_COUNT})"
+    emit_result "javascript"
+  else
+    # 有 package.json 但找不到原始碼，預設 typescript
+    emit_result "typescript"
+  fi
 
 else
   # 嘗試從輸出中提取專案類型名稱

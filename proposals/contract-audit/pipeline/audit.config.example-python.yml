@@ -1,0 +1,39 @@
+# audit.config.example-python.yml
+# 合約審計配置範例 — Python / FastAPI（AuthService）
+#
+# 使用方式：
+#   cp audit.config.example-python.yml audit.config.yml
+#   # 修改 target_files 為實際路徑
+#   bash pipeline/run-baseline.sh
+
+module: AuthService
+language: python
+
+target_files:
+  - src/services/auth_service.py
+  - src/middleware/auth_middleware.py
+  - src/models/user.py
+
+refactoring_intent: "Migrate from Flask sync to FastAPI async, replace SQLAlchemy 1.x with 2.0 async"
+
+boundary_discovery:
+  # 觀察者模式：signal handler、event emitter、callback
+  observer_patterns: 'signal\.signal|\.emit\(|\.on\(|callback|Observer'
+  # 同步原語：threading、asyncio、multiprocessing
+  sync_patterns: "threading\\.Thread|asyncio\\.run|create_task|await\\s|multiprocessing"
+  file_types:
+    - python
+  max_files: 5
+
+verification:
+  # Python 完整支援 ast-grep，可進行結構化匹配
+  primary: ast-grep
+  # grep 作為輔助，捕捉動態特性（eval、exec、monkey patching）
+  secondary: none
+
+dependency_analysis:
+  # Python import 模式：import、from-import、動態 import
+  import_patterns: '^import\s+|^from\s+\w+\s+import|importlib\.import_module'
+  seam_detection: true
+  # AuthService 為核心認證模組
+  pinch_point_threshold: 3

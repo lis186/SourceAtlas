@@ -1,0 +1,41 @@
+# audit.config.example-java.yml
+# 合約審計配置範例 — Java / Spring Boot（OrderService）
+#
+# 使用方式：
+#   cp audit.config.example-java.yml audit.config.yml
+#   # 修改 target_files 為實際路徑
+#   bash pipeline/run-baseline.sh
+
+module: OrderService
+language: java
+
+target_files:
+  - src/main/java/com/app/service/OrderService.java
+  - src/main/java/com/app/repository/OrderRepository.java
+  - src/main/java/com/app/controller/OrderController.java
+  - src/main/java/com/app/config/AppConfig.java
+
+refactoring_intent: "Migrate from synchronized to ReentrantLock, replace @Transactional self-invocation with extracted service"
+
+boundary_discovery:
+  # 觀察者模式：Spring Event、Listener、CompletableFuture callback
+  observer_patterns: 'publishEvent\(|@EventListener|addListener|\.thenApply|\.thenAccept|BlockingQueue'
+  # 同步原語：synchronized、Lock、ExecutorService、volatile
+  sync_patterns: "synchronized|ReentrantLock|ExecutorService|volatile\\s|CompletableFuture|Thread\\.sleep"
+  file_types:
+    - java
+    - kotlin
+  max_files: 5
+
+verification:
+  # Java 完整支援 ast-grep，可進行結構化匹配
+  primary: ast-grep
+  # grep 作為輔助，捕捉 annotation、reflection 等模式
+  secondary: none
+
+dependency_analysis:
+  # Java import 模式：標準 import、static import
+  import_patterns: '^import\s+|^import\s+static\s+'
+  seam_detection: true
+  # Service 層為核心業務邏輯，多處依賴
+  pinch_point_threshold: 3

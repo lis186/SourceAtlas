@@ -1,0 +1,13 @@
+id: M-004-modelcontext-save-notify-order
+message: "M-004: modelContext.insert + save must precede .transcriptionCreated post"
+severity: error
+language: Swift
+rule:
+  pattern: |
+    NotificationCenter.default.post(name: .transcriptionCreated, object: $OBJ)
+note: |
+  Contract source: WhisperState.swift:159
+  Refactoring requirement: When extracting the persistence layer, the notification
+  must only be posted AFTER modelContext.insert() AND modelContext.save() complete.
+  Currently try? save() swallows errors — if save is made throwing, the notification
+  post must be gated on save success.

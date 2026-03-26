@@ -1,0 +1,14 @@
+id: M-006-audiochunk-swap-then-flush
+message: "M-006: onAudioChunk must be swapped to realCallback BEFORE flushing buffered chunks"
+severity: error
+language: Swift
+rule:
+  pattern: |
+    self.recorder.onAudioChunk = $CALLBACK
+note: |
+  Contract source: WhisperState.swift:226-234
+  Refactoring requirement: The swap (recorder.onAudioChunk = realCallback) must occur
+  strictly before the buffered chunk flush loop. If this order is reversed during
+  refactoring, buffered chunks will be double-counted into pendingChunks.
+  This is a CRITICAL ordering contract — manual review required after any restructuring
+  of the recording session setup path.
