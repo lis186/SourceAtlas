@@ -60,16 +60,20 @@ fi
 
 #### Step B: Auto-Discover Candidates
 
-Run `/atlas.history` on the project to find hotspot files, then filter for refactoring candidates:
+Run the deterministic ranking script — no LLM, pure git log + wc:
 
-1. **Run history analysis** — get files ranked by change frequency × co-change coupling
-2. **Filter candidates**:
-   - File size > 200 lines (God Class threshold)
-   - High change frequency (top quartile)
-   - Multiple responsibility signals (diverse import types, many methods)
-3. **Check existing analyses** — if `.sourceatlas/audit/` or `.sourceatlas/seam/` have cached results for a file, note it (head start)
+```bash
+bash plugin/commands/refactor/scripts/rank-candidates.sh .
+# Output: .sourceatlas/refactor/candidates.json (cached 1 hour)
+```
+
+The script scores every source file as `commits_90d × lines`, filters to files >200 lines, and outputs a sorted JSON array. Read the result directly — **do not re-rank or re-filter**.
+
+If the script fails (not a git repo, no source files), fall back to asking the user to specify a file directly.
 
 #### Step C: Present Ranked Candidates
+
+Read `candidates.json` and display top 5. **Use the script's rank order exactly** — do not re-rank. Add one sentence of qualitative context per candidate (why it's worth refactoring), but this is annotation only, not selection logic.
 
 ```
 🔧 SourceAtlas: Refactor — Discovery Mode
@@ -78,17 +82,18 @@ Run `/atlas.history` on the project to find hotspot files, then filter for refac
 🔄 In-progress (1):
   NYHTTPSClient (Step 3/7) — resume: /atlas.refactor NYCore/.../NYHTTPSClient.m
 
-📊 Recommended targets (by hotspot × complexity):
+📊 Recommended targets (score = commits_90d × lines):
 
-  #1 ⚡ NYHTTPSClient.m (842 lines, 47 commits/6mo, 12 co-change partners)
+  #1 ⚡ NYHTTPSClient.m        score 39,574  │ 842 lines, 47 commits
      Group A (ObjC) │ audit ✅ cached │ seam ✅ cached
+     Handles auth + network + retry — classic God Class.
      /atlas.refactor NYCore/NYCore/Classes/NYHTTPSClient.m
 
-  #2   NYDataManager.swift (310 lines, 23 commits/6mo, 8 co-change partners)
+  #2   NYDataManager.swift     score 7,130   │ 310 lines, 23 commits
      Group A (Swift) │ no prior analysis
      /atlas.refactor NYCore/NYCore/Classes/NYDataManager.swift
 
-  #3   api-gateway.ts (280 lines, 19 commits/6mo, 6 co-change partners)
+  #3   api-gateway.ts          score 5,320   │ 280 lines, 19 commits
      Group B (TypeScript) │ audit ✅ cached
      /atlas.refactor src/services/api-gateway.ts
 
@@ -101,8 +106,8 @@ Select a target to begin, or run:
 - Zero-arg = smart discovery, not help page
 - Show resumable work first (respect user's existing investment)
 - Every candidate has a copy-pasteable command
+- Rank order comes from script, not LLM judgment
 - Prior analysis is an asset, surface it ("audit ✅ cached" = head start)
-- Ranked by actionable signal (hotspot × complexity), not alphabetical
 
 After the user selects a target, proceed to Step 1 below.
 
@@ -225,7 +230,23 @@ Read the cached result from `.sourceatlas/impact/` if available.
 
 ### 1.3 Assess Suitability
 
-Combine history + impact to assess:
+Read `candidates.json` for the score of this file (or compute inline if not cached):
+
+```bash
+LINES=$(wc -l < "$FILE_PATH" | tr -d ' ')
+COMMITS=$(git log --oneline --since="$(date -v-90d +%Y-%m-%d 2>/dev/null || date -d '90 days ago' +%Y-%m-%d)" -- "$FILE_PATH" | wc -l | tr -d ' ')
+SCORE=$(( LINES * COMMITS ))
+```
+
+Apply fixed thresholds to determine `recommendation` — **do not use LLM judgment**:
+
+```
+score > 10000  → proceed
+score 3000-10000 → caution
+score < 3000   → skip
+```
+
+Then read `/atlas.impact` output (or cache) to get `blast_radius`.
 
 ```yaml
 # 1_target.yaml
@@ -235,11 +256,11 @@ language: "{language}"
 language_group: "A|B|C"
 line_count: {n}
 suitability:
-  change_frequency: {high|medium|low}
-  coupling_score: {0-100}
-  blast_radius: {n files}
-  recommendation: "proceed|caution|skip"
-  reason: "{why}"
+  commits_90d: {n}
+  score: {commits_90d × lines}        # deterministic
+  blast_radius: {n files}             # from /atlas.impact
+  recommendation: "proceed|caution|skip"  # from fixed thresholds above
+  reason: "{qualitative explanation}"     # LLM fills this only
 history_ref: ".sourceatlas/history/{module}.yaml"
 impact_ref: ".sourceatlas/impact/{module}.yaml"
 ```
@@ -249,6 +270,16 @@ impact_ref: ".sourceatlas/impact/{module}.yaml"
 ### 1.4 Update State
 
 Set `1_target: { status: completed, completed_at: {now} }` and `current_step: 2`.
+
+Lock the candidate selection so future runs do not re-rank:
+
+```bash
+sed -i '' "s/  locked: false/  locked: true/" "$STATE_FILE"
+sed -i '' "s/  score: null/  score: $SCORE/" "$STATE_FILE"
+sed -i '' "s/  locked_at: null/  locked_at: \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"/" "$STATE_FILE"
+```
+
+**Rule**: If `candidate_lock.locked: true` and `--force` is NOT passed, skip Step B and Step 1.1–1.3 entirely — jump directly to the current step. This prevents re-ranking from changing the target mid-refactor.
 
 ---
 

@@ -8,6 +8,10 @@ updated: "{iso_date}"
 current_step: 1
 zone_id: null  # set in Step 2a when user selects a zone
 session_boundaries: [2, 5]  # steps that force a new session after completion
+candidate_lock:
+  locked: false        # true = user confirmed target, do not re-rank
+  score: null          # commits_90d × lines at time of selection
+  locked_at: null
 steps:
   # Status lifecycle: pending → produced → verified
   # produced = artifact file exists
