@@ -1,6 +1,6 @@
 ---
 name: seam
-description: Discover responsibility zones and seams in large files to narrow scope before contract audit
+description: Discover responsibility zones and seam candidates using multi-LLM cross-validation (Gemini blind scan → Claude structured analysis → Codex adversarial review)
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
 argument-hint: "<file-path> [--language objc|swift|typescript|javascript|go|java|kotlin|python|rust] [--force]"
@@ -39,10 +39,14 @@ argument-hint: "<file-path> [--language objc|swift|typescript|javascript|go|java
 ## Quick Start
 
 1. **Parse arguments** → file path + language detection
-2. **Run `detect-zones.sh`** → raw zone map (boundaries + methods + message sends)
-3. **Analyze zones** → cluster by responsibility, identify seam types
-4. **Present zone map** → ranked by refactoring priority
-5. **User selects zone** → pipe to `/atlas.audit`
+2. **Check environment** → gemini CLI, codex CLI (degraded mode if missing)
+3. **Run `detect-zones.sh`** → raw zone map (boundaries + methods + message sends)
+4. **Gemini blind scan** → broad seam discovery without Claude framing
+5. **Claude structured analysis** → cluster by responsibility, identify seam types
+6. **Codex adversarial review** → CONFIRM / DISPUTE / ADD / FLAG
+7. **Claude merge** → resolve disputes, integrate additions
+8. **Present zone map** → ranked by refactoring priority + cross-validation summary
+9. **User selects zone** → pipe to `/atlas.audit`
 
 ---
 
@@ -59,6 +63,8 @@ Help the user understand:
 ---
 
 ## Core Workflow
+
+> For step-by-step execution details, see [workflow.md](workflow.md).
 
 ### Step 1: Parse Arguments and Run detect-zones.sh (30 seconds)
 
@@ -77,18 +83,28 @@ The script outputs YAML with 3 layers:
 
 > If clang is unavailable, Layer 2/3 falls back to grep — still useful but less precise.
 
-### Step 2: Analyze Zone Map (2-3 minutes)
+### Step 2: Environment Check (30 seconds)
 
-With the raw zone map in hand, perform semantic analysis:
+Check for `gemini` and `codex` CLIs. If either is missing, enter **degraded mode**: generate prompt files for manual execution and continue with Claude-only analysis, marking output as `mode: degraded`.
 
-#### 2a. Responsibility Clustering (Sandi Metz's message-passing)
+### Step 3: Gemini Blind Scan (2-3 minutes)
+
+Gemini receives **only the source code and detect-zones.sh output** — no taxonomy framing, no Feathers schema. This prevents confirmation bias from Claude's structured prompt.
+
+Gemini outputs: a list of potential injection points, dependency boundaries, and patterns it finds suspicious or hard-coded.
+
+### Step 4: Claude Structured Analysis (2-3 minutes)
+
+With the raw zone map AND Gemini's blind scan in hand, perform semantic analysis:
+
+#### 4a. Responsibility Clustering (Sandi Metz's message-passing)
 
 Group methods by their **external collaborators** (from `sends` in Layer 3):
 - Methods sending to `aesEncryptWithData:`, `hmacSha512:` → **Encryption zone**
 - Methods sending to `postNotificationName:`, `addObserver:` → **Notification zone**
 - Methods sending to `dispatch_semaphore_wait`, `dispatch_sync` → **Synchronization zone**
 
-#### 2b. Seam Type Identification (Michael Feathers)
+#### 4b. Seam Type Identification (Michael Feathers)
 
 For each zone, identify available seams **based on language group**:
 
@@ -101,14 +117,34 @@ For each zone, identify available seams **based on language group**:
 > See [references/language-groups.md](references/language-groups.md) for full decision matrix.
 > See [references/seam-types.md](references/seam-types.md) for all seam types per language.
 
-#### 2c. Code Smell Detection (Martin Fowler)
+#### 4c. Code Smell Detection (Martin Fowler)
 
 Flag zones exhibiting:
 - **Feature Envy**: Methods that call more external classes than internal ones
 - **Divergent Change**: Zone changes for unrelated reasons
 - **Shotgun Surgery**: Small change requires touching many zones
 
-### Step 3: Score and Rank Zones (30 seconds)
+### Step 5: Codex Adversarial Review (2-3 minutes)
+
+Codex receives: source code, detect-zones.sh output, Gemini blind scan, Claude's seam candidates.
+
+Codex issues one verdict per candidate — and independently adds any it finds missing:
+
+| Verdict | Meaning |
+|---------|---------|
+| **CONFIRM** | Seam candidate valid, enabling point exists, coverage claim accurate |
+| **DISPUTE** | Seam type wrong, enabling point missing, or coverage overstated |
+| **ADD** | Dependency or seam type Claude missed (Gemini or Codex found it) |
+| **FLAG** | Architectural issue seams cannot solve (e.g., shared mutable state) |
+
+### Step 6: Claude Merge (1 minute)
+
+Resolve disputes and integrate additions to produce the final seam list:
+- **DISPUTED** candidates: re-evaluate with evidence from both sides; drop if Codex's objection holds
+- **ADDED** candidates: incorporate with Claude's seam type classification
+- **FLAGGED** concerns: record in `seam_validation.architectural_concerns`
+
+### Step 7: Score and Rank Zones (30 seconds)
 
 For each zone, compute a **refactoring priority score**:
 
@@ -118,11 +154,11 @@ priority = method_count × unique_deps × (1 + smell_count)
 
 Higher score = more urgent to extract. Present as a ranked list.
 
-### Step 4: Present Zone Map
+### Step 8: Present Zone Map
 
 > See [Output Format](#output-format) below.
 
-### Step 5: User Selection → Audit
+### Step 9: User Selection → Audit
 
 After the user picks a zone:
 
@@ -163,6 +199,12 @@ Or suggest copy-pasting the zone into a temporary file for isolated audit.
 └─ #4 Lifecycle (lines 1-84, 2 methods)
 │  ...
 
+🎯 Cross-Validation
+- Gemini candidates: N
+- Claude candidates: M
+- Codex confirmed: X / disputed: Y / added: Z / flagged: W
+[Architectural concerns, if any]
+
 🎯 Recommendation
 Start with Zone #1 (Encryption) — highest priority, cleanest Object Seam.
 Run: /atlas.audit $FILE_PATH --lines 295-410
@@ -182,6 +224,9 @@ Run: /atlas.audit $FILE_PATH --lines 295-410
 4. **Compose with audit**: Output must be directly usable as `/atlas.audit` input
 5. **One File at a Time**: Do not batch-process multiple files
 6. **Graceful Degradation**: No clang? Use grep-based deps. No pragma marks? Use method clustering.
+7. **Cross-Validated**: Seam candidates require Gemini blind scan + Codex adversarial review. Claude-only analysis is degraded mode only.
+8. **Gemini sees no taxonomy**: The blind scan prompt must NOT include Feathers seam types, language groups, or Claude's candidate list. Independence is the value.
+9. **Degraded Mode**: If `gemini` or `codex` CLI is unavailable, generate prompt files in `.sourceatlas/seam/prompts/` and mark output `mode: degraded`.
 
 ---
 

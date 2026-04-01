@@ -93,6 +93,34 @@ Use the existing complexity × coupling formula from Step 5.
 
 ---
 
+## Step 2b: Environment Check
+
+Check for required external LLM CLIs.
+
+```bash
+DEGRADED=false
+MISSING_TOOLS=""
+
+if ! command -v gemini &>/dev/null; then
+    MISSING_TOOLS="$MISSING_TOOLS gemini"
+    DEGRADED=true
+fi
+
+if ! command -v codex &>/dev/null; then
+    MISSING_TOOLS="$MISSING_TOOLS codex"
+    DEGRADED=true
+fi
+
+if [ "$DEGRADED" = true ]; then
+    echo "⚠️ Degraded mode: missing$MISSING_TOOLS"
+    echo "Will generate prompt files for manual execution in .sourceatlas/seam/prompts/"
+fi
+```
+
+In degraded mode, skip Steps 3 (Gemini) and 5 (Codex) — run Claude-only and mark output `seam_validation.mode: degraded`.
+
+---
+
 ## Step 3: Run detect-zones.sh
 
 ```bash
@@ -145,6 +173,45 @@ If `marker_count: 0`, the script outputs `zones: []`. In this case:
 1. Use Layer 3 method sends for clustering
 2. Group methods by shared external collaborators
 3. Create synthetic zones from clusters
+
+---
+
+## Step 3b: Gemini Blind Scan
+
+> Skip if `DEGRADED=true` — generate prompt file instead.
+
+Gemini receives **only** the source file content and detect-zones.sh raw output. **Do NOT include**: Feathers seam taxonomy, language group table, or Claude's candidate list. The value of this step is independence.
+
+### Option A: Gemini CLI available
+
+```bash
+PROMPTS_DIR=".sourceatlas/seam/prompts"
+mkdir -p "$PROMPTS_DIR"
+
+# Build blind scan prompt (no taxonomy framing)
+cat > "$PROMPTS_DIR/gemini-blind-scan.md" << PROMPT
+Look at this source file and the zone map below. Find every place where
+external dependencies are used — things that could be hard-coded, hard to
+replace, or that a test might want to substitute. List them with file:line
+evidence. Do not classify them, just list what you observe.
+
+=== SOURCE FILE ===
+$(cat "$FILE_PATH")
+
+=== ZONE MAP ===
+$(cat "$ZONES_OUTPUT")
+PROMPT
+
+gemini < "$PROMPTS_DIR/gemini-blind-scan.md" > "$PROMPTS_DIR/gemini-output.md"
+echo "✅ Gemini blind scan complete"
+```
+
+### Option B: Degraded (gemini not available)
+
+```bash
+echo "📝 Gemini prompt saved to: $PROMPTS_DIR/gemini-blind-scan.md"
+echo "Run manually and paste output back, or proceed with Claude-only analysis"
+```
 
 ---
 
@@ -204,6 +271,67 @@ Check for Fowler's refactoring signals:
 
 ---
 
+## Step 4b: Codex Adversarial Review
+
+> Skip if `DEGRADED=true` — generate prompt file instead.
+
+Codex receives: source file, detect-zones.sh output, Gemini blind scan, and Claude's seam candidates.
+
+### Option A: Codex CLI available
+
+```bash
+cat > "$PROMPTS_DIR/codex-adversary.md" << PROMPT
+You are an adversarial reviewer. Below are seam candidates proposed by two
+prior analyses. Your job: issue a verdict for each candidate, and add any
+you think are missing.
+
+Verdicts:
+- CONFIRM: candidate is valid, enabling point exists, coverage claim accurate
+- DISPUTE: seam type wrong, enabling point absent, or coverage overstated (provide evidence)
+- ADD: dependency or seam type the prior analyses missed
+- FLAG: architectural issue that seams cannot solve (e.g., shared mutable state)
+
+=== GEMINI BLIND SCAN ===
+$(cat "$PROMPTS_DIR/gemini-output.md")
+
+=== CLAUDE SEAM CANDIDATES ===
+$(cat "$PROMPTS_DIR/claude-candidates.md")
+
+=== SOURCE FILE ===
+$(cat "$FILE_PATH")
+PROMPT
+
+codex < "$PROMPTS_DIR/codex-adversary.md" > "$PROMPTS_DIR/codex-output.md"
+echo "✅ Codex adversarial review complete"
+```
+
+### Option B: Degraded (codex not available)
+
+```bash
+echo "📝 Codex prompt saved to: $PROMPTS_DIR/codex-adversary.md"
+echo "Run manually and paste output back, or proceed without adversarial review"
+```
+
+---
+
+## Step 4c: Claude Merge
+
+Resolve the Codex verdicts and produce the final seam list:
+
+1. **DISPUTED candidates**: Re-evaluate with evidence from both sides. Drop if Codex's objection holds. Keep if Claude's evidence is stronger. Never keep without explicit reasoning.
+2. **ADDED candidates**: Incorporate with Claude's seam type classification. Add `verification_grep` for each.
+3. **FLAGGED concerns**: Record in `seam_validation.architectural_concerns` — these are not seam candidates, they are structural issues that must be fixed separately.
+
+Tally cross-validation counts:
+```bash
+CONFIRMED=$(grep -c '^CONFIRM' "$PROMPTS_DIR/codex-output.md" || echo 0)
+DISPUTED=$(grep -c '^DISPUTE' "$PROMPTS_DIR/codex-output.md" || echo 0)
+ADDED=$(grep -c '^ADD' "$PROMPTS_DIR/codex-output.md" || echo 0)
+FLAGGED=$(grep -c '^FLAG' "$PROMPTS_DIR/codex-output.md" || echo 0)
+```
+
+---
+
 ## Step 5: Score and Rank
 
 Use the ranking strategy from Step 2a (`phase_detection.ranking_strategy`).
@@ -243,8 +371,10 @@ Use the output format from [SKILL.md#output-format](SKILL.md#output-format).
 Key presentation rules:
 1. **Ranked list**: Highest priority first
 2. **Visual hierarchy**: Use box-drawing characters for zone tree
-3. **Actionable recommendation**: Always end with a specific `/atlas.audit` command
-4. **Save to cache**: Write YAML to `.sourceatlas/seam/`
+3. **Cross-validation section**: Always include the Gemini/Codex summary
+4. **Actionable recommendation**: Always end with a specific `/atlas.audit` command
+5. **Architectural concerns**: If Codex flagged any, list them separately before the recommendation
+6. **Save to cache**: Write YAML to `.sourceatlas/seam/`
 
 ---
 
@@ -253,6 +383,18 @@ Key presentation rules:
 ```bash
 mkdir -p .sourceatlas/seam
 # Write zone-report.yaml following templates/zone-report.yaml
+# Include seam_validation block:
+#
+# seam_validation:
+#   mode: "full|degraded"
+#   gemini_candidates: N
+#   claude_candidates: M
+#   codex_confirmed: X
+#   codex_disputed: Y
+#   codex_added: Z
+#   codex_flagged: W
+#   architectural_concerns:
+#     - "{description}"
 ```
 
 ---

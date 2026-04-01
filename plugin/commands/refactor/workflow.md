@@ -429,6 +429,13 @@ if [ "$CONTRACT_STATUS" != "verified" ]; then
     echo "Run: /atlas.refactor $FILE_PATH --step 2"
     exit 1
 fi
+
+# Check LLM CLI availability (degraded mode if missing)
+SEAM_DEGRADED=false
+SEAM_MISSING=""
+command -v gemini &>/dev/null || { SEAM_MISSING="$SEAM_MISSING gemini"; SEAM_DEGRADED=true; }
+command -v codex  &>/dev/null || { SEAM_MISSING="$SEAM_MISSING codex";  SEAM_DEGRADED=true; }
+[ "$SEAM_DEGRADED" = true ] && echo "⚠️ Seam analysis degraded mode: missing$SEAM_MISSING"
 ```
 
 **Only read the artifact file. Do NOT re-derive contracts from source code.**
@@ -440,9 +447,19 @@ From the contracts, extract:
 - **Internal dependencies**: Methods within the zone that call each other
 - **Shared state**: Global variables, singletons, class-level state
 
-### 3.2 Identify Seam Candidates
+### 3.2a Gemini Blind Scan
 
-For each external dependency, evaluate as a potential seam point:
+> Skip if `SEAM_DEGRADED=true` — generate `.sourceatlas/refactor/{module}/3_seams_gemini_prompt.md` instead.
+
+Gemini receives **only** the source file and `2_contracts.yaml` — **no** Feathers taxonomy, no language group table, no schema. Independence is the value.
+
+Ask Gemini: "Find every external dependency boundary in this file — places where an external class, function, or global is used directly. List them with file:line evidence. Do not classify them."
+
+Save Gemini output to `${STATE_DIR}/3_seams_gemini.md`.
+
+### 3.2b Claude Structured Analysis (was 3.2)
+
+With Gemini's blind scan in hand, evaluate each external dependency as a potential seam point:
 
 **Group A (Nominal)**:
 - Object Seam: Can we inject this dependency via constructor/init?
@@ -459,6 +476,34 @@ For each external dependency, evaluate as a potential seam point:
 - Module Seam: Can we `jest.mock('./dep')` or `mock.patch('module.dep')`?
 - Monkey-patch Seam: Can we override at runtime?
 - Enabling point: Import statement, module-level reference
+
+Also check Gemini's output for dependencies Claude might have missed — every item in Gemini's list that is not in Claude's candidates must be explicitly accounted for (incorporated or dismissed with reasoning).
+
+Save Claude's draft candidates to `${STATE_DIR}/3_seams_claude_draft.md`.
+
+### 3.2c Codex Adversarial Review
+
+> Skip if `SEAM_DEGRADED=true` — generate `.sourceatlas/refactor/{module}/3_seams_codex_prompt.md` instead.
+
+Codex receives: source file, `2_contracts.yaml`, Gemini blind scan, Claude's draft candidates.
+
+Codex issues one verdict per candidate, and independently adds any missing:
+
+| Verdict | Meaning |
+|---------|---------|
+| **CONFIRM** | Seam valid, enabling point exists, coverage claim accurate |
+| **DISPUTE** | Seam type wrong, enabling point absent, or coverage overstated |
+| **ADD** | Missing dependency or seam type |
+| **FLAG** | Architectural issue seams cannot solve (e.g., shared mutable state) |
+
+Save Codex output to `${STATE_DIR}/3_seams_codex.md`.
+
+### 3.2d Claude Merge
+
+Produce the final seam candidates:
+1. **DISPUTED**: Re-evaluate — drop if Codex's objection holds, keep with explicit reasoning if not
+2. **ADDED**: Incorporate with seam type classification + `verification_grep`
+3. **FLAGGED**: Record in `seam_validation.architectural_concerns` — not candidates, structural issues
 
 ### 3.3 Rank and Recommend
 
@@ -485,7 +530,8 @@ dependencies:
     usage_count: {n}
     contracts_affected: ["C-001", "C-002"]
 seam_candidates:
-  - seam_type: "object|module|preprocessing|monkey_patch"
+  - id: "{seam_id}"
+    seam_type: "object|module|preprocessing|monkey_patch"
     target_dependency: "{dep_name}"
     enabling_point: "{description}"
     verification_grep: "grep -n '{pattern}' {file_path}"  # REQUIRED
@@ -498,9 +544,19 @@ recommended_seam:
   target_dependency: "{dep_name}"
   enabling_point: "{description}"
   reason: "{why this is the best seam}"
+seam_validation:
+  mode: "full|degraded"
+  gemini_candidates: {n}
+  claude_candidates: {n}
+  codex_confirmed: {n}
+  codex_disputed: {n}
+  codex_added: {n}
+  codex_flagged: {n}
+  architectural_concerns:
+    - "{description of structural issue no seam can fix}"
 ```
 
-Set `3_seams: { status: produced }`.
+Set `3_seams: { status: produced, seam_mode: full|degraded }`.
 
 ### Gate 3: Enabling Point Existence Check
 
