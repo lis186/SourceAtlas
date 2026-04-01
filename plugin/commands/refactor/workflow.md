@@ -63,12 +63,15 @@ fi
 Run the deterministic ranking script — no LLM, pure git log + wc:
 
 ```bash
+PLUGIN_ATLAS=~/.claude/plugins/marketplaces/lis186-SourceAtlas/scripts/atlas
 if [ -f ~/.claude/scripts/atlas/rank-candidates.sh ]; then
     RANK_SCRIPT=~/.claude/scripts/atlas/rank-candidates.sh
+elif [ -f "$PLUGIN_ATLAS/rank-candidates.sh" ]; then
+    RANK_SCRIPT="$PLUGIN_ATLAS/rank-candidates.sh"
 elif [ -f plugin/commands/refactor/scripts/rank-candidates.sh ]; then
     RANK_SCRIPT=plugin/commands/refactor/scripts/rank-candidates.sh
 else
-    echo "❌ rank-candidates.sh not found — install SourceAtlas scripts to ~/.claude/scripts/atlas/"
+    echo "❌ rank-candidates.sh not found — install SourceAtlas plugin or scripts to ~/.claude/scripts/atlas/"
     exit 1
 fi
 bash "$RANK_SCRIPT" .
@@ -356,12 +359,15 @@ Set `2_contracts: { status: produced }`.
 **Execute the gate script** — this is a deterministic check, not an LLM judgment:
 
 ```bash
+PLUGIN_ATLAS=~/.claude/plugins/marketplaces/lis186-SourceAtlas/scripts/atlas
 if [ -f ~/.claude/scripts/atlas/gate-contracts.sh ]; then
     GATE_CONTRACTS=~/.claude/scripts/atlas/gate-contracts.sh
+elif [ -f "$PLUGIN_ATLAS/gate-contracts.sh" ]; then
+    GATE_CONTRACTS="$PLUGIN_ATLAS/gate-contracts.sh"
 elif [ -f plugin/commands/refactor/scripts/gate-contracts.sh ]; then
     GATE_CONTRACTS=plugin/commands/refactor/scripts/gate-contracts.sh
 else
-    echo "❌ gate-contracts.sh not found — install SourceAtlas scripts to ~/.claude/scripts/atlas/"
+    echo "❌ gate-contracts.sh not found — install SourceAtlas plugin or scripts to ~/.claude/scripts/atlas/"
     exit 1
 fi
 bash "$GATE_CONTRACTS" \
@@ -504,12 +510,15 @@ Set `3_seams: { status: produced }`.
 **Execute the gate script**:
 
 ```bash
+PLUGIN_ATLAS=~/.claude/plugins/marketplaces/lis186-SourceAtlas/scripts/atlas
 if [ -f ~/.claude/scripts/atlas/gate-seams.sh ]; then
     GATE_SEAMS=~/.claude/scripts/atlas/gate-seams.sh
+elif [ -f "$PLUGIN_ATLAS/gate-seams.sh" ]; then
+    GATE_SEAMS="$PLUGIN_ATLAS/gate-seams.sh"
 elif [ -f plugin/commands/refactor/scripts/gate-seams.sh ]; then
     GATE_SEAMS=plugin/commands/refactor/scripts/gate-seams.sh
 else
-    echo "❌ gate-seams.sh not found — install SourceAtlas scripts to ~/.claude/scripts/atlas/"
+    echo "❌ gate-seams.sh not found — install SourceAtlas plugin or scripts to ~/.claude/scripts/atlas/"
     exit 1
 fi
 bash "$GATE_SEAMS" \

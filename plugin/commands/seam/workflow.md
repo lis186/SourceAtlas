@@ -53,8 +53,11 @@ With `--force`, always re-run analysis.
 Run phase detection to determine zone ranking strategy before analysis:
 
 ```bash
+PLUGIN_ATLAS=~/.claude/plugins/marketplaces/lis186-SourceAtlas/scripts/atlas
 if [ -f ~/.claude/scripts/atlas/detect-phase.sh ]; then
     PHASE_SCRIPT=~/.claude/scripts/atlas/detect-phase.sh
+elif [ -f "$PLUGIN_ATLAS/detect-phase.sh" ]; then
+    PHASE_SCRIPT="$PLUGIN_ATLAS/detect-phase.sh"
 elif [ -f plugin/commands/seam/scripts/detect-phase.sh ]; then
     PHASE_SCRIPT=plugin/commands/seam/scripts/detect-phase.sh
 else
@@ -93,12 +96,15 @@ Use the existing complexity × coupling formula from Step 5.
 ## Step 3: Run detect-zones.sh
 
 ```bash
+PLUGIN_ATLAS=~/.claude/plugins/marketplaces/lis186-SourceAtlas/scripts/atlas
 if [ -f ~/.claude/scripts/atlas/detect-zones.sh ]; then
     SCRIPT_DIR=~/.claude/scripts/atlas
+elif [ -f "$PLUGIN_ATLAS/detect-zones.sh" ]; then
+    SCRIPT_DIR="$PLUGIN_ATLAS"
 elif [ -f plugin/commands/seam/scripts/detect-zones.sh ]; then
     SCRIPT_DIR=plugin/commands/seam/scripts
 else
-    echo "❌ detect-zones.sh not found — install SourceAtlas scripts to ~/.claude/scripts/atlas/"
+    echo "❌ detect-zones.sh not found — install SourceAtlas plugin or scripts to ~/.claude/scripts/atlas/"
     exit 1
 fi
 bash "$SCRIPT_DIR/detect-zones.sh" "$FILE_PATH" --language "$LANGUAGE"
