@@ -15,6 +15,10 @@ SourceAtlas helps developers quickly understand any codebase through pattern lea
 - **🔄 Flow Analysis** (`/sourceatlas:flow`) - Trace code execution and data flow (11 analysis modes)
 - **📦 Dependency Analysis** (`/sourceatlas:deps`) - Library/framework upgrade analysis (iOS, Android, Python, React)
 - **🔍 Contract Audit** (`/sourceatlas:audit`) - Extract behavior contracts from legacy code (multi-LLM cross-validation)
+- **🔬 Seam Discovery** (`/sourceatlas:seam`) - Discover responsibility zones and seams in large files to narrow scope before contract audit
+- **🔧 Refactor Playbook** (`/sourceatlas:refactor`) - Guided legacy code migration using the 13-step Playbook (Steps 1-7 tool-assisted)
+- **📋 List Results** (`/sourceatlas:list`) - List saved SourceAtlas analysis results
+- **🗑️ Reset Results** (`/sourceatlas:reset`) - Clear saved SourceAtlas analysis results
 
 ### Agent Skills (Model-invoked)
 
@@ -192,8 +196,11 @@ Then ask:
 | `flow` | Code execution tracing | Understanding business logic |
 | `history` | Git history analysis | Finding hotspots & experts |
 | `deps` | Dependency analysis | Planning upgrades |
+| `audit` | Contract extraction (multi-LLM) | Before refactoring legacy code |
+| `seam` | Responsibility zone discovery | Narrowing scope for large files |
+| `refactor` | Guided 13-step migration | Safely extracting from God Classes |
 | `list` | List cached results | Checking previous analyses |
-| `clear` | Clear cached results | Forcing fresh analysis |
+| `reset` | Clear cached results | Forcing fresh analysis |
 
 #### Troubleshooting
 
@@ -445,6 +452,120 @@ Analyze library/framework dependencies for upgrade planning and migration.
 - ✅ Python projects (missing deps files) - 100% accuracy
 - ✅ Kotlin workspaces (1,509 imports) - 100% accuracy
 
+### `/sourceatlas:seam` - Seam Discovery
+
+Discover responsibility zones and seam points in large files to narrow scope before contract audit.
+
+```bash
+# Discover zones in a large file
+/sourceatlas:seam src/NYHTTPSClient.m
+
+# With explicit language
+/sourceatlas:seam src/api-gateway.ts --language typescript
+
+# Re-run (bypass cache)
+/sourceatlas:seam src/UserService.swift --force
+```
+
+**What you get:**
+- 🗺️ Responsibility zone map with line ranges
+- 🔬 Seam type identification (Object/Link/Preprocessing)
+- 📊 Zones ranked by refactoring priority (complexity × coupling)
+- 📋 Copy-pasteable `/sourceatlas:audit --zone <id>` commands
+
+**When to use:**
+- File is 200+ lines with multiple responsibilities
+- `/sourceatlas:audit` produces too many contracts to act on
+- You need to choose which zone to refactor first
+
+### `/sourceatlas:audit` - Contract Audit
+
+Extract implicit behavioral contracts from legacy code before refactoring, using a 3-LLM cross-validation pipeline.
+
+```bash
+# Audit entire file
+/sourceatlas:audit src/NYHTTPSClient.m
+
+# Audit a specific zone (from /sourceatlas:seam)
+/sourceatlas:audit src/NYHTTPSClient.m --zone crypto
+
+# With explicit language
+/sourceatlas:audit src/api.ts --language typescript
+
+# Re-run (bypass cache)
+/sourceatlas:audit src/UserService.swift --force
+```
+
+**What you get:**
+- 📋 Behavioral contracts with M/L/N/S/E/C/D/P taxonomy
+- 🔁 3-LLM cross-validation (Gemini blind scan → Claude structured → Codex adversarial)
+- ✅ Machine-verifiable CI assertions (grep/ast-grep rules)
+- ⚠️ Risk assessment — which behaviors will break during refactoring
+
+**Pipeline:**
+1. Gemini blind scan — discovers contracts without prior context
+2. Claude structured audit — taxonomizes and formalizes
+3. Codex adversarial review — challenges and stress-tests
+
+### `/sourceatlas:refactor` - Refactor Playbook
+
+Guided legacy code migration using the 13-step Playbook (based on Feathers' *Working Effectively with Legacy Code*). Steps 1-7 are tool-assisted; Steps 8-13 are user-driven.
+
+```bash
+# Discovery mode — find best refactoring targets
+/sourceatlas:refactor
+
+# Start refactoring a specific file
+/sourceatlas:refactor src/NYHTTPSClient.m
+
+# Focus on a specific zone
+/sourceatlas:refactor src/NYHTTPSClient.m --zone crypto
+
+# Check progress
+/sourceatlas:refactor src/NYHTTPSClient.m --status
+
+# Resume from a specific step
+/sourceatlas:refactor src/NYHTTPSClient.m --step 3
+```
+
+**What you get:**
+- 🎯 Step 1: Target selection (hotspot + impact analysis)
+- 📋 Step 2: Contract inventory (seam zones + behavioral contracts)
+- 🔬 Step 3: Seam discovery (dependency graph + seam candidates)
+- 🧪 Step 4: Behavior recording (spike tests + characterization skeletons)
+- 🏗️ Step 5: Interface design (user-approved Seam Interface)
+- 🔌 Step 6: Legacy adapter (bridges old impl to new interface)
+- ✅ Step 7: Verification gate (all tests green — hard gate)
+- 📖 Steps 8-13: Guidance for write/swap/verify/cleanup/delete
+
+**Session boundaries** are enforced after Steps 2 and 5 to prevent confirmation bias. Each step produces a versioned artifact in `.sourceatlas/refactor/{module}/`.
+
+### `/sourceatlas:list` - List Saved Results
+
+List all saved analysis results from previous SourceAtlas commands.
+
+```bash
+/sourceatlas:list
+```
+
+**What you get:**
+- 📋 Table of all cached analyses with type, size, age
+- ⚠️ Expired items (>30 days) flagged with re-analysis commands
+
+### `/sourceatlas:reset` - Clear Saved Results
+
+Clear cached analysis results from `.sourceatlas/`.
+
+```bash
+# Clear everything (prompts for confirmation)
+/sourceatlas:reset
+
+# Clear specific type
+/sourceatlas:reset patterns
+/sourceatlas:reset overview
+/sourceatlas:reset history
+```
+
 ## 🧠 Agent Skills (Auto-triggered)
 
 SourceAtlas includes 6 Agent Skills that let Claude automatically choose the right analysis tool based on your natural language questions.
@@ -545,8 +666,11 @@ sourceatlas-plugin/
 │   ├── history/SKILL.md     # Git history analysis
 │   ├── flow/SKILL.md        # Code flow tracing
 │   ├── deps/SKILL.md        # Dependency analysis
+│   ├── audit/SKILL.md       # Contract extraction (multi-LLM)
+│   ├── seam/SKILL.md        # Responsibility zone discovery
+│   ├── refactor/SKILL.md    # Guided 13-step migration
 │   ├── list/SKILL.md        # List saved analyses
-│   └── clear/SKILL.md       # Clear saved analyses
+│   └── reset/SKILL.md       # Clear saved analyses
 ├── skills/                  # Agent Skills (model-invoked)
 │   ├── codebase-overview/SKILL.md
 │   ├── pattern-finder/SKILL.md

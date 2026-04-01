@@ -48,10 +48,59 @@ With `--force`, always re-run analysis.
 
 ---
 
+## Step 2a: Detect Refactoring Phase
+
+Run phase detection to determine zone ranking strategy before analysis:
+
+```bash
+if [ -f ~/.claude/scripts/atlas/detect-phase.sh ]; then
+    PHASE_SCRIPT=~/.claude/scripts/atlas/detect-phase.sh
+elif [ -f plugin/commands/seam/scripts/detect-phase.sh ]; then
+    PHASE_SCRIPT=plugin/commands/seam/scripts/detect-phase.sh
+else
+    echo "⚠️  detect-phase.sh not found — defaulting to Phase 1 (Feathers ordering)"
+    RANKING_STRATEGY="feathers"
+fi
+
+if [ -n "${PHASE_SCRIPT:-}" ]; then
+    bash "$PHASE_SCRIPT" "$FILE_PATH"
+fi
+```
+
+### Phase Decision Table
+
+| Phase | Condition | Zone Ranking |
+|-------|-----------|-------------|
+| **1** | `test_refs == 0` | Feathers ordering: testability first |
+| **1.5** | `test_refs < 3` | Feathers ordering: expand coverage before restructuring |
+| **2** | `test_refs >= 3` | Architectural ordering: highest-value zones first |
+
+### Feathers Ordering Criteria (Phase 1 / 1.5)
+
+Rank zones by:
+1. **Least edit distance to a working test** — fewest changes to get a passing test
+2. **Dependency direction** — zones pointing toward I/O / time / network cut first
+3. **Enabling point accessibility** — skip zones where the switch is buried in a static initializer
+4. **Collateral damage radius** — prefer small blast radius when coverage is thin
+5. **Semantic coherence** — seam must fall on a real responsibility boundary
+
+### Architectural Ordering Criteria (Phase 2)
+
+Use the existing complexity × coupling formula from Step 5.
+
+---
+
 ## Step 3: Run detect-zones.sh
 
 ```bash
-SCRIPT_DIR="plugin/commands/seam/scripts"
+if [ -f ~/.claude/scripts/atlas/detect-zones.sh ]; then
+    SCRIPT_DIR=~/.claude/scripts/atlas
+elif [ -f plugin/commands/seam/scripts/detect-zones.sh ]; then
+    SCRIPT_DIR=plugin/commands/seam/scripts
+else
+    echo "❌ detect-zones.sh not found — install SourceAtlas scripts to ~/.claude/scripts/atlas/"
+    exit 1
+fi
 bash "$SCRIPT_DIR/detect-zones.sh" "$FILE_PATH" --language "$LANGUAGE"
 ```
 
@@ -151,18 +200,33 @@ Check for Fowler's refactoring signals:
 
 ## Step 5: Score and Rank
 
+Use the ranking strategy from Step 2a (`phase_detection.ranking_strategy`).
+
+### Phase 2: Architectural Ordering
+
 Priority formula:
 
 ```
 priority = method_count × unique_external_deps × (1 + smell_count)
 ```
 
-Where:
-- `method_count`: Number of methods in the zone
-- `unique_external_deps`: Number of distinct external classes in sends
-- `smell_count`: Number of detected code smells
+Sort zones by priority descending. Highest-scoring zone = recommended target.
 
-Sort zones by priority descending. The highest-scoring zone is the recommended refactoring target.
+### Phase 1 / 1.5: Feathers Ordering
+
+Score each zone on 5 criteria (1=best, 4=worst relative to other zones):
+
+| Score component | How to assess |
+|----------------|---------------|
+| **testability** | Count: async primitives + shared state + I/O calls in zone (fewer = better) |
+| **io_direction** | Does zone own the I/O call itself? (yes = higher priority to cut) |
+| **enabling_access** | Is the dependency injectable at a normal call site? (yes = accessible) |
+| **blast_radius** | `prod_refs ÷ total_prod_files` — fraction of codebase affected |
+| **semantic_coherence** | Does zone have exactly one responsibility cluster? |
+
+Feathers rank = sort by `testability` ascending, break ties by `blast_radius` ascending.
+
+**Annotate the output with which phase applies and why the ordering differs from architectural ordering.**
 
 ---
 

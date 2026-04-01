@@ -63,7 +63,15 @@ fi
 Run the deterministic ranking script — no LLM, pure git log + wc:
 
 ```bash
-bash plugin/commands/refactor/scripts/rank-candidates.sh .
+if [ -f ~/.claude/scripts/atlas/rank-candidates.sh ]; then
+    RANK_SCRIPT=~/.claude/scripts/atlas/rank-candidates.sh
+elif [ -f plugin/commands/refactor/scripts/rank-candidates.sh ]; then
+    RANK_SCRIPT=plugin/commands/refactor/scripts/rank-candidates.sh
+else
+    echo "❌ rank-candidates.sh not found — install SourceAtlas scripts to ~/.claude/scripts/atlas/"
+    exit 1
+fi
+bash "$RANK_SCRIPT" .
 # Output: .sourceatlas/refactor/candidates.json (cached 1 hour)
 ```
 
@@ -348,7 +356,15 @@ Set `2_contracts: { status: produced }`.
 **Execute the gate script** — this is a deterministic check, not an LLM judgment:
 
 ```bash
-bash plugin/commands/refactor/scripts/gate-contracts.sh \
+if [ -f ~/.claude/scripts/atlas/gate-contracts.sh ]; then
+    GATE_CONTRACTS=~/.claude/scripts/atlas/gate-contracts.sh
+elif [ -f plugin/commands/refactor/scripts/gate-contracts.sh ]; then
+    GATE_CONTRACTS=plugin/commands/refactor/scripts/gate-contracts.sh
+else
+    echo "❌ gate-contracts.sh not found — install SourceAtlas scripts to ~/.claude/scripts/atlas/"
+    exit 1
+fi
+bash "$GATE_CONTRACTS" \
     "${STATE_DIR}/2_contracts.yaml" \
     "${STATE_DIR}"
 ```
@@ -488,7 +504,15 @@ Set `3_seams: { status: produced }`.
 **Execute the gate script**:
 
 ```bash
-bash plugin/commands/refactor/scripts/gate-seams.sh \
+if [ -f ~/.claude/scripts/atlas/gate-seams.sh ]; then
+    GATE_SEAMS=~/.claude/scripts/atlas/gate-seams.sh
+elif [ -f plugin/commands/refactor/scripts/gate-seams.sh ]; then
+    GATE_SEAMS=plugin/commands/refactor/scripts/gate-seams.sh
+else
+    echo "❌ gate-seams.sh not found — install SourceAtlas scripts to ~/.claude/scripts/atlas/"
+    exit 1
+fi
+bash "$GATE_SEAMS" \
     "${STATE_DIR}/3_seams.yaml" \
     "${STATE_DIR}"
 ```
