@@ -1,0 +1,62 @@
+# 5_interface.yaml — Step 5 Interface Design artifact template
+# Copy this file to .sourceatlas/refactor/{module}/5_interface.yaml and fill in values.
+
+module: "{module_name}"
+zone_id: "{zone_id}"
+language_group: "A|B|C"
+seam_id: "{from 3_seams.yaml recommended_seam.seam_id}"
+migration_type: "same-language|cross-language"
+
+interface_type: "{objc_protocol|swift_protocol|java_interface|kotlin_interface|rust_trait|go_interface|ts_interface|message_contract}"
+interface_file: "{path to generated protocol/interface file}"
+interface_mode: "direct|interceptor_chain"  # Group A only; omit for B/C
+
+# ── Protocol Definition ─────────────────────────────────────────────────────
+
+protocol:
+  name: "{ProtocolName}"
+  methods:
+    - selector: "{method signature}"
+      parameters:
+        - name: "{param_name}"
+          type: "{param_type}"
+          purpose: "{which contracts this param serves}"
+      return: "{return_type}"
+      rationale: "{why this signature}"
+
+# ── Execution Order (Group A Mode 2 only — omit for Mode 1, B, C) ────────
+
+# execution_order:
+#   - position: 1
+#     interceptor: "{ConcreteInterceptorName}"
+#     contracts: ["{C-001}", "{C-002}"]
+#     reason: "{why this position}"
+
+# ── Injection Point ─────────────────────────────────────────────────────────
+
+injection:
+  property: "{property_name}"
+  type: "{property_type}"
+  attribute: "{copy, readonly|etc}"
+  init_method: "{designated initializer with injection parameter}"
+
+# ── Cross-Language Alignment (omit entirely for same-language) ──────────────
+
+# target_alignment:
+#   target_protocol: "{TargetProtocolName} ({file path})"
+#   mapping:
+#     - seam_param: "{source language param}"
+#       target_param: "{target language param}"
+#       semantic: "equivalent|narrowed|widened"
+#   migration_steps:
+#     - "Rewrite each conformer in target language"
+#     - "Update injection site to use target type"
+#     - "Delete Seam Interface file"
+
+# ── Contract Coverage ───────────────────────────────────────────────────────
+
+contracts_covered:
+  direct: []           # covered by protocol methods (Mode 1)
+  via_conformers: []   # covered by concrete interceptors (Mode 2)
+  not_covered: []
+  not_covered_reason: "{why these contracts are not covered by this interface}"

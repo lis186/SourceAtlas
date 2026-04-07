@@ -683,6 +683,37 @@ Set `4_tests: { status: verified }` (spike tests passing = verified), `current_s
 
 > **This is the key design decision.** Claude proposes, user reviews and modifies.
 
+### 5.0 Prerequisite Checklist
+
+Before designing the interface, read these artifacts and extract the listed fields. **Do not proceed if any required input is missing.**
+
+#### Inputs (must read)
+
+| Source | Fields to Extract | Why |
+|--------|-------------------|-----|
+| `3_seams.yaml` → `recommended_seam` | `seam_type`, `enabling_point`, `target_dependency` | Determines what the interface wraps |
+| `3_seams.yaml` → `seam_candidates[recommended].codex_note` | Parameter requirements, disputed items | Codex may impose constraints on method signature |
+| `2_contracts.yaml` → contracts matching `recommended_seam.contracts_covered` | `trigger`, `input`, `output`, `ordering` | Method parameters derive from these |
+| Target file header (`.h` / class declaration) | Existing API style, naming conventions, init methods | Interface must match codebase conventions (Group A/B only; Group C skip) |
+| `1_target.yaml` → `language`, `language_group` | Language group for dispatch | Determines Group A/B/C path |
+
+#### Outputs (must produce)
+
+| Artifact | Required For | Group |
+|----------|-------------|-------|
+| Interface/protocol file (`5_interface.{ext}`) | Step 6 adapter implementation | A, B |
+| Message contract (`5_message_contract.md`) | Step 6 mock setup | C |
+| `5_interface.yaml` | State tracking, Step 12 migration | All |
+| Updated `state.yaml` | Progress tracking | All |
+
+#### Validation (must confirm before presenting to user)
+
+- [ ] Protocol parameters cover **all** fields required by Codex verdict
+- [ ] At least one enabling point (init/constructor parameter) declared in target header
+- [ ] Every contract in `recommended_seam.contracts_covered` is mapped to either: a method on the protocol, OR a concrete interceptor/conformer
+- [ ] Layer B test skeletons (from `4_tests`) reference the protocol name — verify with: `grep -l '{ProtocolName}' {test_file}`
+- [ ] `migration_type` determined (same-language or cross-language)
+
 ### 5.1 Map Contracts to Interface Methods
 
 For the recommended seam from Step 3:
@@ -692,6 +723,50 @@ For the recommended seam from Step 3:
 3. Define method signatures based on contract triggers and inputs
 
 ### 5.2 Language Group Dispatch
+
+#### 5.2.0 Cross-Language Migration Check
+
+Before generating the interface, determine the **migration type**:
+
+```
+source_language = language of the target file (from 1_target.yaml)
+target_language = language of the new implementation (if known)
+```
+
+| Migration Type | Condition | Seam Interface | Target Interface |
+|---------------|-----------|----------------|------------------|
+| **same-language** | source == target (or target unknown) | Written in source language. Evolves to Target in Step 12. | Same file, renamed in Step 12. |
+| **cross-language** | source ≠ target (e.g., ObjC→Swift, Java→Kotlin, JS→TS) | Written in **source language** (must be callable from target file). | Written in **target language** (may already exist or be designed separately). |
+
+**Cross-language rules:**
+
+1. **Seam Interface** = temporary bridge in the source language. It enables dependency injection in the *existing* code without rewriting it. Named with `Legacy` or source-language convention (e.g., `@protocol NYPostResponseInterceptor` for ObjC).
+2. **Target Interface** = permanent API in the target language. If it already exists (e.g., a Swift protocol was designed earlier), reference it in `5_interface.yaml` under `target_interface_ref`. Do not duplicate it.
+3. **Parameter mapping** between the two must be documented in `5_interface.yaml` under `target_alignment` block. Each Seam parameter maps to a Target parameter (name, type, semantic equivalence). This is Step 12's migration spec — without it, Step 12 cannot mechanically replace Seam with Target.
+4. **Common cross-language pairs:**
+   - ObjC → Swift: ObjC `@protocol` (Seam) → Swift `protocol` (Target)
+   - Java → Kotlin: Java `interface` (Seam) → Kotlin `interface` (Target)
+   - JavaScript → TypeScript: No Seam Interface needed (TS is a superset); use TS `interface` directly
+   - Go, Rust, Python: Cross-language migration uncommon; if needed, apply the same Seam/Target split
+5. **Step 12 contract**: When `migration_type: cross-language`, Step 12 must:
+   - Delete the Seam Interface file (source language)
+   - Migrate all conformers to the Target Interface (target language)
+   - Update all injection sites to use the Target type
+   - The `target_alignment` block tells Step 12 exactly which parameters map where
+
+Record in state:
+
+```yaml
+5_interface:
+  status: produced
+  migration_type: "same-language|cross-language"
+  source_language: "{lang}"
+  target_language: "{lang|null}"
+  target_interface_ref: "{path to existing target interface file|null}"
+```
+
+If `migration_type: same-language`, proceed to Group A/B/C dispatch below as normal.
+If `migration_type: cross-language`, apply Group A/B/C dispatch for the **source language**, then document the target mapping.
 
 #### Group A (Nominal): Full Interface File
 
@@ -705,11 +780,32 @@ Generate a complete interface/protocol/trait:
 // Rust: trait {Name}
 ```
 
-Include:
+**Determine the interface mode** from `3_seams.yaml` → `recommended_seam`:
+
+##### Mode 1: Direct Interface (default)
+
+**When**: `recommended_seam.target_dependency` names a **single** dependency (e.g., inject a `DatabaseClient` protocol instead of a concrete `MySQLClient`). This is the standard Feathers Object Seam.
+
 - One method per contract group
 - Clear parameter types derived from contract inputs
 - Return types derived from contract outputs
 - Error handling strategy (throws/Result/NSError)
+
+##### Mode 2: Interceptor Chain
+
+**When**: The seam replaces a **cluster of side effects** with an ordered array of interceptors (e.g., post-response notification + shop-id check + logout = three interceptors behind one protocol).
+
+**How to detect**: `recommended_seam.target_dependency` contains multiple dependencies joined by `+` or describes a "cluster" / "chain".
+
+- **Single method** on the protocol — all interceptors share the same signature
+- Parameters derived from the **call-site context** (e.g., completion handler parameters), not from individual contracts
+- Contracts are covered by **concrete interceptor conformers**, not by protocol methods
+- Execution order guaranteed by `NSArray` / `List` / `Vec` insertion order at injection time
+- Document which concrete interceptor covers which contracts in `5_interface.yaml` → `execution_order`
+
+**Decision rule**: If `recommended_seam.contracts_covered` spans 3+ different categories (e.g., N + L + M), it is almost certainly Mode 2.
+
+**Common for both modes**:
 - Comment: `// Seam Interface (temporary) — will evolve to Target Interface`
 
 #### Group B (Structural): Small Interface
@@ -754,7 +850,27 @@ jest.mock('./crypto-module', () => ({
 @mock.patch('module.crypto.verify', return_value=True)
 ```
 
-### 5.3 Present to User
+### 5.3 Build Verification (Group A/B only)
+
+Before presenting to the user, verify the generated interface file compiles:
+
+```bash
+# Language-specific build check:
+# ObjC/Swift: xcodebuild build -workspace *.xcworkspace -scheme {scheme} 2>&1 | tail -5
+# Java/Kotlin: ./gradlew compileDebugJavaWithJavac 2>&1 | tail -5
+# Go:          go build ./...
+# TypeScript:  npx tsc --noEmit
+# Rust:        cargo check
+```
+
+**If build fails**: Fix the interface file before presenting. Common issues:
+- Missing import/include for parameter types
+- Incorrect nullability annotations
+- Naming conflicts with existing declarations
+
+**If no build system** (Group C, or project not buildable): Skip this check and note it in `5_interface.yaml`.
+
+### 5.4 Present to User
 
 Display the proposed interface with:
 - Method list and rationale (which contracts map to which methods)
@@ -763,11 +879,58 @@ Display the proposed interface with:
 
 **Wait for user confirmation before proceeding.**
 
-### 5.4 Update State
+### 5.5 Output Artifact: `5_interface.yaml`
 
-Set `5_interface: { status: verified }` (user approval = verified), `current_step: 6`.
+```yaml
+# 5_interface.yaml
+module: "{module_name}"
+zone_id: "{zone_id}"
+language_group: "A|B|C"
+seam_id: "{from recommended_seam}"
+migration_type: "same-language|cross-language"
 
-### 5.5 Session Boundary
+interface_type: "objc_protocol|swift_protocol|java_interface|kotlin_interface|rust_trait|go_interface|ts_interface|message_contract"
+interface_file: "{path to generated file}"
+interface_mode: "direct|interceptor_chain"  # Group A only
+
+protocol:
+  name: "{ProtocolName}"
+  methods:
+    - selector: "{method signature}"
+      parameters:
+        - { name: "{name}", type: "{type}", purpose: "{contract reference}" }
+      return: "{type}"
+
+# Group A Mode 2 only:
+execution_order:
+  - { position: 1, interceptor: "{Name}", contracts: ["C-001"] }
+
+# Cross-language only (omit entirely for same-language):
+target_alignment:
+  target_protocol: "{TargetProtocolName} ({file path})"
+  mapping:
+    - seam_param: "{ObjC param name and type}"
+      target_param: "{Swift param name and type}"
+      semantic: "{equivalent|narrowed|widened}"
+  migration_steps:
+    - "Rewrite each ObjC conformer in target language"
+    - "Update injection site to use target type"
+    - "Delete Seam Interface file"
+
+contracts_covered:
+  direct: ["C-001"]           # covered by protocol methods
+  via_conformers: ["C-002"]   # covered by concrete interceptors (Mode 2)
+  not_covered: ["C-003"]
+  not_covered_reason: "{why}"
+```
+
+### 5.6 Update State
+
+Set `5_interface: { status: verified, migration_type: same-language|cross-language }` (user approval = verified), `current_step: 6`.
+
+If `cross-language`, also set `target_interface_ref` and `target_language` in state.
+
+### 5.7 Session Boundary
 
 After user approves the interface, **STOP**. Output session boundary message.
 

@@ -24,6 +24,6 @@ steps:
   3_seams:     { status: pending, completed_at: null }
   3_gate:      { status: pending, completed_at: null, candidates_total: 0, candidates_verified: 0 }
   4_tests:     { status: pending, completed_at: null }
-  5_interface: { status: pending, completed_at: null }
+  5_interface: { status: pending, completed_at: null, migration_type: null, target_language: null, target_interface_ref: null }
   6_adapter:   { status: pending, completed_at: null }
   7_gate:      { status: pending, completed_at: null }
