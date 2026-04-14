@@ -48,7 +48,7 @@ fi
 # ─────────────────────────────────────────────────────────
 
 # Extensions to include (source code, not config/docs/data)
-EXTENSIONS="m|swift|ts|js|tsx|jsx|go|py|java|kt|rs|cpp|cc|c|h"
+EXTENSIONS="m|mm|swift|ts|js|tsx|jsx|go|py|java|kt|rs|cpp|cc|c|h|hpp"
 
 # Write matching files to a temp file (bash 3.2 compatible — no mapfile)
 TMPFILE=$(mktemp)

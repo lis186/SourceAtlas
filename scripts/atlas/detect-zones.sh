@@ -40,6 +40,7 @@ if [[ -z "$LANGUAGE" ]]; then
     ext="${FILE_PATH##*.}"
     case "$ext" in
         m|h)    LANGUAGE="objc" ;;
+        mm)     LANGUAGE="objcpp" ;;
         swift)  LANGUAGE="swift" ;;
         ts|tsx) LANGUAGE="typescript" ;;
         js|jsx) LANGUAGE="javascript" ;;
@@ -86,7 +87,7 @@ extract_clang_methods() {
         | python3 "$clang_script" 2>/dev/null
 }
 
-if [[ "$LANGUAGE" == "objc" || "$LANGUAGE" == "swift" ]]; then
+if [[ "$LANGUAGE" == "objc" || "$LANGUAGE" == "objcpp" || "$LANGUAGE" == "swift" ]]; then
     CLANG_METHODS_JSON=$(extract_clang_methods 2>/dev/null || true)
 fi
 
@@ -201,7 +202,7 @@ detect_methods_generic() {
 count_methods() {
     local start=$1 end=$2
     case "$LANGUAGE" in
-        objc)       detect_methods_objc "$start" "$end" ;;
+        objc|objcpp) detect_methods_objc "$start" "$end" ;;
         swift)      detect_methods_swift "$start" "$end" ;;
         typescript|javascript) detect_methods_typescript "$start" "$end" ;;
         *)          detect_methods_generic "$start" "$end" ;;
@@ -233,7 +234,7 @@ detect_deps_in_range() {
 
 detect_markers() {
     case "$LANGUAGE" in
-        objc)       detect_markers_objc ;;
+        objc|objcpp) detect_markers_objc ;;
         swift)      detect_markers_swift ;;
         typescript|javascript) detect_markers_typescript ;;
         go)         detect_markers_go ;;

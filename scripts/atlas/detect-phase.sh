@@ -48,7 +48,9 @@ if [[ -z "$PROJECT_ROOT" ]]; then
 fi
 
 # Source file extensions to search
-EXTS=(--include="*.m" --include="*.swift" --include="*.ts" --include="*.tsx"
+# ObjC: .m .h  |  ObjC++: .mm  |  Swift: .swift
+EXTS=(--include="*.m" --include="*.mm" --include="*.h"
+      --include="*.swift" --include="*.ts" --include="*.tsx"
       --include="*.js" --include="*.jsx" --include="*.py"
       --include="*.go" --include="*.java" --include="*.kt")
 
