@@ -87,13 +87,24 @@ detect_language() {
 
     # 基於專案檔案偵測
     # 注意：glob pattern 在 [[ ]] 中不會展開，需用 ls 檢查
-    # Swift 偵測：SPM, Xcode, Tuist
+    # Swift 偵測：SPM, Xcode, Tuist — 但 mixed ObjC/Swift 專案依 .m vs .swift 數量判定
     if [[ -f "$path/Package.swift" ]] || \
        ls -d "$path"/*.xcodeproj >/dev/null 2>&1 || \
        ls -d "$path"/*.xcworkspace >/dev/null 2>&1 || \
        [[ -f "$path/Project.swift" ]] || \
        [[ -d "$path/Tuist" ]]; then
-        echo "swift"
+        # Mixed project heuristic: if .m files outnumber .swift files by >1.5x,
+        # default to objc. Callers needing precision should pass --lang explicitly.
+        local m_count swift_count
+        m_count=$(find "$path" -name "*.m" -not -path "*/Pods/*" -not -path "*/build/*" 2>/dev/null | wc -l | tr -d ' ')
+        swift_count=$(find "$path" -name "*.swift" -not -path "*/Pods/*" -not -path "*/build/*" 2>/dev/null | wc -l | tr -d ' ')
+        if [[ "$swift_count" -eq 0 && "$m_count" -gt 0 ]]; then
+            echo "objc"
+        elif [[ "$m_count" -gt $((swift_count * 3 / 2)) ]]; then
+            echo "objc"
+        else
+            echo "swift"
+        fi
     elif [[ -f "$path/package.json" ]]; then
         # 檢查是否為 TypeScript
         if [[ -f "$path/tsconfig.json" ]] || grep -q '"typescript"' "$path/package.json" 2>/dev/null; then
@@ -129,6 +140,94 @@ run_inline_rule() {
 }
 
 # ============================================================
+# ObjC/ObjC++ semantic grep → ast-grep-compatible JSON
+# ast-grep 0.40 has no built-in objc parser, so ObjC goes through
+# enhanced grep with an ast-grep-shaped JSON envelope so downstream
+# callers can process results uniformly.
+# ============================================================
+objc_grep_json() {
+    local pattern="$1"
+    local extensions="${2:-m,mm,h}"   # comma-separated
+    local includes=()
+    local IFS=','
+    for ext in $extensions; do
+        includes+=("--include=*.$ext")
+    done
+    unset IFS
+
+    # Feed grep → jq to shape output as [{file, range:{start:{line,column}},text}, ...]
+    grep -rnE "$pattern" "${includes[@]}" "$PROJECT_PATH" 2>/dev/null \
+        | grep -Ev '/(Pods|node_modules|build|DerivedData|Carthage)/' \
+        | jq -R -s 'split("\n") | map(select(length > 0))
+            | map(capture("^(?<file>[^:]+):(?<line>[0-9]+):(?<text>.*)$"))
+            | map({
+                file: .file,
+                range: { start: { line: (.line|tonumber), column: 1 },
+                         end:   { line: (.line|tonumber), column: ((.text|length)+1) } },
+                text: .text
+              })' 2>/dev/null || echo "[]"
+}
+
+# Per-op ObjC dispatchers (ast-grep has no objc parser; we emit
+# ast-grep-shaped JSON from semantic grep).
+op_objc_pattern() {
+    local normalized="$1"
+    case "$normalized" in
+        "class"|"interface")   objc_grep_json "^@(interface|implementation) [A-Za-z_]" ;;
+        "protocol")             objc_grep_json "^@protocol [A-Za-z_]" ;;
+        "category"|"extension") objc_grep_json "^@interface [A-Za-z_][A-Za-z0-9_]* \\(" ;;
+        "property")             objc_grep_json "^@property" ;;
+        "method"|"def"|"function")
+            objc_grep_json "^[-+][[:space:]]*\\([^)]+\\)[[:space:]]*[a-z_][A-Za-z0-9_]*" ;;
+        "block")                objc_grep_json "\\^[[:space:]]*(\\(.*\\))?[[:space:]]*\\{" ;;
+        "synthesize")           objc_grep_json "^@synthesize" ;;
+        *)                      objc_grep_json "\\b${normalized}\\b" ;;
+    esac
+}
+
+op_objc_usage() {
+    local api_name="$1"
+    { objc_grep_json "\\b${api_name}\\b"; } | jq -s 'add // .'
+}
+
+op_objc_async() {
+    {
+        objc_grep_json "dispatch_async|dispatch_after|dispatch_sync|dispatch_once|dispatch_group_async|dispatch_barrier"
+        objc_grep_json "performSelectorInBackground:|performSelectorOnMainThread:|performSelector:withObject:afterDelay:"
+        objc_grep_json "NSOperationQueue|NSOperation *\\*|addOperationWithBlock:"
+        objc_grep_json "\\^[[:space:]]*(\\(.*\\))?[[:space:]]*\\{"  # block literals
+    } | jq -s 'add // []'
+}
+
+op_objc_boundary() {
+    # Method / function declarations as boundary anchors
+    {
+        objc_grep_json "^[-+][[:space:]]*\\([^)]+\\)[[:space:]]*[a-zA-Z_][A-Za-z0-9_]*"
+        objc_grep_json "^@interface [A-Za-z_]|^@implementation [A-Za-z_]|^@end\\b"
+        objc_grep_json "^#pragma mark"
+    } | jq -s 'add // []'
+}
+
+op_objc_definition() {
+    local name="$1"
+    {
+        objc_grep_json "@interface[[:space:]]+${name}\\b"
+        objc_grep_json "@implementation[[:space:]]+${name}\\b"
+        objc_grep_json "@protocol[[:space:]]+${name}\\b"
+        objc_grep_json "^typedef[[:space:]]+(NS_ENUM|NS_OPTIONS)\\([^,]+,[[:space:]]*${name}[[:space:]]*\\)"
+        objc_grep_json "^typedef[[:space:]]+.*[[:space:]]+${name}[[:space:]]*;"
+    } | jq -s 'add // []'
+}
+
+op_objc_import() {
+    {
+        objc_grep_json "^#[[:space:]]*import[[:space:]]+<[^>]+>"
+        objc_grep_json "^#[[:space:]]*import[[:space:]]+\"[^\"]+\""
+        objc_grep_json "^@import[[:space:]]+[A-Za-z_]"
+    } | jq -s 'add // []'
+}
+
+# ============================================================
 # 函數呼叫追蹤 (call)
 # ============================================================
 op_call() {
@@ -146,6 +245,15 @@ op_call() {
             {
                 $AST_GREP_CMD --pattern "\$OBJ.$func_name(\$\$\$)" --lang swift --json "$PROJECT_PATH" 2>/dev/null
                 $AST_GREP_CMD --pattern "$func_name(\$\$\$)" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
+        objc|objcpp)
+            # ObjC: method call uses [receiver selector], or selector can start a line in -/+ decl.
+            {
+                # [receiver funcName or [receiver funcName:
+                objc_grep_json "\\[[^]]+ ${func_name}(:|\\])"
+                # C-style function call or block invocation
+                objc_grep_json "\\b${func_name}\\("
             } | jq -s 'add // []'
             ;;
         tsx|typescript)
@@ -216,6 +324,18 @@ op_type() {
                 # 泛型參數
                 $AST_GREP_CMD --pattern "<$type_name>" --lang swift --json "$PROJECT_PATH" 2>/dev/null
                 $AST_GREP_CMD --pattern "<\$T: $type_name>" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+            } | jq -s 'add // []'
+            ;;
+        objc|objcpp)
+            {
+                # @interface X : TYPE, @interface X () < TYPE >, protocol conformance
+                objc_grep_json "@interface [A-Za-z_][A-Za-z0-9_]* *\\(?[^)]*\\)?[[:space:]]*:[[:space:]]*${type_name}\\b"
+                # Property type: @property (...) TYPE *name; or @property (...) TYPE<P>* name;
+                objc_grep_json "@property[^;]*[[:space:]]${type_name}[[:space:]<*]"
+                # Return type / parameter type / cast:  (TYPE *)name, (TYPE<P>*)name
+                objc_grep_json "\\(${type_name}[[:space:]<*]"
+                # Ivar / block param declaration
+                objc_grep_json "\\b${type_name}[[:space:]]*\\*[[:space:]]*[a-z_]"
             } | jq -s 'add // []'
             ;;
         tsx|typescript)
@@ -291,6 +411,11 @@ op_pattern() {
 
     if $FALLBACK_MODE; then
         echo "grep -rn \"$pattern_name\" --include=\"*.$lang\" \"$PROJECT_PATH\""
+        return 0
+    fi
+
+    if [[ "$lang" == "objc" || "$lang" == "objcpp" ]]; then
+        op_objc_pattern "$normalized"
         return 0
     fi
 
@@ -467,6 +592,11 @@ op_usage() {
         return 0
     fi
 
+    if [[ "$lang" == "objc" || "$lang" == "objcpp" ]]; then
+        op_objc_usage "$api_name"
+        return 0
+    fi
+
     # 對於常見 API，使用精確 pattern
     case "$api_name" in
         "useEffect"|"useState"|"useCallback"|"useMemo"|"useRef")
@@ -498,6 +628,7 @@ op_async() {
     if $FALLBACK_MODE; then
         case "$lang" in
             swift) echo "grep -rn 'await ' --include='*.swift' \"$PROJECT_PATH\"" ;;
+            objc|objcpp) echo "grep -rn 'dispatch_async\\|dispatch_after\\|performSelectorInBackground' --include='*.m' --include='*.mm' --include='*.h' \"$PROJECT_PATH\"" ;;
             tsx) echo "grep -rn 'await ' --include='*.ts' --include='*.tsx' \"$PROJECT_PATH\"" ;;
             kotlin) echo "grep -rn 'suspend fun' --include='*.kt' \"$PROJECT_PATH\"" ;;
             python) echo "grep -rn 'await ' --include='*.py' \"$PROJECT_PATH\"" ;;
@@ -505,6 +636,11 @@ op_async() {
             rust) echo "grep -rn '\\.await\\|async fn' --include='*.rs' \"$PROJECT_PATH\"" ;;
             ruby) echo "grep -rn 'Thread.new\\|async' --include='*.rb' \"$PROJECT_PATH\"" ;;
         esac
+        return 0
+    fi
+
+    if [[ "$lang" == "objc" || "$lang" == "objcpp" ]]; then
+        op_objc_async
         return 0
     fi
 
@@ -575,8 +711,17 @@ op_boundary() {
 
     if $FALLBACK_MODE; then
         case "$boundary_type" in
-            "api") echo "grep -rn 'fetch\\|axios\\|URLSession\\|Retrofit' \"$PROJECT_PATH\"" ;;
-            "db") echo "grep -rn 'prisma\\|realm\\|CoreData\\|Room' \"$PROJECT_PATH\"" ;;
+            "api") echo "grep -rn 'fetch\\|axios\\|URLSession\\|Retrofit\\|AFHTTPSessionManager\\|AFHTTPRequestOperationManager' \"$PROJECT_PATH\"" ;;
+            "db") echo "grep -rn 'prisma\\|realm\\|CoreData\\|Room\\|NSManagedObject\\|NSPersistentContainer' \"$PROJECT_PATH\"" ;;
+        esac
+        return 0
+    fi
+
+    if [[ "$lang" == "objc" || "$lang" == "objcpp" ]]; then
+        case "$boundary_type" in
+            "api")   { objc_grep_json "NSURLSession|URLSession|AFHTTPSessionManager|AFHTTPRequestOperationManager|NSURLConnection"; } | jq -s 'add // []' ;;
+            "db")    { objc_grep_json "NSManagedObject|NSPersistentContainer|NSFetchRequest|RLMObject|RLMRealm|FMDatabase"; } | jq -s 'add // []' ;;
+            *)       op_objc_boundary ;;
         esac
         return 0
     fi
@@ -738,6 +883,7 @@ op_definition() {
     if $FALLBACK_MODE; then
         case "$lang" in
             swift) echo "grep -rn 'func $name\\|class $name\\|struct $name\\|enum $name' --include='*.swift' \"$PROJECT_PATH\"" ;;
+            objc|objcpp) echo "grep -rn '@interface $name\\|@implementation $name\\|@protocol $name' --include='*.m' --include='*.mm' --include='*.h' \"$PROJECT_PATH\"" ;;
             tsx|typescript) echo "grep -rn 'function $name\\|class $name\\|const $name\\|interface $name\\|type $name' --include='*.ts' --include='*.tsx' \"$PROJECT_PATH\"" ;;
             kotlin) echo "grep -rn 'fun $name\\|class $name\\|object $name\\|data class $name' --include='*.kt' \"$PROJECT_PATH\"" ;;
             python) echo "grep -rn '^def $name\\|^class $name' --include='*.py' \"$PROJECT_PATH\"" ;;
@@ -745,6 +891,11 @@ op_definition() {
             rust) echo "grep -rn 'fn $name\\|struct $name\\|enum $name\\|trait $name' --include='*.rs' \"$PROJECT_PATH\"" ;;
             ruby) echo "grep -rn 'def $name\\|class $name\\|module $name' --include='*.rb' \"$PROJECT_PATH\"" ;;
         esac
+        return 0
+    fi
+
+    if [[ "$lang" == "objc" || "$lang" == "objcpp" ]]; then
+        op_objc_definition "$name"
         return 0
     fi
 
@@ -846,6 +997,7 @@ op_import() {
     if $FALLBACK_MODE; then
         case "$lang" in
             swift) echo "grep -rn '^import ' --include='*.swift' \"$PROJECT_PATH\"" ;;
+            objc|objcpp) echo "grep -rn '^#import \\|^@import ' --include='*.m' --include='*.mm' --include='*.h' \"$PROJECT_PATH\"" ;;
             tsx|typescript) echo "grep -rn '^import \\|require(' --include='*.ts' --include='*.tsx' \"$PROJECT_PATH\"" ;;
             kotlin) echo "grep -rn '^import ' --include='*.kt' \"$PROJECT_PATH\"" ;;
             python) echo "grep -rn '^import \\|^from .* import' --include='*.py' \"$PROJECT_PATH\"" ;;
@@ -853,6 +1005,11 @@ op_import() {
             rust) echo "grep -rn '^use \\|^mod ' --include='*.rs' \"$PROJECT_PATH\"" ;;
             ruby) echo "grep -rn \"require \\|require_relative \" --include='*.rb' \"$PROJECT_PATH\"" ;;
         esac
+        return 0
+    fi
+
+    if [[ "$lang" == "objc" || "$lang" == "objcpp" ]]; then
+        op_objc_import
         return 0
     fi
 
