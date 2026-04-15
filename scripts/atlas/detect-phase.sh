@@ -54,11 +54,23 @@ EXTS=(--include="*.m" --include="*.mm" --include="*.h"
       --include="*.js" --include="*.jsx" --include="*.py"
       --include="*.go" --include="*.java" --include="*.kt")
 
-# Files referencing the module name
-ALL_REFS=$(grep -rl "$MODULE_NAME" "$PROJECT_ROOT" "${EXTS[@]}" 2>/dev/null || true)
+# Files referencing the module name (exclude vendor / build-artifact / cache paths)
+EXCLUDE_PATH_RE='/(Pods|node_modules|\.build|build|DerivedData|Carthage|vendor|SourcePackages|\.git|\.swiftpm)/'
+ALL_REFS=$(grep -rl "$MODULE_NAME" "$PROJECT_ROOT" "${EXTS[@]}" 2>/dev/null \
+    | grep -Ev "$EXCLUDE_PATH_RE" || true)
 
-TEST_REFS=$(echo "$ALL_REFS" | grep -iE "test|spec" | wc -l | tr -d ' ')
-PROD_REFS=$(echo "$ALL_REFS" | grep -viE "test|spec" | grep -v "^$" | wc -l | tr -d ' ')
+# Test heuristic — only consider a file a test if:
+#   - its BASENAME contains test/spec (case-insensitive), OR
+#   - it lives in a directory whose LAST component matches Tests/Test/Specs/Spec
+#   - AND it is a real source file (not a header / bridging header)
+# Anchor to path components so that ancestor directories named e.g.
+# "test_targets/" do NOT make every file under them look like tests.
+TEST_PATH_RE='(/[Tt]ests?/|/[Ss]pecs?/|/[^/]*[Tt]est[^/]*\.(swift|m|mm)$|/[^/]*[Ss]pec[^/]*\.(swift|m|mm)$)'
+TEST_REFS=$(echo "$ALL_REFS" \
+    | grep -E "$TEST_PATH_RE" \
+    | grep -vE 'Bridging-Header|\.h$|\.hpp$' \
+    | grep -v '^$' | wc -l | tr -d ' ')
+PROD_REFS=$(echo "$ALL_REFS" | grep -vE "$TEST_PATH_RE" | grep -v "^$" | wc -l | tr -d ' ')
 
 # Phase decision
 if [[ "$TEST_REFS" -eq 0 ]]; then
@@ -85,4 +97,17 @@ phase_detection:
   prod_refs: ${PROD_REFS}
   ranking_strategy: "${RANKING}"
   rationale: "${RATIONALE}"
+  test_file_paths:
 YAML
+
+# Emit the exact file paths counted as test_refs (so downstream tools
+# can list them without re-querying with a different glob → consistency).
+if [[ -n "$ALL_REFS" ]]; then
+    echo "$ALL_REFS" \
+        | grep -E "$TEST_PATH_RE" \
+        | grep -vE 'Bridging-Header|\.h$|\.hpp$' \
+        | while IFS= read -r p; do
+            [[ -z "$p" ]] && continue
+            echo "    - \"$p\""
+        done
+fi

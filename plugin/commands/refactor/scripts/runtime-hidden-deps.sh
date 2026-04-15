@@ -47,9 +47,12 @@ INCLUDES=(--include="*.m" --include="*.mm" --include="*.h" --include="*.swift")
 # Count + list helpers
 count_re() {
     local pattern="$1"
+    # No-match grep returns 1; with pipefail this kills the script. Tolerate it.
+    set +o pipefail
     grep -rnE "$pattern" "${INCLUDES[@]}" "$PROJECT_ROOT" 2>/dev/null \
         | grep -Ev "$EXCLUDE_RE" \
         | wc -l | tr -d ' '
+    set -o pipefail
 }
 
 list_sites() {

@@ -339,11 +339,16 @@ for i in $(seq 0 $((ZONE_COUNT - 1))); do
     fi
 
     name="${ZONE_NAMES[$i]}"
+    # Trim whitespace; fall back to "Zone N (unnamed)" for blank markers
+    name="$(echo "$name" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    [[ -z "$name" ]] && name="Zone $((i + 1)) (unnamed)"
+
     line_count=$((end - start + 1))
     method_count=$(count_methods "$start" "$end")
 
-    # Slugify the name for zone_id
+    # Slugify the name for zone_id; fall back to zone-N for non-ASCII names
     zone_id=$(echo "$name" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')
+    [[ -z "$zone_id" ]] && zone_id="zone-$((i + 1))"
 
     echo "  - id: \"${zone_id}\""
     echo "    name: \"${name}\""
