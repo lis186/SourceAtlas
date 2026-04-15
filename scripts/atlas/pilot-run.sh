@@ -214,6 +214,23 @@ storyboard_refs=$(grep -rl "$target_basename_noext" --include="*.storyboard" --i
     | grep -Ev '/(Pods|build|DerivedData)/' | wc -l | tr -d ' ')
 singleton_use=$(_ccount '\bsharedInstance\b|\.shared\b|\.default\b' "$TARGET")
 mainactor_use=$(_ccount '@MainActor' "$TARGET")
+
+# ── Companion files (structural preparation already done?) ──
+# Strong signal: a file is NAMED as a companion (find by filename).
+#   {stem}+*.swift / {stem}+*.m   — Swift extension convention
+#   {stem}ViewModel.* / {stem}Presenter.* / {stem}LayoutEngine.*
+#   {stem}Helper.* / {stem}Factory.* / {stem}Coordinator.*
+#   {stem}Processor.* / {stem}DataSource.* / {stem}Delegate.*
+#   {stem}Extensions.* (when engineers follow non-`+` convention)
+companion_tmp=$(mktemp)
+strong_suffixes="+*.swift +*.m ViewModel.swift ViewModel.m Presenter.swift Presenter.m LayoutEngine.swift LayoutEngine.m Helper.swift Helper.m Factory.swift Factory.m Coordinator.swift Coordinator.m Processor.swift Processor.m DataSource.swift DataSource.m Delegate.swift Delegate.m Extensions.swift Extensions.m"
+{
+    for suf in $strong_suffixes; do
+        find "$PROJECT_ROOT" -name "${target_basename_noext}${suf}" 2>/dev/null
+    done
+} | grep -Ev '/(Pods|build|DerivedData|Carthage|SourcePackages|node_modules)/' \
+  | grep -v "$TARGET" | sort -u > "$companion_tmp" || true
+companion_count=$(wc -l < "$companion_tmp" | tr -d ' ')
 set -o pipefail
 
 # Classify and emit the strategy block directly to a temp file.
@@ -222,6 +239,11 @@ strategy_tmp=$(mktemp)
 # Heavy singleton coupling defeats "pure_logic" — even without UIKit, you'd
 # need to fake N singletons to test. Treat as needs_surgery (Sprout Class).
 heavy_singletons=0; [[ "$singleton_use" -gt 5 ]] && heavy_singletons=1
+# Partial surgery signal: ≥1 named companion file (ViewModel / Presenter /
+# LayoutEngine / Extensions / +Category) means someone already extracted
+# at least one thing — partial surgery is done.
+has_structural_prep=0; [[ "$companion_count" -ge 1 ]] && has_structural_prep=1
+
 if [[ "$ui_imports" -eq 0 && "$ib_outlets" -eq 0 && "$has_xib" -eq 0 && "$storyboard_refs" -eq 0 && "$heavy_singletons" -eq 0 ]]; then
     testability="pure_logic"
     cat > "$strategy_tmp" <<'BLK'
@@ -233,9 +255,26 @@ if [[ "$ui_imports" -eq 0 && "$ib_outlets" -eq 0 && "$has_xib" -eq 0 && "$storyb
 4. Now you have a real safety net — proceed with Feathers' standard playbook.
 BLK
 elif [[ "$has_xib" -eq 1 || "$storyboard_refs" -gt 0 || "$ib_outlets" -gt 5 ]]; then
-    testability="ui_only"
-    cat > "$strategy_tmp" <<BLK
-**Strategy: surgery before tests** — target is UI-bound (xib=$has_xib, IB outlets=$ib_outlets, storyboard refs=$storyboard_refs).
+    if [[ "$has_structural_prep" -eq 1 ]]; then
+        testability="partial_surgery_done"
+        cat > "$strategy_tmp" <<BLK
+**Strategy: finish the surgery, then test** — target is UI-bound but $companion_count companion files already exist (ViewModel / Presenter / Helper / Extensions). Previous engineers have done partial structural preparation.
+
+Order of operations:
+
+1. **Audit what's already extracted** — review the companion files listed below. Note what logic already lives outside the target.
+2. **Identify remaining bleed** — what's still in the target that should live in a companion? Move it.
+3. **Test the companions** — they're plain classes, testable directly. This builds your safety net.
+4. **Snapshot test the UI** for regression guard.
+5. **Migrate** — the remaining VC code should be thin enough to rewrite confidently.
+
+Risk: **medium** (lower than ui_only without prep). Work already done helps.
+See dev-notes/2026-04/2026-04-15-history-replay-nymemberloyaltypoint.md
+BLK
+    else
+        testability="ui_only"
+        cat > "$strategy_tmp" <<BLK
+**Strategy: surgery before tests** — target is UI-bound (xib=$has_xib, IB outlets=$ib_outlets, storyboard refs=$storyboard_refs) AND no companion files found.
 
 Direct characterization tests are expensive. Order of operations:
 
@@ -244,9 +283,11 @@ Direct characterization tests are expensive. Order of operations:
 3. **Snapshot test as a cheap UI safety net** — swift-snapshot-testing or FBSnapshotTestCase: ~1 line per visual state.
 4. **THEN do the language migration** — by now most logic lives in testable plain classes.
 
+Risk: **high** (no prep done yet).
 This matches what nineyiappshop's team historically did: sub-view extract → xib removal → rewrite.
 See dev-notes/2026-04/2026-04-15-history-replay-nymemberloyaltypoint.md
 BLK
+    fi
 else
     testability="needs_surgery"
     cat > "$strategy_tmp" <<BLK
@@ -259,10 +300,48 @@ else
 BLK
 fi
 
+# Confidence score (0-10) — how confident can we be that this target is
+# safe to act on right now? Higher = less prep needed.
+#
+#   testability base:  pure_logic 6  | partial_surgery_done 4
+#                      needs_surgery 3 | ui_only 1
+#   + companion files present (>=2):  +2
+#   + existing test file count (>0):  +2 (up to)
+#   - heavy singleton (>20):          -1
+#   (clamped to 0..10)
+case "$testability" in
+    pure_logic)           conf=6 ;;
+    partial_surgery_done) conf=4 ;;
+    needs_surgery)        conf=3 ;;
+    ui_only)              conf=1 ;;
+    *)                    conf=0 ;;
+esac
+[[ "$companion_count" -ge 1 ]] && conf=$((conf + 1))
+[[ "$companion_count" -ge 3 ]] && conf=$((conf + 1))
+# test_refs extracted earlier from YAML (if present); recompute safely
+existing_tests=$(grep -E '^  test_refs:' "$OUTPUT" | head -1 | awk '{print $2}')
+existing_tests=${existing_tests:-0}
+if [[ "$existing_tests" -ge 3 ]]; then
+    conf=$((conf + 2))
+elif [[ "$existing_tests" -ge 1 ]]; then
+    conf=$((conf + 1))
+fi
+[[ "$singleton_use" -gt 20 ]] && conf=$((conf - 1))
+[[ "$conf" -lt 0 ]] && conf=0
+[[ "$conf" -gt 10 ]] && conf=10
+
+# Confidence label
+if   [[ "$conf" -ge 8 ]]; then conf_label="HIGH — ready to proceed"
+elif [[ "$conf" -ge 5 ]]; then conf_label="MEDIUM — verify prep items before acting"
+else conf_label="LOW — do structural prep first"
+fi
+
 cat >> "$OUTPUT" <<EOF
 \`\`\`yaml
 testability:
   level: "$testability"
+  confidence_score: $conf        # 0 (risky) … 10 (safe to act)
+  confidence_label: "$conf_label"
   signals:
     uikit_imports: $ui_imports
     ib_outlets_actions: $ib_outlets
@@ -270,9 +349,23 @@ testability:
     storyboard_xib_refs: $storyboard_refs
     singleton_access: $singleton_use
     mainactor_use: $mainactor_use
+  structural_prep:
+    companion_files_count: $companion_count
+    existing_tests: $existing_tests
 \`\`\`
 
 EOF
+
+# Emit companion files if any
+if [[ "$companion_count" -gt 0 ]]; then
+    echo "### Companion files already extracted" >> "$OUTPUT"
+    echo '```' >> "$OUTPUT"
+    cat "$companion_tmp" >> "$OUTPUT"
+    echo '```' >> "$OUTPUT"
+    echo "" >> "$OUTPUT"
+fi
+rm -f "$companion_tmp"
+
 cat "$strategy_tmp" >> "$OUTPUT"
 rm -f "$strategy_tmp"
 echo "" >> "$OUTPUT"
