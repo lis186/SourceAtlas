@@ -184,6 +184,99 @@ echo "" >> "$OUTPUT"
 # Phase 1/1.5 (Feathers): smallest zone with fewest deps — least edit-distance to a working test
 # Phase 2:                zone with HIGHEST dep count — biggest architectural lever
 # Tie-breaker on Phase 2: prefer zones already named in test files
+# ── Testability Triage ───────────────────────────────────────────────
+# Categorise the target so the recommendation matches reality:
+#   pure_logic     — no UIKit / IB / singleton: testable as-is
+#   needs_surgery  — UIKit + logic mixed: needs Extract to ViewModel/Sprout
+#   ui_only        — heavy IB/xib/storyboard binding: prefer snapshot/UI test
+echo "## Testability Triage" >> "$OUTPUT"
+
+# Detect signals (from target file + paired .h + paired .xib presence)
+paired_h="${TARGET%.*}.h"
+paired_xib="${TARGET%.*}.xib"
+target_basename_noext="${basename_noext%.*}"
+
+# Use a helper that always returns a single integer, even when grep -c
+# returns 0 with exit 1 (no match). `|| echo 0` is wrong because grep -c
+# already prints "0" on no-match — it would emit "0\n0" and break $((...)).
+_ccount() { local n; n=$(grep -cE "$1" "$2" 2>/dev/null); [[ -z "$n" ]] && n=0; echo "$n"; }
+set +o pipefail
+ui_imports=$(_ccount '^(#import[[:space:]]+<UIKit|import[[:space:]]+UIKit|import[[:space:]]+SwiftUI)' "$TARGET")
+if [[ -f "$paired_h" ]]; then
+    ui_imports=$((ui_imports + $(_ccount '^(#import[[:space:]]+<UIKit|import[[:space:]]+UIKit)' "$paired_h")))
+fi
+ib_outlets=$(_ccount 'IBOutlet|IBAction|@IBOutlet|@IBAction' "$TARGET")
+if [[ -f "$paired_h" ]]; then
+    ib_outlets=$((ib_outlets + $(_ccount 'IBOutlet|IBAction' "$paired_h")))
+fi
+has_xib=0; [[ -f "$paired_xib" ]] && has_xib=1
+storyboard_refs=$(grep -rl "$target_basename_noext" --include="*.storyboard" --include="*.xib" "$PROJECT_ROOT" 2>/dev/null \
+    | grep -Ev '/(Pods|build|DerivedData)/' | wc -l | tr -d ' ')
+singleton_use=$(_ccount '\bsharedInstance\b|\.shared\b|\.default\b' "$TARGET")
+mainactor_use=$(_ccount '@MainActor' "$TARGET")
+set -o pipefail
+
+# Classify and emit the strategy block directly to a temp file.
+# (bash 3.2 mishandles $(cat <<HEREDOC ... HEREDOC) — write to file instead.)
+strategy_tmp=$(mktemp)
+# Heavy singleton coupling defeats "pure_logic" — even without UIKit, you'd
+# need to fake N singletons to test. Treat as needs_surgery (Sprout Class).
+heavy_singletons=0; [[ "$singleton_use" -gt 5 ]] && heavy_singletons=1
+if [[ "$ui_imports" -eq 0 && "$ib_outlets" -eq 0 && "$has_xib" -eq 0 && "$storyboard_refs" -eq 0 && "$heavy_singletons" -eq 0 ]]; then
+    testability="pure_logic"
+    cat > "$strategy_tmp" <<'BLK'
+**Strategy: write characterization tests now** — target has no UI dependencies. Should take 30-60 minutes.
+
+1. Add `XCTest` file mirroring the target name.
+2. For each public method: pick representative inputs, capture current outputs, assert them.
+3. Run tests once to confirm they pass against today's behavior.
+4. Now you have a real safety net — proceed with Feathers' standard playbook.
+BLK
+elif [[ "$has_xib" -eq 1 || "$storyboard_refs" -gt 0 || "$ib_outlets" -gt 5 ]]; then
+    testability="ui_only"
+    cat > "$strategy_tmp" <<BLK
+**Strategy: surgery before tests** — target is UI-bound (xib=$has_xib, IB outlets=$ib_outlets, storyboard refs=$storyboard_refs).
+
+Direct characterization tests are expensive. Order of operations:
+
+1. **Move presentation logic out** — extract calculation/data-shaping to a plain class such as ViewModel or Presenter. The plain class IS testable; test it.
+2. **Replace xib/storyboard with code** if possible — removes IB string-dispatch, equivalent to breaking a Link Seam.
+3. **Snapshot test as a cheap UI safety net** — swift-snapshot-testing or FBSnapshotTestCase: ~1 line per visual state.
+4. **THEN do the language migration** — by now most logic lives in testable plain classes.
+
+This matches what nineyiappshop's team historically did: sub-view extract → xib removal → rewrite.
+See dev-notes/2026-04/2026-04-15-history-replay-nymemberloyaltypoint.md
+BLK
+else
+    testability="needs_surgery"
+    cat > "$strategy_tmp" <<BLK
+**Strategy: small surgery first, then test** — target imports UIKit but logic looks separable. singletons=$singleton_use, IB=$ib_outlets.
+
+1. **Extract pure logic** into a sibling class — Feathers' Sprout Class. Anything that does not read/write a UIView belongs there.
+2. **Test the extracted class** — it has no UIKit deps now.
+3. **Wrap remaining UIKit calls** behind a protocol so they can be faked in tests — Feathers' Extract Interface.
+4. **Now write characterization tests** on the original target's remaining logic.
+BLK
+fi
+
+cat >> "$OUTPUT" <<EOF
+\`\`\`yaml
+testability:
+  level: "$testability"
+  signals:
+    uikit_imports: $ui_imports
+    ib_outlets_actions: $ib_outlets
+    has_paired_xib: $has_xib
+    storyboard_xib_refs: $storyboard_refs
+    singleton_access: $singleton_use
+    mainactor_use: $mainactor_use
+\`\`\`
+
+EOF
+cat "$strategy_tmp" >> "$OUTPUT"
+rm -f "$strategy_tmp"
+echo "" >> "$OUTPUT"
+
 echo "## Recommended First Slice" >> "$OUTPUT"
 
 # Resolve detected phase from earlier section
