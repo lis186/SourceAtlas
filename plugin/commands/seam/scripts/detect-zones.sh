@@ -40,6 +40,7 @@ if [[ -z "$LANGUAGE" ]]; then
     ext="${FILE_PATH##*.}"
     case "$ext" in
         m|h)    LANGUAGE="objc" ;;
+        mm)     LANGUAGE="objcpp" ;;
         swift)  LANGUAGE="swift" ;;
         ts|tsx) LANGUAGE="typescript" ;;
         js|jsx) LANGUAGE="javascript" ;;
@@ -86,7 +87,7 @@ extract_clang_methods() {
         | python3 "$clang_script" 2>/dev/null
 }
 
-if [[ "$LANGUAGE" == "objc" || "$LANGUAGE" == "swift" ]]; then
+if [[ "$LANGUAGE" == "objc" || "$LANGUAGE" == "objcpp" || "$LANGUAGE" == "swift" ]]; then
     CLANG_METHODS_JSON=$(extract_clang_methods 2>/dev/null || true)
 fi
 
@@ -201,7 +202,7 @@ detect_methods_generic() {
 count_methods() {
     local start=$1 end=$2
     case "$LANGUAGE" in
-        objc)       detect_methods_objc "$start" "$end" ;;
+        objc|objcpp) detect_methods_objc "$start" "$end" ;;
         swift)      detect_methods_swift "$start" "$end" ;;
         typescript|javascript) detect_methods_typescript "$start" "$end" ;;
         *)          detect_methods_generic "$start" "$end" ;;
@@ -210,10 +211,9 @@ count_methods() {
 
 # --- Dependency detection ---
 
-detect_deps_in_range() {
+# ObjC/ObjC++: bracket call syntax + limited singleton dot-syntax
+detect_deps_in_range_objc() {
     local start=$1 end=$2
-    # Extract class/type references: [ClassName method], ClassName.method, ClassName.shared
-    # Filter out common noise (self, super, NSString, etc.)
     local noise='self|super|NSString|NSArray|NSDictionary|NSNumber|NSError|NSData|NSURL|NSLog|NSMutableString|NSMutableDictionary|NSMutableArray|NSURLComponents|NSURLQueryItem|NSPredicate|NSFileManager|NSSearchPathForDirectoriesInDomains|NSNotificationCenter|NSBundle|NSDate|NSTimeInterval|NSLocale|NSUUID|NSOperation|NSURLSessionDataTask|NSHTTPURLResponse|NSJSONSerialization|NSURLRequest|BOOL|YES|NO|nil|dispatch_once|dispatch_semaphore_create|dispatch_semaphore_signal|dispatch_semaphore_wait|DISPATCH_TIME_FOREVER|void|id|AnyPromise|PMKResolver|PMKManifold'
 
     sed -n "${start},${end}p" "$FILE_PATH" \
@@ -229,11 +229,63 @@ detect_deps_in_range() {
         | sort -u
 }
 
+# Swift: dot-call syntax, generics, type annotations, conformance lists
+detect_deps_in_range_swift() {
+    local start=$1 end=$2
+    # Swift stdlib + UIKit/SwiftUI/Foundation noise
+    local noise='Self|self|super|Any|AnyObject|AnyClass|Type|Void|Never|String|Int|UInt|Int8|Int16|Int32|Int64|UInt8|UInt16|UInt32|UInt64|Bool|Float|Double|Decimal|Character|Array|Dictionary|Set|Optional|Result|Range|ClosedRange|URL|URLRequest|URLSession|URLResponse|HTTPURLResponse|URLSessionTask|URLSessionDataTask|Data|Date|DateComponents|DateFormatter|TimeInterval|Calendar|Locale|TimeZone|UUID|IndexPath|Notification|NotificationCenter|JSONDecoder|JSONEncoder|JSONSerialization|PropertyListEncoder|PropertyListDecoder|FileManager|Bundle|UserDefaults|NSError|NSObject|NSString|NSArray|NSDictionary|NSNumber|NSData|NSDate|NSUUID|NSNotification|NSNotificationCenter|NSIndexPath|UIView|UIViewController|UIColor|UIImage|UIImageView|UILabel|UIButton|UITableView|UITableViewCell|UICollectionView|UICollectionViewCell|UIStackView|UIScrollView|UITextField|UITextView|UISwitch|UISlider|UIAlertController|UINavigationController|UITabBarController|UIWindow|UIScreen|UIApplication|UIStoryboard|UINib|CGFloat|CGPoint|CGSize|CGRect|CGAffineTransform|CATransform3D|Published|State|Binding|ObservedObject|StateObject|EnvironmentObject|Environment|View|Text|VStack|HStack|ZStack|Image|Button|List|NavigationView|NavigationLink|Publisher|AnyPublisher|AnyCancellable|PassthroughSubject|CurrentValueSubject|Just|Empty|Future|Task|TaskGroup|MainActor|Sendable|Error|Codable|Encodable|Decodable|Equatable|Hashable|Comparable|Identifiable|CustomStringConvertible|ExpressibleByStringLiteral|IteratorProtocol|Sequence|Collection|RandomAccessCollection|StringProtocol|BinaryInteger|FloatingPoint|print|debugPrint|assert|precondition|fatalError|true|false|nil'
+
+    # 1. Capitalized.identifier(   → method call on a type
+    # 2. Capitalized.shared|default|self|Type  → singleton/type access
+    # 3. : Capitalized  → type annotations, conformance
+    # 4. -> Capitalized → return type
+    # 5. <Capitalized  → generic argument
+    # 6. class|struct|enum|extension|protocol Capitalized : Capitalized → inheritance
+    (
+        # Method calls and type access: X.foo( or X.bar
+        sed -n "${start},${end}p" "$FILE_PATH" \
+            | grep -oE '\b[A-Z][A-Za-z0-9_]+\.([a-zA-Z_][A-Za-z0-9_]*)' \
+            | sed 's/\..*//'
+
+        # Type annotations after colon: `: TypeName` and `: TypeName<...>`
+        sed -n "${start},${end}p" "$FILE_PATH" \
+            | grep -oE ': [A-Z][A-Za-z0-9_]+' \
+            | sed 's/: //'
+
+        # Return types: `-> TypeName`
+        sed -n "${start},${end}p" "$FILE_PATH" \
+            | grep -oE '-> [A-Z][A-Za-z0-9_]+' \
+            | sed 's/-> //'
+
+        # Generic arguments: `<TypeName>` or `<TypeName,` or `<TypeName:`
+        sed -n "${start},${end}p" "$FILE_PATH" \
+            | grep -oE '<[A-Z][A-Za-z0-9_]+[,>: ]' \
+            | sed -E 's/^<//; s/[,>: ]$//'
+
+        # Conformance / inheritance: declaration followed by `: SuperType, P1, P2`
+        sed -n "${start},${end}p" "$FILE_PATH" \
+            | grep -oE '(class|struct|enum|extension|protocol) [A-Z][A-Za-z0-9_]+' \
+            | awk '{print $2}'
+    ) \
+        | grep -vE "^(${noise})$" \
+        | grep -vE '^$' \
+        | sort -u
+}
+
+detect_deps_in_range() {
+    local start=$1 end=$2
+    case "$LANGUAGE" in
+        objc|objcpp) detect_deps_in_range_objc "$start" "$end" ;;
+        swift)       detect_deps_in_range_swift "$start" "$end" ;;
+        *)           detect_deps_in_range_objc "$start" "$end" ;;
+    esac
+}
+
 # --- Main: collect markers and build zone map ---
 
 detect_markers() {
     case "$LANGUAGE" in
-        objc)       detect_markers_objc ;;
+        objc|objcpp) detect_markers_objc ;;
         swift)      detect_markers_swift ;;
         typescript|javascript) detect_markers_typescript ;;
         go)         detect_markers_go ;;
