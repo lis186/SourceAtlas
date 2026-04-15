@@ -278,7 +278,36 @@ impact_ref: ".sourceatlas/impact/{module}.yaml"
 
 **Decision**: If `recommendation: skip`, warn user but allow override with `--force`.
 
-### 1.4 Update State
+### 1.4 ObjC/Swift Context Scan (iOS targets only)
+
+If target language is `objc`, `objcpp`, or `swift`, run the cross-language
+and runtime-hidden dependency scans. These surface migration hazards that
+import-based analysis misses:
+
+```bash
+# Cross-language visibility (Bridging-Header, -Swift.h, @objc, nullability)
+XLANG=~/.claude/scripts/atlas/cross-language-visibility.sh
+[ -f "$XLANG" ] || XLANG=plugin/commands/refactor/scripts/cross-language-visibility.sh
+bash "$XLANG" "$PROJECT_ROOT"
+# → .sourceatlas/cross-language.yaml
+
+# Runtime-hidden dependencies (Category/swizzle/KVO/IB/storyboard)
+HIDDEN=~/.claude/scripts/atlas/runtime-hidden-deps.sh
+[ -f "$HIDDEN" ] || HIDDEN=plugin/commands/refactor/scripts/runtime-hidden-deps.sh
+bash "$HIDDEN" "$PROJECT_ROOT" --target "$MODULE_NAME"
+# → .sourceatlas/runtime-hidden-deps.yaml
+
+# One-shot target readiness report combining the above + detect-phase + detect-zones
+PILOT=~/.claude/scripts/atlas/pilot-run.sh
+[ -f "$PILOT" ] || PILOT=plugin/commands/refactor/scripts/pilot-run.sh
+bash "$PILOT" "$PROJECT_ROOT" "$FILE_PATH"
+# → .sourceatlas/refactor/pilot-{module}.md
+```
+
+Flag showstoppers (swizzle > 0, storyboard string dispatch > 0, categories
+on the target) in the Step 1 summary — these force design choices in Step 5.
+
+### 1.5 Update State
 
 Set `1_target: { status: completed, completed_at: {now} }` and `current_step: 2`.
 
@@ -518,6 +547,27 @@ Present ranked list with recommended seam.
 ### 3.4 Output
 
 Each seam candidate MUST include a `verification_grep` field — a grep/ast-grep command that proves the enabling point exists in source code.
+
+For ObjC / ObjC++ / Swift targets, generate canonical verification_grep
+commands using `seam-patterns.sh` instead of hand-authoring regexes. This
+ensures consistency across languages (e.g. Swift `init(baseURL:)` vs ObjC
+`initWithBaseURL:`) and adds coverage for Swift-native seam types
+(`extension`, `protocol`, `mainactor`):
+
+```bash
+SP=~/.claude/scripts/atlas/seam-patterns.sh
+[ -f "$SP" ] || SP=plugin/commands/seam/scripts/seam-patterns.sh
+# seam-patterns.sh <lang> <seam_type> <symbol> <file>
+bash "$SP" swift extension NYLoginViewController "$TARGET_FILE"
+# → grep -qnE '^extension[[:space:]]+NYLoginViewController([[:space:]]|:|\{)' '<TARGET_FILE>'
+```
+
+Supported seam types:
+- Shared: `object_init`, `method_dispatch`, `class_method`, `property_access`,
+  `delegate`, `notification`, `protocol`, `protocol_adopt`
+- ObjC: `category`, `extension` (== category in ObjC)
+- Swift-only: `extension` (type extension), `mainactor`
+
 
 ```yaml
 # 3_seams.yaml
@@ -1026,6 +1076,28 @@ Set `6_adapter: { status: verified }` (no deterministic gate, produced = verifie
 **Action**: Run the complete safety net
 **Output**: `7_gate_results.yaml`
 **Gate**: **ALL checks must pass**
+
+### 7.0 Automated Runner (recommended)
+
+Use `gate-step7.sh` to orchestrate 7.1-7.3 in one pass. It reads
+`state.yaml` for `spike_tests_cmd` and `characterization_tests_cmd`,
+runs `2_contracts.yaml` verification_grep rules, writes
+`7_gate_results.yaml`, updates `state.yaml` (`7_gate` status +
+`current_step` advance on pass).
+
+```bash
+GATE=~/.claude/scripts/atlas/gate-step7.sh
+[ -f "$GATE" ] || GATE=plugin/commands/refactor/scripts/gate-step7.sh
+
+# Optional env overrides (otherwise read from state.yaml):
+#   SPIKE_CMD="xcodebuild test ..."
+#   CHARACTERIZATION_CMD="xcodebuild test ..."
+
+bash "$GATE" "$STATE_DIR"
+# Exit 0 → pass, exit 1 → fail (gate reports which checks failed)
+```
+
+If you prefer to run the three checks manually, see 7.1–7.3 below.
 
 ### 7.1 Run Spike Tests (Layer A)
 
