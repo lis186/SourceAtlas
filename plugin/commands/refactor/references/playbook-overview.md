@@ -66,56 +66,75 @@ Steps 1-7 are **tool-assisted** by `/atlas.refactor`. Steps 8-13 are **user-driv
 
 ## Phase II: Extract and Replace (Steps 8-13) — User-Driven
 
-> Tools step back. These steps require human judgment and project-specific decisions.
+> Tools step back. You execute these steps — each one names what to start from, what to do, and how to know it's done.
 
 ### Step 8: Write New Implementation
-Write a clean implementation of the Seam Interface defined in Step 5. This is where you design the Target Interface (the permanent API) and implement it.
 
-**Guidance**:
-- Start with the simplest implementation that passes characterization tests
-- The new impl should be independently testable (no legacy dependencies)
-- Write unit tests for the new impl alongside the code
+**Start from**: `5_interface.{ext}` (approved Seam Interface) + `4_tests.{ext}` (characterization tests)
+
+**Do**:
+- [ ] Create a new file implementing the Seam Interface — pick the permanent class/module name now (this becomes the Target Interface in Step 12)
+- [ ] No imports from the legacy file (the new impl must stand alone)
+- [ ] Inject collaborators via constructor / parameters — no globals, no singletons
+- [ ] Write unit tests alongside the new code (characterization tests cover behavior, unit tests cover the new structure)
+
+**Done when**: New file compiles, unit tests green, characterization tests still green, `grep -l "<LegacyClass>" <new-file>` returns no hits.
 
 ### Step 9: Swap Implementation
-Replace the Legacy Adapter (Step 6) with the new implementation at the injection site.
 
-**Guidance**:
-- Change only the wiring (constructor parameter, dependency injection)
-- The adapter served its purpose — remove it
-- Run Step 7 gate again to verify the swap
+**Start from**: New impl from Step 8 + `3_seams.yaml` (the chosen `enabling_point`)
+
+**Do**:
+- [ ] Open the injection site at `3_seams.yaml.recommended.enabling_point`
+- [ ] Replace the `LegacyAdapter` (or equivalent) with the new impl at that ONE line
+- [ ] Do not modify any other file in this commit
+- [ ] Commit as `refactor: swap LegacyAdapter → NewImpl at <enabling_point>`
+
+**Done when**: A single-file, single-line wiring change is committed and characterization tests still pass.
 
 ### Step 10: Run Verification
-Re-run the Step 7 verification gate with the new implementation in place.
 
-**Guidance**:
-- All spike tests should still pass
-- All characterization tests should still pass (behavior preserved)
-- Contract CI rules should still pass
-- If anything fails, the new implementation has a behavioral difference — investigate
+**Start from**: Swapped code from Step 9 + `7_gate_results.yaml` (baseline from Step 7)
+
+**Do**:
+- [ ] Re-run `gate-step7.sh` (or the project equivalent)
+- [ ] Compare each section against `7_gate_results.yaml`: spike tests (Layer A), characterization tests (Layer B), contract CI rules
+- [ ] If anything regresses, the new impl has a behavioral difference — DO NOT proceed; diagnose and fix
+
+**Done when**: New gate output matches the baseline 1:1 — same passes, same counts, no new failures.
 
 ### Step 11: Integration Testing
-Test the new implementation in the broader system context.
 
-**Guidance**:
-- Run the full application test suite
-- Manual smoke test critical user flows
-- Check for performance regressions
-- Verify cross-module interactions
+**Start from**: Verified swap from Step 10
+
+**Do**:
+- [ ] Run the full application test suite (`xcodebuild test`, `pytest`, `go test ./...`, etc.)
+- [ ] Manual smoke: walk through every user-facing flow that touches this module
+- [ ] Check for performance regressions on the module's hot paths (latency, memory, allocation count)
+- [ ] Verify cross-module interactions — anything that called the legacy module should still work
+
+**Done when**: Full suite green, manual smoke flows pass, no perf regression flagged.
 
 ### Step 12: Clean Up
-Remove temporary scaffolding and evolve Seam Interface to Target Interface.
 
-**Guidance**:
-- Delete the Legacy Adapter class (no longer needed)
-- Rename Seam Interface to Target Interface (or replace with clean design)
-- Remove any temporary test helpers or mocks
-- Update import paths and references
+**Start from**: Integrated swap from Step 11
+
+**Do**:
+- [ ] Delete `6_adapter.{ext}` and any adapter class it defined — it has no callers now
+- [ ] If the new impl was named with a temporary "Seam" prefix/suffix, rename it to its final Target Interface name
+- [ ] Delete temporary test helpers, mocks, or shims introduced solely for the swap
+- [ ] Update all imports / re-exports / barrel files that referenced the old or temporary names
+
+**Done when**: `grep -r "<AdapterName>" .` and `grep -r "<TemporarySeamName>" .` both return zero hits, full test suite still green.
 
 ### Step 13: Delete Legacy Code
-Remove the original God Class or legacy module.
 
-**Guidance**:
-- Verify no remaining references to the old code
-- Run full test suite one final time
-- Commit the deletion as a separate, clearly labeled change
-- Celebrate — the migration is complete
+**Start from**: Cleaned codebase from Step 12
+
+**Do**:
+- [ ] Run `grep -r "<LegacyClassName>" .` — confirm zero remaining references
+- [ ] Delete the legacy file(s) and any helper files only it used
+- [ ] Run the full test suite one final time
+- [ ] Commit as a single dedicated change: `chore: remove legacy <name> (replaced by <new-name>)`
+
+**Done when**: Legacy file no longer exists, full suite green, the deletion is its own commit (not bundled with refactor work).

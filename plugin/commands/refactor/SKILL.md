@@ -166,18 +166,18 @@ The Playbook Navigator adds:
 
 ## Steps 8-13: Post-Tool Guidance
 
-Steps 8-13 are **user-driven** without tool assistance. After Step 7 passes, output guidance:
+Steps 8-13 are **user-driven** without tool assistance. After Step 7 passes, output the table below — each row names the starting artifact, the concrete action, and the verifiable Done signal so the user can self-check:
 
-| Step | Name | What to Do |
-|------|------|-----------|
-| 8 | Write New Implementation | Implement the interface with clean code |
-| 9 | Swap Implementation | Replace adapter with new impl in injection site |
-| 10 | Run Verification | Re-run Step 7 gate with new impl |
-| 11 | Integration Testing | Test in broader system context |
-| 12 | Clean Up | Remove adapter, Seam Interface → Target Interface |
-| 13 | Delete Legacy | Remove old code, run full test suite |
+| Step | Start From | Do (concrete actions) | Done When (verifiable signal) |
+|------|------------|-----------------------|-------------------------------|
+| 8 — Write New Implementation | `5_interface.{ext}` + `4_tests.{ext}` | Create new file implementing the Seam Interface; no imports of legacy file; inject collaborators via constructor; write unit tests alongside | New file compiles, unit tests green, characterization tests still green, `grep -l "<LegacyClass>" <new-file>` returns no hits |
+| 9 — Swap Implementation | New impl + `3_seams.yaml.recommended.enabling_point` | Replace `LegacyAdapter` with new impl at the ONE injection-site line; no other files touched in this commit | Single-file, single-line wiring change committed; characterization tests still pass |
+| 10 — Run Verification | Swapped code + `7_gate_results.yaml` (baseline) | Re-run `gate-step7.sh`; diff each section (Layer A / Layer B / contract CI) against the baseline | New gate output matches baseline 1:1 — same passes, same counts, no new failures |
+| 11 — Integration Testing | Verified swap from Step 10 | Run full app test suite; manual smoke every user-facing flow touching this module; check perf on hot paths | Full suite green; manual flows pass; no perf regression flagged |
+| 12 — Clean Up | Integrated swap from Step 11 | Delete `6_adapter.{ext}`; rename Seam Interface → final Target Interface name; delete temporary mocks/shims; update imports / re-exports | `grep -r "<AdapterName>"` and `grep -r "<TemporarySeamName>"` both return zero hits; full suite green |
+| 13 — Delete Legacy | Cleaned codebase from Step 12 | `grep -r "<LegacyClassName>"` to confirm zero refs; delete legacy file(s); final full-suite run; one dedicated commit | Legacy file no longer exists; full suite green; deletion is its own commit (not bundled with refactor work) |
 
-> See [references/playbook-overview.md](references/playbook-overview.md) for the complete 13-step overview.
+> See [references/playbook-overview.md](references/playbook-overview.md) for the complete 13-step overview with detailed checklists per step.
 
 ---
 
