@@ -72,6 +72,7 @@ Each step produces an **artifact** stored in `.sourceatlas/refactor/{module}/`.
 | `<file-path>` | Target file to refactor | Optional (Discovery Mode if omitted) |
 | `--zone <zone-id>` | Focus on a specific zone from `/atlas.seam` | All zones |
 | `--step <1-7>` | Resume from a specific step | Auto-detect from state |
+| `--mode <name>` | Override detected migration mode (`seam-injection` \| `platform-migration` \| `strangler-fig` \| `platform-strangler`) | Auto-detected in Step 1 |
 | `--zones-only` | Run only Step 2a (zone discovery) and stop | false |
 | `--status` | Show current progress for the module | — |
 | `--force` | Re-run current step even if artifact exists | false |
@@ -151,22 +152,30 @@ The Playbook Navigator adds:
 
 ## Critical Rules
 
-1. **Three-state lifecycle** — every step: `pending → produced → verified`. Next step requires previous `verified`
+1. **Three-state lifecycle** — every step: `pending → produced → verified`. Skipped steps (mode dispatch) count as `verified`. Next step requires previous `verified` or `skipped`
 2. **Trust artifacts, not prompts** — each step reads ONLY the previous step's artifact file, never re-derives from source
 3. **Deterministic gates over LLM review** — Gate 2 (grep dry-run) and Gate 3 (enabling point check) are automated, zero human involvement
 4. **Session boundaries are mandatory** — STOP after Step 2 and Step 5. New session reads artifacts, not prior reasoning
 5. **Step 2 must use /atlas.audit** — inline contract analysis is NOT acceptable. Check for `.sourceatlas/audit/` artifact
 6. **Step 7 is a hard gate** — do NOT proceed to Step 8 until all tests pass
-7. **Claude proposes, user decides** — Step 5 (interface design) is the only human decision point
+7. **Claude proposes, user decides** — Step 5 (interface design) is the only human decision point in `seam-injection` mode. In `platform-migration`, mode confirmation in Step 1 is the decision point
 8. **One module at a time** — do not batch-process multiple files
 9. **Evidence-based** — every contract and seam references file:line with `verification_grep`
 10. **Seam Interfaces are temporary** — label them clearly (see language-groups.md)
+11. **Dispatch YAML is source of truth** — `references/mode-dispatch.yaml` governs which steps apply/skip/replace per mode. workflow.md step bodies are subordinate to it
+12. **Schema version on load** — always check `state.yaml → schema_version`. Missing = v1 = treat as `seam-injection` without rewriting state. Never auto-upgrade without `--force`
+13. **Mode confirmation before locking** — auto-detected mode (non-seam-injection) requires explicit user confirmation before `migration_mode.confirmed` is set to `true`. Do not advance past Step 1 without it
 
 ---
 
 ## Steps 8-13: Post-Tool Guidance
 
-Steps 8-13 are **user-driven** without tool assistance. After Step 7 passes, output the table below — each row names the starting artifact, the concrete action, and the verifiable Done signal so the user can self-check:
+Steps 8-13 are **user-driven** without tool assistance. After Step 7 passes, output the table below — each row names the starting artifact, the concrete action, and the verifiable Done signal so the user can self-check.
+
+> **Mode variants**: The table below shows `seam-injection` (default). For `platform-migration`, `strangler-fig`, or `platform-strangler`, see **[references/steps-8-13-by-mode.md](references/steps-8-13-by-mode.md)**.
+> Check `state.yaml → migration_mode.mode_name` to determine which path to follow.
+
+### Mode: `seam-injection` — swap_strategy: `direct` (default)
 
 | Step | Start From | Do (concrete actions) | Done When (verifiable signal) |
 |------|------------|-----------------------|-------------------------------|
@@ -176,6 +185,21 @@ Steps 8-13 are **user-driven** without tool assistance. After Step 7 passes, out
 | 11 — Integration Testing | Verified swap from Step 10 | Run full app test suite; manual smoke every user-facing flow touching this module; check perf on hot paths | Full suite green; manual flows pass; no perf regression flagged |
 | 12 — Clean Up | Integrated swap from Step 11 | Delete `6_adapter.{ext}`; rename Seam Interface → final Target Interface name; delete temporary mocks/shims; update imports / re-exports | `grep -r "<AdapterName>"` and `grep -r "<TemporarySeamName>"` both return zero hits; full suite green |
 | 13 — Delete Legacy | Cleaned codebase from Step 12 | `grep -r "<LegacyClassName>"` to confirm zero refs; delete legacy file(s); final full-suite run; one dedicated commit | Legacy file no longer exists; full suite green; deletion is its own commit (not bundled with refactor work) |
+
+### Mode: `seam-injection` — swap_strategy: `shadow`
+
+> Check `5_interface.yaml → swap_strategy`. If `shadow`, follow this table instead of the direct table above.
+
+| Step | Start From | Do (concrete actions) | Done When (verifiable signal) |
+|------|------------|-----------------------|-------------------------------|
+| 8 — Write New Implementation | `5_interface.{ext}` + `6_logger_protocol.{ext}` + `4_tests.{ext}` | Create new file implementing the Seam Interface (same as direct). Also implement `{Name}ShadowLogger` for your logging infra (write to local log, Datadog, etc.) | New impl compiles, unit tests green; logger writes to observable output |
+| 9a — Deploy Shadow Wiring | New impl + `6_adapter.{ext}` (ShadowAdapter) + `5_interface.yaml → shadow_config` | Wire `ShadowAdapter(primary: LegacyAdapter, shadow: NewImpl, logger: YourLogger)` at the injection site. **Old result still returned to caller.** Deploy to production. | Shadow logs appearing in output; match/mismatch both being recorded; no change in caller behaviour |
+| 9b — Monitor Shadow Period | Shadow logs + `shadow_config.threshold` | Observe match rate in production. Do NOT hard-swap until threshold is met: `match_rate_pct ≥ {threshold}` over `min_days` days AND `min_samples` calls | `match_rate ≥ threshold`, `days ≥ min_days`, `samples ≥ min_samples` — all three satisfied |
+| 9c — Hard Swap | Threshold met + `3_seams.yaml.recommended.enabling_point` | Replace `ShadowAdapter` with new impl directly at the ONE injection site. Single-file, single-line commit. | Characterization tests pass; shadow logger no longer called; `grep -l "ShadowAdapter" <wiring-file>` = 0 hits |
+| 10 — Run Verification | Swapped code + `7_gate_results.yaml` (baseline) | Re-run `gate-step7.sh`; diff against baseline | Baseline matched 1:1 |
+| 11 — Integration Testing | Verified swap from Step 10 | Full suite + manual smoke | Full suite green; no perf regression |
+| 12 — Clean Up | Integrated swap from Step 11 | Delete `6_adapter.{ext}` (ShadowAdapter) + `6_logger_protocol.{ext}`; rename Seam Interface; delete logger implementation | `grep -r "ShadowAdapter\|ShadowLogger"` = 0 hits; full suite green |
+| 13 — Delete Legacy | Cleaned codebase from Step 12 | Confirm zero refs to legacy class; delete; own commit | Legacy file deleted; full suite green |
 
 > See [references/playbook-overview.md](references/playbook-overview.md) for the complete 13-step overview with detailed checklists per step.
 

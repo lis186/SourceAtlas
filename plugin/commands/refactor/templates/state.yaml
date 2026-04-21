@@ -1,3 +1,4 @@
+schema_version: "2.0"   # bump when adding required fields; old state without this = v1, treated as seam-injection
 module: "{module_name}"
 file: "{file_path}"
 language: "{language}"
@@ -8,22 +9,36 @@ updated: "{iso_date}"
 current_step: 1
 zone_id: null  # set in Step 2a when user selects a zone
 session_boundaries: [2, 5]  # steps that force a new session after completion
+
+# Migration mode (set in Step 1 after pilot detection)
+migration_mode:
+  interface_origin: "developer|platform"     # developer = you design it; platform = Apple/Google/framework defines it
+  migration_granularity: "single-swap|zone-by-zone"
+  mode_name: "seam-injection|platform-migration|strangler-fig|platform-strangler"
+  detection_source: "auto|override"          # override = user passed --mode flag
+  detection_signals: []                      # list of grep/file signals that triggered auto detection
+  confirmed: false                           # true = user explicitly confirmed (required when detection_source: auto)
+  confirmed_at: null
+
 candidate_lock:
   locked: false        # true = user confirmed target, do not re-rank
   score: null          # commits_90d × lines at time of selection
   locked_at: null
+
 steps:
   # Status lifecycle: pending → produced → verified
+  # Additional status: skipped (dispatch == skip for this mode; counts as verified)
   # produced = artifact file exists
   # verified = deterministic gate passed (or no gate required)
-  # Next step can only start when previous step is "verified"
+  # skipped  = mode-dispatch.yaml says "skip" for this step; skip_reason recorded
+  # Next step can only start when previous step is "verified" or "skipped"
   1_target:    { status: pending, completed_at: null }
   2a_zones:    { status: pending, completed_at: null }
   2_contracts: { status: pending, completed_at: null, audit_mode: null }  # audit_mode: full|degraded
   2_gate:      { status: pending, completed_at: null, rules_total: 0, rules_passed: 0 }
-  3_seams:     { status: pending, completed_at: null }
-  3_gate:      { status: pending, completed_at: null, candidates_total: 0, candidates_verified: 0 }
+  3_seams:     { status: pending, completed_at: null, skip_reason: null }
+  3_gate:      { status: pending, completed_at: null, candidates_total: 0, candidates_verified: 0, skip_reason: null }
   4_tests:     { status: pending, completed_at: null }
-  5_interface: { status: pending, completed_at: null, migration_type: null, target_language: null, target_interface_ref: null }
-  6_adapter:   { status: pending, completed_at: null }
-  7_gate:      { status: pending, completed_at: null }
+  5_interface: { status: pending, completed_at: null, migration_type: null, target_language: null, target_interface_ref: null, skip_reason: null }
+  6_adapter:   { status: pending, completed_at: null, skip_reason: null }
+  7_gate:      { status: pending, completed_at: null, replacement_script: null }

@@ -1,0 +1,104 @@
+# mode-dispatch.yaml — Single source of truth for step behaviour per migration mode.
+#
+# Modes (from 2D taxonomy: interface_origin × migration_granularity):
+#   seam-injection        developer|single-swap     (default)
+#   platform-migration    platform|single-swap       (e.g. UIKit Scene Lifecycle)
+#   strangler-fig         developer|zone-by-zone     (pure responsibility migration)
+#   platform-strangler    platform|zone-by-zone      (e.g. AppDelegate → SceneDelegate, zone-by-zone)
+#
+# dispatch values per step:
+#   applies       run the standard step as documented in workflow.md
+#   skip          skip entirely — write skip_reason to state and advance current_step
+#   replaced      delegate to the replacement_script listed below
+#
+# Every workflow.md step MUST read this file and check its dispatch value before executing.
+# Adding a new mode: add a new column here. No changes to workflow.md required.
+# CI check: every step-id that appears in workflow.md must have a row in this table.
+
+schema_version: "1.0"
+
+steps:
+  #                          seam-injection   platform-migration   strangler-fig   platform-strangler
+  S1_target:
+    seam-injection:          applies
+    platform-migration:      applies
+    strangler-fig:           applies
+    platform-strangler:      applies
+
+  S2a_zones:
+    seam-injection:          applies
+    platform-migration:      applies
+    strangler-fig:           applies
+    platform-strangler:      applies
+
+  S2_contracts:
+    seam-injection:          applies
+    platform-migration:
+      dispatch:              replaced
+      replacement_script:    gate-contracts-platform.sh
+      skip_reason:           null
+      note: "Contracts mapped to platform method slots (to_slot field). See platform-slot-map.yaml."
+    strangler-fig:           applies
+    platform-strangler:
+      dispatch:              replaced
+      replacement_script:    gate-contracts-platform.sh
+      skip_reason:           null
+
+  S3_seams:
+    seam-injection:          applies
+    platform-migration:
+      dispatch:              skip
+      skip_reason:           "Seams are Apple/Google method boundaries defined in platform SDK — no injection analysis needed."
+    strangler-fig:           applies
+    platform-strangler:
+      dispatch:              skip
+      skip_reason:           "Seams are Apple/Google method boundaries defined in platform SDK — no injection analysis needed."
+
+  S4_tests:
+    seam-injection:          applies
+    platform-migration:      applies
+    strangler-fig:           applies
+    platform-strangler:      applies
+
+  S5_interface:
+    seam-injection:          applies
+    platform-migration:
+      dispatch:              skip
+      skip_reason:           "Interface is defined by the platform SDK (e.g. UIWindowSceneDelegate). No design decision required."
+    strangler-fig:           applies
+    platform-strangler:
+      dispatch:              skip
+      skip_reason:           "Interface is defined by the platform SDK. No design decision required."
+
+  S6_adapter:
+    seam-injection:          applies
+    platform-migration:
+      dispatch:              skip
+      skip_reason:           "No legacy adapter needed — the platform-defined class (SceneDelegate) is the new implementation."
+    strangler-fig:
+      dispatch:              applies
+      note:                  "Conditional: if legacy impl already satisfies interface, adapter may be skipped (per Group B logic)."
+    platform-strangler:
+      dispatch:              skip
+      skip_reason:           "No legacy adapter needed — platform class is the new implementation."
+
+  S7_gate:
+    seam-injection:          applies
+    platform-migration:
+      dispatch:              replaced
+      replacement_script:    gate-platform-migration.sh
+      note:                  "Checks: legacy slots removed, target slots implemented, no double-dispatch."
+    strangler-fig:
+      dispatch:              replaced
+      replacement_script:    gate-strangler.sh
+      note:                  "Verifies each S_strangler_plan.yaml entry."
+    platform-strangler:
+      dispatch:              replaced
+      replacement_script:    gate-platform-migration.sh
+      note:                  "Runs both platform checks and strangler plan verification."
+
+# Skip reasons written to state.yaml when dispatch == skip:
+#   state.steps.SN.status = "skipped"
+#   state.steps.SN.skip_reason = <skip_reason from above>
+#   state.steps.SN.completed_at = <now>
+# Advancement: current_step increments normally — skipped steps count as "verified".

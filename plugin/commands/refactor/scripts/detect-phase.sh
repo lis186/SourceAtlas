@@ -1,0 +1,1 @@
+../../../../scripts/atlas/detect-phase.sh

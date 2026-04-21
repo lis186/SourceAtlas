@@ -1,0 +1,98 @@
+# platform-signatures.yaml — Deterministic detection rules for platform-prescribed migration targets.
+#
+# Each entry defines a platform migration pattern:
+#   id:               unique identifier
+#   name:             human-readable name
+#   legacy_signals:   grep patterns that indicate the file IS a legacy platform delegate
+#   target_signals:   grep patterns that indicate the replacement platform API is already in use
+#   target_architecture: which variant of the target platform API applies (affects slot-map lookup)
+#   mode_name:        migration mode to assign (always platform-migration or platform-strangler)
+#   granularity_hint: single-swap or zone-by-zone (used to set migration_granularity)
+#   reference:        authoritative documentation link
+#
+# Detection algorithm (in pilot-run.sh):
+#   1. For each entry, run legacy_signals grep against target file
+#   2. If any match → candidate detected
+#   3. Run target_signals grep against the project
+#   4. If legacy matches AND target absent → mode_name as declared
+#   5. If legacy matches AND target partially present → platform-strangler (zone-by-zone in progress)
+#   6. If only target present → not a legacy migration candidate, skip
+#
+# Confidence: requires BOTH legacy_signals hit AND target_signals grep to determine presence/absence.
+# When confidence is uncertain, output mode as "<mode>-candidate" and require user confirmation.
+
+schema_version: "1.0"
+
+platforms:
+
+  - id: ios_uikit_scenes
+    name: "iOS UIKit Scene-Based Lifecycle"
+    legacy_signals:
+      - pattern: "<UIApplicationDelegate>"
+        file_types: [".h", ".swift"]
+        description: "File conforms to UIApplicationDelegate"
+      - pattern: "@UIApplicationMain|@main"
+        file_types: [".swift"]
+        description: "File is the application entry point"
+    target_signals:
+      - pattern: "UIWindowSceneDelegate"
+        search_scope: project
+        file_types: [".swift", ".m", ".h"]
+        description: "Project already uses UIWindowSceneDelegate"
+      - pattern: "UIApplicationSceneManifest"
+        search_scope: project
+        file_types: ["Info.plist"]
+        description: "Info.plist declares Scene configuration"
+    target_architecture: "uikit_scenes"
+    mode_name: "platform-migration"
+    granularity_hint: "zone-by-zone"
+    minimum_lines_for_strangler: 300  # files below this → single-swap even if zone-by-zone hint
+    reference: "https://developer.apple.com/documentation/technotes/tn3187-migrating-to-the-uikit-scene-based-life-cycle"
+
+  - id: ios_swiftui_app
+    name: "iOS SwiftUI App Protocol"
+    legacy_signals:
+      - pattern: "<UIApplicationDelegate>"
+        file_types: [".h", ".swift"]
+      - pattern: "@UIApplicationMain|@main"
+        file_types: [".swift"]
+    target_signals:
+      - pattern: "struct.*:.*App\\b"
+        search_scope: project
+        file_types: [".swift"]
+        description: "Project has a SwiftUI App struct"
+    target_architecture: "swiftui_app"
+    mode_name: "platform-migration"
+    granularity_hint: "single-swap"
+    reference: "https://developer.apple.com/documentation/swiftui/app"
+
+  - id: android_single_activity
+    name: "Android Single-Activity Architecture"
+    legacy_signals:
+      - pattern: "extends Application"
+        file_types: [".java", ".kt"]
+      - pattern: "extends Activity"
+        file_types: [".java", ".kt"]
+    target_signals:
+      - pattern: "NavHostFragment|findNavController"
+        search_scope: project
+        file_types: [".java", ".kt", ".xml"]
+        description: "Project uses Jetpack Navigation"
+    target_architecture: "jetpack_navigation"
+    mode_name: "platform-migration"
+    granularity_hint: "zone-by-zone"
+    reference: "https://developer.android.com/guide/navigation/migrate"
+
+  - id: react_class_to_hooks
+    name: "React Class Components → Hooks"
+    legacy_signals:
+      - pattern: "extends (React\\.)?Component|extends (React\\.)?PureComponent"
+        file_types: [".jsx", ".tsx", ".js", ".ts"]
+    target_signals:
+      - pattern: "useState|useEffect|useCallback|useMemo"
+        search_scope: project
+        file_types: [".jsx", ".tsx", ".js", ".ts"]
+    target_architecture: "react_hooks"
+    mode_name: "platform-migration"
+    granularity_hint: "zone-by-zone"
+    reference: "https://react.dev/reference/react/hooks"

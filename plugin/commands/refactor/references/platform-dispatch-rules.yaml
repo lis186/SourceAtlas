@@ -1,0 +1,78 @@
+# platform-dispatch-rules.yaml — Double-dispatch detection rules per platform.
+#
+# Identifies cases where BOTH the legacy AND the new platform API coexist,
+# which may indicate incomplete migration or intentional dual-support.
+#
+# Each rule:
+#   id:                   unique identifier
+#   platform_id:          matches platform-signatures.yaml id
+#   target_architecture:  matches platform-slot-map.yaml key
+#   legacy_pattern:       grep pattern that should NO LONGER be present after migration
+#   target_pattern:       grep pattern that MUST be present after migration
+#   condition:            optional — only apply rule when this evaluates to true
+#     deployment_target_gte: "13.0"   checks IPHONEOS_DEPLOYMENT_TARGET
+#   severity_if_coexist:  fail | info
+#     fail = double-dispatch is an error (deployment target allows full migration)
+#     info = double-dispatch is expected (backward compat required)
+#   remediation:          what to do when this rule fires
+#   reference:            documentation link
+
+schema_version: "1.0"
+
+rules:
+
+  - id: ios_scenes_window_dual
+    platform_id: ios_uikit_scenes
+    target_architecture: uikit_scenes
+    description: "Both AppDelegate.window and SceneDelegate.window declared"
+    legacy_pattern: "@property.*UIWindow.*window"
+    legacy_file_hint: "AppDelegate"
+    target_pattern: "@property.*UIWindow.*window|var window: UIWindow?"
+    target_file_hint: "SceneDelegate"
+    condition:
+      deployment_target_gte: "13.0"
+    severity_if_coexist: fail
+    remediation: "Remove 'window' property from AppDelegate — it must live only in SceneDelegate after iOS 13+ migration."
+    reference: "https://developer.apple.com/documentation/technotes/tn3187-migrating-to-the-uikit-scene-based-life-cycle"
+
+  - id: ios_scenes_did_finish_dual
+    platform_id: ios_uikit_scenes
+    target_architecture: uikit_scenes
+    description: "AppDelegate still configures rootViewController inside didFinishLaunching after SceneDelegate migration"
+    legacy_pattern: "rootViewController"
+    legacy_file_hint: "AppDelegate"
+    target_pattern: "scene:willConnectTo|willConnectTo.*session.*options"
+    target_file_hint: "SceneDelegate"
+    condition:
+      deployment_target_gte: "13.0"
+    severity_if_coexist: fail
+    remediation: "Move rootViewController setup from AppDelegate.application:didFinishLaunchingWithOptions: to SceneDelegate.scene:willConnectTo:session:options:."
+    reference: "https://developer.apple.com/documentation/technotes/tn3187-migrating-to-the-uikit-scene-based-life-cycle"
+
+  - id: ios_scenes_lifecycle_dual
+    platform_id: ios_uikit_scenes
+    target_architecture: uikit_scenes
+    description: "AppDelegate lifecycle methods (didBecomeActive etc.) AND SceneDelegate lifecycle both implemented"
+    legacy_pattern: "applicationDidBecomeActive:|applicationWillResignActive:|applicationDidEnterBackground:|applicationWillEnterForeground:"
+    legacy_file_hint: "AppDelegate"
+    target_pattern: "sceneDidBecomeActive:|sceneWillResignActive:|sceneDidEnterBackground:|sceneWillEnterForeground:"
+    target_file_hint: "SceneDelegate"
+    condition:
+      deployment_target_gte: "13.0"
+    severity_if_coexist: info   # Both coexisting is valid during migration; downgrade to info
+    remediation: "Verify that lifecycle logic is not duplicated across AppDelegate and SceneDelegate. AppDelegate methods fire for iOS 12; SceneDelegate methods fire for iOS 13+."
+    reference: "https://developer.apple.com/documentation/technotes/tn3187-migrating-to-the-uikit-scene-based-life-cycle"
+
+  - id: ios_scenes_info_plist_missing
+    platform_id: ios_uikit_scenes
+    target_architecture: uikit_scenes
+    description: "SceneDelegate implemented but UIApplicationSceneManifest not declared in Info.plist"
+    legacy_pattern: "class SceneDelegate|struct SceneDelegate"
+    legacy_file_hint: "SceneDelegate"
+    target_pattern: "UIApplicationSceneManifest"
+    target_file_hint: "Info.plist"
+    condition: {}   # Always applies
+    severity_if_coexist: null   # Special: fires when target_pattern is ABSENT (not coexist)
+    check_type: "target_must_exist"
+    remediation: "Add UIApplicationSceneManifest key to Info.plist. Without it, UIKit ignores SceneDelegate at runtime."
+    reference: "https://developer.apple.com/documentation/uikit/app_and_environment/scenes/specifying_the_scenes_your_app_supports"

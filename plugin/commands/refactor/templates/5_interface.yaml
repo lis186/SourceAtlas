@@ -53,6 +53,29 @@ injection:
 #     - "Update injection site to use target type"
 #     - "Delete Seam Interface file"
 
+# ── Swap Strategy ───────────────────────────────────────────────────────────
+# Decided in Step 5, drives Step 6 adapter type and Step 9 wiring approach.
+#
+# direct:  LegacyAdapter → single-commit wiring swap (default)
+# shadow:  ShadowAdapter → dual-run period → hard swap after threshold met
+#
+# Use shadow when ALL of the following apply:
+#   1. Output must be byte-for-byte identical between old and new impl
+#   2. Cannot enumerate all valid inputs in advance (e.g. real user data required)
+#   3. Methods are pure / have no side effects (or side effects are safe to run twice)
+
+swap_strategy: "direct|shadow"
+
+# shadow_config: fill in when swap_strategy: shadow (omit for direct)
+# shadow_config:
+#   shadow_safe_methods: []    # methods safe to call twice (no side effects)
+#   unsafe_methods: []         # methods to EXCLUDE from shadow (side effects — log intent only)
+#   logger_protocol: "{ShadowLoggerProtocol}"   # protocol the ShadowAdapter uses to report results
+#   threshold:
+#     match_rate_pct: 99.9     # % of calls must match before S9b hard swap
+#     min_days: 7              # minimum observation period
+#     min_samples: 1000        # minimum number of calls observed
+
 # ── Contract Coverage ───────────────────────────────────────────────────────
 
 contracts_covered:

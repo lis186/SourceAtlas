@@ -12,22 +12,26 @@ Complete step-by-step guide for executing the 13-step Playbook (Steps 1-7 tool-a
 FILE_PATH=""
 ZONE_ID=""
 STEP=""
+MODE_OVERRIDE=""
 ZONES_ONLY=false
 STATUS_ONLY=false
 FORCE=false
 
 for arg in $ARGUMENTS; do
     case "$arg" in
-        --zone) NEXT_IS_ZONE=true ;;
-        --step) NEXT_IS_STEP=true ;;
+        --zone)       NEXT_IS_ZONE=true ;;
+        --step)       NEXT_IS_STEP=true ;;
+        --mode)       NEXT_IS_MODE=true ;;
         --zones-only) ZONES_ONLY=true ;;
-        --status) STATUS_ONLY=true ;;
-        --force) FORCE=true ;;
+        --status)     STATUS_ONLY=true ;;
+        --force)      FORCE=true ;;
         *)
             if [ "$NEXT_IS_ZONE" = true ]; then
                 ZONE_ID="$arg"; NEXT_IS_ZONE=false
             elif [ "$NEXT_IS_STEP" = true ]; then
                 STEP="$arg"; NEXT_IS_STEP=false
+            elif [ "$NEXT_IS_MODE" = true ]; then
+                MODE_OVERRIDE="$arg"; NEXT_IS_MODE=false
             else
                 FILE_PATH="$arg"
             fi
@@ -153,6 +157,75 @@ fi
 # If --step N, set current_step = N and continue
 # Otherwise, auto-detect current_step from state
 ```
+
+### Schema Version Check (F5: backward compatibility)
+
+When loading an existing `state.yaml`, always check its schema version:
+
+```bash
+SCHEMA_VER=$(grep '^schema_version:' "$STATE_FILE" | awk '{print $2}' | tr -d '"')
+
+if [ -z "$SCHEMA_VER" ]; then
+    # v1 state (no schema_version field) — treat as seam-injection, show migration notice
+    echo "ℹ️  Legacy state detected (schema v1). Treating as seam-injection mode."
+    echo "   To change mode: /atlas.refactor $FILE_PATH --mode <name> --force"
+    # Inject defaults so downstream logic can read migration_mode safely
+    MIGRATION_MODE="seam-injection"
+    MIGRATION_CONFIRMED=true
+else
+    MIGRATION_MODE=$(grep 'mode_name:' "$STATE_FILE" | head -1 | awk '{print $2}' | tr -d '"')
+    MIGRATION_CONFIRMED=$(grep 'confirmed:' "$STATE_FILE" | head -1 | awk '{print $2}')
+fi
+```
+
+If `SCHEMA_VER` is empty (v1 state), do NOT rewrite the state file automatically — only use the in-memory defaults above. The user may explicitly upgrade by passing `--force`.
+
+### Migration Mode Override
+
+If `--mode <name>` was passed in arguments:
+
+```bash
+if [ -n "$MODE_OVERRIDE" ]; then
+    # Validate value
+    case "$MODE_OVERRIDE" in
+        seam-injection|platform-migration|strangler-fig|platform-strangler) ;;
+        *) echo "❌ Unknown mode: $MODE_OVERRIDE"; echo "Valid: seam-injection | platform-migration | strangler-fig | platform-strangler"; exit 1 ;;
+    esac
+    MIGRATION_MODE="$MODE_OVERRIDE"
+    MIGRATION_CONFIRMED=true
+    # Write into state
+    # (sed update of mode_name + detection_source: override + confirmed: true)
+fi
+```
+
+### Step Dispatch Check
+
+At the **start of every step**, read `mode-dispatch.yaml` for the current mode:
+
+```bash
+DISPATCH_FILE="$(dirname "$0")/../references/mode-dispatch.yaml"
+# Parse dispatch value for current step and mode (use yq or grep-based fallback)
+# STEP_DISPATCH = applies | skip | replaced
+
+if [ "$STEP_DISPATCH" = "skip" ]; then
+    SKIP_REASON=$(parse_skip_reason "$DISPATCH_FILE" "$STEP_KEY" "$MIGRATION_MODE")
+    echo "⏭️  Step $STEP skipped (mode: $MIGRATION_MODE)"
+    echo "   Reason: $SKIP_REASON"
+    # Write to state: status=skipped, skip_reason, completed_at=now
+    advance_step
+    exit 0
+fi
+
+if [ "$STEP_DISPATCH" = "replaced" ]; then
+    REPLACEMENT=$(parse_replacement_script "$DISPATCH_FILE" "$STEP_KEY" "$MIGRATION_MODE")
+    SCRIPTS_DIR="$(dirname "$0")/../scripts"
+    exec bash "$SCRIPTS_DIR/$REPLACEMENT" "$STATE_DIR"
+fi
+
+# dispatch == applies: continue with standard step logic below
+```
+
+This pattern repeats at the top of Steps 1–7. The dispatch check is the **first** thing each step does after its prerequisite check.
 
 ### Step Status Lifecycle
 
@@ -307,7 +380,61 @@ bash "$PILOT" "$PROJECT_ROOT" "$FILE_PATH"
 Flag showstoppers (swizzle > 0, storyboard string dispatch > 0, categories
 on the target) in the Step 1 summary — these force design choices in Step 5.
 
-### 1.5 Update State
+### 1.5 Determine Migration Mode
+
+Read the `Platform Migration Signals` section from the pilot report:
+
+```bash
+PILOT_REPORT=".sourceatlas/refactor/pilot-${MODULE_NAME}.md"
+DETECTED_MODE=$(grep 'recommended_mode:' "$PILOT_REPORT" | head -1 | sed 's/.*recommended_mode: *"\?//' | tr -d '"')
+DETECTED_MODE=${DETECTED_MODE:-seam-injection}
+
+# --mode override takes precedence over pilot detection
+if [ -n "$MODE_OVERRIDE" ]; then
+    FINAL_MODE="$MODE_OVERRIDE"
+    DETECTION_SOURCE="override"
+else
+    FINAL_MODE="$DETECTED_MODE"
+    DETECTION_SOURCE="auto"
+fi
+```
+
+**Candidate mode confirmation rule** (F1: prevents silent misclassification):
+
+- If `DETECTION_SOURCE=auto` AND `FINAL_MODE != seam-injection`:
+  - Display detected mode + signals + reference doc to the user
+  - Output:
+    ```
+    🔍 Platform migration detected: {platform_name}
+       Recommended mode: {mode_name}
+       Reference: {reference_url}
+
+    Signals found:
+      - {signal_1}
+      - {signal_2}
+
+    ✅ Confirm? Press Enter to accept, or override:
+       /atlas.refactor {file} --mode seam-injection    (force standard mode)
+       /atlas.refactor {file} --mode platform-migration --force
+    ```
+  - **WAIT for user response.** Do not write `migration_mode.confirmed: true` until user confirms.
+  - Set `confirmed: false` in state until response received.
+- If `DETECTION_SOURCE=override` OR `FINAL_MODE=seam-injection`: auto-confirm, no prompt needed.
+
+Write into state (after confirmation if required):
+
+```yaml
+migration_mode:
+  interface_origin: "{developer|platform}"
+  migration_granularity: "{single-swap|zone-by-zone}"
+  mode_name: "{FINAL_MODE}"
+  detection_source: "{auto|override}"
+  detection_signals: ["{signal_1}", ...]
+  confirmed: true
+  confirmed_at: "{iso_date}"
+```
+
+### 1.6 Update State
 
 Set `1_target: { status: completed, completed_at: {now} }` and `current_step: 2`.
 
@@ -328,6 +455,9 @@ sed -i '' "s/  locked_at: null/  locked_at: \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"
 **Input**: `1_target.yaml`
 **Action**: Discover zones (2a) then extract contracts (2b)
 **Output**: `2a_zones.yaml`, `2_contracts.yaml`
+
+> **Dispatch check**: Read `mode-dispatch.yaml` for `S2_contracts` and current mode before starting 2b.
+> If `replaced` → delegate to `gate-contracts-platform.sh` which maps contracts to platform slots.
 
 ### Step 2a: Zone Discovery
 
@@ -357,6 +487,77 @@ Save result as `2_contracts.yaml`.
 Record `audit_mode` in state:
 - `full` — all three LLMs ran (gemini + codex available)
 - `degraded` — one or more LLMs unavailable, Claude-only analysis
+
+### 2b-alt: Strangler Plan Generation (platform-migration / strangler-fig / platform-strangler only)
+
+> Skip this section entirely when `mode_name: seam-injection`.
+
+After zone discovery (2a), generate a draft migration plan from zone data:
+
+```bash
+PLAN_FILE="${STATE_DIR}/S_strangler_plan.yaml"
+
+# Read zones from 2a_zones.yaml
+ZONE_COUNT=$(yq e '.zones | length' "${STATE_DIR}/2a_zones.yaml")
+
+cat > "$PLAN_FILE" <<HEADER
+# S_strangler_plan.yaml — Migration plan for ${MODULE_NAME}
+# Generated from zone map. Fill in to_slot and verification for each zone.
+# Run gate-strangler.sh to verify progress.
+schema_version: "1.0"
+module: "${MODULE_NAME}"
+mode: "${MIGRATION_MODE}"
+migration_plan:
+HEADER
+
+for i in $(seq 0 $((ZONE_COUNT - 1))); do
+    zid=$(yq e ".zones[$i].id" "${STATE_DIR}/2a_zones.yaml")
+    zname=$(yq e ".zones[$i].name" "${STATE_DIR}/2a_zones.yaml")
+    # from_slot: first method name in zone (heuristic; user should verify)
+    zfirst_method=$(yq e ".zones[$i].methods[0] // \"\"" "${STATE_DIR}/2a_zones.yaml" 2>/dev/null || echo "")
+
+    cat >> "$PLAN_FILE" <<ZONE
+  - zone_id: "$zid"
+    responsibility: "$zname"
+    from_slot: "$zfirst_method"   # TODO: verify — legacy API being replaced
+    to_slot: ""                   # REQUIRED: fill in target platform method
+    verification:
+      legacy_removed: "! grep -qE '<from_slot_pattern>' \"$FILE_PATH\""   # replace <from_slot_pattern>
+      new_implemented: "grep -qE '<to_slot_pattern>' \"\${NEW_FILE}\""    # replace <to_slot_pattern> and path
+    status: "pending"
+ZONE
+done
+```
+
+For **platform-migration** and **platform-strangler** modes, auto-fill `to_slot` by looking up `from_slot` in `platform-slot-map.yaml`:
+
+```bash
+SLOT_MAP="$(dirname "$0")/../references/platform-slot-map.yaml"
+TARGET_ARCH=$(yq e '.migration_mode.detection_signals[] | select(. == "target_architecture:*")' "$STATE_FILE" 2>/dev/null \
+    || grep 'target_architecture' ".sourceatlas/refactor/pilot-${MODULE_NAME}.md" | head -1 | awk '{print $2}')
+
+# For each zone, attempt a slot lookup:
+#   yq e ".mappings.${TARGET_ARCH}.slots[] | select(.from == \"$FROM_SLOT\") | .to" "$SLOT_MAP"
+# If matched: write to_slot + generate verification using the slot's target_file_hint
+# If not matched: leave to_slot: "" and mark TODO
+
+# verification.legacy_removed uses -F (fixed-string, no shell expansion) for safety
+# verification.new_implemented likewise uses -F
+```
+
+Unmatched zones remain empty (`to_slot: ""`) and display a `⚠️ TODO` marker in the plan output.
+The `notes` field from the slot map entry (e.g. iOS version caveats) is appended as `slot_notes`.
+
+Present the draft plan to the user with instructions:
+```
+📋 Strangler plan draft: .sourceatlas/refactor/{module}/S_strangler_plan.yaml
+   {n} zones detected. Fill in to_slot and verification for each.
+   Unmatched zones marked TODO — check platform-slot-map.yaml or fill manually.
+
+   When ready: /atlas.refactor {file} --step 3
+```
+
+Set `S_strangler_plan: { status: produced }` in state.
 
 ### 2.3 Verify: Check Audit Artifact
 
@@ -974,9 +1175,49 @@ contracts_covered:
   not_covered_reason: "{why}"
 ```
 
+### 5.5b Swap Strategy Decision
+
+After proposing the interface (5.2–5.4), present a second decision to the user:
+
+> **Should this migration use Shadow Mode or Direct Swap?**
+
+Evaluate the recommended seam's `target_dependency` against these criteria:
+
+| Criterion | Shadow | Direct |
+|-----------|--------|--------|
+| Output must be byte-for-byte identical (crypto, hashing, encoding) | ✓ | — |
+| Cannot enumerate all valid inputs in advance | ✓ | — |
+| All protocol methods are pure / side-effect-free | ✓ required | not required |
+| New impl can be validated by unit tests alone | — | ✓ |
+
+**If shadow is warranted**, also determine which methods are **shadow-safe** (pure — safe to call twice) vs **unsafe** (side effects — shadow logs intent only, does not call new impl):
+
+```
+For each method in the interface:
+  - Is calling the new impl twice (primary + shadow) safe?
+  - If yes → shadow_safe_methods
+  - If no (writes DB, sends network request, charges user) → unsafe_methods
+```
+
+Present to user alongside the interface proposal:
+```
+💡 Shadow Mode recommendation: {Yes/No}
+   Reason: {one-line justification}
+
+   Shadow-safe:  {method list}
+   Unsafe:       {method list} ← shadow logs intent, does not call new impl
+
+   Threshold guidance: 99.9% match rate over ≥7 days / ≥1000 samples
+   (adjust based on traffic volume and risk tolerance)
+
+Confirm swap_strategy: [direct] or [shadow]
+```
+
+Write `swap_strategy` and (if shadow) `shadow_config` into `5_interface.yaml` after user confirms.
+
 ### 5.6 Update State
 
-Set `5_interface: { status: verified, migration_type: same-language|cross-language }` (user approval = verified), `current_step: 6`.
+Set `5_interface: { status: verified, migration_type: same-language|cross-language, swap_strategy: direct|shadow }` (user approval = verified), `current_step: 6`.
 
 If `cross-language`, also set `target_interface_ref` and `target_language` in state.
 
@@ -997,11 +1238,81 @@ This prevents the adapter (Step 6) from being generated by the same agent that p
 
 ## Step 6: Legacy Adapter
 
-**Input**: `5_interface.{ext}`, `3_seams.yaml`
+**Input**: `5_interface.{ext}`, `3_seams.yaml`, `5_interface.yaml → swap_strategy`
 **Action**: Create adapter bridging legacy code to new interface
 **Output**: `6_adapter.{ext}`, `6_diff.patch`
 
+> Read `swap_strategy` from `5_interface.yaml` first.
+> `direct` → generate LegacyAdapter (standard path below).
+> `shadow` → generate ShadowAdapter (see §6.0 before §6.1).
+
+### 6.0 Shadow Adapter (swap_strategy: shadow only)
+
+Skip this section entirely when `swap_strategy: direct`.
+
+Generate **two files** instead of one:
+
+**File 1: `6_logger_protocol.{ext}`** — the logger protocol ShadowAdapter depends on:
+
+```
+// ObjC:
+@protocol {Name}ShadowLogger <NSObject>
+- (void)shadowMethod:(NSString *)selector
+             primary:(id)primaryResult
+              shadow:(id)shadowResult
+             matched:(BOOL)matched;
+@end
+
+// Swift:
+protocol {Name}ShadowLogger: AnyObject {
+    func shadow(method: String, primary: Any?, shadow: Any?, matched: Bool)
+}
+```
+
+**File 2: `6_adapter.{ext}`** — the ShadowAdapter:
+
+```
+// ObjC:
+@interface Shadow{Name}Adapter : NSObject <{Name}Protocol>
+- (instancetype)initWithPrimary:(id<{Name}Protocol>)primary
+                         shadow:(id<{Name}Protocol>)shadow
+                         logger:(id<{Name}ShadowLogger>)logger;
+@end
+
+@implementation Shadow{Name}Adapter
+// For each shadow-safe method:
+- (ReturnType)methodName:(Param)p {
+    ReturnType primary = [_primary methodName:p];
+    ReturnType candidate = [_shadow methodName:p];    // calls new impl
+    BOOL matched = [primary isEqual:candidate];
+    [_logger shadowMethod:@"methodName:" primary:primary shadow:candidate matched:matched];
+    return primary;  // always return primary result
+}
+// For each unsafe method (side effects):
+- (ReturnType)unsafeMethod:(Param)p {
+    [_logger shadowMethod:@"unsafeMethod:" primary:nil shadow:nil matched:YES];  // log intent only
+    return [_primary unsafeMethod:p];  // only calls primary, never shadow
+}
+@end
+```
+
+Also generate `6_diff.patch` showing injection site wiring (same as direct, but using `Shadow{Name}Adapter`).
+
+Write to `state.yaml`:
+```yaml
+6_adapter:
+  status: verified
+  adapter_type: "shadow"
+  logger_protocol_file: "{path to 6_logger_protocol.{ext}}"
+  shadow_safe_methods: ["{method1}", ...]
+  unsafe_methods: ["{method1}", ...]
+```
+
+> **Note**: The new implementation (Step 8) must conform to the Seam Interface and be injected as the `shadow:` parameter. The `primary:` parameter receives the LegacyAdapter.
+
 ### 6.1 Language Group Dispatch
+
+> Skip §6.1–6.2 for shadow adapters — §6.0 already produced the adapter files.
 
 #### Group A (Nominal): Adapter Class
 

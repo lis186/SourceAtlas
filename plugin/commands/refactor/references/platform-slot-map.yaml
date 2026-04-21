@@ -1,0 +1,145 @@
+# platform-slot-map.yaml — Known legacy → target API slot mappings per platform.
+#
+# Keyed by target_architecture (matches platform-signatures.yaml entries).
+# Each mapping entry:
+#   from:        legacy method name / pattern (used for verification.legacy_removed grep)
+#   to:          target platform method (used for verification.new_implemented grep)
+#   notes:       migration nuance (e.g. iOS version conditions, semantic differences)
+#   confidence:  high | medium | low  (low = requires manual verification before acting)
+#
+# Lookup algorithm in 2b-alt strangler plan generation:
+#   1. Read target_architecture from state.yaml → migration_mode
+#   2. Find matching block in this file
+#   3. For each zone's from_slot, search mappings for a match
+#   4. If found → pre-fill to_slot + auto-generate verification
+#   5. If not found → leave to_slot empty, mark as TODO
+
+schema_version: "1.0"
+
+mappings:
+
+  uikit_scenes:
+    description: "UIKit Scene-Based Lifecycle (TN3187)"
+    reference: "https://developer.apple.com/documentation/technotes/tn3187-migrating-to-the-uikit-scene-based-life-cycle"
+    note: "Requires deployment target iOS 13+. For iOS 12 support keep AppDelegate methods and guard with availability check."
+    slots:
+      - from: "application:didFinishLaunchingWithOptions:"
+        to: "scene:willConnectTo:session:options:"
+        target_file_hint: "SceneDelegate.swift"
+        notes: "Window setup and initial configuration moves here. Return true still needed in AppDelegate for iOS 12."
+        confidence: high
+
+      - from: "applicationDidBecomeActive:"
+        to: "sceneDidBecomeActive:"
+        target_file_hint: "SceneDelegate.swift"
+        notes: "Resume timers, restart paused tasks."
+        confidence: high
+
+      - from: "applicationWillResignActive:"
+        to: "sceneWillResignActive:"
+        target_file_hint: "SceneDelegate.swift"
+        notes: "Pause ongoing tasks, disable timers."
+        confidence: high
+
+      - from: "applicationDidEnterBackground:"
+        to: "sceneDidEnterBackground:"
+        target_file_hint: "SceneDelegate.swift"
+        notes: "Release shared resources, save user data."
+        confidence: high
+
+      - from: "applicationWillEnterForeground:"
+        to: "sceneWillEnterForeground:"
+        target_file_hint: "SceneDelegate.swift"
+        notes: "Undo changes made on entering background."
+        confidence: high
+
+      - from: "applicationWillTerminate:"
+        to: null
+        target_file_hint: null
+        notes: "No scene equivalent — AppDelegate.applicationWillTerminate: still fires. Keep in AppDelegate."
+        confidence: high
+
+      - from: "application:openURL:options:"
+        to: "scene:openURLContexts:"
+        target_file_hint: "SceneDelegate.swift"
+        notes: "Deep link / URL scheme handling."
+        confidence: high
+
+      - from: "application:continueUserActivity:restorationHandler:"
+        to: "scene:continueUserActivity:"
+        target_file_hint: "SceneDelegate.swift"
+        notes: "Handoff and Universal Links."
+        confidence: high
+
+      - from: "application:didReceiveRemoteNotification:"
+        to: null
+        target_file_hint: null
+        notes: "Remote notification handling stays in AppDelegate (UNUserNotificationCenterDelegate)."
+        confidence: high
+
+      - from: "window"
+        to: "window"
+        target_file_hint: "SceneDelegate.swift"
+        notes: "UIWindow property moves from AppDelegate to SceneDelegate. AppDelegate.window should be removed."
+        confidence: high
+
+  swiftui_app:
+    description: "SwiftUI App Protocol"
+    reference: "https://developer.apple.com/documentation/swiftui/app"
+    slots:
+      - from: "application:didFinishLaunchingWithOptions:"
+        to: "init()"
+        target_file_hint: "App.swift"
+        notes: "App-level initialization moves to App struct init or @main body."
+        confidence: medium
+
+      - from: "window"
+        to: "WindowGroup"
+        target_file_hint: "App.swift"
+        notes: "Window is replaced by a WindowGroup scene in the App body."
+        confidence: high
+
+  jetpack_navigation:
+    description: "Android Jetpack Navigation (Single-Activity)"
+    reference: "https://developer.android.com/guide/navigation/migrate"
+    slots:
+      - from: "onCreate"
+        to: "NavHostFragment"
+        target_file_hint: "MainActivity.kt"
+        notes: "Activity onCreate sets up NavHostFragment; individual screen logic moves to Fragments."
+        confidence: medium
+
+      - from: "onBackPressed"
+        to: "onSupportNavigateUp"
+        target_file_hint: "MainActivity.kt"
+        notes: "Back navigation handled by NavController."
+        confidence: high
+
+  react_hooks:
+    description: "React Class Components to Hooks"
+    reference: "https://react.dev/reference/react/hooks"
+    slots:
+      - from: "componentDidMount"
+        to: "useEffect(() => { ... }, [])"
+        notes: "Run-once effect on mount."
+        confidence: high
+
+      - from: "componentDidUpdate"
+        to: "useEffect(() => { ... }, [deps])"
+        notes: "Dependency array must be specified explicitly."
+        confidence: medium
+
+      - from: "componentWillUnmount"
+        to: "useEffect(() => { return () => { ... } }, [])"
+        notes: "Cleanup return inside useEffect."
+        confidence: high
+
+      - from: "this.state"
+        to: "useState"
+        notes: "Each state field becomes a separate useState call."
+        confidence: high
+
+      - from: "this.setState"
+        to: "setState (from useState)"
+        notes: "Functional update form recommended when new state depends on previous."
+        confidence: high

@@ -444,6 +444,123 @@ fi
 rm -f "$zone_yaml"
 echo "" >> "$OUTPUT"
 
+# ── Platform Migration Signals ────────────────────────────────────────────────
+# Reads platform-signatures.yaml and detects whether this target is a candidate
+# for platform-prescribed migration (e.g. UIKit Scenes, SwiftUI App, Jetpack Nav).
+# Outputs a recommended migration_mode with confidence level.
+# When confidence is uncertain → outputs "<mode>-candidate" requiring user confirmation.
+
+echo "## Platform Migration Signals" >> "$OUTPUT"
+
+PLATFORM_SIGS="$SCRIPT_DIR/../references/platform-signatures.yaml"
+detected_platform_id=""
+detected_mode=""
+detected_confidence=""
+detected_reference=""
+
+if [[ -f "$PLATFORM_SIGS" ]]; then
+    # Parse platform entries and run grep-based detection.
+    # Uses yq when available; falls back to line-oriented awk parsing.
+    if command -v yq &>/dev/null; then
+        platform_count=$(yq e '.platforms | length' "$PLATFORM_SIGS" 2>/dev/null || echo 0)
+        for i in $(seq 0 $((platform_count - 1))); do
+            pid=$(yq e ".platforms[$i].id" "$PLATFORM_SIGS")
+            pname=$(yq e ".platforms[$i].name" "$PLATFORM_SIGS")
+            pmode=$(yq e ".platforms[$i].mode_name" "$PLATFORM_SIGS")
+            pref=$(yq e ".platforms[$i].reference" "$PLATFORM_SIGS")
+            gran=$(yq e ".platforms[$i].granularity_hint" "$PLATFORM_SIGS")
+            min_lines=$(yq e ".platforms[$i].minimum_lines_for_strangler // 300" "$PLATFORM_SIGS")
+
+            # Check each legacy_signal against target file
+            legacy_hit=0
+            legacy_count=$(yq e ".platforms[$i].legacy_signals | length" "$PLATFORM_SIGS")
+            # For ObjC .m files, also check the paired .h (interface decls live there)
+            paired_header="${TARGET%.m}.h"
+            for j in $(seq 0 $((legacy_count - 1))); do
+                pattern=$(yq e ".platforms[$i].legacy_signals[$j].pattern" "$PLATFORM_SIGS")
+                set +o pipefail
+                if grep -qE "$pattern" "$TARGET" 2>/dev/null; then
+                    legacy_hit=1
+                elif [[ -f "$paired_header" ]] && grep -qE "$pattern" "$paired_header" 2>/dev/null; then
+                    legacy_hit=1
+                fi
+                set -o pipefail
+            done
+
+            if [[ "$legacy_hit" -eq 0 ]]; then continue; fi
+
+            # Legacy signal matched — now check target signals in project
+            target_present=0
+            target_count=$(yq e ".platforms[$i].target_signals | length" "$PLATFORM_SIGS")
+            for k in $(seq 0 $((target_count - 1))); do
+                tpattern=$(yq e ".platforms[$i].target_signals[$k].pattern" "$PLATFORM_SIGS")
+                set +o pipefail
+                if grep -rqE "$tpattern" --include="*.swift" --include="*.m" --include="*.h" \
+                        --include="*.java" --include="*.kt" --include="*.jsx" --include="*.tsx" \
+                        --include="*.js" --include="*.ts" --include="Info.plist" \
+                        "$PROJECT_ROOT" 2>/dev/null \
+                        | grep -qv '/(Pods|build|DerivedData|Carthage|SourcePackages)/' 2>/dev/null; then
+                    target_present=1
+                fi
+                set -o pipefail
+            done
+
+            # Determine confidence and effective mode
+            target_file_lines=$(wc -l < "$TARGET" 2>/dev/null || echo 0)
+            local_mode="$pmode"
+            if [[ "$target_present" -eq 1 ]]; then
+                # Both legacy and target present → migration partially in progress → zone-by-zone
+                local_mode="platform-strangler"
+                conf_label="MEDIUM — target API already partially adopted; zone-by-zone migration in progress"
+            else
+                # Legacy present, target absent → full migration needed
+                if [[ "$gran" = "zone-by-zone" && "$target_file_lines" -ge "$min_lines" ]]; then
+                    local_mode="${pmode}"
+                    conf_label="HIGH — legacy pattern matched, target API absent"
+                else
+                    local_mode="${pmode}"
+                    conf_label="HIGH — legacy pattern matched"
+                fi
+            fi
+
+            detected_platform_id="$pid"
+            detected_mode="$local_mode"
+            detected_confidence="$conf_label"
+            detected_reference="$pref"
+            break  # first match wins
+        done
+    fi
+
+    if [[ -n "$detected_platform_id" ]]; then
+        cat >> "$OUTPUT" <<EOF
+\`\`\`yaml
+platform_migration_detected:
+  platform_id: "$detected_platform_id"
+  recommended_mode: "$detected_mode"
+  confidence: "$detected_confidence"
+  reference: "$detected_reference"
+\`\`\`
+
+> **Mode override**: If detection is wrong → \`/atlas.refactor $basename_noext --mode <name>\`
+> Valid modes: \`seam-injection\` | \`platform-migration\` | \`strangler-fig\` | \`platform-strangler\`
+
+EOF
+    else
+        cat >> "$OUTPUT" <<'EOF'
+```yaml
+platform_migration_detected: false
+recommended_mode: "seam-injection"
+confidence: "HIGH — no platform migration patterns matched"
+```
+
+EOF
+    fi
+else
+    echo "_(platform-signatures.yaml not found — skipping platform detection)_" >> "$OUTPUT"
+    echo "" >> "$OUTPUT"
+fi
+# ── End Platform Migration Signals ────────────────────────────────────────────
+
 echo "## Step-1 Readiness Checklist" >> "$OUTPUT"
 echo "- [ ] Phase detected and matches team expectation" >> "$OUTPUT"
 echo "- [ ] Zone map covers all major sections of target" >> "$OUTPUT"
@@ -451,5 +568,6 @@ echo "- [ ] Cross-language exposure reviewed (Bridging-Header, -Swift.h)" >> "$O
 echo "- [ ] Runtime-hidden showstoppers (swizzle/KVO/storyboard) triaged" >> "$OUTPUT"
 echo "- [ ] Paired header API surface recorded" >> "$OUTPUT"
 echo "- [ ] Recommended First Slice reviewed (override if heuristic looks wrong)" >> "$OUTPUT"
+echo "- [ ] Migration mode reviewed (platform-migration detected? confirm or override)" >> "$OUTPUT"
 
 echo "wrote $OUTPUT"
