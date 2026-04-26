@@ -97,7 +97,7 @@ bash "$SCRIPT_DIR/pilot-run.sh" "$PROJECT_ROOT" "$TARGET" >&2 || true
 detected_mode="seam-injection"
 platform_id=""
 platform_ref=""
-detection_signals_inline="[]"  # used inline after the colon
+detection_signals_inline="[]"
 
 if [[ -f "$pilot_report" ]]; then
     # awk-based extraction: find key, take value between quotes (or trailing word)
@@ -151,7 +151,6 @@ else
     confirmed_at="null"
 fi
 
-# Map mode_name → interface_origin × granularity
 case "$final_mode" in
     seam-injection)      origin="developer"; granularity="single-swap" ;;
     strangler-fig)       origin="developer"; granularity="zone-by-zone" ;;
@@ -282,8 +281,12 @@ fi
 if (( swizzle_count > 0 || storyboard_dispatch > 0 )); then
     echo
     echo "  ⚠️  Showstoppers detected:"
-    (( swizzle_count > 0 ))       && echo "    - swizzle: $swizzle_count occurrence(s) — preserve order in Step 5"
-    (( storyboard_dispatch > 0 )) && echo "    - storyboard string dispatch: $storyboard_dispatch — Step 5 must keep class names"
+    if (( swizzle_count > 0 )); then
+        echo "    - swizzle: $swizzle_count occurrence(s) — preserve order in Step 5"
+    fi
+    if (( storyboard_dispatch > 0 )); then
+        echo "    - storyboard string dispatch: $storyboard_dispatch — Step 5 must keep class names"
+    fi
 fi
 
 echo
