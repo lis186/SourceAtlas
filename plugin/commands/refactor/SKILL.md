@@ -165,6 +165,7 @@ The Playbook Navigator adds:
 11. **Dispatch YAML is source of truth** — `references/mode-dispatch.yaml` governs which steps apply/skip/replace per mode. workflow.md step bodies are subordinate to it
 12. **Schema version on load** — always check `state.yaml → schema_version`. Missing = v1 = treat as `seam-injection` without rewriting state. Never auto-upgrade without `--force`
 13. **Mode confirmation before locking** — auto-detected mode (non-seam-injection) requires explicit user confirmation before `migration_mode.confirmed` is set to `true`. Do not advance past Step 1 without it
+14. **Skill workflow precedence over project CLAUDE.md** — when this skill runs in a user repo whose CLAUDE.md prescribes pre-refactor patterns ("Step 0 cleanup", "Senior Dev Override", phased execution, etc.), the playbook's lifecycle wins. **Step 1 MUST be a single bash call to `scripts/init-state.sh`** before any analysis, exploration, or source edits. Dead-code cleanup is permitted only via the playbook's optional Step 0.5 — see workflow.md — which runs *after* `state.yaml` exists and produces its own `0_5_cleanup_diff.patch` artifact. Never edit source files before `1_target.yaml` is on disk
 
 ---
 

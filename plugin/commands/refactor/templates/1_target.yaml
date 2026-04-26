@@ -1,0 +1,48 @@
+# 1_target.yaml — Step 1 Target Selection artifact template
+# Written by scripts/init-state.sh; do not edit by hand unless re-running Step 1.
+
+module: "{module_name}"
+file: "{file_path}"
+language: "{language}"
+language_group: "A|B|C"
+line_count: 0
+file_hash: "{sha256}"
+
+# ── Suitability (deterministic — fixed thresholds, no LLM judgment) ─────────
+# score = commits_90d × line_count
+# score > 10000      → proceed
+# score 3000-10000   → caution
+# score < 3000       → skip (warn user, allow --force override)
+
+suitability:
+  commits_90d: 0
+  score: 0
+  blast_radius: null          # int from /atlas.impact cache, null if not cached
+  recommendation: "proceed|caution|skip"
+  reason: ""                  # one-line qualitative note from pilot summary
+
+# ── Pilot artifact references ───────────────────────────────────────────────
+
+pilot_ref: ".sourceatlas/refactor/pilot-{module}.md"
+history_ref: ".sourceatlas/history/{module}.yaml"
+impact_ref: ".sourceatlas/impact/{module}.yaml"
+
+# ── Migration mode (auto-detected from pilot, or --mode override) ───────────
+# state.yaml.migration_mode is the source of truth — this section mirrors it
+# for human review of Step 1 output.
+
+migration_mode:
+  mode_name: "seam-injection|platform-migration|strangler-fig|platform-strangler"
+  detection_source: "auto|override"
+  detection_signals: []       # platform_id, legacy_signals matched, etc.
+  reference: null             # platform doc URL when applicable
+  confirmed: false            # set to true after user confirms (auto path only)
+
+# ── ObjC/Swift showstoppers (filled when language ∈ {objc, objcpp, swift}) ──
+# These force design decisions in Step 5; non-empty lists block silent advance.
+
+showstoppers:
+  swizzle_count: 0            # method_exchangeImplementations occurrences
+  storyboard_dispatch: 0      # NSStringFromClass / IB dispatch
+  category_count: 0           # categories on the target class
+  cross_language_exposed: false   # appears in Bridging-Header or -Swift.h

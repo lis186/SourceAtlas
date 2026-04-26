@@ -290,163 +290,88 @@ fi
 
 ## Step 1: Select Target
 
-**Input**: File path from arguments
-**Action**: Assess refactoring suitability using history + impact analysis
-**Output**: `1_target.yaml`
+**Input**: File path from arguments (+ optional `--mode <name>` override)
+**Action**: Single deterministic bash call — no exploration, no analysis, no source edits before this completes.
+**Output**: `state.yaml` + `1_target.yaml` + `pilot-{module}.md`
 
-### 1.1 Run History Analysis
+### Start
 
-Call `/atlas.history` on the target file to get:
-- Change frequency (commits in last 6 months)
-- Co-change partners (files that change together)
-- Knowledge concentration (bus factor)
+State: target file exists; `state.yaml` for this module does NOT exist (or `--force` was passed).
 
-Read the cached result from `.sourceatlas/history/` if available.
-
-### 1.2 Run Impact Analysis
-
-Call `/atlas.impact` on the target file to get:
-- Direct dependents (files that import/include this file)
-- Transitive dependents (2nd-degree impact)
-- Blast radius score
-
-Read the cached result from `.sourceatlas/impact/` if available.
-
-### 1.3 Assess Suitability
-
-Read `candidates.json` for the score of this file (or compute inline if not cached):
+### Do
 
 ```bash
-LINES=$(wc -l < "$FILE_PATH" | tr -d ' ')
-COMMITS=$(git log --oneline --since="$(date -v-90d +%Y-%m-%d 2>/dev/null || date -d '90 days ago' +%Y-%m-%d)" -- "$FILE_PATH" | wc -l | tr -d ' ')
-SCORE=$(( LINES * COMMITS ))
+INIT=plugin/commands/refactor/scripts/init-state.sh
+[ -f "$INIT" ] || INIT=~/.claude/plugins/cache/lis186-SourceAtlas/sourceatlas/*/commands/refactor/scripts/init-state.sh
+
+bash "$INIT" "$PROJECT_ROOT" "$FILE_PATH" ${MODE_OVERRIDE:+--mode "$MODE_OVERRIDE"} ${FORCE:+--force}
 ```
 
-Apply fixed thresholds to determine `recommendation` — **do not use LLM judgment**:
+That's it. The script chains internally:
+- `pilot-run.sh` → phase, zones, cross-language, runtime-hidden deps, platform detection
+- score = `lines × commits_90d` → `recommendation` via fixed thresholds (proceed/caution/skip)
+- `migration_mode` from pilot's `recommended_mode` (or `--mode` override)
+- showstopper grep (swizzle / storyboard dispatch / category count)
+- writes `state.yaml` (`1_target.status: produced`, `candidate_lock: locked`) and `1_target.yaml`
 
-```
-score > 10000  → proceed
-score 3000-10000 → caution
-score < 3000   → skip
-```
+The LLM's job at Step 1 is **only**:
+1. Run the bash command above
+2. Show the script's stdout summary to the user verbatim
+3. Branch on the summary:
+   - `confirmed: true` → proceed to Step 2
+   - `confirmed: false` (mode != seam-injection, auto-detected) → ask user to confirm; on confirmation, set `migration_mode.confirmed: true` + `confirmed_at` in state.yaml
+   - `recommendation: skip` AND `--force` not passed → warn user, stop
 
-Then read `/atlas.impact` output (or cache) to get `blast_radius`.
+### Done
 
-```yaml
-# 1_target.yaml
-module: "{module_name}"
-file: "{file_path}"
-language: "{language}"
-language_group: "A|B|C"
-line_count: {n}
-suitability:
-  commits_90d: {n}
-  score: {commits_90d × lines}        # deterministic
-  blast_radius: {n files}             # from /atlas.impact
-  recommendation: "proceed|caution|skip"  # from fixed thresholds above
-  reason: "{qualitative explanation}"     # LLM fills this only
-history_ref: ".sourceatlas/history/{module}.yaml"
-impact_ref: ".sourceatlas/impact/{module}.yaml"
-```
+Verifiable signals:
+- `state.yaml` exists with `current_step: 1`, `steps.1_target.status: produced`, `migration_mode.mode_name` set
+- `1_target.yaml` exists with non-zero `line_count`, `score`, `recommendation`
+- `candidate_lock.locked: true`
+- Pilot report exists at `.sourceatlas/refactor/pilot-{module}.md`
 
-**Decision**: If `recommendation: skip`, warn user but allow override with `--force`.
+### Re-entry rule
 
-### 1.4 ObjC/Swift Context Scan (iOS targets only)
+If `state.yaml` exists and `--force` is not passed, init-state.sh exits 3. Resume from `current_step` in state.yaml; do not re-run init-state.sh. This prevents re-ranking mid-refactor.
 
-If target language is `objc`, `objcpp`, or `swift`, run the cross-language
-and runtime-hidden dependency scans. These surface migration hazards that
-import-based analysis misses:
+---
 
-```bash
-# Cross-language visibility (Bridging-Header, -Swift.h, @objc, nullability)
-XLANG=~/.claude/scripts/atlas/cross-language-visibility.sh
-[ -f "$XLANG" ] || XLANG=plugin/commands/refactor/scripts/cross-language-visibility.sh
-bash "$XLANG" "$PROJECT_ROOT"
-# → .sourceatlas/cross-language.yaml
+## Step 0.5: Pre-Refactor Cleanup (optional)
 
-# Runtime-hidden dependencies (Category/swizzle/KVO/IB/storyboard)
-HIDDEN=~/.claude/scripts/atlas/runtime-hidden-deps.sh
-[ -f "$HIDDEN" ] || HIDDEN=plugin/commands/refactor/scripts/runtime-hidden-deps.sh
-bash "$HIDDEN" "$PROJECT_ROOT" --target "$MODULE_NAME"
-# → .sourceatlas/runtime-hidden-deps.yaml
+**When this step exists**: only after Step 1 has produced `state.yaml`. **Never** before.
 
-# One-shot target readiness report combining the above + detect-phase + detect-zones
-PILOT=~/.claude/scripts/atlas/pilot-run.sh
-[ -f "$PILOT" ] || PILOT=plugin/commands/refactor/scripts/pilot-run.sh
-bash "$PILOT" "$PROJECT_ROOT" "$FILE_PATH"
-# → .sourceatlas/refactor/pilot-{module}.md
-```
+**Why this step exists**: project CLAUDE.md files commonly prescribe "delete dead code before structural refactor" patterns (e.g. `~/.claude/CLAUDE.md` Step 0). Running that cleanup before Step 1 violates the playbook's artifact lifecycle (Critical Rule 14). This step gives the cleanup a sanctioned home — *after* the target is locked, *before* contracts are extracted.
 
-Flag showstoppers (swizzle > 0, storyboard string dispatch > 0, categories
-on the target) in the Step 1 summary — these force design choices in Step 5.
+**Skip condition**: `state.yaml.steps.1_target.status: produced` AND target file ≤ 300 LOC AND no commented-out blocks > 50 lines. Otherwise optional — proceed to Step 2 directly.
 
-### 1.5 Determine Migration Mode
+### Start
 
-Read the `Platform Migration Signals` section from the pilot report:
+State: `state.yaml` exists; target file > 300 LOC OR has obvious dead code (commented-out blocks, unused imports, dead typedefs only referenced by other dead code).
 
-```bash
-PILOT_REPORT=".sourceatlas/refactor/pilot-${MODULE_NAME}.md"
-DETECTED_MODE=$(grep 'recommended_mode:' "$PILOT_REPORT" | head -1 | sed 's/.*recommended_mode: *"\?//' | tr -d '"')
-DETECTED_MODE=${DETECTED_MODE:-seam-injection}
+### Do
 
-# --mode override takes precedence over pilot detection
-if [ -n "$MODE_OVERRIDE" ]; then
-    FINAL_MODE="$MODE_OVERRIDE"
-    DETECTION_SOURCE="override"
-else
-    FINAL_MODE="$DETECTED_MODE"
-    DETECTION_SOURCE="auto"
-fi
-```
+1. Read target file. List candidates for removal:
+   - Commented-out blocks > 20 lines
+   - `typedef`/struct/protocol declarations whose only users are also dead
+   - `#import` lines whose imported symbols don't appear in surviving code
+2. Generate diff. Write to `.sourceatlas/refactor/{module}/0_5_cleanup_diff.patch`.
+3. Apply diff to source files.
+4. Run the project's type-check / build (best-effort — surface failures, don't auto-fix).
+5. Commit cleanup as a **separate commit** with message prefix `chore({module}): Step 0.5 — `.
 
-**Candidate mode confirmation rule** (F1: prevents silent misclassification):
+### Done
 
-- If `DETECTION_SOURCE=auto` AND `FINAL_MODE != seam-injection`:
-  - Display detected mode + signals + reference doc to the user
-  - Output:
-    ```
-    🔍 Platform migration detected: {platform_name}
-       Recommended mode: {mode_name}
-       Reference: {reference_url}
+Verifiable signals:
+- `0_5_cleanup_diff.patch` exists
+- Cleanup commit on the current branch (one commit, scoped to target file + paired header)
+- `state.yaml.steps.1_target.completed_at` updated (mark sub-step as done; lifecycle stays at 1_target produced — Step 0.5 is a sub-step, not a top-level step)
+- Build passes (or known failures are listed in the cleanup commit message)
 
-    Signals found:
-      - {signal_1}
-      - {signal_2}
+### Anti-patterns
 
-    ✅ Confirm? Press Enter to accept, or override:
-       /atlas.refactor {file} --mode seam-injection    (force standard mode)
-       /atlas.refactor {file} --mode platform-migration --force
-    ```
-  - **WAIT for user response.** Do not write `migration_mode.confirmed: true` until user confirms.
-  - Set `confirmed: false` in state until response received.
-- If `DETECTION_SOURCE=override` OR `FINAL_MODE=seam-injection`: auto-confirm, no prompt needed.
-
-Write into state (after confirmation if required):
-
-```yaml
-migration_mode:
-  interface_origin: "{developer|platform}"
-  migration_granularity: "{single-swap|zone-by-zone}"
-  mode_name: "{FINAL_MODE}"
-  detection_source: "{auto|override}"
-  detection_signals: ["{signal_1}", ...]
-  confirmed: true
-  confirmed_at: "{iso_date}"
-```
-
-### 1.6 Update State
-
-Set `1_target: { status: completed, completed_at: {now} }` and `current_step: 2`.
-
-Lock the candidate selection so future runs do not re-rank:
-
-```bash
-sed -i '' "s/  locked: false/  locked: true/" "$STATE_FILE"
-sed -i '' "s/  score: null/  score: $SCORE/" "$STATE_FILE"
-sed -i '' "s/  locked_at: null/  locked_at: \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"/" "$STATE_FILE"
-```
-
-**Rule**: If `candidate_lock.locked: true` and `--force` is NOT passed, skip Step B and Step 1.1–1.3 entirely — jump directly to the current step. This prevents re-ranking from changing the target mid-refactor.
+- ❌ Running cleanup before init-state.sh — Critical Rule 14 violation
+- ❌ Bundling cleanup with refactor commits in Steps 6+ — must be its own commit
+- ❌ "Improving" code style during cleanup — only delete; rename or restructure belong in Steps 5–6
 
 ---
 
