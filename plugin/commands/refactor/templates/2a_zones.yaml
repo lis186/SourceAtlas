@@ -1,0 +1,30 @@
+# 2a_zones.yaml — Step 2a Zone Discovery artifact template
+# Written by scripts/init-step2a.sh; do not edit by hand.
+
+module: "{module_name}"
+file: "{file_path}"
+language: "{language}"
+total_lines: 0
+marker_count: 0
+
+# ── Zones (from detect-zones.sh) ────────────────────────────────────────────
+# Each zone is a contiguous block of methods sharing structural concern
+# (#pragma mark / // MARK: / extension boundary / blank-line cluster).
+
+zones:
+  - id: "{zone_id_kebab}"
+    name: "{Human Readable Name}"
+    lines: [0, 0]              # [start, end] inclusive
+    line_count: 0
+    method_count: 0
+    deps: []                   # external symbols this zone references
+
+# ── Recommended First Slice ─────────────────────────────────────────────────
+# Heuristic per detected phase (Feathers' easiest-first):
+#   Phase 1/1.5/unknown: smallest line_count, fewest deps
+#   Phase 2:             highest deps_n (architectural lever)
+# Selected by init-step2a.sh; LLM does NOT override without --force.
+
+recommended:
+  zone_id: "{zone_id_kebab}"
+  reason: "{deterministic — e.g. 'smallest line_count (10), 0 deps'}"

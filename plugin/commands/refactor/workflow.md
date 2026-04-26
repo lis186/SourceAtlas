@@ -386,18 +386,53 @@ Verifiable signals:
 
 ### Step 2a: Zone Discovery
 
-If file has **200+ lines**:
+**Input**: `state.yaml` (from Step 1)
+**Action**: Single deterministic bash call — no manual zone selection, no Edit/Write of state.yaml.
+**Output**: `2a_zones.yaml` + state.yaml advanced to `current_step: 2` with `zone_id` set.
 
-1. Run `/atlas.seam {file_path}` (or read from `.sourceatlas/seam/` cache)
-2. Save zone map as `2a_zones.yaml`
-3. Present zones to user with priority ranking
-4. **User selects a zone** (or pass `--zone <zone-id>`)
+#### Start
 
-If file has **< 200 lines**:
-- Skip 2a, treat entire file as one zone
-- Set `zone_id: "full"` in state
+State: `state.yaml.steps.1_target.status` ∈ {produced, verified}; `2a_zones.yaml` does NOT exist (or `--force` was passed).
 
-If `--zones-only` was passed, **stop here** and display zones.
+#### Do
+
+```bash
+INIT2A=plugin/commands/refactor/scripts/init-step2a.sh
+[ -f "$INIT2A" ] || INIT2A=~/.claude/plugins/cache/lis186-SourceAtlas/sourceatlas/*/commands/refactor/scripts/init-step2a.sh
+
+bash "$INIT2A" "$PROJECT_ROOT" --module "$MODULE_NAME" ${FORCE:+--force}
+```
+
+The script:
+- Reads target file + language from state.yaml
+- Calls `detect-zones.sh` to produce zones list
+- Picks first-slice zone via deterministic ranking (smallest line_count, fewest deps; or pilot-report's `recommended_zone` if present)
+- Writes `2a_zones.yaml`
+- Calls `state.sh set-status --step 2a_zones --status produced`
+- Calls `state.sh set-zone --zone <id>`
+- Calls `state.sh advance --to 2` (verifies 1_target → advances current_step)
+
+The LLM's job at Step 2a is **only**:
+1. Run the bash command above
+2. Show the script's stdout summary verbatim
+3. If user wants a different zone, re-run with `--force` and `--zone <id>` (TODO: support `--zone` override flag)
+
+#### Done
+
+Verifiable signals:
+- `2a_zones.yaml` exists with non-empty `zones` list and `recommended.zone_id`
+- `state.yaml.zone_id` matches the recommended zone
+- `state.yaml.steps.2a_zones.status: produced`
+- `state.yaml.steps.1_target.status: verified` (auto-promoted by `state.sh advance`)
+- `state.yaml.current_step: 2`
+
+#### Anti-patterns
+
+- ❌ Hand-editing `state.yaml` to set `zone_id` or `current_step` — Critical Rule 15 violation
+- ❌ Picking a zone via LLM judgment instead of `recommended.zone_id` — defeats deterministic ranking
+- ❌ Skipping 2a for files < 200 lines — init-step2a.sh handles small files (single zone)
+
+If `--zones-only` was passed, stop after this step.
 
 ### Step 2b: Contract Extraction
 
