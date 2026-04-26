@@ -39,6 +39,14 @@ PROJECT_ROOT="$(cd "$PROJECT_ROOT" && pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATES_DIR="$SCRIPT_DIR/../templates"
 
+# Emit a YAML double-quoted scalar with " and \ escaped.
+# Use this for any value that might contain user-controlled characters (filenames).
+yaml_dq() {
+    local s="${1//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    printf '"%s"' "$s"
+}
+
 # ── Derive identifiers ──────────────────────────────────────────────────────
 basename_noext="$(basename "$TARGET")"
 module_name="$(echo "${basename_noext%.*}" | tr '[:upper:]' '[:lower:]')"
@@ -181,10 +189,13 @@ fi
 
 # ── Write state.yaml ────────────────────────────────────────────────────────
 file_rel="${TARGET#$PROJECT_ROOT/}"
+module_q=$(yaml_dq "$module_name")
+file_q=$(yaml_dq "$file_rel")
+
 cat > "$state_file" <<EOF
 schema_version: "2.0"
-module: "$module_name"
-file: "$file_rel"
+module: $module_q
+file: $file_q
 language: "$language"
 language_group: "$group"
 file_hash: "$file_hash"
@@ -222,9 +233,13 @@ steps:
 EOF
 
 # ── Write 1_target.yaml ─────────────────────────────────────────────────────
+pilot_ref_q=$(yaml_dq ".sourceatlas/refactor/pilot-${module_name}.md")
+history_ref_q=$(yaml_dq ".sourceatlas/history/${module_name}.yaml")
+impact_ref_q=$(yaml_dq ".sourceatlas/impact/${module_name}.yaml")
+
 cat > "$target_file" <<EOF
-module: "$module_name"
-file: "$file_rel"
+module: $module_q
+file: $file_q
 language: "$language"
 language_group: "$group"
 line_count: $line_count
@@ -237,9 +252,9 @@ suitability:
   recommendation: "$recommendation"
   reason: "score=$score (lines=$line_count × commits_90d=$commits_90d)"
 
-pilot_ref: ".sourceatlas/refactor/pilot-${module_name}.md"
-history_ref: ".sourceatlas/history/${module_name}.yaml"
-impact_ref: ".sourceatlas/impact/${module_name}.yaml"
+pilot_ref: $pilot_ref_q
+history_ref: $history_ref_q
+impact_ref: $impact_ref_q
 
 migration_mode:
   mode_name: "$final_mode"
