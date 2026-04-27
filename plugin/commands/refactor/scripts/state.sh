@@ -132,6 +132,48 @@ step_key_for_num() {
     esac
 }
 
+# Read dispatch value for a given (step_key, mode) from mode-dispatch.yaml.
+# Returns one of: applies | skip | replaced | "" (unknown).
+# The dispatch YAML uses "S"-prefixed keys (S1_target) while state uses
+# unprefixed (1_target); we add "S" inside the lookup.
+SCRIPT_DIR_FOR_DISPATCH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DISPATCH_FILE="$SCRIPT_DIR_FOR_DISPATCH/../references/mode-dispatch.yaml"
+
+dispatch_for() {
+    local step_key="$1" mode="$2"
+    [[ -f "$DISPATCH_FILE" ]] || { echo ""; return; }
+    awk -v step="S${step_key}" -v mode="$mode" '
+        # Step header: "  S1_target:" (indented under "steps:")
+        $0 ~ "^[[:space:]]+" step ":[[:space:]]*$" { in_step = 1; next }
+        # Next sibling step at same indent level → exit current step block
+        in_step && /^[[:space:]]+S[0-9]/ { in_step = 0; in_mode = 0 }
+        in_step {
+            line = $0
+            sub(/^[[:space:]]+/, "", line)
+            # Mode scalar: "seam-injection: applies"
+            # Mode mapping: "platform-migration:" then nested "dispatch: replaced"
+            if (line ~ "^" mode ":") {
+                rest = line
+                sub("^" mode ":[[:space:]]*", "", rest)
+                if (rest != "") { print rest; exit }
+                in_mode = 1; next
+            }
+            if (in_mode) {
+                if (line ~ /^dispatch:/) {
+                    sub(/^dispatch:[[:space:]]*/, "", line)
+                    gsub(/"/, "", line)
+                    print line
+                    exit
+                }
+                # Exit mode mapping if we hit another mode key (top of next mapping)
+                if (line ~ /^[a-z]/ && line !~ /^dispatch:|^skip_reason:|^replacement_script:|^note:/) {
+                    in_mode = 0
+                }
+            }
+        }
+    ' "$DISPATCH_FILE"
+}
+
 case "$SUBCMD" in
     show)
         cat <<EOF
@@ -160,6 +202,39 @@ EOF
             exit 3
         fi
 
+        # Critical Rule 17: dispatch ↔ status consistency check.
+        # mode-dispatch.yaml is the source of truth for which steps apply per mode.
+        # If a step's dispatch is "skip" but status isn't "skipped", the LLM bypassed
+        # the dispatch rule (e.g. ran /atlas.seam in platform-migration where S3=skip).
+        mode=$(awk '/^[[:space:]]+mode_name:/ {print $2; exit}' "$state_file" | tr -d '"')
+        if [[ -n "$mode" ]]; then
+            disp=$(dispatch_for "$prev_key" "$mode")
+            case "$disp" in
+                skip)
+                    if [[ "$prev_status" != "skipped" ]]; then
+                        echo "error: dispatch mismatch — $prev_key for mode '$mode' is dispatch=skip but status=$prev_status." >&2
+                        echo "       Run: state.sh set-status --module $MODULE --step $prev_key --status skipped --skip-reason '<reason>'" >&2
+                        exit 3
+                    fi
+                    ;;
+                replaced)
+                    # Replaced steps still produce/verify their own artifact via the replacement_script.
+                    # Accept produced/verified; reject skipped (LLM should run replacement, not skip).
+                    if [[ "$prev_status" == "skipped" ]]; then
+                        echo "error: dispatch mismatch — $prev_key for mode '$mode' is dispatch=replaced (run replacement_script) but status=skipped." >&2
+                        exit 3
+                    fi
+                    ;;
+                applies|"")
+                    # Normal path or unknown step (e.g. composite gates) — allow produced/verified/skipped.
+                    ;;
+                *)
+                    echo "error: unknown dispatch value '$disp' for $prev_key + $mode in mode-dispatch.yaml" >&2
+                    exit 4
+                    ;;
+            esac
+        fi
+
         # Step-specific artifact validation before advancing.
         # Step 5 (interface design) → require swap_strategy ∈ {direct, shadow}.
         # This is the user-decision lock per Critical Rule 16: state.sh refuses
@@ -179,13 +254,15 @@ EOF
         fi
 
         # Promote prev step from produced → verified (if it has a gate, gate runner promotes; otherwise auto)
+        final_status="$prev_status"
         if [[ "$prev_status" == "produced" ]]; then
             set_step_status "$prev_key" "verified" ""
+            final_status="verified"
         fi
 
         set_scalar current_step "$target_step"
         set_scalar updated "\"$iso_now\""
-        echo "advanced: $prev_key verified → current_step=$target_step"
+        echo "advanced: $prev_key $final_status → current_step=$target_step"
         ;;
 
     set-zone)
