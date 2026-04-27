@@ -67,11 +67,14 @@ fi
 DETECT="$SCRIPT_DIR/detect-zones.sh"
 [[ -f "$DETECT" ]] || DETECT="$SCRIPT_DIR/../../../scripts/atlas/detect-zones.sh"
 
-raw_zones=$(bash "$DETECT" "$target_abs" --language "$language" 2>&1) || {
+stderr_tmp=$(mktemp)
+raw_zones=$(bash "$DETECT" "$target_abs" --language "$language" 2>"$stderr_tmp") || {
     echo "error: detect-zones.sh failed:" >&2
-    echo "$raw_zones" >&2
+    cat "$stderr_tmp" >&2
+    rm -f "$stderr_tmp"
     exit 4
 }
+rm -f "$stderr_tmp"
 
 # ── Pick first-slice zone via deterministic ranking ─────────────────────────
 # Strategy: smallest line_count first; tie-break by fewest deps.

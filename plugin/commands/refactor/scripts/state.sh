@@ -149,7 +149,12 @@ EOF
         prev_key=$(step_key_for_num "$current")
         [[ -n "$prev_key" ]] || { echo "error: cannot map current_step=$current" >&2; exit 4; }
 
-        prev_status=$(grep -E "^[[:space:]]+${prev_key}:" "$state_file" | sed -E 's/.*status: *([a-z]+).*/\1/')
+        prev_line=$(grep -E "^[[:space:]]+${prev_key}:" "$state_file" || true)
+        if [[ -z "$prev_line" ]]; then
+            echo "error: cannot advance — step '$prev_key' not found in state.yaml" >&2
+            exit 4
+        fi
+        prev_status=$(echo "$prev_line" | sed -E 's/.*status: *([a-z]+).*/\1/')
         if [[ "$prev_status" != "produced" && "$prev_status" != "verified" && "$prev_status" != "skipped" ]]; then
             echo "error: cannot advance — $prev_key.status=$prev_status (need produced|verified|skipped)" >&2
             exit 3
