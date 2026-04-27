@@ -160,6 +160,24 @@ EOF
             exit 3
         fi
 
+        # Step-specific artifact validation before advancing.
+        # Step 5 (interface design) → require swap_strategy ∈ {direct, shadow}.
+        # This is the user-decision lock per Critical Rule 16: state.sh refuses
+        # to advance past Step 5 if swap_strategy is null/missing/invalid.
+        if [[ "$current" == "5" ]]; then
+            interface_file="$state_dir/5_interface.yaml"
+            if [[ ! -f "$interface_file" ]]; then
+                echo "error: cannot advance — 5_interface.yaml missing at $interface_file" >&2
+                exit 3
+            fi
+            swap=$(awk '/^swap_strategy:/ {print $2; exit}' "$interface_file" | tr -d '"' | tr -d "'")
+            case "$swap" in
+                direct|shadow) ;;
+                *) echo "error: cannot advance — 5_interface.yaml.swap_strategy must be 'direct' or 'shadow' (got: '$swap'). User must confirm per workflow.md §5.5b before Step 6." >&2
+                   exit 3 ;;
+            esac
+        fi
+
         # Promote prev step from produced → verified (if it has a gate, gate runner promotes; otherwise auto)
         if [[ "$prev_status" == "produced" ]]; then
             set_step_status "$prev_key" "verified" ""
