@@ -471,18 +471,45 @@ if [[ -f "$PLATFORM_SIGS" ]]; then
             gran=$(yq e ".platforms[$i].granularity_hint" "$PLATFORM_SIGS")
             min_lines=$(yq e ".platforms[$i].minimum_lines_for_strangler // 300" "$PLATFORM_SIGS")
 
-            # Check each legacy_signal against target file
+            # Check each legacy_signal against target file + paired files.
+            # Some languages declare protocols/interfaces in a separate file:
+            #   ObjC .m      → paired .h (interface decls)
+            #   ObjC .mm     → paired .h
+            #   Swift Foo+X.swift → base Foo.swift (extension cases)
+            #   TS .ts       → .d.ts (ambient declarations)
             legacy_hit=0
             legacy_count=$(yq e ".platforms[$i].legacy_signals | length" "$PLATFORM_SIGS")
-            # For ObjC .m files, also check the paired .h (interface decls live there)
-            paired_header="${TARGET%.m}.h"
+
+            paired_files=()
+            target_ext="${TARGET##*.}"
+            target_base="${TARGET%.*}"
+            case "$target_ext" in
+                m|mm)
+                    paired_files+=("${target_base}.h")
+                    ;;
+                swift)
+                    # Swift extension file: Foo+Logging.swift → Foo.swift
+                    if [[ "$target_base" == *+* ]]; then
+                        paired_files+=("${target_base%%+*}.swift")
+                    fi
+                    ;;
+                ts|tsx)
+                    paired_files+=("${target_base}.d.ts")
+                    ;;
+            esac
+
             for j in $(seq 0 $((legacy_count - 1))); do
                 pattern=$(yq e ".platforms[$i].legacy_signals[$j].pattern" "$PLATFORM_SIGS")
                 set +o pipefail
                 if grep -qE "$pattern" "$TARGET" 2>/dev/null; then
                     legacy_hit=1
-                elif [[ -f "$paired_header" ]] && grep -qE "$pattern" "$paired_header" 2>/dev/null; then
-                    legacy_hit=1
+                else
+                    for paired in "${paired_files[@]}"; do
+                        if [[ -f "$paired" ]] && grep -qE "$pattern" "$paired" 2>/dev/null; then
+                            legacy_hit=1
+                            break
+                        fi
+                    done
                 fi
                 set -o pipefail
             done
