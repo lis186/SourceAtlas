@@ -33,23 +33,130 @@ Do **not** use shadow if:
 
 ### Shadow logger implementation guidance
 
-The `{Name}ShadowLogger` protocol is minimal by design — the playbook does not dictate the logging backend. Common implementations:
+The `{Name}ShadowLogger` protocol is minimal by design — the playbook does not dictate the logging backend. Pick one of the patterns below based on infra you already have.
+
+#### Pattern 1: Console (development only)
 
 ```swift
-// Minimal: print to console during development
 class ConsoleShadowLogger: CryptoShadowLogger {
     func shadow(method: String, primary: Any?, shadow: Any?, matched: Bool) {
         if !matched { print("[SHADOW MISMATCH] \(method): \(primary ?? "nil") vs \(shadow ?? "nil")") }
     }
 }
+```
 
-// Production: structured logging (Datadog, Firebase, os_log)
-class AnalyticsShadowLogger: CryptoShadowLogger {
+#### Pattern 2: os_log (Apple unified logging — production-safe, no extra dep)
+
+```swift
+import os.log
+
+class OSLogShadowLogger: CryptoShadowLogger {
+    private let log = OSLog(subsystem: Bundle.main.bundleIdentifier ?? "shadow", category: "Crypto")
     func shadow(method: String, primary: Any?, shadow: Any?, matched: Bool) {
-        Analytics.log("shadow_compare", ["method": method, "matched": matched])
+        os_log(matched ? .info : .error,
+               log: log,
+               "%{public}@ matched=%{public}@",
+               method, String(matched))
     }
 }
 ```
+View in Console.app filtering by your subsystem; or `log show --predicate 'subsystem == "..."'`.
+
+#### Pattern 3: Firebase Analytics (mobile, free tier OK for low volume)
+
+```swift
+import FirebaseAnalytics
+
+class FirebaseShadowLogger: CryptoShadowLogger {
+    func shadow(method: String, primary: Any?, shadow: Any?, matched: Bool) {
+        Analytics.logEvent("shadow_compare", parameters: [
+            "method": method,
+            "matched": matched,
+        ])
+    }
+}
+```
+
+#### Pattern 4: Datadog (custom metric — preferred when you already have Datadog SDK)
+
+```swift
+import DatadogRUM
+
+class DatadogShadowLogger: CryptoShadowLogger {
+    func shadow(method: String, primary: Any?, shadow: Any?, matched: Bool) {
+        RUMMonitor.shared().addUserAction(type: .custom, name: "shadow_compare", attributes: [
+            "method": method,
+            "matched": matched,
+        ])
+    }
+}
+```
+
+#### Pattern 5: Sentry (error-tracking-shaped infra, useful when mismatch == bug)
+
+```swift
+import Sentry
+
+class SentryShadowLogger: CryptoShadowLogger {
+    func shadow(method: String, primary: Any?, shadow: Any?, matched: Bool) {
+        if !matched {
+            SentrySDK.capture(message: "shadow_mismatch:\(method)") { scope in
+                scope.setTag(value: method, key: "shadow_method")
+                // Avoid logging primary/shadow values directly if they contain PII or secrets.
+            }
+        }
+    }
+}
+```
+
+### Sampling / volume control
+
+Shadow runs every method twice. For high-frequency methods (called per-frame, per-tap), the log volume can swamp your infra.
+
+**Rule of thumb**: if the method is called > 100×/min, sample at 1–10%. Below that, log every call.
+
+```swift
+class SampledShadowLogger: CryptoShadowLogger {
+    private let sampleRate: Double
+    private let inner: CryptoShadowLogger
+    init(inner: CryptoShadowLogger, sampleRate: Double = 0.01) {
+        self.inner = inner
+        self.sampleRate = sampleRate
+    }
+    func shadow(method: String, primary: Any?, shadow: Any?, matched: Bool) {
+        // Always log mismatches (rare → safe to keep verbose);
+        // sample matches at sampleRate (frequent → reduce volume).
+        if !matched || Double.random(in: 0..<1) < sampleRate {
+            inner.shadow(method: method, primary: primary, shadow: shadow, matched: matched)
+        }
+    }
+}
+```
+
+### Match-rate dashboard
+
+The S9b "Monitor Shadow Period" gate compares against `shadow_config.threshold` from `5_interface.yaml`. Build a dashboard that reports:
+
+| Metric | Source | Pass threshold (default) |
+|--------|--------|--------------------------|
+| `match_rate_pct` | matched count / total count | ≥ 99.9% |
+| `mismatch_count` | non-matched events | flat or decreasing trend |
+| `total_samples` | total events for method | ≥ 1000 |
+| `days_observed` | first event timestamp → now | ≥ 7 |
+
+Group by `method` so you can see if one method is dragging down the aggregate. A single buggy method that mismatches 50% will show up clearly.
+
+For OSLog: build a query in Console.app or pipe `log show` to a script.
+For Firebase: BigQuery export → SQL aggregation.
+For Datadog: log-based metric on `shadow_compare` event, faceted by `matched` and `method`.
+For Sentry: Issues view filtered by `shadow_mismatch:*` tag.
+
+### PII / secrets warning
+
+If the methods being shadowed handle credentials, encryption keys, user tokens, or PII:
+
+- **Do not log `primary` / `shadow` values directly** — pattern 5 (Sentry) shows this. Log only the method name and the matched boolean.
+- For crypto methods, if mismatch occurs, log a hash of inputs (e.g. SHA-256 truncated to 8 chars) so you can correlate without exposing the secret.
 
 Delete the logger implementation file in Step 12 after hard swap.
 
