@@ -24,14 +24,54 @@ GATE_RESULTS="$STATE_DIR/7_gate_results.yaml"
 STATE_FILE="$STATE_DIR/state.yaml"
 
 # ── Detect deployment target ──────────────────────────────────────────────────
+# Prefer xcodebuild when available (resolves correct target for multi-target
+# projects). Falls back to pbxproj/xcconfig grep, which on multi-target
+# repos picks the LOWEST version across all targets — that may be a
+# watch/iMessage extension's value, not the iOS app's. The fallback path
+# emits a warning so users know the value may be imprecise.
 DEPLOYMENT_TARGET=""
-set +o pipefail
-DEPLOYMENT_TARGET=$(grep -r 'IPHONEOS_DEPLOYMENT_TARGET' \
-    --include="*.xcconfig" --include="*.pbxproj" "$PROJECT_ROOT" 2>/dev/null \
-    | grep -v '/(Pods|DerivedData|Carthage)/' \
-    | grep -oE '[0-9]+\.[0-9]+' | sort -V | head -1 || echo "")
-set -o pipefail
-DEPLOYMENT_TARGET=${DEPLOYMENT_TARGET:-"0.0"}
+DETECT_SOURCE="unknown"
+
+if command -v xcodebuild &>/dev/null; then
+    # Prefer .xcodeproj over .xcworkspace — workspaces include all Pods schemes
+    # and slow xcodebuild down significantly. Project listing gives us Targets:
+    # which match app names directly.
+    project=$(find "$PROJECT_ROOT" -maxdepth 3 -name '*.xcodeproj' -not -path '*/Pods/*' 2>/dev/null | head -1)
+
+    if [[ -n "$project" ]]; then
+        base=$(basename "$project" .xcodeproj)
+        # Read Targets: section; pick the one matching the project basename
+        # (the main app target). Fall back to first non-test/extension target.
+        all_targets=$(xcodebuild -project "$project" -list 2>/dev/null \
+            | awk '/Targets:/ {found=1; next} /^$/ {if(found) found=2} found==1 && NF>0 {sub(/^[[:space:]]+/,""); print}')
+        target=$(echo "$all_targets" | grep -Fx "$base" | head -1)
+        if [[ -z "$target" ]]; then
+            # Fall back to first target that doesn't look like Tests/UITests/Extension
+            target=$(echo "$all_targets" \
+                | grep -Eiv '(Tests|UITests|extension|Screenshot|notification-)' \
+                | head -1)
+        fi
+
+        if [[ -n "$target" ]]; then
+            DEPLOYMENT_TARGET=$(xcodebuild -project "$project" -target "$target" -showBuildSettings 2>/dev/null \
+                | awk -F'= ' '/^[[:space:]]+IPHONEOS_DEPLOYMENT_TARGET = / {print $2; exit}' \
+                | tr -d ' ')
+            [[ -n "$DEPLOYMENT_TARGET" ]] && DETECT_SOURCE="xcodebuild ($target)"
+        fi
+    fi
+fi
+
+if [[ -z "$DEPLOYMENT_TARGET" ]]; then
+    set +o pipefail
+    DEPLOYMENT_TARGET=$(grep -r 'IPHONEOS_DEPLOYMENT_TARGET' \
+        --include="*.xcconfig" --include="*.pbxproj" "$PROJECT_ROOT" 2>/dev/null \
+        | grep -v '/(Pods|DerivedData|Carthage)/' \
+        | grep -oE '[0-9]+\.[0-9]+' | sort -V | head -1 || echo "")
+    set -o pipefail
+    DEPLOYMENT_TARGET=${DEPLOYMENT_TARGET:-"0.0"}
+    DETECT_SOURCE="grep (multi-target imprecise)"
+    echo "warning: deployment target detected via pbxproj grep — may pick lowest of multiple targets. Install Xcode CLI tools for accurate detection." >&2
+fi
 
 # ── Check 1 & 2: legacy_removed + target_implemented ─────────────────────────
 legacy_total=0; legacy_passed=0; legacy_offenders=()
