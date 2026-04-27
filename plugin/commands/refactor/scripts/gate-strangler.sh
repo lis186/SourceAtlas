@@ -25,30 +25,78 @@ if [[ ! -f "$PLAN" ]]; then
     exit 1
 fi
 
-if ! command -v yq &>/dev/null; then
-    echo "❌ yq is required for gate-strangler.sh"
-    echo "   Install: brew install yq"
-    exit 1
+# yq is preferred; awk fallback handles read-only parsing when yq is unavailable.
+# Status write-back requires yq — without it, items remain "pending" in the plan
+# and will be re-checked on every run (correctness preserved, slightly slower).
+HAS_YQ=0
+if command -v yq &>/dev/null; then
+    HAS_YQ=1
+fi
+
+# Item parser: emits one record per item to stdout in TSV format:
+#   zone_id<TAB>status<TAB>from_slot<TAB>to_slot<TAB>legacy_cmd<TAB>new_cmd
+parse_items() {
+    if [[ "$HAS_YQ" -eq 1 ]]; then
+        local n=$(yq e '.migration_plan | length' "$PLAN" 2>/dev/null || echo 0)
+        local i
+        for i in $(seq 0 $((n - 1))); do
+            printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
+                "$(yq e ".migration_plan[$i].zone_id" "$PLAN")" \
+                "$(yq e ".migration_plan[$i].status" "$PLAN")" \
+                "$(yq e ".migration_plan[$i].from_slot" "$PLAN")" \
+                "$(yq e ".migration_plan[$i].to_slot" "$PLAN")" \
+                "$(yq e ".migration_plan[$i].verification.legacy_removed" "$PLAN")" \
+                "$(yq e ".migration_plan[$i].verification.new_implemented" "$PLAN")"
+        done
+    else
+        # awk fallback: parse migration_plan list-of-mappings
+        awk '
+            /^migration_plan:/ { in_plan = 1; next }
+            in_plan && /^[a-zA-Z]/ { in_plan = 0 }
+            in_plan && /^[[:space:]]*-[[:space:]]+zone_id:/ {
+                if (have) {
+                    printf "%s\t%s\t%s\t%s\t%s\t%s\n", zone, status, from, to, lcmd, ncmd
+                }
+                have = 1; zone=""; status=""; from=""; to=""; lcmd=""; ncmd=""; in_verif = 0
+                line = $0
+                sub(/.*zone_id:[[:space:]]*"?/, "", line); sub(/"?[[:space:]]*$/, "", line)
+                zone = line
+                next
+            }
+            in_plan && have {
+                line = $0
+                sub(/^[[:space:]]+/, "", line)
+                if (line ~ /^verification:/) { in_verif = 1; next }
+                if (line ~ /^[a-z]/ && line !~ /^legacy_removed:|^new_implemented:/) in_verif = 0
+                if (line ~ /^status:/)    { v=line; sub(/^status:[[:space:]]*"?/, "", v);    sub(/"?[[:space:]]*$/, "", v); status = v }
+                if (line ~ /^from_slot:/) { v=line; sub(/^from_slot:[[:space:]]*"?/, "", v); sub(/"?[[:space:]]*$/, "", v); from = v }
+                if (line ~ /^to_slot:/)   { v=line; sub(/^to_slot:[[:space:]]*"?/, "", v);   sub(/"?[[:space:]]*$/, "", v); to = v }
+                if (in_verif && line ~ /^legacy_removed:/)  { v=line; sub(/^legacy_removed:[[:space:]]*"?/, "", v);  sub(/"?[[:space:]]*$/, "", v); lcmd = v }
+                if (in_verif && line ~ /^new_implemented:/) { v=line; sub(/^new_implemented:[[:space:]]*"?/, "", v); sub(/"?[[:space:]]*$/, "", v); ncmd = v }
+            }
+            END {
+                if (have) printf "%s\t%s\t%s\t%s\t%s\t%s\n", zone, status, from, to, lcmd, ncmd
+            }
+        ' "$PLAN"
+    fi
+}
+
+if [[ "$HAS_YQ" -eq 0 ]]; then
+    echo "warning: yq not found — using awk fallback. Status write-back is disabled (passing items will be re-checked on next run). Install yq for full functionality: brew install yq (macOS) | apt install yq (Linux)" >&2
 fi
 
 total=0
 passed=0
 failed=0
 offenders=()
+item_idx=-1
 
-item_count=$(yq e '.migration_plan | length' "$PLAN" 2>/dev/null || echo 0)
-
-for i in $(seq 0 $((item_count - 1))); do
-    zone_id=$(yq e ".migration_plan[$i].zone_id" "$PLAN")
+while IFS=$'\t' read -r zone_id status from_slot to_slot legacy_cmd new_cmd; do
+    item_idx=$((item_idx+1))
+    [[ -z "$zone_id" ]] && continue
     [[ -n "$ZONE_FILTER" && "$zone_id" != "$ZONE_FILTER" ]] && continue
 
-    status=$(yq e ".migration_plan[$i].status" "$PLAN")
     [[ "$status" = "done" ]] && { total=$((total+1)); passed=$((passed+1)); continue; }
-
-    from_slot=$(yq e ".migration_plan[$i].from_slot" "$PLAN")
-    to_slot=$(yq e ".migration_plan[$i].to_slot" "$PLAN")
-    legacy_cmd=$(yq e ".migration_plan[$i].verification.legacy_removed" "$PLAN")
-    new_cmd=$(yq e ".migration_plan[$i].verification.new_implemented" "$PLAN")
     total=$((total+1))
 
     item_failed=0
@@ -80,12 +128,14 @@ for i in $(seq 0 $((item_count - 1))); do
 
     if [[ $item_failed -eq 0 ]]; then
         passed=$((passed+1))
-        # Update status in plan
-        yq e -i ".migration_plan[$i].status = \"done\"" "$PLAN" 2>/dev/null || true
+        # Update status in plan (yq-only — awk fallback skips write-back)
+        if [[ "$HAS_YQ" -eq 1 ]]; then
+            yq e -i ".migration_plan[$item_idx].status = \"done\"" "$PLAN" 2>/dev/null || true
+        fi
     else
         failed=$((failed+1))
     fi
-done
+done < <(parse_items)
 
 overall="pass"
 [[ $failed -gt 0 ]] && overall="fail"
