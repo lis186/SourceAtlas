@@ -147,18 +147,34 @@ MODULE_NAME=$(basename "$FILE_PATH" | sed 's/\.[^.]*$//' | tr '[:upper:]' '[:low
 STATE_DIR=".sourceatlas/refactor/${MODULE_NAME}"
 STATE_FILE="${STATE_DIR}/state.yaml"
 
-# Initialize state if not exists
+# state.yaml absent → UNMANAGED STATE. Prior artifacts on disk (pilot-{module}.md,
+# test files, etc.) WITHOUT state.yaml do NOT indicate Step 1 was completed.
+# DO NOT create or write state.yaml here. Step 1 (init-state.sh) is the sole
+# creator. Jump directly to Step 1.
 if [ ! -f "$STATE_FILE" ]; then
-    mkdir -p "$STATE_DIR"
-    # Copy from templates/state.yaml and fill in values
+    CURRENT_STEP=1
+else
+    CURRENT_STEP=$(grep '^current_step:' "$STATE_FILE" | awk '{print $2}')
 fi
 
 # If --status, display state and exit
-# If --step N, set current_step = N and continue
-# Otherwise, auto-detect current_step from state
+if [ "$STATUS_ONLY" = "true" ]; then
+    if [ ! -f "$STATE_FILE" ]; then
+        echo "No refactor state found. Run /atlas.refactor $FILE_PATH to begin Step 1."
+        exit 0
+    fi
+    # display state and exit (see state.sh show)
+fi
+
+# If --step N, override CURRENT_STEP
+if [ -n "$STEP" ]; then
+    CURRENT_STEP="$STEP"
+fi
 ```
 
 ### Schema Version Check (F5: backward compatibility)
+
+Only applies when `state.yaml` exists (`CURRENT_STEP > 1`). Skip this section entirely when `CURRENT_STEP=1` — there is no state to check.
 
 When loading an existing `state.yaml`, always check its schema version:
 

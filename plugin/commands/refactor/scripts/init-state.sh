@@ -97,9 +97,16 @@ else                           recommendation="skip"
 fi
 
 # ── Run pilot-run.sh (writes pilot-{module}.md, includes platform detection) ─
+# Reuse an existing pilot report when present and --force is not set.
+# This makes init-state.sh the correct entry point even when prior artifacts exist:
+# the script will not redundantly re-run analysis, it will simply import the report.
 pilot_report="$PROJECT_ROOT/.sourceatlas/refactor/pilot-${module_name}.md"
-echo "→ Running pilot-run.sh..." >&2
-bash "$SCRIPT_DIR/pilot-run.sh" "$PROJECT_ROOT" "$TARGET" >&2 || true
+if [[ -f "$pilot_report" && "$FORCE" -ne 1 ]]; then
+    echo "→ Reusing existing pilot report: $pilot_report" >&2
+else
+    echo "→ Running pilot-run.sh..." >&2
+    bash "$SCRIPT_DIR/pilot-run.sh" "$PROJECT_ROOT" "$TARGET" >&2 || true
+fi
 
 # ── Parse pilot report for migration mode + platform signals ────────────────
 detected_mode="seam-injection"
