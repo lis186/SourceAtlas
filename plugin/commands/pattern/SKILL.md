@@ -1,363 +1,118 @@
 ---
 name: pattern
-description: Learn design patterns from the current codebase
+description: Learn how THIS codebase implements a specific pattern — find the 2-3 best example files, extract conventions, and produce an implementation guide, cached to .sourceatlas/patterns/. Use when the user asks "how do I implement X here", "how does this project do X", "show me examples of X", "where is X implemented", or needs to follow existing code conventions before writing new code.
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: [pattern type, e.g., "api endpoint", "background job"] [--force] [--brief|--full]
+argument-hint: "[pattern, e.g. 'api endpoint', 'background job'] [--force] [--brief|--full]"
 ---
 
-# SourceAtlas: Pattern Learning Mode
+# SourceAtlas: Pattern
 
-> **Constitution**: [ANALYSIS_CONSTITUTION.md](../../../ANALYSIS_CONSTITUTION.md) v1.0
+**Arguments**: $ARGUMENTS
 
-## Context
+Learn how this specific codebase implements the requested pattern. Extract reusable conventions from real code — not generic internet advice. Every claim needs a real `file:line` reference.
 
-**Pattern requested:** $ARGUMENTS
-**Goal:** Learn how THIS specific codebase implements the requested pattern
-**Time Limit:** 5-10 minutes maximum
+## 1. Cache check (do this first)
 
-## Quick Start
+Cache path: `.sourceatlas/patterns/<pattern-name>.md` — pattern name lowercased, spaces → hyphens, special characters removed, truncated to 50 chars (e.g. "API Endpoint" → `api-endpoint.md`).
 
-1. **Check cache** (skip if `--force` flag present)
-2. **Detect pattern** using `find-patterns.sh` script
-3. **Apply output mode** (--brief / --full / smart)
-4. **Analyze top 2-3 files** (high-entropy priority)
-5. **Extract conventions** and best practices
-6. **Generate implementation guide**
-7. **Verify output** using [verification-guide.md](verification-guide.md)
-8. **Auto-save** to `.sourceatlas/patterns/`
+If the cache exists and `--force` is NOT in the arguments: read it, output its content under this header, then STOP — no analysis.
 
-## Your Task
-
-You are analyzing how THIS codebase implements a specific pattern by:
-1. Finding 2-3 best example files
-2. Extracting design patterns and conventions
-3. Providing actionable implementation guidance
-
-### Output Modes
-
-| Parameter | Behavior | Use Case |
-|-----------|----------|----------|
-| `--brief` | List files only | Quick file browser |
-| `--full` | Analyze all files | Deep learning |
-| (default) | Smart: ≤5 files→full; >5→selection UI | Balanced |
-
----
-
-## Core Workflow
-
-Execute these steps in order. See [workflow.md](workflow.md) for complete details.
-
-### Step 0: Parse Output Mode (10 seconds)
-
-**Purpose:** Determine how much analysis to perform.
-
-Detect flags:
-- `--brief` → List files only, no analysis
-- `--full` → Analyze all found files
-- No flag → Smart mode (adapt based on file count)
-
-→ See [workflow.md#step-0](workflow.md#step-0-parse-output-mode-10-seconds)
-
-### Step 1: Execute Pattern Detection (1-2 minutes)
-
-**Purpose:** Find relevant files using optimized search.
-
-**Use find-patterns.sh script first:**
-```bash
-# Locate script (global → local)
-if [ -f ~/.claude/scripts/atlas/find-patterns.sh ]; then
-    SCRIPT_PATH=~/.claude/scripts/atlas/find-patterns.sh
-elif [ -f scripts/atlas/find-patterns.sh ]; then
-    SCRIPT_PATH=scripts/atlas/find-patterns.sh
-fi
-
-bash "$SCRIPT_PATH" "$ARGUMENTS"
+```
+📁 Loading cache: .sourceatlas/patterns/api-endpoint.md (N days ago)
+💡 Add --force to re-analyze
 ```
 
-**Supported patterns:**
-- api endpoint / api / endpoint
-- background job / job / queue
-- swiftui view / view
-- view controller / viewcontroller
-- authentication / auth / login
-- file upload / upload
-- database query / database
-- networking / network
+Warn if the cache is older than 30 days.
 
-**If unsupported:** Fallback to manual Glob/Grep search
+## 2. Find candidate files
 
-→ See [workflow.md#step-1](workflow.md#step-1-execute-pattern-detection-1-2-minutes)
-
-### Step 1.5: ast-grep Enhanced Search (Optional)
-
-**Purpose:** More precise search for content-based patterns.
-
-**Use ast-grep-search.sh for:**
-- async/await patterns
-- suspend functions (Kotlin)
-- custom hooks (React)
-- goroutines (Go)
-
-**Graceful degradation:** Script handles ast-grep unavailability
-
-→ See [workflow.md#step-1-5](workflow.md#step-1-5-ast-grep-enhanced-search-optional)
-
-### Step 2: Apply Output Mode Logic (30 seconds)
-
-**Purpose:** Decide analysis depth based on file count.
-
-**Smart mode logic:**
-```
-FILE_COUNT = 0      → "No files found"
-FILE_COUNT ≤ 5      → Full analysis
-FILE_COUNT > 5      → Selection interface
-```
-
-**Brief mode:** List files, end immediately
-
-**Full mode:** Analyze all files (warn if >10)
-
-→ See [workflow.md#step-2](workflow.md#step-2-apply-output-mode-logic-30-seconds)
-
-### Step 3: Analyze Selected Files (3-5 minutes)
-
-**Purpose:** Extract patterns from 2-3 best examples.
-
-**High-entropy priority:**
-- ✅ Main implementation files
-- ✅ Complete examples (100-500 lines)
-- ✅ Well-structured production code
-- ❌ NOT: Utilities, trivial code, generated files
-
-**Focus areas:**
-1. Overall structure
-2. Standard flow
-3. Naming conventions
-4. Dependencies
-5. Error handling
-6. Configuration
-
-→ See [workflow.md#step-3](workflow.md#step-3-analyze-selected-files-3-5-minutes)
-
-### Step 4: Extract the Pattern (2 minutes)
-
-**Purpose:** Distill findings into reusable guidance.
-
-**Extract:**
-1. How this codebase handles it (2-3 sentences)
-2. Standard flow (numbered steps)
-3. Key conventions (bullet points)
-4. Testing patterns
-5. Common pitfalls
-
-→ See [workflow.md#step-4](workflow.md#step-4-extract-the-pattern-2-minutes)
-
-### Step 5: Find Related Tests (1 minute, optional)
-
-**Purpose:** Understand how pattern is tested.
+Run the bundled detector (auto-detects Swift/Kotlin/TypeScript/Python/Ruby/Go/Rust project type and returns the top 10 files, ranked by filename + directory relevance):
 
 ```bash
-find . \( -path "*/test/*" -o -path "*/tests/*" -o -name "*.test.*" \) \
-    -type f -not -path "*/node_modules/*" | head -20
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/atlas/find-patterns.sh" "<pattern>" [path]
 ```
 
-→ See [workflow.md#step-5](workflow.md#step-5-find-related-tests-1-minute-optional)
+Run it with no arguments to list supported pattern names for the detected language. If the script is unavailable or reports "Unknown pattern", fall back to Grep/Glob using keywords from the pattern name.
 
-### Step 6: Generate Implementation Guide (1 minute)
+Notes:
+- The script matches filenames/directories only. For **content-based patterns** (async/await, Combine publishers, suspend functions, custom hooks, decorators), go straight to Grep on code content.
+- It already excludes vendored/build dirs, and test dirs unless the pattern itself is test-related.
+- If results are too broad (>50 files), ask the user for a more specific pattern (e.g. "payment service" instead of "service").
 
-**Purpose:** Provide concrete steps to follow.
+**Output modes**: `--brief` → list the ranked files and stop. `--full` → analyze all found files. Default: ≤5 files → analyze all; >5 → show the ranked list and ask which to analyze.
 
-Create actionable, step-by-step guide with:
-- Specific file locations
-- Code structure templates
-- Configuration steps
-- Testing approach
+## 3. Analyze
 
-→ See [workflow.md#step-6](workflow.md#step-6-generate-implementation-guide-1-minute)
+Read the top 2-3 files only — prefer complete, production implementation files (~100-500 lines) over utilities, trivial code, or generated files. Extract:
 
----
+1. How this codebase handles the pattern (2-3 sentences)
+2. Standard execution flow (numbered steps across layers)
+3. Naming, structure, and dependency-injection conventions
+4. Error handling approach
+5. How the pattern is tested (locate the matching test files)
+6. Pitfalls implied by the code (what the examples deliberately avoid)
 
-## Output Format
+## 4. Report
 
-Your analysis should follow this Markdown structure:
+Start with:
 
 ```markdown
 🗺️ SourceAtlas: Pattern
 ───────────────────────────────
 🧩 [Pattern Name] │ [N] files found
-
-## Overview
-[2-3 sentence summary]
-
-## Best Examples
-### 1. [File Path]:[line]
-[Purpose, Key Code, Key Points]
-
-### 2. [File Path]:[line]
-[Same structure]
-
-## Key Conventions
-- [Convention 1]
-- [Convention 2]
-- [Convention 3]
-
-## Testing Pattern
-[Test location, approach, examples]
-
-## Common Pitfalls to Avoid
-1. [Pitfall 1]
-2. [Pitfall 2]
-
-## Step-by-Step Implementation Guide
-1. [Step 1]
-2. [Step 2]
-...
-
-## Related Patterns (Optional)
-[If applicable]
-
-## Recommended Next (Optional)
-[Dynamic suggestions based on findings]
 ```
 
-→ See [output-template.md](output-template.md) for complete specification and examples
+Then YAML:
 
----
-
-## Critical Rules
-
-### 1. Scan <5% of Files
-- Use script for targeted search
-- Read only top 2-3 files
-- High-entropy priority
-
-### 2. Focus on PATTERNS
-- Extract reusable approaches
-- Not line-by-line details
-- Actionable conventions
-
-### 3. Be Specific to THIS Codebase
-- Not generic internet advice
-- Actual code from this project
-- Real file paths and examples
-
-### 4. Provide Evidence
-- file:line references always
-- Code snippets from actual files
-- Directory paths must exist
-
-### 5. Time Limit: 5-10 Minutes
-- Be efficient
-- Don't read entire codebase
-- Progressive disclosure
-
-### 6. Verification Required
-- Execute [verification-guide.md](verification-guide.md) after analysis
-- Verify file paths, line numbers, code snippets
-- Correct discrepancies before output
-
-### 7. Constitutional Compliance
-Follow [ANALYSIS_CONSTITUTION.md](../../../ANALYSIS_CONSTITUTION.md):
-- **Article I**: High-entropy priority (scan 2-3 best examples)
-- **Article II**: Mandatory exclusions (node_modules, .venv, Pods)
-- **Article IV**: Evidence format (file:line references)
-
----
-
-## Self-Verification
-
-After generating your analysis, execute verification steps:
-
-### Step V1: Extract Verifiable Claims
-- File paths (with line numbers)
-- Directory paths
-- Code snippets
-- File counts
-
-### Step V2: Parallel Verification
-- Verify file paths exist
-- Verify line numbers within bounds
-- Verify code snippets match files
-- Verify directories exist
-- Verify file counts (±2 tolerance)
-
-### Step V3: Handle Results
-- ✅ All checks pass → Proceed to output
-- ⚠️ Minor issues (1-2 checks) → Correct and note
-- ❌ Major issues (3+ checks) → Re-execute analysis
-
-### Step V4: Add Verification Summary
 ```yaml
-verification_summary:
-  checks_performed: [...]
-  confidence_level: "high"  # high|medium|low
-  notes: [...]
+overview: ...                # 2-3 sentences: how THIS codebase does it
+best_examples:               # 2-3 entries, best first
+  - {file: path:line, purpose: ..., key_points: [...]}   # + short code snippet
+key_conventions:             # observable rules with locations
+  - ...
+testing_pattern:             # test location, framework, approach; or "no tests found"
+  ...
+common_pitfalls:             # what to avoid + the correct approach
+  - ...
+implementation_guide:        # concrete numbered steps with target file paths
+  - ...
+related_patterns: [...]      # optional
 ```
 
-→ See [verification-guide.md](verification-guide.md) for complete checklist
+Include a 5-15 line code snippet for each best example, taken verbatim from the file.
 
----
+## 5. Verify, then save
 
-## Advanced
+Before saving, `test -f` every claimed file path and `test -d` every claimed directory; spot-check that each code snippet actually appears in its file (`grep`). Correct anything that fails; if most claims fail, redo the analysis.
 
-### Cache Behavior
-- **Default**: Use cache if exists
-- **Force flag**: Skip cache with `--force`
-- **Cache location**: `.sourceatlas/patterns/${PATTERN_NAME}.md`
-- **Cache age warning**: If >30 days old
+Then save:
 
-→ See [reference.md#cache-behavior](reference.md#cache-behavior)
-
-### Auto-Save Mechanism
-Complete Markdown report auto-saves after verification:
-```
-💾 Saved to .sourceatlas/patterns/[pattern-name].md
+```bash
+mkdir -p .sourceatlas/patterns
+# write the full report to the cache path from step 1
 ```
 
-→ See [reference.md#auto-save-behavior](reference.md#auto-save-behavior)
+Confirm: `💾 Saved to .sourceatlas/patterns/<pattern-name>.md`
 
-### Handoffs to Next Commands
-Based on findings, suggest:
-- Complex flow → `/sourceatlas:flow "[entry point]"`
-- Wide usage → `/sourceatlas:impact "[core file]"`
-- Related pattern → `/sourceatlas:pattern "[related]"`
+## 6. Recommended next steps
 
-→ See [reference.md#handoffs](reference.md#handoffs)
-
-### find-patterns.sh Script
-- Pre-tested patterns for common use cases
-- Optimized search (<20 seconds)
-- Relevance ranking (⭐⭐⭐ / ⭐⭐ / ⭐)
-- Graceful fallback to manual search
-
-### ast-grep Integration
-- Content-based pattern search
-- Higher precision for Type B patterns
-- 14-93% false positive reduction
-- Automatic fallback if unavailable
-
----
-
-## Support Files
-
-Detailed documentation available in:
-
-- **[workflow.md](workflow.md)** - Complete Step 0-6 execution guide with bash commands
-- **[output-template.md](output-template.md)** - Full Markdown structure and examples
-- **[verification-guide.md](verification-guide.md)** - Self-verification steps V1-V4
-- **[reference.md](reference.md)** - Cache, scripts, handoffs
-
----
-
-## Output Header
-
-Start your output with:
+If the pattern is simple and self-contained, end with:
 
 ```markdown
-🗺️ SourceAtlas: Pattern
-───────────────────────────────
-🧩 [Pattern Name] │ [N] files found
+✅ **Pattern analysis complete** — start implementing with the guide above
 ```
 
-Then follow complete structure in [output-template.md](output-template.md).
+Otherwise suggest follow-ups (only those with concrete parameters from your findings):
+
+```markdown
+## Recommended Next
+
+| # | Command | Purpose |
+|---|---------|---------|
+| 1 | `/sourceatlas:flow "src/api/UserController.ts"` | Pattern spans 3 layers — trace the full flow |
+| 2 | `/sourceatlas:impact "src/services/BaseService.ts"` | Used by 23 services — map dependencies |
+| 3 | `/sourceatlas:pattern "repository"` | Controllers depend on repositories — learn that next |
+
+💡 Enter a number (e.g., `1`) or copy the command to execute
+```

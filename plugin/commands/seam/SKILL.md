@@ -8,9 +8,7 @@ argument-hint: "<file-path> [--language objc|swift|typescript|javascript|go|java
 
 # SourceAtlas: Seam Discovery
 
-> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../../ANALYSIS_CONSTITUTION.md) v1.0
->
-> Key principles enforced:
+> Key principles:
 > - Article I: Structure over details (find responsibility boundaries, not implementation)
 > - Article IV: Evidence format (file:line references)
 > - Article VI: Scale awareness (narrow before deep)
@@ -20,8 +18,6 @@ argument-hint: "<file-path> [--language objc|swift|typescript|javascript|go|java
 **Target:** $ARGUMENTS
 
 **Goal:** Discover responsibility zones and seam points in a large file, so the user can run `/atlas.audit` on a focused subset instead of the entire file.
-
-**Time Limit:** 2-5 minutes per file.
 
 **Composability:** This skill outputs zone maps that feed into `/atlas.audit --zone <zone-id>`.
 
@@ -66,14 +62,14 @@ Help the user understand:
 
 > For step-by-step execution details, see [workflow.md](workflow.md).
 
-### Step 1: Parse Arguments and Run detect-zones.sh (30 seconds)
+### Step 1: Parse Arguments and Run detect-zones.sh
 
 ```bash
 # Auto-detect language from extension
-bash plugin/commands/seam/scripts/detect-zones.sh "$FILE_PATH"
+bash "${CLAUDE_PLUGIN_ROOT}/commands/seam/scripts/detect-zones.sh" "$FILE_PATH"
 
 # Or explicit language
-bash plugin/commands/seam/scripts/detect-zones.sh "$FILE_PATH" --language objc
+bash "${CLAUDE_PLUGIN_ROOT}/commands/seam/scripts/detect-zones.sh" "$FILE_PATH" --language objc
 ```
 
 The script outputs YAML with 3 layers:
@@ -83,17 +79,17 @@ The script outputs YAML with 3 layers:
 
 > If clang is unavailable, Layer 2/3 falls back to grep — still useful but less precise.
 
-### Step 2: Environment Check (30 seconds)
+### Step 2: Environment Check
 
 Check for `gemini` and `codex` CLIs. If either is missing, enter **degraded mode**: generate prompt files for manual execution and continue with Claude-only analysis, marking output as `mode: degraded`.
 
-### Step 3: Gemini Blind Scan (2-3 minutes)
+### Step 3: Gemini Blind Scan
 
 Gemini receives **only the source code and detect-zones.sh output** — no taxonomy framing, no Feathers schema. This prevents confirmation bias from Claude's structured prompt.
 
 Gemini outputs: a list of potential injection points, dependency boundaries, and patterns it finds suspicious or hard-coded.
 
-### Step 4: Claude Structured Analysis (2-3 minutes)
+### Step 4: Claude Structured Analysis
 
 With the raw zone map AND Gemini's blind scan in hand, perform semantic analysis:
 
@@ -124,7 +120,7 @@ Flag zones exhibiting:
 - **Divergent Change**: Zone changes for unrelated reasons
 - **Shotgun Surgery**: Small change requires touching many zones
 
-### Step 5: Codex Adversarial Review (2-3 minutes)
+### Step 5: Codex Adversarial Review
 
 Codex receives: source code, detect-zones.sh output, Gemini blind scan, Claude's seam candidates.
 
@@ -144,7 +140,7 @@ Resolve disputes and integrate additions to produce the final seam list:
 - **ADDED** candidates: incorporate with Claude's seam type classification
 - **FLAGGED** concerns: record in `seam_validation.architectural_concerns`
 
-### Step 7: Score and Rank Zones (30 seconds)
+### Step 7: Score and Rank Zones
 
 For each zone, compute a **refactoring priority score**:
 

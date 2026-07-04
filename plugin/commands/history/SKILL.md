@@ -1,325 +1,156 @@
 ---
 name: history
-description: Smart temporal analysis using git history - Hotspots, Coupling, and Recent Contributors
+description: Analyzes git history to find hotspots (frequently changed files), temporal coupling (files that change together), contributor knowledge distribution, and bus factor risk, using code-maat-style analyses. Use when the user asks "what are the hotspots", "what files change most", "what files always change together", "who knows this code", "who should I ask about X", "bus factor", "knowledge silos", or wants to understand code evolution before refactoring.
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write, AskUserQuestion
-argument-hint: (optional) [path or scope, e.g., "src/", "frontend", "last 6 months"] [--force]
+argument-hint: (optional) [path or scope, e.g., "src/", "last 6 months"] [--force]
 ---
 
-# SourceAtlas: Smart Temporal Analysis (Git History)
+# SourceAtlas: Git History Analysis
 
-> **Constitution**: [ANALYSIS_CONSTITUTION.md](../../../ANALYSIS_CONSTITUTION.md) v1.0
+**Arguments**: ${ARGUMENTS:-entire repository}
 
-## Context
+Extract hotspots, temporal coupling, and knowledge distribution from git history. Requires a git repository (`git rev-parse --git-dir`).
 
-**Analysis Scope:** $ARGUMENTS (default: entire repository)
-**Goal:** Extract actionable insights from git history
-**Time Limit:** 5-10 minutes
-**Prerequisite:** code-maat (will ask permission to install if missing)
+## 1. Cache check (do this first)
 
-## Quick Start
+Cache path: `.sourceatlas/history.md` (fixed — the analysis is repository-wide).
 
-1. **Check cache** (skip if `--force` flag present)
-2. **Check code-maat** installation (install if needed with permission)
-3. **Generate git log** (last 12 months, code-maat compatible)
-4. **Run analyses**: Hotspots, Coupling, Contributors
-5. **Risk assessment** combining all dimensions
-6. **Generate report** following [output-template.md](output-template.md)
-7. **Verify output** using [verification-guide.md](verification-guide.md)
-8. **Auto-save** to `.sourceatlas/history.md`
+If the cache exists and `--force` is NOT in the arguments: read it, output its content under the branded header, then STOP — no analysis.
 
-## Your Task
+```
+📁 Loading cache: .sourceatlas/history.md (N days ago)
+💡 Add --force to re-analyze
+```
 
-You are analyzing git commit history to understand:
-1. **Hotspots** - Files changed most frequently (likely complex/risky)
-2. **Temporal Coupling** - Files that change together (hidden dependencies)
-3. **Recent Contributors** - Who has knowledge of which areas (bus factor)
-4. **Risk Areas** - Aggregate assessment for prioritization
+Warn if the cache is older than 30 days.
 
-### What You'll Discover
+## 2. Prerequisites
 
-| Analysis Type | Insight | Business Value |
-|---------------|---------|----------------|
-| **Hotspots** | Complexity indicators | Refactoring priorities, technical debt |
-| **Coupling** | Hidden dependencies | Architecture review targets |
-| **Contributors** | Knowledge distribution | Bus factor risks, training needs |
-| **Risk** | Aggregate assessment | Resource allocation decisions |
+code-maat gives the best coupling/ownership data:
 
----
-
-## Core Workflow
-
-Execute these steps in order. See [workflow.md](workflow.md) for complete details.
-
-### Step 0: Check Prerequisites (30 seconds)
-
-**Purpose:** Ensure code-maat is installed and Java is available.
-
-**Check code-maat:**
 ```bash
-if [ -f "$HOME/.sourceatlas/bin/code-maat-1.0.4-standalone.jar" ]; then
+[ -f "$HOME/.sourceatlas/bin/code-maat-1.0.4-standalone.jar" ] &&
   export CODEMAAT_JAR="$HOME/.sourceatlas/bin/code-maat-1.0.4-standalone.jar"
-fi
 ```
 
-**If not found, use AskUserQuestion:**
-- "code-maat required for analysis. Install now? (requires Java 8+)"
-- If yes → run `./scripts/install-codemaat.sh`
-- If no → show manual installation steps
+If not found, ask via AskUserQuestion whether to install (requires Java 8+), then run `"${CLAUDE_PLUGIN_ROOT}/scripts/install-codemaat.sh"`. If declined or Java is unavailable, use the pure-git fallbacks below and note reduced coupling accuracy.
 
-→ See [workflow.md#step-0](workflow.md#step-0-check-prerequisites-30-seconds)
+## 3. Generate git log
 
-### Step 1: Generate Git Log (1 minute)
+Default period 12 months (min 3, max 24 — parse a number from the arguments if given). Scope filter applies if a path was given.
 
-**Purpose:** Create code-maat compatible git log file.
-
-**Default: Last 12 months**
 ```bash
-git log --all --numstat --date=short \
-    --pretty=format:'--%h--%ad--%aN' \
-    --after="$(date -v-12m +%Y-%m-%d)" \
-    > /tmp/git-history.log
+MONTHS=12
+AFTER=$(date -v-${MONTHS}m +%Y-%m-%d 2>/dev/null || date -d "${MONTHS} months ago" +%Y-%m-%d)
+git log --all --numstat --date=short --pretty=format:'--%h--%ad--%aN' \
+    --after="$AFTER" ${SCOPE:+-- "$SCOPE"} > /tmp/git-history.log
+
+COMMIT_COUNT=$(grep -c '^--' /tmp/git-history.log)
+FILE_COUNT=$(awk 'NF==3 && $1 ~ /^[0-9]+$/' /tmp/git-history.log | cut -f3 | sort -u | wc -l)
 ```
 
-**If scope specified:** Filter to directory (e.g., "src/")
+If fewer than 50 commits, warn that temporal patterns will be weak and suggest widening the range. For huge repos, add `--max-count=1000` or narrow the scope.
 
-→ See [workflow.md#step-1](workflow.md#step-1-generate-git-log-1-minute)
+## 4. Analyses
 
-### Step 2: Hotspot Analysis (2 minutes)
+**Hotspots** (top 10 by revisions; complexity score = LOC × revisions):
 
-**Purpose:** Identify frequently changed files.
-
-**Run code-maat revisions:**
 ```bash
-java -jar "$CODEMAAT_JAR" -l /tmp/git-history.log -c git2 -a revisions
+java -jar "$CODEMAAT_JAR" -l /tmp/git-history.log -c git2 -a revisions 2>/dev/null > /tmp/revisions.csv
+tail -n +2 /tmp/revisions.csv | sort -t, -k2 -nr | head -10 |
+while IFS=, read -r file revs; do
+  [ -f "$file" ] || continue
+  LOC=$(wc -l < "$file"); echo "$file,$revs,$LOC,$((LOC * revs))"
+done
 ```
 
-**Calculate complexity scores:** LOC × Revisions
+Fallback without code-maat:
 
-**Identify top 10 hotspots** sorted by complexity
-
-→ See [workflow.md#step-2](workflow.md#step-2-hotspot-analysis-2-minutes)
-
-### Step 3: Temporal Coupling Analysis (2 minutes)
-
-**Purpose:** Find files that change together.
-
-**Run code-maat coupling:**
 ```bash
-java -jar "$CODEMAAT_JAR" -l /tmp/git-history.log -c git2 -a coupling
+git log --after="$AFTER" --name-only --pretty=format: ${SCOPE:+-- "$SCOPE"} |
+  grep -v '^$' | sort | uniq -c | sort -rn | head -10
 ```
 
-**Filter significant couplings:** degree ≥ 0.5
+**Temporal coupling** (keep degree ≥ 0.5, top 20):
 
-**Categorize:** Expected vs Suspicious
-
-→ See [workflow.md#step-3](workflow.md#step-3-temporal-coupling-analysis-2-minutes)
-
-### Step 4: Recent Contributors Analysis (2 minutes)
-
-**Purpose:** Map knowledge distribution across modules.
-
-**Run code-maat entity-ownership:**
 ```bash
-java -jar "$CODEMAAT_JAR" -l /tmp/git-history.log -c git2 -a entity-ownership
+java -jar "$CODEMAAT_JAR" -l /tmp/git-history.log -c git2 -a coupling 2>/dev/null > /tmp/coupling.csv
+awk -F, 'NR>1 && $3 >= 0.5' /tmp/coupling.csv | sort -t, -k3 -nr | head -20
 ```
 
-**Generate knowledge map** by area (src/api/, src/core/, etc.)
+**Contributors / knowledge map** (per major area) and **bus factor** (single-contributor files in the last 6 months):
 
-**Identify bus factor risks:** Single-contributor modules
+```bash
+java -jar "$CODEMAAT_JAR" -l /tmp/git-history.log -c git2 -a entity-ownership 2>/dev/null > /tmp/ownership.csv
 
-→ See [workflow.md#step-4](workflow.md#step-4-recent-contributors-analysis-2-minutes)
+for area in src/api/ src/core/; do   # use the repo's actual top-level areas
+  echo "=== $area ==="; git log --pretty=format:'%an|%ad|%s' --date=short -- "$area" | head -5
+done
 
-### Step 5: Risk Assessment (1 minute)
+AFTER6=$(date -v-6m +%Y-%m-%d 2>/dev/null || date -d '6 months ago' +%Y-%m-%d)
+git log --all --numstat --date=short --pretty=format:'--%h--%ad--%aN' --after="$AFTER6" > /tmp/recent-6m.log
+java -jar "$CODEMAAT_JAR" -l /tmp/recent-6m.log -c git2 -a entity-ownership 2>/dev/null |
+  awk -F, 'NR>1 {count[$1]++} END {for (f in count) if (count[f]==1) print f}'
+```
 
-**Purpose:** Combine all dimensions into actionable priorities.
+## 5. Interpretation rules
 
-**Calculate composite risk:** (Revisions × Coupling_Count) / Contributor_Count
+- Composite risk = (revisions × coupling_count) / contributor_count. Risk types: bus factor, complexity, coupling, testing gap (hotspot with no matching test-file churn).
+- Complexity score > 10,000 → refactoring candidate. High revisions + low LOC (configs, small utils) is normal. Low revisions + high LOC is stable, mature code.
+- Coupling degree: ≥ 0.9 consider merging the files; 0.7–0.9 review the dependency; 0.5–0.7 monitor.
+- Expected coupling: model↔service, route↔controller, test↔production, component↔styles. Suspicious: cross-layer (API↔DB), cross-module (user↔payment), backend↔frontend.
+- Healthy knowledge: 2–3 active contributors per module. Risk: single contributor, especially if inactive > 6 months.
+- Privacy: report "recent contributors", never ownership percentages; frame findings as opportunities, not blame. Note if duplicate author names may merge stats (`git log --format='%aN <%aE>' | sort -u`).
+- If all couplings < 0.5 and hotspots < 10 revisions, say so plainly: clean separation, young history, or monolithic commits.
 
-**Risk categories:**
-- Bus Factor Risk
-- Complexity Risk
-- Coupling Risk
-- Testing Gap Risk
+## 6. Report
 
-→ See [workflow.md#step-5](workflow.md#step-5-risk-assessment-1-minute)
-
----
-
-## Output Format
-
-Your analysis should follow this Markdown structure:
+Start with:
 
 ```markdown
 🗺️ SourceAtlas: History
 ───────────────────────────────
 📜 [repo name] │ [N] months
-
-**Analysis Period**: [start] → [end]
-**Commits Analyzed**: [count]
-**Files Analyzed**: [count]
-
-## 1. Hotspots (Top 10)
-[Table with Rank, File, Changes, LOC, Complexity Score]
-[Insights paragraph]
-
-## 2. Temporal Coupling (Significant Pairs)
-[Table with File A, File B, Coupling, Co-changes]
-[Expected vs Suspicious coupling analysis]
-
-## 3. Recent Contributors (Knowledge Map)
-[Per-area tables with Contributor, Commits, Last Active]
-[Bus Factor Risks section]
-
-## 4. Risk Summary
-[Risk aggregation table]
-[Priority Actions numbered list]
-
-## 5. Recommendations
-[Refactoring candidates, knowledge sharing, architecture review]
-
-## Recommended Next
-[Dynamic suggestions based on findings]
 ```
 
-→ See [output-template.md](output-template.md) for complete specification and examples
+Then YAML:
 
----
-
-## Critical Rules
-
-### 1. Privacy Aware
-- Use "Recent Contributors" not "Ownership %"
-- Focus on knowledge distribution, not blame
-- Frame findings as opportunities, not criticisms
-
-### 2. Actionable Insights
-- Every finding must have recommended action
-- Reference specific commit counts and file paths
-- Provide concrete next steps (not vague suggestions)
-
-### 3. Evidence-Based
-- All hotspot files must exist (verify)
-- Commit counts must match git history (±20% tolerance)
-- Contributor names must be in git log
-
-### 4. Time-Bounded
-- Default: 12 months (good balance)
-- Minimum: 3 months (for meaningful patterns)
-- Maximum: 24 months (avoid ancient history)
-
-### 5. Verification Required
-- Execute [verification-guide.md](verification-guide.md) after analysis
-- Verify file paths, commit counts, contributors
-- Correct discrepancies before output
-
-### 6. Constitutional Compliance
-Follow [ANALYSIS_CONSTITUTION.md](../../../ANALYSIS_CONSTITUTION.md):
-- **Article I**: Evidence-based (all claims from git/code-maat)
-- **Article III**: Verification (run V1-V4 checks)
-- **Article IV**: Evidence format (file:line references)
-- **Article V**: Transparency (show analysis period, cache age)
-- **Article VII**: User Empowerment (actionable recommendations)
-
----
-
-## Self-Verification
-
-After generating your analysis, execute verification steps:
-
-### Step V1: Extract Verifiable Claims
-Parse output for all quantifiable claims:
-- File paths (hotspots, coupled files)
-- Commit counts (total, per file, per contributor)
-- Contributor names
-- Coupling pairs
-- Date ranges
-
-### Step V2: Parallel Verification
-- Verify hotspot files exist (sample 3-5)
-- Verify commit counts (±20% tolerance)
-- Verify contributors in git history
-- Verify coupling pairs (both files exist)
-- Verify date ranges within repository history
-
-### Step V3: Handle Results
-- ✅ All checks pass → Proceed to output
-- ⚠️ Minor issues (1-2 checks) → Correct and note
-- ❌ Major issues (3+ checks) → Re-execute analysis
-
-### Step V4: Add Verification Summary
 ```yaml
-verification_summary:
-  checks_performed: [...]
-  confidence_level: "high"  # high|medium|low
-  notes: [...]
+metadata:
+  period: {months: ..., start: ..., end: ...}
+  commits_analyzed: ...
+  files_analyzed: ...
+hotspots:                 # top 10 by revisions
+  - {file: ..., revisions: ..., loc: ..., complexity: ...}   # complexity = loc × revisions
+coupling:                 # degree ≥ 0.5
+  - {a: ..., b: ..., degree: ..., co_changes: ..., verdict: expected|suspicious, note: ...}
+knowledge:
+  areas:
+    - {area: ..., contributors: [{name: ..., recent_commits: ..., last_active: ...}]}
+  bus_factor_risks:
+    - {area: ..., level: high|medium|low, reason: ...}
+risks:                    # composite assessment across dimensions
+  - {target: ..., type: bus_factor|complexity|coupling|testing_gap, severity: ..., action: ...}
+summary:
+  priority_actions: [...]   # concrete, ordered; each references real files/metrics
 ```
 
-→ See [verification-guide.md](verification-guide.md) for complete checklist
+Every finding needs a recommended action with real file paths and counts — no placeholders.
 
----
+## 7. Verify, then save
 
-## Advanced
+Before saving, `test -f` each hotspot file and both files of each coupling pair claimed in the report (drop or correct entries that fail), spot-check 2–3 revision counts against `git log --oneline -- <file> | wc -l` (±20% tolerance), and confirm contributor names appear in `git shortlog -sn --all`. Then `mkdir -p .sourceatlas` and write the full report to `.sourceatlas/history.md`. Confirm: `💾 Saved to .sourceatlas/history.md`
 
-### Cache Behavior
-- **Default**: Use cache if exists
-- **Force flag**: Skip cache with `--force`
-- **Cache location**: `.sourceatlas/history.md` (fixed path)
-- **Cache age warning**: If >30 days old
+## Recommended next
 
-→ See [reference.md#cache-behavior](reference.md#cache-behavior)
+Suggest 1–2 follow-ups only when findings are concrete, using discovered names:
 
-### Auto-Save Mechanism
-Complete Markdown report auto-saves after verification:
-```
-💾 Saved to .sourceatlas/history.md
-```
+| Finding | Command |
+|---------|---------|
+| High-risk hotspot | `/sourceatlas:impact "[hotspot file]"` |
+| Suspicious coupling | `/sourceatlas:flow "[entry point]"` |
+| Refactoring needed | `/sourceatlas:pattern "[pattern]"` |
+| Complexity everywhere | `/sourceatlas:overview` |
 
-→ See [reference.md#auto-save-behavior](reference.md#auto-save-behavior)
-
-### Handoffs to Next Commands
-Based on findings, suggest:
-- High-risk hotspot → `/sourceatlas:impact "[hotspot]"`
-- Suspicious coupling → `/sourceatlas:flow "[entry point]"`
-- Refactoring needed → `/sourceatlas:pattern "[pattern]"`
-
-→ See [reference.md#handoffs](reference.md#handoffs)
-
-### code-maat Installation
-- Default location: `~/.sourceatlas/bin/code-maat-1.0.4-standalone.jar`
-- Auto-install via: `./scripts/install-codemaat.sh`
-- Requires: Java 8+
-
-→ See [reference.md#code-maat-installation](reference.md#code-maat-installation)
-
-### Interpretation Guidelines
-- Hotspots: Not always bad (core logic changes often)
-- Coupling: Expected (same domain) vs Suspicious (cross-module)
-- Contributors: Healthy = 2-3 per module, Risk = single contributor
-
-→ See [reference.md#interpretation-guidelines](reference.md#interpretation-guidelines)
-
----
-
-## Support Files
-
-Detailed documentation available in:
-
-- **[workflow.md](workflow.md)** - Complete Step 0-5 execution guide with bash commands
-- **[output-template.md](output-template.md)** - Full Markdown structure and examples
-- **[verification-guide.md](verification-guide.md)** - Self-verification steps V1-V4
-- **[reference.md](reference.md)** - Cache, code-maat, interpretation, troubleshooting
-
----
-
-## Output Header
-
-Start your output with:
-
-```markdown
-🗺️ SourceAtlas: History
-───────────────────────────────
-📜 [repo name] │ [N] months
-```
-
-Then follow complete structure in [output-template.md](output-template.md).
+💡 Enter a number (e.g., `1`) or copy the command to execute

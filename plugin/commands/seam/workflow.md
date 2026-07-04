@@ -53,21 +53,8 @@ With `--force`, always re-run analysis.
 Run phase detection to determine zone ranking strategy before analysis:
 
 ```bash
-PLUGIN_ATLAS=~/.claude/plugins/marketplaces/lis186-SourceAtlas/scripts/atlas
-if [ -f ~/.claude/scripts/atlas/detect-phase.sh ]; then
-    PHASE_SCRIPT=~/.claude/scripts/atlas/detect-phase.sh
-elif [ -f "$PLUGIN_ATLAS/detect-phase.sh" ]; then
-    PHASE_SCRIPT="$PLUGIN_ATLAS/detect-phase.sh"
-elif [ -f plugin/commands/seam/scripts/detect-phase.sh ]; then
-    PHASE_SCRIPT=plugin/commands/seam/scripts/detect-phase.sh
-else
-    echo "⚠️  detect-phase.sh not found — defaulting to Phase 1 (Feathers ordering)"
-    RANKING_STRATEGY="feathers"
-fi
-
-if [ -n "${PHASE_SCRIPT:-}" ]; then
-    bash "$PHASE_SCRIPT" "$FILE_PATH"
-fi
+PHASE_SCRIPT="${CLAUDE_PLUGIN_ROOT}/commands/seam/scripts/detect-phase.sh"
+bash "$PHASE_SCRIPT" "$FILE_PATH"
 ```
 
 ### Phase Decision Table
@@ -124,17 +111,7 @@ In degraded mode, skip Steps 3 (Gemini) and 5 (Codex) — run Claude-only and ma
 ## Step 3: Run detect-zones.sh
 
 ```bash
-PLUGIN_ATLAS=~/.claude/plugins/marketplaces/lis186-SourceAtlas/scripts/atlas
-if [ -f ~/.claude/scripts/atlas/detect-zones.sh ]; then
-    SCRIPT_DIR=~/.claude/scripts/atlas
-elif [ -f "$PLUGIN_ATLAS/detect-zones.sh" ]; then
-    SCRIPT_DIR="$PLUGIN_ATLAS"
-elif [ -f plugin/commands/seam/scripts/detect-zones.sh ]; then
-    SCRIPT_DIR=plugin/commands/seam/scripts
-else
-    echo "❌ detect-zones.sh not found — install SourceAtlas plugin or scripts to ~/.claude/scripts/atlas/"
-    exit 1
-fi
+SCRIPT_DIR="${CLAUDE_PLUGIN_ROOT}/commands/seam/scripts"
 bash "$SCRIPT_DIR/detect-zones.sh" "$FILE_PATH" --language "$LANGUAGE"
 ```
 

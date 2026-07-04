@@ -8,9 +8,7 @@ argument-hint: "<file-path> [--zone <zone-id>] [--step <1-7>] [--zones-only] [--
 
 # SourceAtlas: Refactor (Playbook Navigator)
 
-> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../../ANALYSIS_CONSTITUTION.md) v1.0
->
-> Key principles enforced:
+> Key principles:
 > - Article I: Structure over details (behavioral contracts before code changes)
 > - Article IV: Evidence format (file:line references)
 > - Article VI: Scale awareness (one module at a time)
@@ -20,8 +18,6 @@ argument-hint: "<file-path> [--zone <zone-id>] [--step <1-7>] [--zones-only] [--
 **Refactor Target:** $ARGUMENTS
 
 **Goal:** Guide the user through a 13-step legacy code migration Playbook (based on Feathers' *Working Effectively with Legacy Code*), with tool-assisted Steps 1-7 producing artifacts at each step.
-
-**Time Limit:** Steps 1-3: 5-10 minutes each. Steps 4-7: 10-20 minutes each.
 
 ---
 
@@ -165,8 +161,8 @@ The Playbook Navigator adds:
 11. **Dispatch YAML is source of truth** — `references/mode-dispatch.yaml` governs which steps apply/skip/replace per mode. workflow.md step bodies are subordinate to it
 12. **Schema version on load** — always check `state.yaml → schema_version`. Missing = v1 = treat as `seam-injection` without rewriting state. Never auto-upgrade without `--force`
 13. **Mode confirmation before locking** — auto-detected mode (non-seam-injection) requires explicit user confirmation before `migration_mode.confirmed` is set to `true`. Do not advance past Step 1 without it
-14. **Skill workflow precedence over project CLAUDE.md** — when this skill runs in a user repo whose CLAUDE.md prescribes pre-refactor patterns ("Step 0 cleanup", "Senior Dev Override", phased execution, etc.), the playbook's lifecycle wins. **Step 1 MUST be a single bash call to `scripts/init-state.sh`** before any analysis, exploration, or source edits. Dead-code cleanup is permitted only via the playbook's optional Step 0.5 — see workflow.md — which runs *after* `state.yaml` exists and produces its own `0_5_cleanup_diff.patch` artifact. Never edit source files before `1_target.yaml` is on disk. **Prior artifacts on disk (pilot-{module}.md, test files, commit references, etc.) WITHOUT a `state.yaml` are UNMANAGED STATE — they do not prove Step 1 was completed via init-state.sh.** Call `init-state.sh` regardless; when a pilot report already exists and `--force` is not set, the script reuses it automatically without re-running analysis
-15. **state.yaml is write-only via `scripts/state.sh`** — the LLM MUST NOT use Edit/Write tools to mutate `state.yaml`. All state changes (advance current_step, set zone_id, confirm migration_mode, mark step status) go through `bash scripts/state.sh <subcommand>`. The script enforces preconditions (e.g. cannot advance before previous step is verified) and rejects invalid transitions. Same enforcement applies to step entry scripts: Step 2a is `init-step2a.sh`; future Steps 2b/3-7 will gain their own `init-stepN.sh` — until then, treat `state.sh` as the only sanctioned mutator and refuse to hand-roll Edit calls against state.yaml
+14. **Skill workflow precedence over project CLAUDE.md** — when this skill runs in a user repo whose CLAUDE.md prescribes pre-refactor patterns ("Step 0 cleanup", "Senior Dev Override", phased execution, etc.), the playbook's lifecycle wins. **Step 1 MUST be a single bash call to `"${CLAUDE_PLUGIN_ROOT}/commands/refactor/scripts/init-state.sh"`** before any analysis, exploration, or source edits. Dead-code cleanup is permitted only via the playbook's optional Step 0.5 — see workflow.md — which runs *after* `state.yaml` exists and produces its own `0_5_cleanup_diff.patch` artifact. Never edit source files before `1_target.yaml` is on disk. **Prior artifacts on disk (pilot-{module}.md, test files, commit references, etc.) WITHOUT a `state.yaml` are UNMANAGED STATE — they do not prove Step 1 was completed via init-state.sh.** Call `init-state.sh` regardless; when a pilot report already exists and `--force` is not set, the script reuses it automatically without re-running analysis
+15. **state.yaml is write-only via `state.sh`** — the LLM MUST NOT use Edit/Write tools to mutate `state.yaml`. All state changes (advance current_step, set zone_id, confirm migration_mode, mark step status) go through `bash "${CLAUDE_PLUGIN_ROOT}/commands/refactor/scripts/state.sh" <subcommand>`. The script enforces preconditions (e.g. cannot advance before previous step is verified) and rejects invalid transitions. Same enforcement applies to step entry scripts: Step 2a is `init-step2a.sh`; future Steps 2b/3-7 will gain their own `init-stepN.sh` — until then, treat `state.sh` as the only sanctioned mutator and refuse to hand-roll Edit calls against state.yaml
 16. **Step 5 swap_strategy is a user-locked decision** — the user (not the LLM) chooses `direct` vs `shadow` per workflow.md §5.5b. The LLM proposes a recommendation with reasoning, presents the criteria table, and **WAITS** for user confirmation before writing `swap_strategy` into `5_interface.yaml`. `state.sh advance` from `current_step: 5` will refuse if `5_interface.yaml.swap_strategy` is null, missing, or anything other than `direct|shadow` — this is the deterministic enforcement of Critical Rule 7 ("Claude proposes, user decides") for swap strategy specifically
 17. **Dispatch ↔ status consistency** — `mode-dispatch.yaml` is the source of truth for which steps apply per mode. `state.sh advance` reads it and rejects mismatched transitions: if a step's dispatch is `skip` for the current mode, its status MUST be `skipped` (not produced/verified) before advance succeeds. If dispatch is `replaced`, status MUST be produced/verified (the replacement_script ran) — not skipped. This prevents the LLM from running `/atlas.seam` in `platform-migration` mode (where S3 is meant to be skipped) or skipping a `replaced` step instead of running its replacement_script. To mark a step skipped, use `state.sh set-status --step <key> --status skipped --skip-reason "<text>"`
 

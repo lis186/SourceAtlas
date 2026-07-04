@@ -1,6 +1,6 @@
 ---
 name: audit
-description: Extract behavior contracts from legacy code before refactoring using multi-LLM cross-validation
+description: Extracts implicit behavior contracts from legacy code before refactoring, using a 3-LLM cross-validation pipeline (Gemini blind scan → Claude structured audit → Codex adversarial review) with machine-verifiable grep/ast-grep assertions. Use when the user asks "what will break if I refactor this", "audit this file", "extract behavior contracts", "what hidden behaviors does this code have", or is preparing to rewrite/migrate a legacy module.
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
 argument-hint: "<file-path> [--language objc|swift|typescript|javascript] [--zone <zone-id>] [--force]"
@@ -8,210 +8,131 @@ argument-hint: "<file-path> [--language objc|swift|typescript|javascript] [--zon
 
 # SourceAtlas: Contract Audit (Multi-LLM Cross-Validation)
 
-> **Constitution**: This command operates under [ANALYSIS_CONSTITUTION.md](../../../ANALYSIS_CONSTITUTION.md) v1.0
->
-> Key principles enforced:
-> - Article I: Structure over details (extract behavioral contracts, not implementation)
-> - Article II: Mandatory directory exclusion
-> - Article IV: Evidence format (file:line references)
-> - Article VI: Scale awareness (one module at a time)
+**Arguments**: $ARGUMENTS
 
-## Context
+Extract the implicit behavioral contracts of one target file so a refactor can prove it preserved them. One module at a time — never batch files.
 
-**Audit Target:** $ARGUMENTS
+## 1. Cache check (do this first)
 
-**Goal:** Extract implicit behavioral contracts from legacy code before refactoring, using a 3-LLM cross-validation pipeline (Gemini blind scan → Claude structured audit → Codex adversarial review).
+Module name = basename, extension stripped, lowercased (`NYHTTPSClient.m` → `nyhttpsclient`). Cache path: `.sourceatlas/audit/{module}.yaml`.
 
-**Time Limit:** 10-20 minutes per module (depending on file size).
-
----
-
-## Quick Start
-
-1. **Parse arguments** → file path + language detection
-2. **Check cache** (if no `--force` flag) → See [reference.md#cache-behavior](reference.md#cache-behavior)
-3. **Check environment** → gemini CLI, codex CLI availability
-4. **Execute pipeline** using [workflow.md](workflow.md)
-5. **Verify output** using [verification-guide.md](verification-guide.md)
-6. **Auto-save** to `.sourceatlas/audit/` → See [reference.md#auto-save](reference.md#auto-save)
-
----
-
-## Your Task
-
-You are **SourceAtlas Contract Auditor**, specialized in extracting implicit behavioral contracts from legacy code before refactoring.
-
-Help the user understand:
-1. What hidden behaviors exist in the target code (implicit contracts)
-2. Which behaviors are intentional vs accidental (cross-validation)
-3. What will break during refactoring (risk assessment)
-4. Machine-verifiable assertions for CI/CD (Phase B rules)
-
----
-
-## Core Workflow
-
-Follow these high-level steps. For detailed instructions, see [workflow.md](workflow.md).
-
-### Step 1: Parse Arguments and Detect Language (1 minute)
-
-Parse `$ARGUMENTS` to extract:
-- **File path**: The target file to audit
-- **Language**: Auto-detect from extension, or use `--language` flag
-- **Zone** (optional): A zone ID from `/atlas.seam` output, to audit only that zone's line range
-
-Language detection priority:
-1. Explicit `--language` flag
-2. File extension mapping (`.m` → objc, `.swift` → swift, `.ts` → typescript, `.js` → javascript)
-3. Fallback: `detect-language.sh`
-
-> See [workflow.md#step-1](workflow.md#step-1-parse-arguments-and-detect-language)
-
-### Step 2: Environment Check (30 seconds)
-
-Check for required CLI tools:
-- `gemini` CLI → Step 1 blind scan
-- `codex` CLI → Step 3 adversarial review
-
-**Degraded mode**: If either CLI is missing, generate prompt files for manual execution instead.
-
-> See [workflow.md#step-2](workflow.md#step-2-environment-check)
-
-### Step 3: Cache Check (30 seconds)
-
-Check `.sourceatlas/audit/` for existing results.
-
-> See [reference.md#cache-behavior](reference.md#cache-behavior)
-
-### Step 4: Execute Pipeline (8-15 minutes)
-
-The core 4-step pipeline:
-
-1. **Step 0 — Boundary Discovery**: `rg` static scan for related files
-2. **Step 1 — Gemini Blind Scan**: Independent behavior discovery
-3. **Step 2 — Claude Structured Audit**: Contract extraction + verification scripts
-4. **Step 3 — Codex Adversarial Review**: CONFIRM/DISPUTE/ADD
-5. **Step 4 — Claude Merge**: Final contracts + verification rules
-
-> See [workflow.md#step-4](workflow.md#step-4-execute-pipeline)
-
-### Step 5: Output and Save (1 minute)
-
-Format results and auto-save.
-
-> See [workflow.md#step-5](workflow.md#step-5-output-and-save)
-
----
-
-## Output Format
-
-Your analysis should follow this structure:
+If the cache exists and `--force` is NOT in the arguments: read it, output its content, then STOP.
 
 ```
-🔍 SourceAtlas: Audit
-───────────────────────────────
-📋 $MODULE │ [language] │ [contract_count] contracts
-
-📊 Contract Summary
-- M (Mutation): [count]
-- L (Lifecycle): [count]
-- N (Notification): [count]
-- S (Synchronization): [count]
-- E (Error Handling): [count]
-- C (Cancellation): [count]
-- D (Dependency): [count]
-- P (Propagation): [count]
-
-🎯 Cross-Validation
-- Gemini found: [count] behaviors
-- Codex confirmed: [count] / disputed: [count] / added: [count]
-- CONFIRM_RATIO: [ratio]%
-
-⚠️ Risk Assessment
-[risk details]
-
-📁 Saved to: .sourceatlas/audit/{module}.yaml
+📁 Loading cache: .sourceatlas/audit/{module}.yaml (N days ago)
+💡 Add --force to re-audit
 ```
 
-> See [output-template.md](output-template.md) for complete template
+Warn if older than 30 days — code may have changed.
 
----
+## 2. Setup
 
-## Contract Categories
+- **Target**: first non-flag argument. If not a file, fuzzy-search (`find . -name "*<basename>*"`, excluding `.git/`, `node_modules/`) and ask the user to pick.
+- **Language**: `--language` flag wins; else map extension (`.m/.h`→objc, `.swift`→swift, `.ts/.tsx`→typescript, `.js/.jsx`→javascript, `.kt`→kotlin, `.py`→python, `.go`→go, `.rs`→rust, `.java`→java). Unknown → generic analysis with a note.
+- **Zone scoping**: with `--zone <id>`, read `.sourceatlas/seam/{module}.yaml` (from `/atlas.seam`), extract that zone's `start_line`/`end_line`, and audit only `sed -n "${START},${END}p"` of the file. Keep contract line references absolute to the original file. If the seam file or zone is missing, list available zones and stop.
+- **LLM CLIs**: check `command -v gemini` and `command -v codex`. Either missing → degraded mode (step 4).
 
-| Category | Name | Description |
-|----------|------|-------------|
+## 3. Pipeline
+
+**Step 0 — Boundary discovery.** `rg` the codebase for the module's neighbors: imports/includes of it, references to its types, and notification/event names it posts or observes. These files are context for every later step.
+
+**Step 1 — Gemini blind scan.** Ask the `gemini` CLI to independently list hidden behaviors of the target (plus boundary context), with file:line evidence. Blind means: do NOT show Gemini the contract taxonomy or your own draft — independence prevents confirmation bias.
+
+**Step 2 — Claude structured audit (you).** Read the target and boundary files. Extract formal contracts using this taxonomy:
+
+| ID | Category | What to capture |
+|----|----------|-----------------|
 | M | Mutation | Side-effect modifications to requests or data |
 | L | Lifecycle | Implicit state transitions |
 | N | Notification | Publish/subscribe coupling |
 | S | Synchronization | Blocking, locking, ordering guarantees |
 | E | Error Handling | Error swallowing vs propagation |
 | C | Cancellation | Cancel scope and residual state |
-| D | Dependency | Behavior depends on external entity; must separate before migration |
-| P | Propagation | Effect propagation paths: return value chains, parameter mutation, global state |
+| D | Dependency | Behavior depends on an external entity; must separate before migration |
+| P | Propagation | Effect paths: return-value chains, parameter mutation, global state |
 
----
+Each contract records: Trigger, Input, Output, Condition, Ordering, Risk (LOW/MEDIUM/HIGH + reason), Evidence (file:line + snippet), Scope (method/class/module), Seam_Type (object/preprocessing/link/none), Pinch_Point (true/false), and a machine-verifiable grep or ast-grep assertion.
 
-## Critical Rules
+**Step 3 — Codex adversarial review.** Feed the contract list to the `codex` CLI with an adversarial brief: for each contract answer CONFIRM, DISPUTE (with reasoning), or ADD missing contracts. CONFIRM_RATIO = confirmed/total; healthy range is 30–70%. >70% means the review wasn't critical enough; <30% means the contracts need revision.
 
-1. **Evidence-Based**: Every contract must reference file:line
-2. **Cross-Validated**: Contracts require at least 2 of 3 LLMs to agree
-3. **Machine-Verifiable**: Each contract produces a grep/ast-grep assertion
-4. **Language-Aware**: Use language-specific patterns from [reference.md#language-support](reference.md#language-support)
-5. **One Module at a Time**: Do not batch-process multiple files
-6. **Degraded Mode**: If LLM CLIs unavailable, output prompt files for manual execution
-7. **Time Limit**: Complete analysis in 10-20 minutes
-8. **Verification Required**: Run [verification-guide.md](verification-guide.md) before output
+**Step 4 — Merge (you).** Resolve disputes, integrate additions, produce the final list plus CI rules.
 
----
+**Methodology rules** (non-negotiable):
+1. Every contract cites file:line evidence — no evidence, no contract.
+2. A contract needs at least 2 of 3 LLMs agreeing to survive the merge.
+3. Every contract ships a runnable grep/ast-grep assertion (grep fallback when ast-grep is unavailable, e.g. Objective-C).
+4. Codex DISPUTEs often reveal real issues — resolve them explicitly, don't discard.
+5. If no contracts are found, say so: the file may be a leaf module — suggest `/atlas.impact` instead.
 
-## Error Handling
+## 4. Degraded mode
 
-**If target file not found**:
-- Search with fuzzy matching
-- Suggest similar files
-- Ask user to clarify
+If `gemini` or `codex` is missing, generate the prompts as files instead and tell the user how to run them manually:
 
-**If language not supported**:
-- Show supported languages list
-- Suggest closest match
-- Allow `--language` override
+```
+.sourceatlas/audit/prompts/
+├── step1-gemini.md   # feed to Gemini
+├── step2-claude.md   # feed to Claude, include Gemini output
+└── step3-codex.md    # feed to Codex, include Claude output
+```
 
-**If LLM CLI not available**:
-- Switch to degraded mode
-- Generate prompt files in `.sourceatlas/audit/prompts/`
-- Print instructions for manual execution
+Then: re-run `/atlas.audit <file> --force` and paste the outputs to merge. Still perform Step 2 yourself — Claude's structured audit is always available; mark the result `degraded: true`.
 
-> See [workflow.md#error-handling](workflow.md#error-handling) for details
+## 5. Report
 
----
+Start with:
 
-## Self-Verification (REQUIRED)
+```markdown
+🗺️ SourceAtlas: Audit
+───────────────────────────────
+📋 [module] │ [language] │ [N] contracts
+```
 
-Before outputting results, run verification checks:
+Then YAML:
 
-1. **Verify file paths** in contracts exist
-2. **Verify line references** match expected content
-3. **Check contract ID uniqueness**
-4. **Validate CONFIRM_RATIO** threshold (≤70% = healthy disagreement)
+```yaml
+module: ...
+language: ...
+file: ...
+degraded: false
+summary:
+  total_contracts: ...
+  by_category: {M: ..., L: ..., N: ..., S: ..., E: ..., C: ..., D: ..., P: ...}
+cross_validation:
+  gemini_behaviors: ...
+  codex: {confirmed: ..., disputed: ..., added: ...}
+  confirm_ratio: ...        # healthy 30–70%
+contracts:
+  - id: M-001               # unique, category prefix + 3 digits
+    title: ...
+    trigger: ...
+    input: ...
+    output: ...
+    condition: ...
+    ordering: ...
+    risk: MEDIUM            # + risk_reason
+    evidence: {file: ..., line: ..., snippet: ...}
+    scope: method           # method|class|module
+    seam_type: object       # object|preprocessing|link|none
+    pinch_point: true
+    verification: {type: grep, command: "grep -q 'pattern' file"}
+risk_assessment:
+  high_risk: [...]          # contracts with risk HIGH + refactoring recommendations
+  seam_analysis: {object: ..., preprocessing: ..., link: ..., pinch_points: ...}
+ci_rules: [...]             # the grep/ast-grep assertions, ready to paste into CI
+```
 
-> See [verification-guide.md](verification-guide.md) for complete checklist
+## 6. Verify, then save
 
----
+Before saving: `test -f` every file claimed in contract evidence; check each evidence line with `sed -n "${line}p"` against the snippet (fix the line number or flag the contract as possibly hallucinated); confirm contract IDs are unique; run every verification assertion and drop or relax ones that fail; sanity-check CONFIRM_RATIO. If fewer than 3 categories appear, note that the analysis may be shallow. Then `mkdir -p .sourceatlas/audit` and write the YAML to `.sourceatlas/audit/{module}.yaml`. Confirm: `💾 Saved to .sourceatlas/audit/{module}.yaml`
 
-## Advanced
+## Recommended next
 
-- **Cache behavior**: [reference.md#cache-behavior](reference.md#cache-behavior)
-- **Auto-save**: [reference.md#auto-save](reference.md#auto-save)
-- **Language support**: [reference.md#language-support](reference.md#language-support)
-- **Degraded mode**: [reference.md#degraded-mode](reference.md#degraded-mode)
-- **Pipeline scripts**: [reference.md#pipeline-scripts](reference.md#pipeline-scripts)
+| Finding | Command |
+|---------|---------|
+| High-risk dependencies (D contracts) | `/atlas.impact <module>` |
+| Need to trace call chains | `/atlas.flow <function>` |
+| Planning refactoring scope | `/atlas.deps` |
+| File too big to audit whole | `/atlas.seam <file>` then `--zone` |
+| Need historical context / hotspots | `/atlas.history` |
 
----
-
-## Support Files
-
-- **[workflow.md](workflow.md)** - Detailed step-by-step execution guide
-- **[output-template.md](output-template.md)** - Complete output format specification
-- **[verification-guide.md](verification-guide.md)** - Verification checklist and error handling
-- **[reference.md](reference.md)** - Cache, Language Support, Degraded Mode, Pipeline Scripts
+💡 Enter a number (e.g., `1`) or copy the command to execute

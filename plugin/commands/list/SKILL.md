@@ -22,10 +22,10 @@ If output contains `NOT_FOUND` or directory is empty:
 ```
 📁 No saved analyses yet
 
-Use the `--save` parameter to save analysis results:
-- `/sourceatlas:overview --save`
-- `/sourceatlas:pattern "api" --save`
-- `/sourceatlas:history --save`
+Run an analysis command — results are saved automatically:
+- `/sourceatlas:overview`
+- `/sourceatlas:pattern "api"`
+- `/sourceatlas:history`
 ```
 
 End.
@@ -69,8 +69,8 @@ If there are expired items (>30 days), output copyable re-analysis commands:
 
 | File | Days | Re-analyze Command |
 |------|------|-------------------|
-| patterns/api.md | 45 days | `/sourceatlas:pattern "api" --force --save` |
-| history.md | 60 days | `/sourceatlas:history --force --save` |
+| patterns/api.md | 45 days | `/sourceatlas:pattern "api" --force` |
+| history.md | 60 days | `/sourceatlas:history --force` |
 
 💡 Copy the commands above to re-analyze
 ```
@@ -79,13 +79,13 @@ If there are expired items (>30 days), output copyable re-analysis commands:
 
 | Type | Command Format |
 |------|----------------|
-| overview | `/sourceatlas:overview --force --save` |
-| overview-{dir} | `/sourceatlas:overview {dir} --force --save` |
-| patterns/{name}.md | `/sourceatlas:pattern "{name}" --force --save` |
-| history.md | `/sourceatlas:history --force --save` |
-| flows/{name}.md | `/sourceatlas:flow "{name}" --force --save` |
-| impact/{name}.md | `/sourceatlas:impact "{name}" --force --save` |
-| deps/{name}.md | `/sourceatlas:deps "{name}" --force --save` |
+| overview | `/sourceatlas:overview --force` |
+| overview-{dir} | `/sourceatlas:overview {dir} --force` |
+| patterns/{name}.md | `/sourceatlas:pattern "{name}" --force` |
+| history.md | `/sourceatlas:history --force` |
+| flows/{name}.md | `/sourceatlas:flow "{name}" --force` |
+| impact/{name}.md | `/sourceatlas:impact "{name}" --force` |
+| deps/{name}.md | `/sourceatlas:deps "{name}" --force` |
 
 **Note**: Convert `-` in filenames back to spaces for parameters (e.g., `api-endpoint.md` → `"api endpoint"`)
 

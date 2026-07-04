@@ -67,18 +67,7 @@ fi
 Run the deterministic ranking script — no LLM, pure git log + wc:
 
 ```bash
-PLUGIN_ATLAS=~/.claude/plugins/marketplaces/lis186-SourceAtlas/scripts/atlas
-if [ -f ~/.claude/scripts/atlas/rank-candidates.sh ]; then
-    RANK_SCRIPT=~/.claude/scripts/atlas/rank-candidates.sh
-elif [ -f "$PLUGIN_ATLAS/rank-candidates.sh" ]; then
-    RANK_SCRIPT="$PLUGIN_ATLAS/rank-candidates.sh"
-elif [ -f plugin/commands/refactor/scripts/rank-candidates.sh ]; then
-    RANK_SCRIPT=plugin/commands/refactor/scripts/rank-candidates.sh
-else
-    echo "❌ rank-candidates.sh not found — install SourceAtlas plugin or scripts to ~/.claude/scripts/atlas/"
-    exit 1
-fi
-bash "$RANK_SCRIPT" .
+bash "${CLAUDE_PLUGIN_ROOT}/commands/refactor/scripts/rank-candidates.sh" .
 # Output: .sourceatlas/refactor/candidates.json (cached 1 hour)
 ```
 
@@ -317,8 +306,7 @@ State: target file exists; `state.yaml` for this module does NOT exist (or `--fo
 ### Do
 
 ```bash
-INIT=plugin/commands/refactor/scripts/init-state.sh
-[ -f "$INIT" ] || INIT=~/.claude/plugins/cache/lis186-SourceAtlas/sourceatlas/*/commands/refactor/scripts/init-state.sh
+INIT="${CLAUDE_PLUGIN_ROOT}/commands/refactor/scripts/init-state.sh"
 
 bash "$INIT" "$PROJECT_ROOT" "$FILE_PATH" ${MODE_OVERRIDE:+--mode "$MODE_OVERRIDE"} ${FORCE:+--force}
 ```
@@ -413,8 +401,7 @@ State: `state.yaml.steps.1_target.status` ∈ {produced, verified}; `2a_zones.ya
 #### Do
 
 ```bash
-INIT2A=plugin/commands/refactor/scripts/init-step2a.sh
-[ -f "$INIT2A" ] || INIT2A=~/.claude/plugins/cache/lis186-SourceAtlas/sourceatlas/*/commands/refactor/scripts/init-step2a.sh
+INIT2A="${CLAUDE_PLUGIN_ROOT}/commands/refactor/scripts/init-step2a.sh"
 
 bash "$INIT2A" "$PROJECT_ROOT" --module "$MODULE_NAME" ${FORCE:+--force}
 ```
@@ -565,17 +552,7 @@ Set `2_contracts: { status: produced }`.
 **Execute the gate script** — this is a deterministic check, not an LLM judgment:
 
 ```bash
-PLUGIN_ATLAS=~/.claude/plugins/marketplaces/lis186-SourceAtlas/scripts/atlas
-if [ -f ~/.claude/scripts/atlas/gate-contracts.sh ]; then
-    GATE_CONTRACTS=~/.claude/scripts/atlas/gate-contracts.sh
-elif [ -f "$PLUGIN_ATLAS/gate-contracts.sh" ]; then
-    GATE_CONTRACTS="$PLUGIN_ATLAS/gate-contracts.sh"
-elif [ -f plugin/commands/refactor/scripts/gate-contracts.sh ]; then
-    GATE_CONTRACTS=plugin/commands/refactor/scripts/gate-contracts.sh
-else
-    echo "❌ gate-contracts.sh not found — install SourceAtlas plugin or scripts to ~/.claude/scripts/atlas/"
-    exit 1
-fi
+GATE_CONTRACTS="${CLAUDE_PLUGIN_ROOT}/commands/refactor/scripts/gate-contracts.sh"
 bash "$GATE_CONTRACTS" \
     "${STATE_DIR}/2_contracts.yaml" \
     "${STATE_DIR}"
@@ -732,8 +709,7 @@ ensures consistency across languages (e.g. Swift `init(baseURL:)` vs ObjC
 (`extension`, `protocol`, `mainactor`):
 
 ```bash
-SP=~/.claude/scripts/atlas/seam-patterns.sh
-[ -f "$SP" ] || SP=plugin/commands/seam/scripts/seam-patterns.sh
+SP="${CLAUDE_PLUGIN_ROOT}/commands/seam/scripts/seam-patterns.sh"
 # seam-patterns.sh <lang> <seam_type> <symbol> <file>
 bash "$SP" swift extension NYLoginViewController "$TARGET_FILE"
 # → grep -qnE '^extension[[:space:]]+NYLoginViewController([[:space:]]|:|\{)' '<TARGET_FILE>'
@@ -793,17 +769,7 @@ Set `3_seams: { status: produced, seam_mode: full|degraded }`.
 **Execute the gate script**:
 
 ```bash
-PLUGIN_ATLAS=~/.claude/plugins/marketplaces/lis186-SourceAtlas/scripts/atlas
-if [ -f ~/.claude/scripts/atlas/gate-seams.sh ]; then
-    GATE_SEAMS=~/.claude/scripts/atlas/gate-seams.sh
-elif [ -f "$PLUGIN_ATLAS/gate-seams.sh" ]; then
-    GATE_SEAMS="$PLUGIN_ATLAS/gate-seams.sh"
-elif [ -f plugin/commands/refactor/scripts/gate-seams.sh ]; then
-    GATE_SEAMS=plugin/commands/refactor/scripts/gate-seams.sh
-else
-    echo "❌ gate-seams.sh not found — install SourceAtlas plugin or scripts to ~/.claude/scripts/atlas/"
-    exit 1
-fi
+GATE_SEAMS="${CLAUDE_PLUGIN_ROOT}/commands/refactor/scripts/gate-seams.sh"
 bash "$GATE_SEAMS" \
     "${STATE_DIR}/3_seams.yaml" \
     "${STATE_DIR}"
@@ -1373,8 +1339,7 @@ runs `2_contracts.yaml` verification_grep rules, writes
 `current_step` advance on pass).
 
 ```bash
-GATE=~/.claude/scripts/atlas/gate-step7.sh
-[ -f "$GATE" ] || GATE=plugin/commands/refactor/scripts/gate-step7.sh
+GATE="${CLAUDE_PLUGIN_ROOT}/commands/refactor/scripts/gate-step7.sh"
 
 # Optional env overrides (otherwise read from state.yaml):
 #   SPIKE_CMD="xcodebuild test ..."

@@ -1,6 +1,6 @@
 ---
 name: flow
-description: Extract business logic flow from code, trace execution path from entry point
+description: Traces code execution paths and business logic flow from an entry point, producing a call graph with boundary detection and file:line references. Use when the user asks "how does X work", "what happens when X", "trace this flow", "where does this data come from", or "who calls X".
 model: opus
 allowed-tools: Bash, Glob, Grep, Read, Write
 argument-hint: [flow description or entry point, e.g., "user checkout", "from OrderService.create()"] [--force]
@@ -16,36 +16,27 @@ argument-hint: [flow description or entry point, e.g., "user checkout", "from Or
 
 **IMPORTANT: Check these patterns FIRST before doing anything else.**
 
-### Check for Tier 2-3 Keywords (External Mode Required)
+Scan `$ARGUMENTS` for these keywords to pick the analysis mode:
 
-Scan `$ARGUMENTS` for these keywords. **If ANY match, load external file and STOP reading this document:**
+| If arguments contain... | Mode | Approach |
+|------------------------|------|----------|
+| "who calls" OR "callers" OR "called by" | Reverse Tracing | See template below |
+| "error" OR "failure" OR "exception" OR "fail" | Error Path | See template below |
+| "data flow" OR "how is X calculated" OR "trace variable" | Data Flow | See template below |
+| "event" OR "message" OR "pub/sub" OR "listener" | Event Tracing | See template below |
+| "permission" OR "role" OR "auth" OR "access control" | Permission Flow | See template below |
+| "dead code" OR "unreachable" OR "unused" | Dead Code | Find definitions with no callers or references; before declaring dead, check exports, DI/reflection, config-driven dispatch, and tests |
+| "async" OR "thread" OR "concurrent" OR "race" | Concurrency | Trace across async boundaries (threads, queues, await points); flag shared mutable state and unsynchronized access |
+| "taint" OR "injection" OR "untrusted" | Taint Analysis | Trace untrusted input from source to sink; flag any path reaching SQL/exec/render/filesystem without sanitization |
+| "state" OR "status" OR "lifecycle" | State Machine | Enumerate states and transitions; for each transition capture trigger, guard, and action; flag unreachable states and missing transitions |
+| "transaction" OR "rollback" OR "commit" | Transaction | Trace begin/commit/rollback boundaries; flag operations outside the transaction and partial-failure risks |
+| "log" OR "logging" OR "from logs" | Log Discovery | Match given log lines to logging statements in code, then trace the execution path between them |
+| "compare" OR "diff" OR "vs" | Flow Comparison | Trace each flow separately, then diff step-by-step: shared path, divergence points, behavioral differences |
+| "feature toggle" OR "feature flag" | Feature Toggle | Locate the flag definition and evaluation points, then trace both the enabled and disabled branches |
+| "cache" OR "redis" OR "TTL" | Cache Flow | Trace read/write paths through the cache: hit/miss branches, TTL, invalidation points, stale-data risks |
+| (none of the above) | Standard Flow Tracing (default) | Steps 2–4 below |
 
-| If arguments contain... | Then execute this action |
-|------------------------|--------------------------|
-| "dead code" OR "unreachable" OR "unused" | `Read scripts/atlas/flow-modes/mode-13-dead-code.md` then follow its instructions |
-| "async" OR "thread" OR "concurrent" OR "race" | `Read scripts/atlas/flow-modes/mode-14-concurrency.md` then follow its instructions |
-| "taint" OR "injection" OR "untrusted" | `Read scripts/atlas/flow-modes/mode-12-taint-analysis.md` then follow its instructions |
-| "state" OR "status" OR "lifecycle" | `Read scripts/atlas/flow-modes/mode-04-state-machine.md` then follow its instructions |
-| "transaction" OR "rollback" OR "commit" | `Read scripts/atlas/flow-modes/mode-09-transaction.md` then follow its instructions |
-| "log" OR "logging" OR "from logs" | `Read scripts/atlas/flow-modes/mode-06-log-discovery.md` then follow its instructions |
-| "compare" OR "diff" OR "vs" | `Read scripts/atlas/flow-modes/mode-05-flow-comparison.md` then follow its instructions |
-| "feature toggle" OR "feature flag" | `Read scripts/atlas/flow-modes/mode-07-feature-toggle.md` then follow its instructions |
-| "cache" OR "redis" OR "TTL" | `Read scripts/atlas/flow-modes/mode-11-cache-flow.md` then follow its instructions |
-
-**If a keyword matched above**: Load the file NOW, then execute ONLY that mode's instructions. Do NOT continue reading this document.
-
-### Check for Tier 1 Keywords (Built-in Modes)
-
-If none of the above matched, check for these Tier 1 patterns:
-
-| If arguments contain... | Mode to use |
-|------------------------|-------------|
-| "who calls" OR "callers" OR "called by" | Mode 1: Reverse Tracing (see below) |
-| "error" OR "failure" OR "exception" OR "fail" | Mode 2: Error Path (see below) |
-| "data flow" OR "how is X calculated" OR "trace variable" | Mode 3: Data Flow (see below) |
-| "event" OR "message" OR "pub/sub" OR "listener" | Mode 8: Event Tracing (see below) |
-| "permission" OR "role" OR "auth" OR "access control" | Mode 10: Permission Flow (see below) |
-| (none of the above) | Standard Flow Tracing (default) |
+For modes without a template, follow the Approach column and adapt the STEP 4 output skeleton (steps table + flow diagram + patterns).
 
 ---
 
@@ -119,7 +110,7 @@ Notable Patterns:
 
 ---
 
-## Tier 1 Mode: Reverse Tracing
+## Mode: Reverse Tracing
 
 **Trigger**: "who calls", "callers", "called by"
 
@@ -141,7 +132,7 @@ Callers (N found):
 
 ---
 
-## Tier 1 Mode: Error Path
+## Mode: Error Path
 
 **Trigger**: "error", "failure", "exception", "fail"
 
@@ -160,7 +151,7 @@ Trace failure scenarios:
 
 ---
 
-## Tier 1 Mode: Data Flow
+## Mode: Data Flow
 
 **Trigger**: "data flow", "how is X calculated", "trace variable"
 
@@ -179,7 +170,7 @@ Data Flow: {variable}
 
 ---
 
-## Tier 1 Mode: Event Tracing
+## Mode: Event Tracing
 
 **Trigger**: "event", "message", "pub/sub", "listener"
 
@@ -199,7 +190,7 @@ Data Flow: {variable}
 
 ---
 
-## Tier 1 Mode: Permission Flow
+## Mode: Permission Flow
 
 **Trigger**: "permission", "role", "auth", "access control"
 
@@ -220,11 +211,7 @@ Data Flow: {variable}
 
 ## Self-Verification
 
-Before output, verify:
-1. File paths exist: `test -f {path}`
-2. Methods exist: `grep -q "{method}" {file}`
-
-Add to footer: `✅ Verified: [N] paths, [M] methods`
+Before saving, verify every claimed file path exists (`test -f {path}`); correct anything that fails.
 
 ---
 
@@ -246,4 +233,4 @@ If `--save` is in arguments:
 
 ---
 
-🗺️ SourceAtlas v3.0 │ Tiered Architecture
+🗺️ SourceAtlas Flow Analysis
