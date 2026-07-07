@@ -72,9 +72,15 @@ bash "$SCRIPT_DIR/detect-zones.sh" "$TARGET" 2>&1 >> "$OUTPUT" || true
 echo '```' >> "$OUTPUT"
 echo "" >> "$OUTPUT"
 
-# Cross-language context (global — regenerate only if missing)
+# Cross-language context (global — regenerate if missing or older than last commit)
 xlang_file="$PROJECT_ROOT/.sourceatlas/cross-language.yaml"
-if [[ ! -f "$xlang_file" ]]; then
+xlang_stale=0
+if [[ -f "$xlang_file" ]]; then
+    last_commit=$(git -C "$PROJECT_ROOT" log -1 --format=%ct 2>/dev/null || echo 0)
+    cache_mtime=$(stat -f %m "$xlang_file" 2>/dev/null || stat -c %Y "$xlang_file" 2>/dev/null || echo 0)
+    [[ "$cache_mtime" -lt "$last_commit" ]] && xlang_stale=1
+fi
+if [[ ! -f "$xlang_file" || "$xlang_stale" = 1 ]]; then
     bash "$SCRIPT_DIR/cross-language-visibility.sh" "$PROJECT_ROOT" >/dev/null 2>&1 || true
 fi
 echo "## Cross-Language Visibility (project-level)" >> "$OUTPUT"
