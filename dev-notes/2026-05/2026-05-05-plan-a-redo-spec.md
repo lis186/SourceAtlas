@@ -1,8 +1,39 @@
 ---
 date: 2026-05-05
 session: Plan A redo spec
-status: pending execution
+status: executed 2026-07-07 — Step 1 gate PASS, Step 2a PASS, Step 2b blocked (see record below)
 ---
+
+## 執行紀錄（2026-07-07）
+
+實際執行環境與原 spec 不同：改在開源測試專案 WordPress-iOS 上執行（rank #1
+`AztecPostViewController.swift`，3742 行 Swift，Group A），以 harness pilot 報告
+複製為 `.sourceatlas/refactor/pilot-aztecpostviewcontroller.md` 重建 #28 場景
+（有 pilot、無 state.yaml）。由乾淨 context 的 agent 依 SKILL.md 執行。
+
+```
+執行日期：2026-07-07
+Step 1:
+  - 第一個實質 bash 呼叫：init-state.sh ✅（其前僅兩個唯讀 ls 環境確認）
+  - Reusing pilot report？ ✅ "→ Reusing existing pilot report: ..."
+  - 手改 state.yaml？ ✅ 無（全程走 init-state.sh / init-step2a.sh / state.sh）
+  - state.yaml schema_version：2.1（steps-8-13 擴充後的新 schema）
+  - current_step after Step 1：1 → 2a 後 2
+  - 1_target.yaml 存在？ ✅（score 18710 → proceed；candidate_lock.locked: true）
+  - 整體判定：PASS — #28 修法驗證通過
+Step 2:
+  - init-step2a.sh 呼叫？ ✅
+  - 2a_zones.yaml 產生？ ✅（67 zones；recommended: screenshot-generation-add-ons）
+  - state.sh advance 呼叫？ ✅（1_target verified）
+  - Session boundary STOP？ ⚠️ 未達 — Step 2b 被 /atlas.audit 的 gemini/codex
+    外部 CLI 硬依賴（CR5）擋下；gemini CLI 已被 Google 終止個人版（2026-07 實測
+    IneligibleTierError），真實使用者現在必然進 degraded mode
+  - 整體判定：Step 2a PASS；Step 2b 依賴問題另案處理（audit 改 subagent 化）
+
+結論：#28（CR14 unmanaged-state gap）修法驗證通過。後續：/atlas.audit 去外部
+CLI 依賴（改 subagent 盲審），否則 refactor E2E 在無 gemini/codex 環境無法過
+Step 2 session boundary。
+```
 
 # Plan A Redo — E2E Smoke Test Spec
 
