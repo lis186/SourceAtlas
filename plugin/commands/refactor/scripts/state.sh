@@ -128,6 +128,12 @@ step_key_for_num() {
         5)   echo "5_interface" ;;
         6)   echo "6_adapter" ;;
         7)   echo "7_gate" ;;
+        8)   echo "8_new_impl" ;;
+        9|9a|9b|9c) echo "9_swap" ;;   # shadow sub-phases share one state entry
+        10)  echo "10_verification" ;;
+        11)  echo "11_integration" ;;
+        12)  echo "12_cleanup" ;;
+        13)  echo "13_delete_legacy" ;;
         *)   echo "" ;;
     esac
 }
@@ -181,12 +187,16 @@ $(get_scalar module) — current_step: $(get_scalar current_step)
   zone_id:       $(get_scalar zone_id)
   language:      $(get_scalar language)
 EOF
-        grep -E '^\s+(1_target|2a_zones|2_contracts|3_seams|4_tests|5_interface|6_adapter|7_gate):' "$state_file" \
+        grep -E '^\s+(1_target|2a_zones|2_contracts|3_seams|4_tests|5_interface|6_adapter|7_gate|8_new_impl|9_swap|10_verification|11_integration|12_cleanup|13_delete_legacy):' "$state_file" \
             | sed 's/^[[:space:]]*/  /'
         ;;
 
     advance)
         current=$(get_scalar current_step)
+        if [[ "$current" == "13" ]]; then
+            echo "error: already at final step 13 — playbook complete. Promote via: state.sh set-status --module $MODULE --step 13_delete_legacy --status verified" >&2
+            exit 3
+        fi
         target_step="${TO_STEP:-$((current + 1))}"
         prev_key=$(step_key_for_num "$current")
         [[ -n "$prev_key" ]] || { echo "error: cannot map current_step=$current" >&2; exit 4; }

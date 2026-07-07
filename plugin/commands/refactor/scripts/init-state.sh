@@ -200,7 +200,7 @@ module_q=$(yaml_dq "$module_name")
 file_q=$(yaml_dq "$file_rel")
 
 cat > "$state_file" <<EOF
-schema_version: "2.0"
+schema_version: "2.1"
 module: $module_q
 file: $file_q
 language: "$language"
@@ -237,6 +237,12 @@ steps:
   5_interface: { status: pending, completed_at: null, migration_type: null, target_language: null, target_interface_ref: null, skip_reason: null }
   6_adapter:   { status: pending, completed_at: null, skip_reason: null }
   7_gate:      { status: pending, completed_at: null, replacement_script: null }
+  8_new_impl:       { status: pending, completed_at: null }
+  9_swap:           { status: pending, completed_at: null }
+  10_verification:  { status: pending, completed_at: null }
+  11_integration:   { status: pending, completed_at: null }
+  12_cleanup:       { status: pending, completed_at: null }
+  13_delete_legacy: { status: pending, completed_at: null }
 EOF
 
 # ── Write 1_target.yaml ─────────────────────────────────────────────────────

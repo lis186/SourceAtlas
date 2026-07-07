@@ -1,4 +1,4 @@
-schema_version: "2.0"   # bump when adding required fields; old state without this = v1, treated as seam-injection
+schema_version: "2.1"   # 2.1 adds steps 8-13; old state without this = v1, treated as seam-injection
 module: "{module_name}"
 file: "{file_path}"
 language: "{language}"
@@ -42,3 +42,11 @@ steps:
   5_interface: { status: pending, completed_at: null, migration_type: null, target_language: null, target_interface_ref: null, skip_reason: null }
   6_adapter:   { status: pending, completed_at: null, skip_reason: null }
   7_gate:      { status: pending, completed_at: null, replacement_script: null }
+  # Steps 8-13: post-gate execution. User-driven; gate-postswap.sh verifies 8/12/13.
+  # Shadow swap (9a/9b/9c) shares the 9_swap entry — sub-phase progress lives in the shadow dashboard, not here.
+  8_new_impl:       { status: pending, completed_at: null }
+  9_swap:           { status: pending, completed_at: null }
+  10_verification:  { status: pending, completed_at: null }
+  11_integration:   { status: pending, completed_at: null }
+  12_cleanup:       { status: pending, completed_at: null }
+  13_delete_legacy: { status: pending, completed_at: null }
