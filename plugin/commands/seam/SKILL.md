@@ -1,8 +1,8 @@
 ---
 name: seam
-description: Discover responsibility zones and seam candidates using multi-LLM cross-validation (Gemini blind scan → Claude structured analysis → Codex adversarial review)
+description: Discover responsibility zones and seam candidates in a large file using cross-validation (blind scan → Claude structured analysis → adversarial review, each in an independent context). Use when a 200+ line file has mixed responsibilities, when audit output is too broad to act on, or before choosing which zone to refactor first.
 model: sonnet
-allowed-tools: Bash, Glob, Grep, Read, Write
+allowed-tools: Bash, Glob, Grep, Read, Write, Task
 argument-hint: "<file-path> [--language objc|swift|typescript|javascript|go|java|kotlin|python|rust] [--force]"
 ---
 
@@ -35,11 +35,11 @@ argument-hint: "<file-path> [--language objc|swift|typescript|javascript|go|java
 ## Quick Start
 
 1. **Parse arguments** → file path + language detection
-2. **Check environment** → gemini CLI, codex CLI (degraded mode if missing)
+2. **Resolve reviewers** → blind scan: `agy` CLI; adversarial: `codex` CLI; either missing/failing → fresh-context Claude subagent with the same prompt
 3. **Run `detect-zones.sh`** → raw zone map (boundaries + methods + message sends)
-4. **Gemini blind scan** → broad seam discovery without Claude framing
+4. **Blind scan** → broad seam discovery without Claude framing
 5. **Claude structured analysis** → cluster by responsibility, identify seam types
-6. **Codex adversarial review** → CONFIRM / DISPUTE / ADD / FLAG
+6. **Adversarial review** → CONFIRM / DISPUTE / ADD / FLAG
 7. **Claude merge** → resolve disputes, integrate additions
 8. **Present zone map** → ranked by refactoring priority + cross-validation summary
 9. **User selects zone** → pipe to `/atlas.audit`
@@ -79,19 +79,19 @@ The script outputs YAML with 3 layers:
 
 > If clang is unavailable, Layer 2/3 falls back to grep — still useful but less precise.
 
-### Step 2: Environment Check
+### Step 2: Resolve Reviewers
 
-Check for `gemini` and `codex` CLIs. If either is missing, enter **degraded mode**: generate prompt files for manual execution and continue with Claude-only analysis, marking output as `mode: degraded`.
+Blind scan runs on the `agy` CLI (`agy -p "<prompt>"`); adversarial review on the `codex` CLI. If either is missing or fails (e.g. quota), substitute a **fresh-context Claude subagent** (Task tool) given the exact same prompt — independence comes from the clean context, not the vendor. Record which reviewer ran in the output (`reviewers:` field).
 
-### Step 3: Gemini Blind Scan
+### Step 3: Blind Scan
 
-Gemini receives **only the source code and detect-zones.sh output** — no taxonomy framing, no Feathers schema. This prevents confirmation bias from Claude's structured prompt.
+The blind reviewer receives **only the source code and detect-zones.sh output** — no taxonomy framing, no Feathers schema. This prevents confirmation bias from Claude's structured prompt.
 
-Gemini outputs: a list of potential injection points, dependency boundaries, and patterns it finds suspicious or hard-coded.
+Blind scan output: a list of potential injection points, dependency boundaries, and patterns it finds suspicious or hard-coded.
 
 ### Step 4: Claude Structured Analysis
 
-With the raw zone map AND Gemini's blind scan in hand, perform semantic analysis:
+With the raw zone map AND the blind scan in hand, perform semantic analysis:
 
 #### 4a. Responsibility Clustering (Sandi Metz's message-passing)
 
@@ -120,23 +120,23 @@ Flag zones exhibiting:
 - **Divergent Change**: Zone changes for unrelated reasons
 - **Shotgun Surgery**: Small change requires touching many zones
 
-### Step 5: Codex Adversarial Review
+### Step 5: Adversarial Review
 
-Codex receives: source code, detect-zones.sh output, Gemini blind scan, Claude's seam candidates.
+The adversarial reviewer receives: source code, detect-zones.sh output, the blind scan, Claude's seam candidates.
 
-Codex issues one verdict per candidate — and independently adds any it finds missing:
+It issues one verdict per candidate — and independently adds any it finds missing:
 
 | Verdict | Meaning |
 |---------|---------|
 | **CONFIRM** | Seam candidate valid, enabling point exists, coverage claim accurate |
 | **DISPUTE** | Seam type wrong, enabling point missing, or coverage overstated |
-| **ADD** | Dependency or seam type Claude missed (Gemini or Codex found it) |
+| **ADD** | Dependency or seam type Claude missed (blind or adversarial reviewer found it) |
 | **FLAG** | Architectural issue seams cannot solve (e.g., shared mutable state) |
 
 ### Step 6: Claude Merge (1 minute)
 
 Resolve disputes and integrate additions to produce the final seam list:
-- **DISPUTED** candidates: re-evaluate with evidence from both sides; drop if Codex's objection holds
+- **DISPUTED** candidates: re-evaluate with evidence from both sides; drop if the objection holds
 - **ADDED** candidates: incorporate with Claude's seam type classification
 - **FLAGGED** concerns: record in `seam_validation.architectural_concerns`
 
@@ -196,9 +196,9 @@ Or suggest copy-pasting the zone into a temporary file for isolated audit.
 │  ...
 
 🎯 Cross-Validation
-- Gemini candidates: N
-- Claude candidates: M
-- Codex confirmed: X / disputed: Y / added: Z / flagged: W
+- Reviewers: blind=agy|claude-subagent, adversarial=codex|claude-subagent
+- Blind candidates: N / Claude candidates: M
+- Adversarial: confirmed X / disputed Y / added Z / flagged W
 [Architectural concerns, if any]
 
 🎯 Recommendation
@@ -220,9 +220,9 @@ Run: /atlas.audit $FILE_PATH --lines 295-410
 4. **Compose with audit**: Output must be directly usable as `/atlas.audit` input
 5. **One File at a Time**: Do not batch-process multiple files
 6. **Graceful Degradation**: No clang? Use grep-based deps. No pragma marks? Use method clustering.
-7. **Cross-Validated**: Seam candidates require Gemini blind scan + Codex adversarial review. Claude-only analysis is degraded mode only.
-8. **Gemini sees no taxonomy**: The blind scan prompt must NOT include Feathers seam types, language groups, or Claude's candidate list. Independence is the value.
-9. **Degraded Mode**: If `gemini` or `codex` CLI is unavailable, generate prompt files in `.sourceatlas/seam/prompts/` and mark output `mode: degraded`.
+7. **Cross-Validated**: Seam candidates require a blind scan + an adversarial review, each in an independent context (CLI or fresh Claude subagent). Never present Claude-only inline analysis as cross-validated.
+8. **Blind reviewer sees no taxonomy**: The blind scan prompt must NOT include Feathers seam types, language groups, or Claude's candidate list. Independence is the value.
+9. **Reviewer fallback, never blocked**: `agy` missing/failing → fresh-context Claude subagent for the blind scan; `codex` missing/failing → same for the adversarial review. The subagent gets only the prompt and file paths — none of this session's reasoning. Record substitutions in `reviewers:`.
 
 ---
 

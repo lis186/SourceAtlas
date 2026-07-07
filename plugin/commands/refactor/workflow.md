@@ -443,13 +443,13 @@ Run `/atlas.audit {file_path} --zone {zone_id}` on the selected zone.
 
 - If zone was selected, audit only those lines
 - If no zone (small file), audit the entire file
-- **IMPORTANT**: This MUST invoke the actual `/atlas.audit` command (which runs the multi-LLM pipeline: Gemini blind scan → Claude structured audit → Codex adversarial review). Do NOT perform inline contract analysis as a substitute.
+- **IMPORTANT**: This MUST invoke the actual `/atlas.audit` command (which runs the cross-validated pipeline: blind scan → Claude structured audit → adversarial review, each in an independent context). Do NOT perform inline contract analysis as a substitute.
 
 Save result as `2_contracts.yaml`.
 
 Record `audit_mode` in state:
-- `full` — all three LLMs ran (gemini + codex available)
-- `degraded` — one or more LLMs unavailable, Claude-only analysis
+- `full` — blind + adversarial ran on external CLIs (agy / codex)
+- `subagent` — one or both reviewers ran as fresh-context Claude subagents (CLI missing or failed); still cross-validated
 
 ### 2b-alt: Strangler Plan Generation (platform-migration / strangler-fig / platform-strangler only)
 
@@ -577,7 +577,7 @@ After Gate 2 passes, **STOP**. Output session boundary message and do not contin
 
 ```
 ✅ Step 2 complete — {rules_passed}/{rules_total} contract rules verified.
-   audit_mode: {full|degraded}
+   audit_mode: {full|subagent}
 
 ⏸️ Session boundary — start a new session to continue:
    /atlas.refactor {file_path} --step 3
@@ -613,12 +613,10 @@ if [ "$CONTRACT_STATUS" != "verified" ]; then
     exit 1
 fi
 
-# Check LLM CLI availability (degraded mode if missing)
-SEAM_DEGRADED=false
-SEAM_MISSING=""
-command -v gemini &>/dev/null || { SEAM_MISSING="$SEAM_MISSING gemini"; SEAM_DEGRADED=true; }
-command -v codex  &>/dev/null || { SEAM_MISSING="$SEAM_MISSING codex";  SEAM_DEGRADED=true; }
-[ "$SEAM_DEGRADED" = true ] && echo "⚠️ Seam analysis degraded mode: missing$SEAM_MISSING"
+# Resolve reviewers (missing/failing CLI → fresh-context Claude subagent)
+BLIND_REVIEWER=$(command -v agy >/dev/null 2>&1 && echo agy || echo claude-subagent)
+ADV_REVIEWER=$(command -v codex >/dev/null 2>&1 && echo codex || echo claude-subagent)
+echo "reviewers: blind=$BLIND_REVIEWER adversarial=$ADV_REVIEWER"
 ```
 
 **Only read the artifact file. Do NOT re-derive contracts from source code.**
@@ -630,19 +628,19 @@ From the contracts, extract:
 - **Internal dependencies**: Methods within the zone that call each other
 - **Shared state**: Global variables, singletons, class-level state
 
-### 3.2a Gemini Blind Scan
+### 3.2a Blind Scan
 
-> Skip if `SEAM_DEGRADED=true` — generate `.sourceatlas/refactor/{module}/3_seams_gemini_prompt.md` instead.
+Run on `$BLIND_REVIEWER` — `agy -p "<prompt>"`, or a fresh-context Claude subagent (Task tool) with the identical prompt when agy is unavailable/failing.
 
-Gemini receives **only** the source file and `2_contracts.yaml` — **no** Feathers taxonomy, no language group table, no schema. Independence is the value.
+The blind reviewer receives **only** the source file and `2_contracts.yaml` — **no** Feathers taxonomy, no language group table, no schema, none of this session's reasoning. Independence is the value.
 
-Ask Gemini: "Find every external dependency boundary in this file — places where an external class, function, or global is used directly. List them with file:line evidence. Do not classify them."
+Prompt: "Find every external dependency boundary in this file — places where an external class, function, or global is used directly. List them with file:line evidence. Do not classify them."
 
-Save Gemini output to `${STATE_DIR}/3_seams_gemini.md`.
+Save output to `${STATE_DIR}/3_seams_blind.md`.
 
 ### 3.2b Claude Structured Analysis (was 3.2)
 
-With Gemini's blind scan in hand, evaluate each external dependency as a potential seam point:
+With the blind scan in hand, evaluate each external dependency as a potential seam point:
 
 **Group A (Nominal)**:
 - Object Seam: Can we inject this dependency via constructor/init?
@@ -660,17 +658,17 @@ With Gemini's blind scan in hand, evaluate each external dependency as a potenti
 - Monkey-patch Seam: Can we override at runtime?
 - Enabling point: Import statement, module-level reference
 
-Also check Gemini's output for dependencies Claude might have missed — every item in Gemini's list that is not in Claude's candidates must be explicitly accounted for (incorporated or dismissed with reasoning).
+Also check the blind scan for dependencies Claude might have missed — every item in the blind list that is not in Claude's candidates must be explicitly accounted for (incorporated or dismissed with reasoning).
 
 Save Claude's draft candidates to `${STATE_DIR}/3_seams_claude_draft.md`.
 
-### 3.2c Codex Adversarial Review
+### 3.2c Adversarial Review
 
-> Skip if `SEAM_DEGRADED=true` — generate `.sourceatlas/refactor/{module}/3_seams_codex_prompt.md` instead.
+Run on `$ADV_REVIEWER` — `codex`, or a fresh-context Claude subagent with the identical brief when codex is unavailable/failing.
 
-Codex receives: source file, `2_contracts.yaml`, Gemini blind scan, Claude's draft candidates.
+The reviewer receives: source file, `2_contracts.yaml`, the blind scan, Claude's draft candidates.
 
-Codex issues one verdict per candidate, and independently adds any missing:
+It issues one verdict per candidate, and independently adds any missing:
 
 | Verdict | Meaning |
 |---------|---------|
@@ -679,12 +677,12 @@ Codex issues one verdict per candidate, and independently adds any missing:
 | **ADD** | Missing dependency or seam type |
 | **FLAG** | Architectural issue seams cannot solve (e.g., shared mutable state) |
 
-Save Codex output to `${STATE_DIR}/3_seams_codex.md`.
+Save output to `${STATE_DIR}/3_seams_adversary.md`.
 
 ### 3.2d Claude Merge
 
 Produce the final seam candidates:
-1. **DISPUTED**: Re-evaluate — drop if Codex's objection holds, keep with explicit reasoning if not
+1. **DISPUTED**: Re-evaluate — drop if the objection holds, keep with explicit reasoning if not
 2. **ADDED**: Incorporate with seam type classification + `verification_grep`
 3. **FLAGGED**: Record in `seam_validation.architectural_concerns` — not candidates, structural issues
 
@@ -748,18 +746,18 @@ recommended_seam:
   enabling_point: "{description}"
   reason: "{why this is the best seam}"
 seam_validation:
-  mode: "full|degraded"
-  gemini_candidates: {n}
+  reviewers: {blind: agy|claude-subagent, adversarial: codex|claude-subagent}
+  blind_candidates: {n}
   claude_candidates: {n}
-  codex_confirmed: {n}
-  codex_disputed: {n}
-  codex_added: {n}
-  codex_flagged: {n}
+  adversarial_confirmed: {n}
+  adversarial_disputed: {n}
+  adversarial_added: {n}
+  adversarial_flagged: {n}
   architectural_concerns:
     - "{description of structural issue no seam can fix}"
 ```
 
-Set `3_seams: { status: produced, seam_mode: full|degraded }`.
+Set `3_seams: { status: produced, seam_mode: full|subagent }`.
 
 ### Gate 3: Enabling Point Existence Check
 
@@ -885,7 +883,7 @@ Before designing the interface, read these artifacts and extract the listed fiel
 | Source | Fields to Extract | Why |
 |--------|-------------------|-----|
 | `3_seams.yaml` → `recommended_seam` | `seam_type`, `enabling_point`, `target_dependency` | Determines what the interface wraps |
-| `3_seams.yaml` → `seam_candidates[recommended].codex_note` | Parameter requirements, disputed items | Codex may impose constraints on method signature |
+| `3_seams.yaml` → `seam_candidates[recommended].adversarial_note` | Parameter requirements, disputed items | The adversarial reviewer may impose constraints on method signature |
 | `2_contracts.yaml` → contracts matching `recommended_seam.contracts_covered` | `trigger`, `input`, `output`, `ordering` | Method parameters derive from these |
 | Target file header (`.h` / class declaration) | Existing API style, naming conventions, init methods | Interface must match codebase conventions (Group A/B only; Group C skip) |
 | `1_target.yaml` → `language`, `language_group` | Language group for dispatch | Determines Group A/B/C path |
@@ -901,7 +899,7 @@ Before designing the interface, read these artifacts and extract the listed fiel
 
 #### Validation (must confirm before presenting to user)
 
-- [ ] Protocol parameters cover **all** fields required by Codex verdict
+- [ ] Protocol parameters cover **all** fields required by the adversarial verdict
 - [ ] At least one enabling point (init/constructor parameter) declared in target header
 - [ ] Every contract in `recommended_seam.contracts_covered` is mapped to either: a method on the protocol, OR a concrete interceptor/conformer
 - [ ] Layer B test skeletons (from `4_tests`) reference the protocol name — verify with: `grep -l '{ProtocolName}' {test_file}`
