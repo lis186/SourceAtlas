@@ -140,9 +140,9 @@ case "$TARGET" in
         header="${TARGET%.*}.h"
         if [[ -f "$header" ]]; then
             echo "## Paired Header API Surface (\`$(basename "$header")\`)" >> "$OUTPUT"
-            local_methods=$(grep -cE '^[-+] *\(' "$header" 2>/dev/null || echo 0)
-            local_props=$(grep -cE '^@property' "$header" 2>/dev/null || echo 0)
-            local_nullnonnull=$(grep -cE 'NS_ASSUME_NONNULL_BEGIN|_Nullable|_Nonnull|nullable|nonnull|NS_SWIFT_NAME|NS_REFINED_FOR_SWIFT' "$header" 2>/dev/null || echo 0)
+            local_methods=$(grep -cE '^[-+] *\(' "$header" 2>/dev/null || true)
+            local_props=$(grep -cE '^@property' "$header" 2>/dev/null || true)
+            local_nullnonnull=$(grep -cE 'NS_ASSUME_NONNULL_BEGIN|_Nullable|_Nonnull|nullable|nonnull|NS_SWIFT_NAME|NS_REFINED_FOR_SWIFT' "$header" 2>/dev/null || true)
             echo '```yaml' >> "$OUTPUT"
             echo "header_path: \"$header\"" >> "$OUTPUT"
             echo "public_methods: $local_methods" >> "$OUTPUT"

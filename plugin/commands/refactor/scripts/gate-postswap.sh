@@ -68,6 +68,21 @@ legacy_rel=$(yaml_value "$target_yaml" "file")
 legacy_file="$PROJECT_ROOT/$legacy_rel"
 legacy_class=$(basename "$legacy_rel"); legacy_class="${legacy_class%.*}"
 
+# Group C (dynamic) module names are often common words ("response", "utils")
+# that appear everywhere as plain English or platform identifiers
+# (http.ServerResponse). For those languages the meaningful signal is a
+# module-path reference (require/import of the legacy file), not the bare word.
+TARGET_LANG=$(yaml_value "$target_yaml" "language")
+module_ref_pattern() {  # regex matching require('./<mod>') / from '.../<mod>.js'
+    printf '%s' "(require\(|from[[:space:]]).*['\"][^'\"]*/${legacy_class}(\.[a-z]+)?['\"]"
+}
+is_dynamic_lang() {
+    case "$TARGET_LANG" in javascript|typescript|python|ruby) return 0 ;; *) return 1 ;; esac
+}
+module_ref_count() {  # project-wide count of legacy module-path references
+    grep -rnE "${GREP_EXCLUDES[@]}" -- "$(module_ref_pattern)" "$PROJECT_ROOT" 2>/dev/null | wc -l | tr -d ' '
+}
+
 pass=0; fail=0
 check() {  # check <label> <ok:0|1> <detail>
     if [[ "$2" -eq 0 ]]; then echo "  ✅ $1 — $3"; pass=$((pass+1))
@@ -82,20 +97,36 @@ case "$STEP" in
         [[ -n "$IMPL_FILE" ]] || { echo "error: --step 8 requires --impl-file" >&2; exit 1; }
         [[ -f "$IMPL_FILE" ]]; check "impl_file_exists" $? "$IMPL_FILE"
         if [[ -f "$IMPL_FILE" ]]; then
-            hits=$(grep -c -- "$legacy_class" "$IMPL_FILE" 2>/dev/null); hits=${hits:-0}
-            [[ "$hits" -eq 0 ]]; check "no_legacy_refs_in_impl" $? "grep '$legacy_class' → $hits hits (need 0)"
+            if is_dynamic_lang; then
+                hits=$(grep -cE -- "$(module_ref_pattern)" "$IMPL_FILE" 2>/dev/null || true); hits=${hits:-0}
+                [[ "$hits" -eq 0 ]]; check "no_legacy_module_import_in_impl" $? "require/import of '$legacy_class' → $hits hits (need 0)"
+            else
+                hits=$(grep -c -- "$legacy_class" "$IMPL_FILE" 2>/dev/null); hits=${hits:-0}
+                [[ "$hits" -eq 0 ]]; check "no_legacy_refs_in_impl" $? "grep '$legacy_class' → $hits hits (need 0)"
+            fi
         fi
         echo "  ℹ compile + unit tests are your gate too — this script only checks the grep signals"
         ;;
 
     12)
+        adapter_artifact=""
         if [[ -z "$ADAPTER_NAME" ]]; then
             adapter_artifact=$(ls "$state_dir"/6_adapter.* 2>/dev/null | grep -v '\.patch$' | head -1)
-            [[ -n "$adapter_artifact" ]] && ADAPTER_NAME=$(grep -oE '(@interface|class|struct)[[:space:]]+[A-Za-z0-9_]+' "$adapter_artifact" | head -1 | awk '{print $2}')
+            # Anchored to line start so prose like "No adapter class exists"
+            # in comments cannot be mistaken for a declaration.
+            [[ -n "$adapter_artifact" ]] && ADAPTER_NAME=$(grep -oE '^[[:space:]]*(@interface|class|struct)[[:space:]]+[A-Za-z0-9_]+' "$adapter_artifact" | head -1 | awk '{print $NF}')
         fi
-        [[ -n "$ADAPTER_NAME" ]] || { echo "error: cannot derive adapter name — pass --adapter-name" >&2; exit 2; }
-        hits=$(ref_count "$ADAPTER_NAME")
-        [[ "$hits" -eq 0 ]]; check "adapter_deleted" $? "grep -r '$ADAPTER_NAME' → $hits hits (need 0)"
+        if [[ -z "$ADAPTER_NAME" ]] && is_dynamic_lang; then
+            # Group C: no adapter class by design — 6_adapter.* is test-side
+            # mock setup. Done signal: production code never references it.
+            base=$(basename "${adapter_artifact:-6_adapter}"); base="${base%.*}"
+            hits=$(ref_count "$base")
+            [[ "$hits" -eq 0 ]]; check "no_adapter_artifact_refs" $? "grep -r '$base' → $hits hits (need 0; Group C has no adapter class)"
+        else
+            [[ -n "$ADAPTER_NAME" ]] || { echo "error: cannot derive adapter name — pass --adapter-name" >&2; exit 2; }
+            hits=$(ref_count "$ADAPTER_NAME")
+            [[ "$hits" -eq 0 ]]; check "adapter_deleted" $? "grep -r '$ADAPTER_NAME' → $hits hits (need 0)"
+        fi
 
         if [[ "$SKIP_SEAM" -eq 0 ]]; then
             [[ -z "$SEAM_NAME" && -f "$interface_yaml" ]] && SEAM_NAME=$(yaml_value "$interface_yaml" "name")
@@ -116,8 +147,13 @@ case "$STEP" in
 
     13)
         [[ ! -f "$legacy_file" ]]; check "legacy_file_deleted" $? "$legacy_rel"
-        hits=$(ref_count "$legacy_class")
-        [[ "$hits" -eq 0 ]]; check "no_legacy_class_refs" $? "grep -r '$legacy_class' → $hits hits (need 0)"
+        if is_dynamic_lang; then
+            hits=$(module_ref_count)
+            [[ "$hits" -eq 0 ]]; check "no_legacy_module_refs" $? "require/import of '$legacy_class' → $hits hits (need 0)"
+        else
+            hits=$(ref_count "$legacy_class")
+            [[ "$hits" -eq 0 ]]; check "no_legacy_class_refs" $? "grep -r '$legacy_class' → $hits hits (need 0)"
+        fi
         ;;
 
     *)

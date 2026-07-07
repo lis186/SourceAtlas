@@ -142,7 +142,8 @@ while IFS= read -r line; do
     elif echo "$line" | grep -q 'target_dependency:'; then
         CURRENT_DEP=$(echo "$line" | sed 's/.*target_dependency: *"\{0,1\}//' | sed 's/"\{0,1\} *$//')
     elif echo "$line" | grep -q 'verification_grep:'; then
-        CURRENT_GREP=$(echo "$line" | sed 's/.*verification_grep: *"\{0,1\}//' | sed 's/"\{0,1\} *$//')
+        # Trailing sed unescapes YAML \" sequences — same fix as gate-contracts.sh
+        CURRENT_GREP=$(echo "$line" | sed 's/.*verification_grep: *"\{0,1\}//' | sed 's/"\{0,1\} *$//' | sed 's/\\"/"/g')
     fi
 done < "$SEAMS_FILE"
 

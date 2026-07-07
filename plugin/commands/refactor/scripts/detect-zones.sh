@@ -181,22 +181,22 @@ detect_markers_rust() {
 
 detect_methods_objc() {
     local start=$1 end=$2
-    sed -n "${start},${end}p" "$FILE_PATH" | grep -c '^[+-] *(' || echo 0
+    sed -n "${start},${end}p" "$FILE_PATH" | grep -c '^[+-] *(' || true
 }
 
 detect_methods_swift() {
     local start=$1 end=$2
-    sed -n "${start},${end}p" "$FILE_PATH" | grep -cE '^\s*(func |init\(|deinit)' || echo 0
+    sed -n "${start},${end}p" "$FILE_PATH" | grep -cE '^\s*(func |init\(|deinit)' || true
 }
 
 detect_methods_typescript() {
     local start=$1 end=$2
-    sed -n "${start},${end}p" "$FILE_PATH" | grep -cE '^\s*(async\s+)?(function |.*\(.*\)\s*[:{])' || echo 0
+    sed -n "${start},${end}p" "$FILE_PATH" | grep -cE '^\s*(async\s+)?(function |.*\(.*\)\s*[:{])' || true
 }
 
 detect_methods_generic() {
     local start=$1 end=$2
-    sed -n "${start},${end}p" "$FILE_PATH" | grep -cE '^\s*(pub\s+)?(fn |func |def |fun )' || echo 0
+    sed -n "${start},${end}p" "$FILE_PATH" | grep -cE '^\s*(pub\s+)?(fn |func |def |fun )' || true
 }
 
 count_methods() {
@@ -299,7 +299,7 @@ detect_markers() {
 
 MARKERS=$(detect_markers)
 
-MARKER_COUNT=$(echo "$MARKERS" | grep -c . || echo 0)
+MARKER_COUNT=$(echo "$MARKERS" | grep -c . || true)
 
 # --- Output YAML ---
 

@@ -9,7 +9,7 @@
 #   advance     --module <m> [--to <step>]      Advance current_step + mark step verified
 #   set-zone    --module <m> --zone <id>        Set zone_id (requires 2a_zones.yaml)
 #   confirm-mode --module <m>                   Set migration_mode.confirmed=true
-#   set-status  --module <m> --step <key> --status <produced|verified|skipped> [--skip-reason <txt>]
+#   set-status  --module <m> --step <key> --status <produced|verified|skipped> [--skip-reason <txt>] [--audit-mode <full|subagent>]
 #   show        --module <m>                    Print current state summary
 #
 # Exit codes:
@@ -45,6 +45,7 @@ ZONE_ID=""
 STEP_KEY=""
 STATUS=""
 SKIP_REASON=""
+AUDIT_MODE=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -54,6 +55,7 @@ while [[ $# -gt 0 ]]; do
         --step)        STEP_KEY="$2";    shift 2 ;;
         --status)      STATUS="$2";      shift 2 ;;
         --skip-reason) SKIP_REASON="$2"; shift 2 ;;
+        --audit-mode)  AUDIT_MODE="$2";  shift 2 ;;
         *) echo "error: unknown flag: $1" >&2; usage ;;
     esac
 done
@@ -317,6 +319,20 @@ EOF
             *) echo "error: --status must be one of produced|verified|skipped" >&2; exit 4 ;;
         esac
         set_step_status "$STEP_KEY" "$STATUS" "$SKIP_REASON"
+        if [[ -n "$AUDIT_MODE" ]]; then
+            case "$AUDIT_MODE" in
+                full|subagent) ;;
+                *) echo "error: --audit-mode must be full|subagent" >&2; exit 4 ;;
+            esac
+            tmp="$state_file.tmp"
+            awk -v step="$STEP_KEY" -v am="$AUDIT_MODE" '
+                $0 ~ "^[[:space:]]+" step ":[[:space:]]*\\{" {
+                    sub(/audit_mode:[[:space:]]*[^,}]+/, "audit_mode: " am)
+                }
+                { print }
+            ' "$state_file" > "$tmp" && mv "$tmp" "$state_file"
+            echo "$STEP_KEY.audit_mode = $AUDIT_MODE"
+        fi
         set_scalar updated "\"$iso_now\""
         echo "$STEP_KEY.status = $STATUS"
         ;;
