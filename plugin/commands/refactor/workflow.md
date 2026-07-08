@@ -843,6 +843,8 @@ For each contract in 2_contracts.yaml:
 
 Mark these as **skipped/pending** — they cannot run until Step 5+6 provide the mock infrastructure.
 
+> **Characterization tests are guardrails, not improvement evidence.** This playbook performs pure refactoring: the tests' only job is to pin existing behavior. If you find yourself able to write a test that FAILS on the legacy code and would pass only on the new implementation — stop. You have changed behavior; that is a warning, not an achievement. Go back and check Step 3 (seam) or Step 5 (interface) for accidental semantic changes. Conversely, all-green at Step 10 only proves "nothing broke" — evidence of improvement lives in Step 12's structural metrics (`12_metrics.yaml`).
+
 ### 4.4 Gate: Run Spike Tests
 
 ```bash

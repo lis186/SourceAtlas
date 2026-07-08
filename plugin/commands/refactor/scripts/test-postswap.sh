@@ -16,6 +16,10 @@ expect() { # expect <label> <want_exit> <got_exit>
     if [[ "$2" -eq "$3" ]]; then echo "ok  $1"
     else echo "FAIL $1 (want exit $2, got $3)"; fail=1; fi
 }
+has() { # has <label> <file> <pattern>
+    if grep -q -- "$3" "$2" 2>/dev/null; then echo "ok  $1"
+    else echo "FAIL $1 (no '$3' in $2)"; fail=1; fi
+}
 
 # ── Fixture ─────────────────────────────────────────────────────────────────
 mkdir -p "$T/.sourceatlas/refactor/legacy" "$T/src"
@@ -39,7 +43,20 @@ EOF
 printf 'module: "legacy"\nfile: "src/Legacy.m"\n' > "$T/.sourceatlas/refactor/legacy/1_target.yaml"
 printf 'protocol:\n  name: "LegacySeam"\nswap_strategy: "direct"\n' > "$T/.sourceatlas/refactor/legacy/5_interface.yaml"
 printf 'class LegacyAdapter: LegacySeam {}\n' > "$T/.sourceatlas/refactor/legacy/6_adapter.swift"
-printf '@implementation Legacy\n@end\n' > "$T/src/Legacy.m"
+# 11 lines / 2 `if` lines, so step-12 metric ratios are meaningful
+cat > "$T/src/Legacy.m" <<'EOF'
+@implementation Legacy
+- (int)value:(int)x {
+    if (x > 0) {
+        return x;
+    }
+    if (x < -10) {
+        return -10;
+    }
+    return 0;
+}
+@end
+EOF
 
 # ── State machine: advance 7 → 13, then terminal refusal ────────────────────
 S advance --module legacy >/dev/null; expect "advance 7→8" 0 $?
@@ -62,6 +79,20 @@ printf 'let x = LegacyAdapter()\n' > "$T/src/Wiring.swift"
 G --module legacy --step 12 >/dev/null; expect "step12 wired adapter fails" 3 $?
 printf 'let x = NewImpl()\n' > "$T/src/Wiring.swift"
 G --module legacy --step 12 >/dev/null; expect "step12 clean passes" 0 $?
+
+# ── Gate step 12 metrics (informational — must never change exit codes) ──────
+M="$T/.sourceatlas/refactor/legacy/12_metrics.yaml"
+printf 'final class NewImpl {\n    func value(_ x: Int) -> Int {\n        if x > 0 { return x }\n        return 0\n    }\n}\n' > "$T/src/NewImpl.swift"
+G --module legacy --step 12 --impl-file "$T/src/NewImpl.swift" >/dev/null; expect "step12 metrics small impl passes" 0 $?
+has "step12 metrics writes loc_pct" "$M" "loc_pct"
+has "step12 metrics impl path is project-relative" "$M" 'file: "src/NewImpl.swift"'
+# bloated impl: >150% of Legacy.m LOC and more `if` lines → flags fire, exit still 0
+for i in $(seq 1 30); do echo "        if flag$i { total += $i }"; done > "$T/src/Bloat.swift"
+G --module legacy --step 12 --impl-file "$T/src/Bloat.swift" >/dev/null; expect "step12 bloated impl still passes" 0 $?
+has "step12 metrics flags loc_ratio_gt_150" "$M" "loc_ratio_gt_150"
+G --module legacy --step 12 >/dev/null; expect "step12 no impl-file passes" 0 $?
+has "step12 metrics records not_provided" "$M" "not_provided"
+printf 'final class NewImpl {}\n' > "$T/src/NewImpl.swift"
 
 # ── Gate step 13 ─────────────────────────────────────────────────────────────
 G --module legacy --step 13 >/dev/null; expect "step13 legacy present fails" 3 $?

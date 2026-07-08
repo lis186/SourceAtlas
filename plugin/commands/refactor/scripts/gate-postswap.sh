@@ -7,7 +7,7 @@
 #
 # Usage:
 #   gate-postswap.sh --module <m> --step 8  --impl-file <path>
-#   gate-postswap.sh --module <m> --step 12 [--adapter-name <N>] [--seam-name <N>] [--skip-seam-check]
+#   gate-postswap.sh --module <m> --step 12 [--impl-file <path>] [--adapter-name <N>] [--seam-name <N>] [--skip-seam-check]
 #   gate-postswap.sh --module <m> --step 13
 #
 # Name resolution (when flags omitted):
@@ -55,6 +55,12 @@ GREP_EXCLUDES=(--exclude-dir=.git --exclude-dir=.sourceatlas --exclude-dir=Pods
 
 ref_count() {  # ref_count <name> → number of referencing lines in the project
     grep -rn "${GREP_EXCLUDES[@]}" -- "$1" "$PROJECT_ROOT" 2>/dev/null | wc -l | tr -d ' '
+}
+
+# Grep line-count PROXY for cyclomatic complexity — counts matching lines,
+# not branches, so it's evidence for review, never a gate.
+decision_points() {  # decision_points <file> → lines with branch keywords
+    grep -cE '\b(if|for|while|case|catch|guard|elif|when)\b' "$1" 2>/dev/null || true
 }
 
 yaml_value() {  # yaml_value <file> <key> → first "key: value", quotes stripped
@@ -109,6 +115,7 @@ case "$STEP" in
         ;;
 
     12)
+        adapter_refs=0 seam_refs=0
         adapter_artifact=""
         if [[ -z "$ADAPTER_NAME" ]]; then
             adapter_artifact=$(ls "$state_dir"/6_adapter.* 2>/dev/null | grep -v '\.patch$' | head -1)
@@ -120,18 +127,18 @@ case "$STEP" in
             # Group C: no adapter class by design — 6_adapter.* is test-side
             # mock setup. Done signal: production code never references it.
             base=$(basename "${adapter_artifact:-6_adapter}"); base="${base%.*}"
-            hits=$(ref_count "$base")
+            hits=$(ref_count "$base"); adapter_refs=$hits
             [[ "$hits" -eq 0 ]]; check "no_adapter_artifact_refs" $? "grep -r '$base' → $hits hits (need 0; Group C has no adapter class)"
         else
             [[ -n "$ADAPTER_NAME" ]] || { echo "error: cannot derive adapter name — pass --adapter-name" >&2; exit 2; }
-            hits=$(ref_count "$ADAPTER_NAME")
+            hits=$(ref_count "$ADAPTER_NAME"); adapter_refs=$hits
             [[ "$hits" -eq 0 ]]; check "adapter_deleted" $? "grep -r '$ADAPTER_NAME' → $hits hits (need 0)"
         fi
 
         if [[ "$SKIP_SEAM" -eq 0 ]]; then
             [[ -z "$SEAM_NAME" && -f "$interface_yaml" ]] && SEAM_NAME=$(yaml_value "$interface_yaml" "name")
             if [[ -n "$SEAM_NAME" ]]; then
-                hits=$(ref_count "$SEAM_NAME")
+                hits=$(ref_count "$SEAM_NAME"); seam_refs=$hits
                 [[ "$hits" -eq 0 ]]; check "seam_interface_renamed" $? "grep -r '$SEAM_NAME' → $hits hits (need 0; --skip-seam-check if final name kept)"
             fi
         fi
@@ -142,6 +149,60 @@ case "$STEP" in
                 hits=$(ref_count "$logger")
                 [[ "$hits" -eq 0 ]]; check "shadow_logger_deleted" $? "grep -r '$logger' → $hits hits (need 0)"
             fi
+        fi
+
+        # ── Structural metrics — informational evidence, NEVER a gate ────────
+        # All tests green only proves no regression, not improvement; these
+        # numbers are the improvement evidence. Recorded even when the checks
+        # above failed; flags never touch pass/fail or the exit code.
+        metrics_yaml="$state_dir/12_metrics.yaml"
+        legacy_loc=$(wc -l < "$legacy_file" 2>/dev/null | tr -d ' '); legacy_loc=${legacy_loc:-0}
+        legacy_dp=$(decision_points "$legacy_file"); legacy_dp=${legacy_dp:-0}
+        flags=""
+        {
+            echo "# 12_metrics.yaml — structural metrics evidence (informational, not a gate)"
+            echo "module: \"$MODULE\""
+            echo "legacy:"
+            echo "  file: \"$legacy_rel\""
+            echo "  loc: $legacy_loc"
+            echo "  decision_points: $legacy_dp"
+            echo "impl:"
+        } > "$metrics_yaml"
+        if [[ -n "$IMPL_FILE" && -f "$IMPL_FILE" ]]; then
+            impl_loc=$(wc -l < "$IMPL_FILE" | tr -d ' '); impl_loc=${impl_loc:-0}
+            impl_dp=$(decision_points "$IMPL_FILE"); impl_dp=${impl_dp:-0}
+            loc_pct=$(( legacy_loc > 0 ? impl_loc * 100 / legacy_loc : 0 ))
+            [[ "$loc_pct" -gt 150 ]] && flags="loc_ratio_gt_150"
+            [[ "$impl_dp" -gt "$legacy_dp" ]] && flags="${flags:+$flags, }decision_points_increased"
+            impl_rel="${IMPL_FILE#"$PROJECT_ROOT"/}"  # project-relative, like legacy_rel
+            {
+                echo "  file: \"$impl_rel\""
+                echo "  loc: $impl_loc"
+                echo "  decision_points: $impl_dp"
+                echo "delta:"
+                echo "  loc_pct: $loc_pct"
+                echo "  decision_points: $(( impl_dp - legacy_dp ))"
+            } >> "$metrics_yaml"
+        else
+            echo "  file: not_provided" >> "$metrics_yaml"
+        fi
+        {
+            echo "references:"
+            echo "  adapter_refs: $adapter_refs"
+            echo "  seam_refs: $seam_refs"
+            echo "flags: [$flags]"
+            echo "notes: \"decision_points is a grep line-count proxy for cyclomatic complexity\""
+        } >> "$metrics_yaml"
+
+        echo "  metrics (informational, not a gate) → $metrics_yaml"
+        printf '    %-8s %6s %16s\n' "" "loc" "decision_points"
+        printf '    %-8s %6s %16s\n' "legacy" "$legacy_loc" "$legacy_dp"
+        if [[ -n "$IMPL_FILE" && -f "$IMPL_FILE" ]]; then
+            printf '    %-8s %6s %16s\n' "impl" "$impl_loc" "$impl_dp"
+            [[ "$loc_pct" -gt 150 ]] && echo "  ⚠️ REVIEW — impl LOC is ${loc_pct}% of legacy (>150%); sometimes justified (interface boilerplate), needs human judgment"
+            [[ "$impl_dp" -gt "$legacy_dp" ]] && echo "  ⚠️ REVIEW — impl decision_points $impl_dp > legacy $legacy_dp; proxy metric, needs human judgment"
+        else
+            echo "  ℹ metrics recorded legacy-side only — pass --impl-file to compare against the new impl"
         fi
         ;;
 

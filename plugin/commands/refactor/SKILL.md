@@ -175,6 +175,8 @@ Steps 8-13 are **user-driven**, but state-tracked: `state.sh advance` continues 
 > **Mode variants**: The table below shows `seam-injection` (default). For `platform-migration`, `strangler-fig`, or `platform-strangler`, see **[references/steps-8-13-by-mode.md](references/steps-8-13-by-mode.md)**.
 > Check `state.yaml → migration_mode.mode_name` to determine which path to follow.
 
+> **Verification boundary**: green gates at Steps 10–11 prove **no regression** only — they do not prove the refactor made anything better. Improvement evidence comes from Step 12's structural metrics (`12_metrics.yaml`: LOC, decision points, reference counts, before vs after) and gate-postswap's zero-reference checks. When reporting Step 10 results, state this boundary explicitly.
+
 ### Mode: `seam-injection` — swap_strategy: `direct` (default)
 
 | Step | Start From | Do (concrete actions) | Done When (verifiable signal) |
@@ -183,7 +185,7 @@ Steps 8-13 are **user-driven**, but state-tracked: `state.sh advance` continues 
 | 9 — Swap Implementation | New impl + `3_seams.yaml.recommended.enabling_point` | Replace `LegacyAdapter` with new impl at the ONE injection-site line; no other files touched in this commit | Single-file, single-line wiring change committed; characterization tests still pass |
 | 10 — Run Verification | Swapped code + `7_gate_results.yaml` (baseline) | Re-run `gate-step7.sh`; diff each section (Layer A / Layer B / contract CI) against the baseline | New gate output matches baseline 1:1 — same passes, same counts, no new failures |
 | 11 — Integration Testing | Verified swap from Step 10 | Run full app test suite; manual smoke every user-facing flow touching this module; check perf on hot paths | Full suite green; manual flows pass; no perf regression flagged |
-| 12 — Clean Up | Integrated swap from Step 11 | Delete `6_adapter.{ext}`; rename Seam Interface → final Target Interface name; delete temporary mocks/shims; update imports / re-exports | `gate-postswap.sh --step 12` passes (adapter + temporary seam name zero refs); full suite green |
+| 12 — Clean Up | Integrated swap from Step 11 | Delete `6_adapter.{ext}`; rename Seam Interface → final Target Interface name; delete temporary mocks/shims; update imports / re-exports; run gate-postswap.sh --step 12 --impl-file <new-file> to record structural metrics (LOC / decision points / references, before vs after) into 12_metrics.yaml | `gate-postswap.sh --step 12` passes (adapter + temporary seam name zero refs); full suite green; 12_metrics.yaml written and its delta presented to the user (⚠️ REVIEW flags need human judgment, they do not fail the gate) |
 | 13 — Delete Legacy | Cleaned codebase from Step 12 | Delete legacy file(s); final full-suite run; one dedicated commit | `gate-postswap.sh --step 13` passes (legacy file gone, zero class refs); full suite green; deletion is its own commit (not bundled with refactor work) |
 
 ### Mode: `seam-injection` — swap_strategy: `shadow`
@@ -198,7 +200,7 @@ Steps 8-13 are **user-driven**, but state-tracked: `state.sh advance` continues 
 | 9c — Hard Swap | Threshold met + `3_seams.yaml.recommended.enabling_point` | Replace `ShadowAdapter` with new impl directly at the ONE injection site. Single-file, single-line commit. | Characterization tests pass; shadow logger no longer called; `grep -l "ShadowAdapter" <wiring-file>` = 0 hits |
 | 10 — Run Verification | Swapped code + `7_gate_results.yaml` (baseline) | Re-run `gate-step7.sh`; diff against baseline | Baseline matched 1:1 |
 | 11 — Integration Testing | Verified swap from Step 10 | Full suite + manual smoke | Full suite green; no perf regression |
-| 12 — Clean Up | Integrated swap from Step 11 | Delete `6_adapter.{ext}` (ShadowAdapter) + `6_logger_protocol.{ext}`; rename Seam Interface; delete logger implementation | `gate-postswap.sh --step 12` passes (also checks the shadow logger protocol); full suite green |
+| 12 — Clean Up | Integrated swap from Step 11 | Delete `6_adapter.{ext}` (ShadowAdapter) + `6_logger_protocol.{ext}`; rename Seam Interface; delete logger implementation; run gate-postswap.sh --step 12 --impl-file <new-file> to record structural metrics (LOC / decision points / references, before vs after) into 12_metrics.yaml | `gate-postswap.sh --step 12` passes (also checks the shadow logger protocol); full suite green; 12_metrics.yaml written and its delta presented to the user (⚠️ REVIEW flags need human judgment, they do not fail the gate) |
 | 13 — Delete Legacy | Cleaned codebase from Step 12 | Delete legacy file; own commit | `gate-postswap.sh --step 13` passes; full suite green |
 
 > See [references/playbook-overview.md](references/playbook-overview.md) for the complete 13-step overview with detailed checklists per step.
