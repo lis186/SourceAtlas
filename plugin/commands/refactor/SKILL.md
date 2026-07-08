@@ -1,9 +1,9 @@
 ---
 name: refactor
-description: Guided legacy code migration using the 13-step Playbook (Steps 1-7 tool-assisted)
+description: Guided legacy code migration using the 13-step Playbook (Steps 1-7 tool-assisted, 8-13 gate-verified)
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: "<file-path> [--zone <zone-id>] [--step <1-7>] [--zones-only] [--status] [--force]"
+argument-hint: "<file-path> [--zone <zone-id>] [--step <1-13>] [--zones-only] [--status] [--force]"
 ---
 
 # SourceAtlas: Refactor (Playbook Navigator)
