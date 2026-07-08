@@ -281,6 +281,14 @@ showstoppers:
   storyboard_dispatch: $storyboard_dispatch
   category_count: $category_count
   cross_language_exposed: $cross_language_exposed
+
+# Declared BEFORE work begins; Step 12 echoes these back with results.
+# goal: free-text definition of "better" for THIS refactor (empty = universal metrics only).
+# checks: machine-verifiable rules, each { desc, verify }. verify is a shell command,
+# exit 0 = met. Prefer quote-free grep -qE patterns (see SKILL.md Gotchas).
+success_criteria:
+  goal: ""
+  checks: []
 EOF
 
 # ── Summary to stdout ───────────────────────────────────────────────────────
@@ -321,3 +329,6 @@ echo
 echo "  artifacts: $state_file"
 echo "             $target_file"
 echo "             $pilot_report"
+echo
+echo "  optional: declare this refactor's success criteria (goal + checks) in"
+echo "            1_target.yaml → success_criteria — Step 12 will echo them back"

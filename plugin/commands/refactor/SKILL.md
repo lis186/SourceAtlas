@@ -33,7 +33,7 @@ argument-hint: "<file-path> [--zone <zone-id>] [--step <1-13>] [--zones-only] [-
 ## Quick Start
 
 0. **No arguments?** → Discovery Mode: auto-find hotspots, show in-progress refactors, suggest candidates
-1. **Select target** → history hotspot + impact analysis → `1_target.yaml`
+1. **Select target** → history hotspot + impact analysis → `1_target.yaml` (+ optional `success_criteria` declaration)
 2. **Inventory contracts** → seam zones + audit → `2_contracts.yaml`
 3. **Find seams** → dependency graph + seam recommendations → `3_seams.yaml`
 4. **Record behavior** → spike tests + characterization test skeletons → `4_tests.{ext}`
@@ -175,7 +175,7 @@ Steps 8-13 are **user-driven**, but state-tracked: `state.sh advance` continues 
 > **Mode variants**: The table below shows `seam-injection` (default). For `platform-migration`, `strangler-fig`, or `platform-strangler`, see **[references/steps-8-13-by-mode.md](references/steps-8-13-by-mode.md)**.
 > Check `state.yaml → migration_mode.mode_name` to determine which path to follow.
 
-> **Verification boundary**: green gates at Steps 10–11 prove **no regression** only — they do not prove the refactor made anything better. Improvement evidence comes from Step 12's structural metrics (`12_metrics.yaml`: LOC, decision points, reference counts, before vs after) and gate-postswap's zero-reference checks. When reporting Step 10 results, state this boundary explicitly.
+> **Verification boundary**: green gates at Steps 10–11 prove **no regression** only — they do not prove the refactor made anything better. Improvement evidence comes from Step 12's structural metrics (`12_metrics.yaml`: LOC, decision points, reference counts, before vs after) and gate-postswap's zero-reference checks. When reporting Step 10 results, state this boundary explicitly. If `success_criteria` were declared in `1_target.yaml` at Step 1, Step 12 echoes them back with per-check results (`12_metrics.yaml → goal_checks`) — an unmet declared criterion is loud evidence for review, not a gate failure.
 
 ### Mode: `seam-injection` — swap_strategy: `direct` (default)
 

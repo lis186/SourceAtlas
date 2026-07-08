@@ -338,6 +338,25 @@ Verifiable signals:
 
 If `state.yaml` exists and `--force` is not passed, init-state.sh exits 3. Resume from `current_step` in state.yaml; do not re-run init-state.sh. This prevents re-ranking mid-refactor.
 
+### 1.5 Declare Success Criteria (optional but recommended)
+
+init-state.sh scaffolds an empty `success_criteria` block at the end of `1_target.yaml`:
+
+```yaml
+success_criteria:
+  goal: ""      # free-text: what "better" means for THIS refactor
+  checks: []    # machine-verifiable rules: { desc, verify } — verify is a shell command, exit 0 = met
+```
+
+After Step 1 completes, ask the user what this refactor is trying to achieve, and fill the block in. This is the **one** block in `1_target.yaml` the LLM may edit after init-state.sh runs — everything else is script-owned.
+
+Why before, not after: declaring the criteria up front is the metrics analogue of "write the red test first" — it forces "better" to be defined before any code moves, so Step 12 can confront you with the result instead of letting all-green pass as improvement. Step 12 (`gate-postswap.sh --step 12`) echoes the goal back, runs each check, and records results in `12_metrics.yaml → goal_checks`. An unmet declared check prints loudly but does not fail the gate — attainment is the user's verdict to make.
+
+Rules for `checks[].verify`:
+- Shell command run from the project root; exit 0 = criterion met
+- Prefer quote-free `grep -qE` patterns with `.` wildcards (see Gotchas in SKILL.md — embedded quotes have bitten every gate script)
+- Empty `goal` + empty `checks` = skip; Step 12 stays silent about goals
+
 ---
 
 ## Step 0.5: Pre-Refactor Cleanup (optional)

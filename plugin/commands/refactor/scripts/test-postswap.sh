@@ -94,6 +94,22 @@ G --module legacy --step 12 >/dev/null; expect "step12 no impl-file passes" 0 $?
 has "step12 metrics records not_provided" "$M" "not_provided"
 printf 'final class NewImpl {}\n' > "$T/src/NewImpl.swift"
 
+# ── Gate step 12 goal checks (declared criteria echo — never a gate) ─────────
+# Earlier step-12 runs covered the absent-block silent path; now declare one.
+cat >> "$T/.sourceatlas/refactor/legacy/1_target.yaml" <<'EOF'
+success_criteria:
+  goal: "wiring references NewImpl only"
+  checks:
+    - desc: "NewImpl wired"
+      verify: "grep -q NewImpl src/Wiring.swift"
+    - desc: "phantom symbol present"
+      verify: "grep -q NoSuchThing src/Wiring.swift"
+EOF
+G --module legacy --step 12 --impl-file "$T/src/NewImpl.swift" >/dev/null; expect "step12 unmet goal check still passes" 0 $?
+has "step12 metrics writes goal_checks" "$M" "goal_checks:"
+has "step12 goal check met recorded" "$M" "met: true"
+has "step12 goal check unmet recorded" "$M" "met: false"
+
 # ── Gate step 13 ─────────────────────────────────────────────────────────────
 G --module legacy --step 13 >/dev/null; expect "step13 legacy present fails" 3 $?
 rm "$T/src/Legacy.m"

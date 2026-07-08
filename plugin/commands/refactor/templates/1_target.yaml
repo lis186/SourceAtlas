@@ -1,5 +1,6 @@
 # 1_target.yaml — Step 1 Target Selection artifact template
-# Written by scripts/init-state.sh; do not edit by hand unless re-running Step 1.
+# Written by scripts/init-state.sh; do not edit by hand unless re-running Step 1 —
+# except `success_criteria`, the one block the user/LLM fills in after Step 1.
 
 module: "{module_name}"
 file: "{file_path}"
@@ -46,3 +47,13 @@ showstoppers:
   storyboard_dispatch: 0      # NSStringFromClass / IB dispatch
   category_count: 0           # categories on the target class
   cross_language_exposed: false   # appears in Bridging-Header or -Swift.h
+
+# ── Success criteria (fill in by hand AFTER Step 1) ─────────────────────────
+# Declared BEFORE work begins; Step 12 echoes these back with results.
+# goal: free-text definition of "better" for THIS refactor (empty = universal metrics only).
+# checks: machine-verifiable rules, each { desc, verify }. verify is a shell command,
+# exit 0 = met. Prefer quote-free grep -qE patterns (see SKILL.md Gotchas).
+
+success_criteria:
+  goal: ""
+  checks: []

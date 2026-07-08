@@ -4,6 +4,8 @@
 # Turns the grep-checkable signals from SKILL.md's Steps 8-13 tables into exit
 # codes, so "cleanup complete" is a gate, not a claim. Steps 9-11 are verified
 # by test suites (re-run gate-step7.sh / your full suite) — not this script.
+# Step 12 also records structural metrics and echoes the success_criteria
+# declared in 1_target.yaml into 12_metrics.yaml — evidence, never a gate.
 #
 # Usage:
 #   gate-postswap.sh --module <m> --step 8  --impl-file <path>
@@ -203,6 +205,56 @@ case "$STEP" in
             [[ "$impl_dp" -gt "$legacy_dp" ]] && echo "  ⚠️ REVIEW — impl decision_points $impl_dp > legacy $legacy_dp; proxy metric, needs human judgment"
         else
             echo "  ℹ metrics recorded legacy-side only — pass --impl-file to compare against the new impl"
+        fi
+
+        # ── Goal checks — declared success_criteria echoed back, NEVER a gate ─
+        # Step 1 declared "better" in 1_target.yaml → success_criteria; run each
+        # verify and record met/unmet. Unmet criteria print loudly but never
+        # touch pass/fail or the exit code. Absent/empty block → fully silent.
+        if grep -q '^success_criteria:' "$target_yaml" 2>/dev/null; then
+            sc_goal=$(awk '/^success_criteria:/{f=1;next} f&&/^[^[:space:]]/{f=0}
+                f&&/^[[:space:]]*goal:/{sub(/^[[:space:]]*goal:[[:space:]]*/,"")
+                    sub(/[[:space:]]*$/,""); sub(/^"/,""); sub(/"$/,""); print; exit}' "$target_yaml")
+            sc_goal="${sc_goal//\\\"/\"}"  # unescape YAML \" before use (same care as gate-contracts.sh)
+            # pair each checks[] desc with its verify → tab-separated lines
+            sc_checks=$(awk '/^success_criteria:/{f=1;next} f&&/^[^[:space:]]/{f=0}
+                f&&/^[[:space:]]*-[[:space:]]*desc:/{d=$0
+                    sub(/^[[:space:]]*-[[:space:]]*desc:[[:space:]]*/,"",d)
+                    sub(/[[:space:]]*$/,"",d); sub(/^"/,"",d); sub(/"$/,"",d); desc=d; next}
+                f&&/^[[:space:]]*verify:/{v=$0
+                    sub(/^[[:space:]]*verify:[[:space:]]*/,"",v)
+                    sub(/[[:space:]]*$/,"",v); sub(/^"/,"",v); sub(/"$/,"",v)
+                    print desc "\t" v; desc=""}' "$target_yaml")
+            if [[ -n "$sc_goal" || -n "$sc_checks" ]]; then
+                goal_q="${sc_goal//\\/\\\\}"; goal_q="${goal_q//\"/\\\"}"
+                {
+                    echo "goal_checks:"
+                    echo "  goal: \"$goal_q\""
+                } >> "$metrics_yaml"
+                [[ -n "$sc_goal" ]] && echo "  goal: $sc_goal"
+                if [[ -n "$sc_checks" ]]; then
+                    echo "  checks:" >> "$metrics_yaml"
+                    while IFS=$'\t' read -r c_desc c_verify; do
+                        [[ -n "$c_verify" ]] || continue
+                        c_desc="${c_desc//\\\"/\"}"; c_verify="${c_verify//\\\"/\"}"
+                        if (cd "$PROJECT_ROOT" && bash -c "$c_verify") >/dev/null 2>&1; then met=true; else met=false; fi
+                        desc_q="${c_desc//\\/\\\\}"; desc_q="${desc_q//\"/\\\"}"
+                        {
+                            echo "    - desc: \"$desc_q\""
+                            echo "      met: $met"
+                        } >> "$metrics_yaml"
+                        if [[ "$met" == true ]]; then echo "    ✓ $c_desc"
+                        else echo "    ✗ $c_desc — declared criterion NOT met (evidence for review, does not fail this gate)"; fi
+                    done <<< "$sc_checks"
+                    echo "  unverified: false" >> "$metrics_yaml"
+                else
+                    {
+                        echo "  checks: []"
+                        echo "  unverified: true"
+                    } >> "$metrics_yaml"
+                    echo "  ℹ goal declared without machine checks — confirm attainment manually"
+                fi
+            fi
         fi
         ;;
 
