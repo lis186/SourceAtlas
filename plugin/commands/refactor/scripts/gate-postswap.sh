@@ -256,6 +256,10 @@ case "$STEP" in
                 fi
             fi
         fi
+
+        # ── Retrospective prompt — the human verdict ──────────────────────
+        echo "retrospective: pending" >> "$metrics_yaml"
+        echo "  🤔 這次重構達成你的目的了嗎？(由執行者向使用者確認，記入 retrospective: yes|no|deferred)"
         ;;
 
     13)

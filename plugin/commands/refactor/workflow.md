@@ -356,6 +356,23 @@ Rules for `checks[].verify`:
 - Shell command run from the project root; exit 0 = criterion met
 - Prefer quote-free `grep -qE` patterns with `.` wildcards (see Gotchas in SKILL.md — embedded quotes have bitten every gate script)
 - Empty `goal` + empty `checks` = skip; Step 12 stays silent about goals
+- After declaring checks, **run them from the project root now** — they should fail. If any already passes, it cannot distinguish before from after; revise that check
+
+Example templates (copy, edit, delete — not a taxonomy):
+
+```yaml
+# Split responsibilities: legacy fan-in drops to ≤1 file
+- desc: "legacy fan-in reduced"
+  verify: "test $(grep -rlE 'import.*LegacyModule|require.*LegacyModule' src/ | wc -l) -le 1"
+
+# Testability: characterization tests use mocks, not real deps
+- desc: "tests use injected deps"
+  verify: "grep -qE 'mock|stub|fake|spy' 4_tests.*"
+
+# Decouple: co-change coupling gone (requires /atlas.history data post-refactor)
+- desc: "no co-change coupling with OldDep"
+  verify: "! grep -q 'co_change.*OldDep' .sourceatlas/history/*.yaml"
+```
 
 ---
 

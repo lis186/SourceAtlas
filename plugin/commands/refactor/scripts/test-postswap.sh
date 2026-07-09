@@ -109,6 +109,7 @@ G --module legacy --step 12 --impl-file "$T/src/NewImpl.swift" >/dev/null; expec
 has "step12 metrics writes goal_checks" "$M" "goal_checks:"
 has "step12 goal check met recorded" "$M" "met: true"
 has "step12 goal check unmet recorded" "$M" "met: false"
+has "step12 retrospective prompt recorded" "$M" "retrospective:"
 
 # ── Gate step 13 ─────────────────────────────────────────────────────────────
 G --module legacy --step 13 >/dev/null; expect "step13 legacy present fails" 3 $?
