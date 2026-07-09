@@ -96,6 +96,21 @@ printf 'final class NewImpl {}\n' > "$T/src/NewImpl.swift"
 
 # ── Gate step 12 goal checks (declared criteria echo — never a gate) ─────────
 # Earlier step-12 runs covered the absent-block silent path; now declare one.
+# First: goal with no checks → unverified: true
+cat >> "$T/.sourceatlas/refactor/legacy/1_target.yaml" <<'EOF'
+success_criteria:
+  goal: "wiring references NewImpl only"
+  checks: []
+EOF
+G --module legacy --step 12 --impl-file "$T/src/NewImpl.swift" >/dev/null; expect "step12 goal-only still passes" 0 $?
+has "step12 goal-only marks unverified" "$M" "unverified: true"
+# Now add actual checks (overwrite success_criteria by rewriting the file tail)
+python3 -c "
+import re, sys
+t = open(sys.argv[1]).read()
+t = re.sub(r'success_criteria:.*', '', t, flags=re.DOTALL)
+open(sys.argv[1],'w').write(t)
+" "$T/.sourceatlas/refactor/legacy/1_target.yaml"
 cat >> "$T/.sourceatlas/refactor/legacy/1_target.yaml" <<'EOF'
 success_criteria:
   goal: "wiring references NewImpl only"
