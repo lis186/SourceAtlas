@@ -32,6 +32,11 @@ done
 [ -f "$YAML_FILE" ] || die "file not found: $YAML_FILE"
 command -v yq >/dev/null 2>&1 || die "yq required but not found"
 
+# Fail closed: reject non-YAML input instead of silently warning through
+if ! yq -r '.metadata' "$YAML_FILE" >/dev/null 2>&1; then
+  die "not valid YAML or missing top-level 'metadata' key: $YAML_FILE"
+fi
+
 PASS=0
 FAIL=0
 WARN=0
@@ -85,7 +90,11 @@ echo
 echo "[file_counts]"
 claimed_total=$(yq -r '.metadata.total_files' "$YAML_FILE" 2>/dev/null || true)
 if [ -n "$claimed_total" ] && [ "$claimed_total" != "null" ]; then
-  actual_total=$(find "$TARGET_CWD" -type f -not -path '*/.git/*' -not -path '*/node_modules/*' 2>/dev/null | wc -l | tr -d ' ')
+  actual_total=$(find "$TARGET_CWD" -type f \
+    -not -path '*/.git/*' -not -path '*/node_modules/*' \
+    -not -path '*/.venv/*' -not -path '*/vendor/*' \
+    -not -path '*/__pycache__/*' -not -path '*/.build/*' \
+    2>/dev/null | wc -l | tr -d ' ')
   min=$((claimed_total * 80 / 100))
   max=$((claimed_total * 120 / 100))
   if [ "$actual_total" -ge "$min" ] && [ "$actual_total" -le "$max" ]; then
@@ -113,7 +122,7 @@ echo "[evidence_refs]"
 # Extract file references from evidence fields (pattern: "path/file.ext:NN")
 # ponytail: yq v4 can't easily flatten nested map-of-arrays; grep the raw YAML instead
 evidence_refs=$(grep -E '^\s+evidence:' "$YAML_FILE" | sed 's/.*evidence: *"*//' | sed 's/"*$//' \
-  | grep -oE '[A-Za-z0-9_./-]+\.[a-z]+:[0-9]+' | head -10 || true)
+  | grep -oE '[A-Za-z0-9_./-]+\.[a-z]+:[0-9]+([-][0-9]+)?' | head -10 || true)
 
 if [ -z "$evidence_refs" ]; then
   check WARN "no file:line evidence references found"
@@ -121,15 +130,18 @@ else
   while IFS= read -r ref; do
     [ -z "$ref" ] && continue
     ref_file="${ref%%:*}"
-    ref_line="${ref##*:}"
+    line_spec="${ref##*:}"
+    # Handle "N" and "N-M" range formats
+    ref_start="${line_spec%%-*}"
+    ref_end="${line_spec##*-}"
     if [ ! -f "$TARGET_CWD/$ref_file" ]; then
       check FAIL "evidence ref $ref — file does not exist"
     else
       total_lines=$(wc -l < "$TARGET_CWD/$ref_file" | tr -d ' ')
-      if [ "$ref_line" -le "$total_lines" ]; then
-        check PASS "evidence ref $ref — file exists, line in range"
+      if [ "$ref_start" -le "$total_lines" ] && [ "$ref_end" -le "$total_lines" ]; then
+        check PASS "evidence ref $ref — file exists, line(s) in range"
       else
-        check FAIL "evidence ref $ref — line $ref_line > file length $total_lines"
+        check FAIL "evidence ref $ref — line(s) exceed file length $total_lines"
       fi
     fi
   done <<< "$evidence_refs"
