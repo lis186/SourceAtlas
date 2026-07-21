@@ -1,0 +1,27 @@
+# Eval case: overview outputs file paths that don't exist
+#
+# Captured from real .sourceatlas/overview.yaml in the repo (2026-01-03 scan).
+# The overview referenced plugin/commands/overview.md which was renamed to
+# plugin/commands/overview/SKILL.md during the v2.11→v2.13 restructure.
+# Also referenced glob patterns like "scripts/atlas/*.sh:1-20" as evidence,
+# which fact-check resolves as "/SKILL.md:1" — a nonexistent path.
+
+id: overview-hallucinated-path
+command: "/sourceatlas:overview"
+args: ". --force"
+target: self                # run against SourceAtlas's own repo
+captured: 2026-07-22
+bug: "scanned_files and evidence refs contain paths that don't exist (stale after rename)"
+runs: 5
+assertions:
+  - type: fact-check
+    min_pass_rate: 1.0      # zero FAIL results from fact-check.sh
+  - type: schema
+    required_fields:
+      - metadata.project_name
+      - metadata.total_files
+      - metadata.scanned_files
+      - scanned_files
+      - summary.key_findings
+old_must_fail: ">=4/5"      # current prompt reproduces stale paths most runs
+new_must_pass: "5/5"
