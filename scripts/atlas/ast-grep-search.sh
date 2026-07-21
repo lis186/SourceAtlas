@@ -20,7 +20,7 @@
 #   import [module]        - Import 語句提取 (for /atlas.flow, /atlas.impact)
 #
 # Options:
-#   --lang <language>      - 指定語言 (swift|tsx|kotlin|python|go|rust|ruby)
+#   --lang <language>      - 指定語言 (swift|objc|objc_swift|tsx|kotlin|python|go|rust|ruby)
 #   --path <project_path>  - 專案路徑 (default: .)
 #   --fallback             - 輸出 grep fallback 命令（不執行 ast-grep）
 #   --json                 - JSON 輸出格式
@@ -42,7 +42,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # 預設值
 PROJECT_PATH="."
-LANG=""
+SEARCH_LANG=""
 OUTPUT_JSON=false
 OUTPUT_COUNT=false
 FALLBACK_MODE=false
@@ -74,25 +74,157 @@ detect_ast_grep() {
 }
 
 # ============================================================
+# clang 偵測（用於 Objective-C AST 分析）
+# ============================================================
+CLANG_CMD=""
+CLANG_AVAILABLE=false
+
+detect_clang() {
+    if [[ -n "$CLANG_CMD" ]]; then
+        return 0
+    fi
+
+    if command -v clang &> /dev/null; then
+        CLANG_CMD="clang"
+        CLANG_AVAILABLE=true
+        return 0
+    elif command -v /usr/bin/clang &> /dev/null; then
+        CLANG_CMD="/usr/bin/clang"
+        CLANG_AVAILABLE=true
+        return 0
+    elif command -v xcrun &> /dev/null && xcrun --find clang &> /dev/null; then
+        CLANG_CMD="$(xcrun --find clang)"
+        CLANG_AVAILABLE=true
+        return 0
+    else
+        CLANG_AVAILABLE=false
+        return 1
+    fi
+}
+
+# ============================================================
+# clang AST JSON 搜尋（Objective-C 專用）
+# ============================================================
+# 使用 clang -Xclang -ast-dump=json 取得結構化 AST
+# 輸出格式：統一為 ast-grep 相容的 JSON 格式
+#   [{ "file": "path", "range": {"start": {"line": N, "column": N}}, "text": "matched text" }]
+# ============================================================
+
+# 搜尋單一 ObjC 檔案的 AST，回傳匹配的節點
+# $1 = file path
+# $2 = jq filter expression (用於篩選 AST 節點)
+clang_ast_search_file() {
+    local file="$1"
+    local jq_filter="$2"
+
+    local ast_json
+    ast_json=$($CLANG_CMD -Xclang -ast-dump=json -fsyntax-only -x objective-c \
+        -fmodules -Wno-everything "$file" 2>/dev/null) || return 0
+
+    echo "$ast_json" | jq --arg file "$file" "$jq_filter" 2>/dev/null || echo "[]"
+}
+
+# 批次搜尋所有 ObjC 檔案
+# $1 = jq filter expression
+# $2 = file extensions glob (default: "*.m")
+clang_ast_search() {
+    local jq_filter="$1"
+    local ext="${2:-*.m}"
+
+    local results="[]"
+    while IFS= read -r -d '' file; do
+        local file_result
+        file_result=$(clang_ast_search_file "$file" "$jq_filter")
+        if [[ -n "$file_result" && "$file_result" != "[]" && "$file_result" != "null" ]]; then
+            results=$(echo -e "$results\n$file_result" | jq -s 'add // []')
+        fi
+    done < <(find "$PROJECT_PATH" -name "$ext" \
+        -not -path "*/Pods/*" \
+        -not -path "*/.build/*" \
+        -not -path "*/DerivedData/*" \
+        -not -path "*/node_modules/*" \
+        -not -path "*/__pycache__/*" \
+        -print0 2>/dev/null)
+
+    echo "$results"
+}
+
+# 搜尋 .m 和 .h 檔案
+clang_ast_search_all() {
+    local jq_filter="$1"
+    local m_results h_results
+    m_results=$(clang_ast_search "$jq_filter" "*.m")
+    h_results=$(clang_ast_search "$jq_filter" "*.h")
+    echo -e "$m_results\n$h_results" | jq -s 'add // []'
+}
+
+# ============================================================
+# clang AST jq 過濾器（常用）
+# ============================================================
+
+# 遞迴搜尋 AST 節點中符合條件的項目，轉為標準輸出格式
+# 用法：clang_jq_filter "ObjCMethodDecl" ".name" "methodName"
+clang_jq_filter_kind() {
+    local kind="$1"
+    local name_field="${2:-.name}"
+    local name_pattern="${3:-}"
+
+    if [[ -n "$name_pattern" ]]; then
+        cat <<JQEOF
+[.. | select(.kind? == "$kind" and ($name_field | tostring | test("$name_pattern"))) |
+{
+  file: \$file,
+  range: { start: { line: (.loc.line // .range.begin.line // 0), column: (.loc.col // .range.begin.col // 0) } },
+  text: ($name_field // .kind)
+}] | unique_by(.file + ":" + (.range.start.line | tostring))
+JQEOF
+    else
+        cat <<JQEOF
+[.. | select(.kind? == "$kind") |
+{
+  file: \$file,
+  range: { start: { line: (.loc.line // .range.begin.line // 0), column: (.loc.col // .range.begin.col // 0) } },
+  text: ($name_field // .kind)
+}] | unique_by(.file + ":" + (.range.start.line | tostring))
+JQEOF
+    fi
+}
+
+# ============================================================
 # 語言自動偵測
 # ============================================================
 detect_language() {
     local path="$1"
 
     # 如果已指定語言，直接返回
-    if [[ -n "$LANG" ]]; then
-        echo "$LANG"
+    if [[ -n "$SEARCH_LANG" ]]; then
+        echo "$SEARCH_LANG"
         return
     fi
 
     # 基於專案檔案偵測
     # 注意：glob pattern 在 [[ ]] 中不會展開，需用 ls 檢查
-    # Swift 偵測：SPM, Xcode, Tuist
-    if [[ -f "$path/Package.swift" ]] || \
-       ls -d "$path"/*.xcodeproj >/dev/null 2>&1 || \
-       ls -d "$path"/*.xcworkspace >/dev/null 2>&1 || \
-       [[ -f "$path/Project.swift" ]] || \
-       [[ -d "$path/Tuist" ]]; then
+    # iOS 偵測：Swift / Objective-C / 混編
+    local has_swift=false
+    local has_objc=false
+
+    if [[ -f "$path/Package.swift" ]] || [[ -f "$path/Project.swift" ]] || [[ -d "$path/Tuist" ]]; then
+        has_swift=true
+    fi
+    if ls -d "$path"/*.xcodeproj >/dev/null 2>&1 || ls -d "$path"/*.xcworkspace >/dev/null 2>&1; then
+        # Xcode 專案：檢查是 Swift、ObjC 還是混編
+        local swift_count objc_count
+        swift_count=$(find "$path" -name "*.swift" -not -path "*/Pods/*" -not -path "*/.build/*" -not -path "*/DerivedData/*" 2>/dev/null | head -20 | wc -l)
+        objc_count=$(find "$path" \( -name "*.m" -o -name "*.mm" \) -not -path "*/Pods/*" -not -path "*/DerivedData/*" 2>/dev/null | head -20 | wc -l)
+        [[ "$swift_count" -gt 0 ]] && has_swift=true
+        [[ "$objc_count" -gt 0 ]] && has_objc=true
+    fi
+
+    if $has_swift && $has_objc; then
+        echo "objc_swift"
+    elif $has_objc; then
+        echo "objc"
+    elif $has_swift; then
         echo "swift"
     elif [[ -f "$path/package.json" ]]; then
         # 檢查是否為 TypeScript
@@ -137,11 +269,71 @@ op_call() {
     lang=$(detect_language "$PROJECT_PATH")
 
     if $FALLBACK_MODE; then
-        echo "grep -rn \"$func_name(\" --include=\"*.$lang\" \"$PROJECT_PATH\""
+        case "$lang" in
+            objc)
+                echo "grep -rn '\\[$func_name \\|$func_name(\\|$func_name]' --include='*.m' --include='*.h' \"$PROJECT_PATH\""
+                ;;
+            objc_swift)
+                echo "grep -rn '\\[$func_name \\|$func_name(' --include='*.m' --include='*.h' --include='*.swift' \"$PROJECT_PATH\""
+                ;;
+            *)
+                echo "grep -rn \"$func_name(\" --include=\"*.$lang\" \"$PROJECT_PATH\""
+                ;;
+        esac
         return 0
     fi
 
     case "$lang" in
+        objc)
+            if detect_clang; then
+                local jq_filter
+                jq_filter=$(cat <<JQEOF
+[.. | select(
+    (.kind? == "ObjCMessageExpr" and (.selector? | tostring | test("$func_name"))) or
+    (.kind? == "CallExpr" and (.inner? // [] | .[] | select(.kind? == "DeclRefExpr" and (.referencedDecl?.name? | tostring | test("$func_name")))) != null)
+) |
+{
+  file: \$file,
+  range: { start: { line: (.range.begin.line // .loc.line // 0), column: (.range.begin.col // .loc.col // 0) } },
+  text: (.selector // .referencedDecl.name // "$func_name")
+}] | unique_by(.file + ":" + (.range.start.line | tostring))
+JQEOF
+                )
+                clang_ast_search_all "$jq_filter"
+            else
+                # clang 不可用，fallback 到 grep
+                grep -rn "\[$func_name \|$func_name(" --include='*.m' --include='*.h' "$PROJECT_PATH" 2>/dev/null | \
+                    jq -R 'split(":") | {file: .[0], range: {start: {line: (.[1] | tonumber), column: 0}}, text: (.[2:] | join(":"))}' | \
+                    jq -s '.' || echo "[]"
+            fi
+            ;;
+        objc_swift)
+            # 混編：ObjC 用 clang，Swift 用 ast-grep，合併結果
+            local objc_result="[]" swift_result="[]"
+            if detect_clang; then
+                local jq_filter
+                jq_filter=$(cat <<JQEOF
+[.. | select(
+    (.kind? == "ObjCMessageExpr" and (.selector? | tostring | test("$func_name"))) or
+    (.kind? == "CallExpr" and (.inner? // [] | .[] | select(.kind? == "DeclRefExpr" and (.referencedDecl?.name? | tostring | test("$func_name")))) != null)
+) |
+{
+  file: \$file,
+  range: { start: { line: (.range.begin.line // .loc.line // 0), column: (.range.begin.col // .loc.col // 0) } },
+  text: (.selector // .referencedDecl.name // "$func_name")
+}] | unique_by(.file + ":" + (.range.start.line | tostring))
+JQEOF
+                )
+                objc_result=$(clang_ast_search_all "$jq_filter")
+            fi
+            if detect_ast_grep; then
+                swift_result=$({
+                    $AST_GREP_CMD --pattern "\$OBJ.$func_name(\$\$\$)" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                    $AST_GREP_CMD --pattern "$func_name(\$\$\$)" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                } | jq -s 'add // []')
+            fi
+            echo -e "$objc_result\n$swift_result" | jq -s 'add // []'
+            ;;
         swift)
             {
                 $AST_GREP_CMD --pattern "\$OBJ.$func_name(\$\$\$)" --lang swift --json "$PROJECT_PATH" 2>/dev/null
@@ -202,11 +394,77 @@ op_type() {
     lang=$(detect_language "$PROJECT_PATH")
 
     if $FALLBACK_MODE; then
-        echo "grep -rn \"$type_name\" --include=\"*.$lang\" \"$PROJECT_PATH\" | grep -v \"//.*$type_name\""
+        case "$lang" in
+            objc)
+                echo "grep -rn '$type_name' --include='*.m' --include='*.h' \"$PROJECT_PATH\" | grep -v '//.*$type_name'"
+                ;;
+            objc_swift)
+                echo "grep -rn '$type_name' --include='*.m' --include='*.h' --include='*.swift' \"$PROJECT_PATH\" | grep -v '//.*$type_name'"
+                ;;
+            *)
+                echo "grep -rn \"$type_name\" --include=\"*.$lang\" \"$PROJECT_PATH\" | grep -v \"//.*$type_name\""
+                ;;
+        esac
         return 0
     fi
 
     case "$lang" in
+        objc)
+            if detect_clang; then
+                local jq_filter
+                jq_filter=$(cat <<JQEOF
+[.. | select(
+    (.kind? == "ObjCInterfaceDecl" and .name? == "$type_name") or
+    (.kind? == "ObjCProtocolDecl" and .name? == "$type_name") or
+    (.kind? == "ObjCCategoryDecl" and .name? == "$type_name") or
+    (.kind? == "TypedefDecl" and .name? == "$type_name") or
+    ((.kind? == "ObjCObjectType" or .kind? == "ObjCInterfaceType") and (.type?.qualType? | tostring | test("$type_name")))
+) |
+{
+  file: \$file,
+  range: { start: { line: (.range.begin.line // .loc.line // 0), column: (.range.begin.col // .loc.col // 0) } },
+  text: (.name // .type.qualType // "$type_name")
+}] | unique_by(.file + ":" + (.range.start.line | tostring))
+JQEOF
+                )
+                clang_ast_search_all "$jq_filter"
+            else
+                grep -rn "$type_name" --include='*.m' --include='*.h' "$PROJECT_PATH" 2>/dev/null | grep -v "//.*$type_name" | \
+                    jq -R 'split(":") | {file: .[0], range: {start: {line: (.[1] | tonumber), column: 0}}, text: (.[2:] | join(":"))}' | \
+                    jq -s '.' || echo "[]"
+            fi
+            ;;
+        objc_swift)
+            local objc_result="[]" swift_result="[]"
+            if detect_clang; then
+                local jq_filter
+                jq_filter=$(cat <<JQEOF
+[.. | select(
+    (.kind? == "ObjCInterfaceDecl" and .name? == "$type_name") or
+    (.kind? == "ObjCProtocolDecl" and .name? == "$type_name") or
+    (.kind? == "ObjCCategoryDecl" and .name? == "$type_name") or
+    (.kind? == "TypedefDecl" and .name? == "$type_name") or
+    ((.kind? == "ObjCObjectType" or .kind? == "ObjCInterfaceType") and (.type?.qualType? | tostring | test("$type_name")))
+) |
+{
+  file: \$file,
+  range: { start: { line: (.range.begin.line // .loc.line // 0), column: (.range.begin.col // .loc.col // 0) } },
+  text: (.name // .type.qualType // "$type_name")
+}] | unique_by(.file + ":" + (.range.start.line | tostring))
+JQEOF
+                )
+                objc_result=$(clang_ast_search_all "$jq_filter")
+            fi
+            if detect_ast_grep; then
+                swift_result=$({
+                    $AST_GREP_CMD --pattern "var \$NAME: $type_name" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                    $AST_GREP_CMD --pattern "let \$NAME: $type_name" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                    $AST_GREP_CMD --pattern "<$type_name>" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                    $AST_GREP_CMD --pattern "<\$T: $type_name>" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                } | jq -s 'add // []')
+            fi
+            echo -e "$objc_result\n$swift_result" | jq -s 'add // []'
+            ;;
         swift)
             {
                 # Swift 類型引用需要完整語法
@@ -290,11 +548,105 @@ op_pattern() {
     normalized=$(echo "$pattern_name" | tr '[:upper:]' '[:lower:]')
 
     if $FALLBACK_MODE; then
-        echo "grep -rn \"$pattern_name\" --include=\"*.$lang\" \"$PROJECT_PATH\""
+        case "$lang" in
+            objc|objc_swift)
+                echo "grep -rn '$pattern_name' --include='*.m' --include='*.h' --include='*.swift' \"$PROJECT_PATH\""
+                ;;
+            *)
+                echo "grep -rn \"$pattern_name\" --include=\"*.$lang\" \"$PROJECT_PATH\""
+                ;;
+        esac
         return 0
     fi
 
     case "$lang" in
+        objc)
+            case "$normalized" in
+                "singleton"|"shared instance")
+                    if detect_clang; then
+                        local jq_filter
+                        jq_filter=$(cat <<JQEOF
+[.. | select(
+    .kind? == "ObjCMethodDecl" and
+    (.name? | tostring | test("shared|default|instance"; "i"))
+) |
+{
+  file: \$file,
+  range: { start: { line: (.range.begin.line // .loc.line // 0), column: (.range.begin.col // .loc.col // 0) } },
+  text: .name
+}] | unique_by(.file + ":" + (.range.start.line | tostring))
+JQEOF
+                        )
+                        clang_ast_search_all "$jq_filter"
+                    else
+                        grep -rn 'sharedInstance\|shared]\|dispatch_once\|+ (instancetype)' --include='*.m' --include='*.h' "$PROJECT_PATH" 2>/dev/null | \
+                            jq -R 'split(":") | {file: .[0], range: {start: {line: (.[1] | tonumber), column: 0}}, text: (.[2:] | join(":"))}' | \
+                            jq -s '.' || echo "[]"
+                    fi
+                    ;;
+                "protocol"|"delegate")
+                    if detect_clang; then
+                        local jq_filter
+                        jq_filter=$(cat <<JQEOF
+[.. | select(.kind? == "ObjCProtocolDecl") |
+{
+  file: \$file,
+  range: { start: { line: (.range.begin.line // .loc.line // 0), column: (.range.begin.col // .loc.col // 0) } },
+  text: .name
+}] | unique_by(.file + ":" + (.range.start.line | tostring))
+JQEOF
+                        )
+                        clang_ast_search_all "$jq_filter"
+                    else
+                        grep -rn '@protocol\|@optional\|@required' --include='*.m' --include='*.h' "$PROJECT_PATH" 2>/dev/null | \
+                            jq -R 'split(":") | {file: .[0], range: {start: {line: (.[1] | tonumber), column: 0}}, text: (.[2:] | join(":"))}' | \
+                            jq -s '.' || echo "[]"
+                    fi
+                    ;;
+                "category"|"extension")
+                    if detect_clang; then
+                        local jq_filter
+                        jq_filter=$(cat <<JQEOF
+[.. | select(.kind? == "ObjCCategoryDecl") |
+{
+  file: \$file,
+  range: { start: { line: (.range.begin.line // .loc.line // 0), column: (.range.begin.col // .loc.col // 0) } },
+  text: .name
+}] | unique_by(.file + ":" + (.range.start.line | tostring))
+JQEOF
+                        )
+                        clang_ast_search_all "$jq_filter"
+                    else
+                        grep -rn '@interface.*(.*)' --include='*.m' --include='*.h' "$PROJECT_PATH" 2>/dev/null | \
+                            jq -R 'split(":") | {file: .[0], range: {start: {line: (.[1] | tonumber), column: 0}}, text: (.[2:] | join(":"))}' | \
+                            jq -s '.' || echo "[]"
+                    fi
+                    ;;
+                "block"|"blocks"|"closure")
+                    grep -rn 'typedef.*Block)\|void (^' --include='*.m' --include='*.h' "$PROJECT_PATH" 2>/dev/null | \
+                        jq -R 'split(":") | {file: .[0], range: {start: {line: (.[1] | tonumber), column: 0}}, text: (.[2:] | join(":"))}' | \
+                        jq -s '.' || echo "[]"
+                    ;;
+                *)
+                    echo "[]"
+                    exit 2
+                    ;;
+            esac
+            ;;
+        objc_swift)
+            # 混編：同時搜尋兩邊
+            local objc_result="[]" swift_result="[]"
+
+            # 用 objc 模式搜尋 ObjC 部分
+            local saved_lang="$SEARCH_LANG"
+            SEARCH_LANG="objc"
+            objc_result=$(op_pattern "$pattern_name" 2>/dev/null || echo "[]")
+            SEARCH_LANG="swift"
+            swift_result=$(op_pattern "$pattern_name" 2>/dev/null || echo "[]")
+            SEARCH_LANG="$saved_lang"
+
+            echo -e "$objc_result\n$swift_result" | jq -s 'add // []'
+            ;;
         swift)
             case "$normalized" in
                 "async"|"async function"|"async func")
@@ -463,9 +815,57 @@ op_usage() {
     lang=$(detect_language "$PROJECT_PATH")
 
     if $FALLBACK_MODE; then
-        echo "grep -rn \"$api_name\" --include=\"*.$lang\" \"$PROJECT_PATH\""
+        case "$lang" in
+            objc|objc_swift)
+                echo "grep -rn '$api_name' --include='*.m' --include='*.h' --include='*.swift' \"$PROJECT_PATH\""
+                ;;
+            *)
+                echo "grep -rn \"$api_name\" --include=\"*.$lang\" \"$PROJECT_PATH\""
+                ;;
+        esac
         return 0
     fi
+
+    # ObjC / 混編：API 使用盤點
+    case "$lang" in
+        objc)
+            if detect_clang; then
+                local jq_filter
+                jq_filter=$(cat <<JQEOF
+[.. | select(
+    (.kind? == "ObjCMessageExpr" and (.selector? | tostring | test("$api_name"))) or
+    (.kind? == "CallExpr" and (.inner? // [] | .[] | select(.kind? == "DeclRefExpr" and (.referencedDecl?.name? | tostring | test("$api_name")))) != null) or
+    (.kind? == "DeclRefExpr" and (.referencedDecl?.name? | tostring | test("$api_name")))
+) |
+{
+  file: \$file,
+  range: { start: { line: (.range.begin.line // .loc.line // 0), column: (.range.begin.col // .loc.col // 0) } },
+  text: (.selector // .referencedDecl.name // "$api_name")
+}] | unique_by(.file + ":" + (.range.start.line | tostring))
+JQEOF
+                )
+                clang_ast_search_all "$jq_filter"
+            else
+                grep -rn "$api_name" --include='*.m' --include='*.h' "$PROJECT_PATH" 2>/dev/null | \
+                    jq -R 'split(":") | {file: .[0], range: {start: {line: (.[1] | tonumber), column: 0}}, text: (.[2:] | join(":"))}' | \
+                    jq -s '.' || echo "[]"
+            fi
+            return 0
+            ;;
+        objc_swift)
+            local objc_result="[]" swift_result="[]"
+            local saved_lang="$SEARCH_LANG"
+            SEARCH_LANG="objc"
+            objc_result=$(op_usage "$api_name" 2>/dev/null) || objc_result="[]"
+            SEARCH_LANG="$saved_lang"
+            # Swift 部分：使用 ast-grep
+            if detect_ast_grep; then
+                swift_result=$($AST_GREP_CMD --pattern "$api_name(\$\$\$)" --lang swift --json "$PROJECT_PATH" 2>/dev/null || echo "[]")
+            fi
+            echo -e "$objc_result\n$swift_result" | jq -s 'add // []'
+            return 0
+            ;;
+    esac
 
     # 對於常見 API，使用精確 pattern
     case "$api_name" in
@@ -497,6 +897,8 @@ op_async() {
 
     if $FALLBACK_MODE; then
         case "$lang" in
+            objc) echo "grep -rn 'dispatch_async\\|dispatch_group\\|NSOperationQueue\\|performSelector.*withObject.*afterDelay' --include='*.m' --include='*.h' \"$PROJECT_PATH\"" ;;
+            objc_swift) echo "grep -rn 'dispatch_async\\|await \\|NSOperationQueue\\|async let' --include='*.m' --include='*.h' --include='*.swift' \"$PROJECT_PATH\"" ;;
             swift) echo "grep -rn 'await ' --include='*.swift' \"$PROJECT_PATH\"" ;;
             tsx) echo "grep -rn 'await ' --include='*.ts' --include='*.tsx' \"$PROJECT_PATH\"" ;;
             kotlin) echo "grep -rn 'suspend fun' --include='*.kt' \"$PROJECT_PATH\"" ;;
@@ -509,6 +911,30 @@ op_async() {
     fi
 
     case "$lang" in
+        objc)
+            # ObjC 無原生 async/await，搜尋 GCD 和 NSOperation 模式
+            grep -rn 'dispatch_async\|dispatch_group\|dispatch_barrier\|NSOperationQueue\|performSelector.*withObject.*afterDelay\|completionHandler\|completionBlock' \
+                --include='*.m' --include='*.h' "$PROJECT_PATH" 2>/dev/null | \
+                jq -R 'split(":") | {file: .[0], range: {start: {line: (.[1] | tonumber), column: 0}}, text: (.[2:] | join(":"))}' | \
+                jq -s '.' || echo "[]"
+            ;;
+        objc_swift)
+            local objc_result swift_result
+            # ObjC: GCD patterns
+            objc_result=$(grep -rn 'dispatch_async\|dispatch_group\|dispatch_barrier\|NSOperationQueue\|completionHandler\|completionBlock' \
+                --include='*.m' --include='*.h' "$PROJECT_PATH" 2>/dev/null | \
+                jq -R 'split(":") | {file: .[0], range: {start: {line: (.[1] | tonumber), column: 0}}, text: (.[2:] | join(":"))}' | \
+                jq -s '.' || echo "[]")
+            # Swift: ast-grep async/await
+            swift_result="[]"
+            if detect_ast_grep; then
+                swift_result=$({
+                    $AST_GREP_CMD --pattern 'await $EXPR' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                    $AST_GREP_CMD --pattern 'async let $NAME = $EXPR' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                } | jq -s 'add // []')
+            fi
+            echo -e "$objc_result\n$swift_result" | jq -s 'add // []'
+            ;;
         swift)
             {
                 $AST_GREP_CMD --pattern 'await $EXPR' --lang swift --json "$PROJECT_PATH" 2>/dev/null
@@ -575,8 +1001,8 @@ op_boundary() {
 
     if $FALLBACK_MODE; then
         case "$boundary_type" in
-            "api") echo "grep -rn 'fetch\\|axios\\|URLSession\\|Retrofit' \"$PROJECT_PATH\"" ;;
-            "db") echo "grep -rn 'prisma\\|realm\\|CoreData\\|Room' \"$PROJECT_PATH\"" ;;
+            "api") echo "grep -rn 'fetch\\|axios\\|URLSession\\|NSURLSession\\|NSURLConnection\\|AFHTTPSessionManager\\|Alamofire\\|Retrofit' \"$PROJECT_PATH\"" ;;
+            "db") echo "grep -rn 'prisma\\|realm\\|CoreData\\|NSManagedObject\\|NSFetchRequest\\|FMDB\\|Room' \"$PROJECT_PATH\"" ;;
         esac
         return 0
     fi
@@ -584,6 +1010,28 @@ op_boundary() {
     case "$boundary_type" in
         "api")
             case "$lang" in
+                objc)
+                    # ObjC 網路 API 邊界
+                    grep -rn 'NSURLSession\|NSURLConnection\|AFHTTPSessionManager\|AFURLSessionManager\|\[.*dataTaskWithURL\|\[.*dataTaskWithRequest' \
+                        --include='*.m' --include='*.h' "$PROJECT_PATH" 2>/dev/null | \
+                        jq -R 'split(":") | {file: .[0], range: {start: {line: (.[1] | tonumber), column: 0}}, text: (.[2:] | join(":"))}' | \
+                        jq -s '.' || echo "[]"
+                    ;;
+                objc_swift)
+                    local objc_result swift_result
+                    objc_result=$(grep -rn 'NSURLSession\|NSURLConnection\|AFHTTPSessionManager\|AFURLSessionManager' \
+                        --include='*.m' --include='*.h' "$PROJECT_PATH" 2>/dev/null | \
+                        jq -R 'split(":") | {file: .[0], range: {start: {line: (.[1] | tonumber), column: 0}}, text: (.[2:] | join(":"))}' | \
+                        jq -s '.' || echo "[]")
+                    swift_result="[]"
+                    if detect_ast_grep; then
+                        swift_result=$({
+                            $AST_GREP_CMD --pattern 'URLSession.shared.dataTask($$$)' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                            $AST_GREP_CMD --pattern 'URLSession.shared.data($$$)' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                        } | jq -s 'add // []')
+                    fi
+                    echo -e "$objc_result\n$swift_result" | jq -s 'add // []'
+                    ;;
                 swift)
                     {
                         $AST_GREP_CMD --pattern 'URLSession.shared.dataTask($$$)' --lang swift --json "$PROJECT_PATH" 2>/dev/null
@@ -637,6 +1085,28 @@ op_boundary() {
             ;;
         "db")
             case "$lang" in
+                objc)
+                    # ObjC DB 邊界：CoreData, FMDB, Realm
+                    grep -rn 'NSManagedObject\|NSFetchRequest\|NSEntityDescription\|NSPersistentContainer\|FMDatabase\|FMDatabaseQueue\|\[RLMRealm\|RLMResults' \
+                        --include='*.m' --include='*.h' "$PROJECT_PATH" 2>/dev/null | \
+                        jq -R 'split(":") | {file: .[0], range: {start: {line: (.[1] | tonumber), column: 0}}, text: (.[2:] | join(":"))}' | \
+                        jq -s '.' || echo "[]"
+                    ;;
+                objc_swift)
+                    local objc_db_result swift_db_result
+                    objc_db_result=$(grep -rn 'NSManagedObject\|NSFetchRequest\|NSEntityDescription\|FMDatabase\|\[RLMRealm' \
+                        --include='*.m' --include='*.h' "$PROJECT_PATH" 2>/dev/null | \
+                        jq -R 'split(":") | {file: .[0], range: {start: {line: (.[1] | tonumber), column: 0}}, text: (.[2:] | join(":"))}' | \
+                        jq -s '.' || echo "[]")
+                    swift_db_result="[]"
+                    if detect_ast_grep; then
+                        swift_db_result=$({
+                            $AST_GREP_CMD --pattern '$CTX.fetch($$$)' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                            $AST_GREP_CMD --pattern 'realm.write { $$$ }' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                        } | jq -s 'add // []')
+                    fi
+                    echo -e "$objc_db_result\n$swift_db_result" | jq -s 'add // []'
+                    ;;
                 swift)
                     {
                         $AST_GREP_CMD --pattern '$CTX.fetch($$$)' --lang swift --json "$PROJECT_PATH" 2>/dev/null
@@ -737,6 +1207,8 @@ op_definition() {
 
     if $FALLBACK_MODE; then
         case "$lang" in
+            objc) echo "grep -rn '@interface $name\\|@implementation $name\\|@protocol $name\\|- ($name\\|+ ($name\\|void)$name' --include='*.m' --include='*.h' \"$PROJECT_PATH\"" ;;
+            objc_swift) echo "grep -rn '@interface $name\\|@implementation $name\\|func $name\\|class $name\\|struct $name' --include='*.m' --include='*.h' --include='*.swift' \"$PROJECT_PATH\"" ;;
             swift) echo "grep -rn 'func $name\\|class $name\\|struct $name\\|enum $name' --include='*.swift' \"$PROJECT_PATH\"" ;;
             tsx|typescript) echo "grep -rn 'function $name\\|class $name\\|const $name\\|interface $name\\|type $name' --include='*.ts' --include='*.tsx' \"$PROJECT_PATH\"" ;;
             kotlin) echo "grep -rn 'fun $name\\|class $name\\|object $name\\|data class $name' --include='*.kt' \"$PROJECT_PATH\"" ;;
@@ -749,6 +1221,53 @@ op_definition() {
     fi
 
     case "$lang" in
+        objc)
+            if detect_clang; then
+                local jq_filter
+                jq_filter=$(cat <<JQEOF
+[.. | select(
+    (.kind? == "ObjCInterfaceDecl" and .name? == "$name") or
+    (.kind? == "ObjCImplementationDecl" and .name? == "$name") or
+    (.kind? == "ObjCProtocolDecl" and .name? == "$name") or
+    (.kind? == "ObjCCategoryDecl" and .name? == "$name") or
+    (.kind? == "ObjCMethodDecl" and (.name? | tostring | test("$name"))) or
+    (.kind? == "FunctionDecl" and .name? == "$name")
+) |
+{
+  file: \$file,
+  range: { start: { line: (.range.begin.line // .loc.line // 0), column: (.range.begin.col // .loc.col // 0) } },
+  text: (.name // "$name")
+}] | unique_by(.file + ":" + (.range.start.line | tostring))
+JQEOF
+                )
+                clang_ast_search_all "$jq_filter"
+            else
+                grep -rn "@interface $name\|@implementation $name\|@protocol $name" --include='*.m' --include='*.h' "$PROJECT_PATH" 2>/dev/null | \
+                    jq -R 'split(":") | {file: .[0], range: {start: {line: (.[1] | tonumber), column: 0}}, text: (.[2:] | join(":"))}' | \
+                    jq -s '.' || echo "[]"
+            fi
+            ;;
+        objc_swift)
+            local objc_result="[]" swift_result="[]"
+            # ObjC 部分
+            local saved_lang="$SEARCH_LANG"
+            SEARCH_LANG="objc"
+            objc_result=$(op_definition "$name" 2>/dev/null || echo "[]")
+            SEARCH_LANG="$saved_lang"
+            # Swift 部分
+            if detect_ast_grep; then
+                swift_result=$({
+                    $AST_GREP_CMD --pattern "func $name(\$\$\$)" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                    $AST_GREP_CMD --pattern "class $name { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                    $AST_GREP_CMD --pattern "class $name: \$\$\$INHERIT { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                    $AST_GREP_CMD --pattern "struct $name { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                    $AST_GREP_CMD --pattern "struct $name: \$\$\$INHERIT { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                    $AST_GREP_CMD --pattern "enum $name { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                    $AST_GREP_CMD --pattern "enum $name: \$\$\$INHERIT { \$\$\$ }" --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                } | jq -s 'add // []')
+            fi
+            echo -e "$objc_result\n$swift_result" | jq -s 'add // []'
+            ;;
         swift)
             {
                 $AST_GREP_CMD --pattern "func $name(\$\$\$)" --lang swift --json "$PROJECT_PATH" 2>/dev/null
@@ -845,6 +1364,8 @@ op_import() {
 
     if $FALLBACK_MODE; then
         case "$lang" in
+            objc) echo "grep -rn '#import \\|#include ' --include='*.m' --include='*.h' \"$PROJECT_PATH\"" ;;
+            objc_swift) echo "grep -rn '#import \\|#include \\|^import ' --include='*.m' --include='*.h' --include='*.swift' \"$PROJECT_PATH\"" ;;
             swift) echo "grep -rn '^import ' --include='*.swift' \"$PROJECT_PATH\"" ;;
             tsx|typescript) echo "grep -rn '^import \\|require(' --include='*.ts' --include='*.tsx' \"$PROJECT_PATH\"" ;;
             kotlin) echo "grep -rn '^import ' --include='*.kt' \"$PROJECT_PATH\"" ;;
@@ -858,6 +1379,42 @@ op_import() {
 
     local result
     case "$lang" in
+        objc)
+            if detect_clang; then
+                local jq_filter
+                jq_filter=$(cat <<JQEOF
+[.. | select(.kind? == "ImportDecl" or .kind? == "ObjCImportDecl") |
+{
+  file: \$file,
+  range: { start: { line: (.range.begin.line // .loc.line // 0), column: (.range.begin.col // .loc.col // 0) } },
+  text: (.name // .module.name // "import")
+}] | unique_by(.file + ":" + (.range.start.line | tostring))
+JQEOF
+                )
+                result=$(clang_ast_search_all "$jq_filter")
+            else
+                result=$(grep -rn '#import \|#include ' --include='*.m' --include='*.h' "$PROJECT_PATH" 2>/dev/null | \
+                    jq -R 'split(":") | {file: .[0], range: {start: {line: (.[1] | tonumber), column: 0}}, text: (.[2:] | join(":"))}' | \
+                    jq -s '.' || echo "[]")
+            fi
+            ;;
+        objc_swift)
+            local objc_import_result="[]" swift_import_result="[]"
+            # ObjC imports
+            objc_import_result=$(grep -rn '#import \|#include ' --include='*.m' --include='*.h' "$PROJECT_PATH" 2>/dev/null | \
+                jq -R 'split(":") | {file: .[0], range: {start: {line: (.[1] | tonumber), column: 0}}, text: (.[2:] | join(":"))}' | \
+                jq -s '.' || echo "[]")
+            # Swift imports
+            if detect_ast_grep; then
+                swift_import_result=$({
+                    $AST_GREP_CMD --pattern 'import $MODULE' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                    $AST_GREP_CMD --pattern 'public import $MODULE' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                    $AST_GREP_CMD --pattern 'internal import $MODULE' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                    $AST_GREP_CMD --pattern 'private import $MODULE' --lang swift --json "$PROJECT_PATH" 2>/dev/null
+                } | jq -s 'add // []')
+            fi
+            result=$(echo -e "$objc_import_result\n$swift_import_result" | jq -s 'add // []')
+            ;;
         swift)
             result=$({
                 $AST_GREP_CMD --pattern 'import $MODULE' --lang swift --json "$PROJECT_PATH" 2>/dev/null
@@ -945,7 +1502,7 @@ TARGET=""
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --lang)
-            LANG="$2"
+            SEARCH_LANG="$2"
             shift 2
             ;;
         --path)
@@ -980,7 +1537,7 @@ while [[ $# -gt 0 ]]; do
             echo "  boundary <type>     - Boundary detection (api|db)"
             echo ""
             echo "Options:"
-            echo "  --lang <language>   - Specify language (swift|tsx|kotlin|python)"
+            echo "  --lang <language>   - Specify language (swift|objc|objc_swift|tsx|kotlin|python|go|rust|ruby)"
             echo "  --path <path>       - Project path (default: .)"
             echo "  --fallback          - Output grep fallback command"
             echo "  --json              - JSON output format"
@@ -1010,12 +1567,27 @@ if [[ -z "$OPERATION" ]]; then
     exit 3
 fi
 
-# 非 fallback 模式下檢查 ast-grep
+# 非 fallback 模式下檢查工具可用性
 if ! $FALLBACK_MODE; then
-    if ! detect_ast_grep; then
-        echo "Error: ast-grep not installed. Use --fallback for grep alternative." >&2
-        exit 1
-    fi
+    local_lang=$(detect_language "$PROJECT_PATH")
+    case "$local_lang" in
+        objc)
+            # ObjC 只需要 clang（可選），有 grep fallback
+            detect_clang || true
+            ;;
+        objc_swift)
+            # 混編：clang（可選） + ast-grep（可選）
+            detect_clang || true
+            detect_ast_grep || true
+            ;;
+        *)
+            # 其他語言需要 ast-grep
+            if ! detect_ast_grep; then
+                echo "Error: ast-grep not installed. Use --fallback for grep alternative." >&2
+                exit 1
+            fi
+            ;;
+    esac
 fi
 
 # 執行操作
