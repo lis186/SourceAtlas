@@ -17,13 +17,18 @@ assertions:
     required_fields:
       - metadata.project_name
       - metadata.scan_time
+      - metadata.target_path
       - metadata.total_files
       - metadata.scanned_files
+      - metadata.scan_ratio
       - metadata.project_scale
+      - metadata.constitution_version
       - project_fingerprint.project_type
       - project_fingerprint.primary_language
+      - tech_stack
       - hypotheses.architecture
       - hypotheses.tech_stack
+      - hypotheses.business
       - scanned_files
       - summary.understanding_depth
       - summary.key_findings

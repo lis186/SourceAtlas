@@ -25,9 +25,12 @@ require() {
 echo "schema-check: $YAML_FILE"
 require '.metadata.project_name'
 require '.metadata.scan_time'
+require '.metadata.target_path'
 require '.metadata.total_files'
 require '.metadata.scanned_files'
+require '.metadata.scan_ratio'
 require '.metadata.project_scale'
+require '.metadata.constitution_version'
 require '.project_fingerprint.project_type'
 require '.project_fingerprint.primary_language'
 require '.hypotheses.architecture'

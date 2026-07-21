@@ -32,9 +32,13 @@ done
 [ -f "$YAML_FILE" ] || die "file not found: $YAML_FILE"
 command -v yq >/dev/null 2>&1 || die "yq required but not found"
 
-# Fail closed: reject non-YAML input instead of silently warning through
+# Fail closed: reject non-YAML or YAML without required top-level structure
 if ! yq -r '.metadata' "$YAML_FILE" >/dev/null 2>&1; then
-  die "not valid YAML or missing top-level 'metadata' key: $YAML_FILE"
+  die "not valid YAML: $YAML_FILE"
+fi
+metadata_name=$(yq -r '.metadata.project_name' "$YAML_FILE" 2>/dev/null || true)
+if [ -z "$metadata_name" ] || [ "$metadata_name" = "null" ]; then
+  die "YAML lacks metadata.project_name — not a SourceAtlas output: $YAML_FILE"
 fi
 
 PASS=0
@@ -94,6 +98,10 @@ if [ -n "$claimed_total" ] && [ "$claimed_total" != "null" ]; then
     -not -path '*/.git/*' -not -path '*/node_modules/*' \
     -not -path '*/.venv/*' -not -path '*/vendor/*' \
     -not -path '*/__pycache__/*' -not -path '*/.build/*' \
+    -not -path '*/Pods/*' -not -path '*/DerivedData/*' \
+    -not -path '*/build/*' -not -path '*/dist/*' \
+    -not -path '*/target/*' -not -path '*/.next/*' \
+    -not -path '*/.nuxt/*' \
     2>/dev/null | wc -l | tr -d ' ')
   min=$((claimed_total * 80 / 100))
   max=$((claimed_total * 120 / 100))
@@ -122,7 +130,7 @@ echo "[evidence_refs]"
 # Extract file references from evidence fields (pattern: "path/file.ext:NN")
 # ponytail: yq v4 can't easily flatten nested map-of-arrays; grep the raw YAML instead
 evidence_refs=$(grep -E '^\s+evidence:' "$YAML_FILE" | sed 's/.*evidence: *"*//' | sed 's/"*$//' \
-  | grep -oE '[A-Za-z0-9_./-]+\.[a-z]+:[0-9]+([-][0-9]+)?' | head -10 || true)
+  | grep -oE '[A-Za-z0-9_./-]+\.[a-z]+:[0-9]+([-][0-9]+)?' || true)
 
 if [ -z "$evidence_refs" ]; then
   check WARN "no file:line evidence references found"
@@ -136,6 +144,8 @@ else
     ref_end="${line_spec##*-}"
     if [ ! -f "$TARGET_CWD/$ref_file" ]; then
       check FAIL "evidence ref $ref — file does not exist"
+    elif [ "$ref_start" -lt 1 ] || [ "$ref_end" -lt 1 ] || [ "$ref_start" -gt "$ref_end" ]; then
+      check FAIL "evidence ref $ref — invalid line range"
     else
       total_lines=$(wc -l < "$TARGET_CWD/$ref_file" | tr -d ' ')
       if [ "$ref_start" -le "$total_lines" ] && [ "$ref_end" -le "$total_lines" ]; then
