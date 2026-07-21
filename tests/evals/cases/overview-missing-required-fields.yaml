@@ -1,0 +1,36 @@
+# Eval case: overview output missing required YAML fields
+#
+# The output-template.md specifies mandatory fields. A prompt that skips
+# sections (e.g. omits summary.understanding_depth or hypotheses.business)
+# passes fact-check but fails schema validation. This case ensures the
+# output contract is enforced independently of content correctness.
+
+id: overview-missing-required-fields
+command: "/sourceatlas:overview"
+args: ". --force"
+target: self
+captured: 2026-07-22
+bug: "output omits required YAML sections defined in output-template.md"
+runs: 3
+assertions:
+  - type: schema
+    required_fields:
+      - metadata.project_name
+      - metadata.scan_time
+      - metadata.target_path
+      - metadata.total_files
+      - metadata.scanned_files
+      - metadata.scan_ratio
+      - metadata.project_scale
+      - metadata.constitution_version
+      - project_fingerprint.project_type
+      - project_fingerprint.primary_language
+      - tech_stack
+      - hypotheses.architecture
+      - hypotheses.tech_stack
+      - hypotheses.business
+      - scanned_files
+      - summary.understanding_depth
+      - summary.key_findings
+old_must_fail: ">=2/3"      # lower bar — schema issues are less frequent than hallucinations
+new_must_pass: "3/3"

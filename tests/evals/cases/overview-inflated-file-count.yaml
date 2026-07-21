@@ -1,0 +1,20 @@
+# Eval case: overview claims wildly wrong total_files count
+#
+# Captured from real .sourceatlas/overview.yaml: metadata.total_files = 85188
+# but the actual repo has ~400 tracked files. The scan was likely run from a
+# parent directory or a worktree that included node_modules / .git objects.
+# fact-check.sh catches this via ±20% tolerance check.
+
+id: overview-inflated-file-count
+command: "/sourceatlas:overview"
+args: ". --force"
+target: self
+captured: 2026-07-22
+bug: "total_files count 85188 is >200x the actual file count (~400)"
+runs: 5
+assertions:
+  - type: fact-check
+    min_pass_rate: 1.0
+    focus: file_counts       # the specific section that must pass
+old_must_fail: ">=4/5"
+new_must_pass: "5/5"
