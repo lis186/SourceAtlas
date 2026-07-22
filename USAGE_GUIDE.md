@@ -1175,8 +1175,7 @@ echo -e "\n=== Check Complete ==="
 ```
 
 **Expected Results**:
-- ✅ See 8 .md command files (overview, pattern, impact, history, flow, deps, list, clear)
-- ✅ See 6 skill directories (codebase-overview, pattern-finder, etc.)
+- ✅ See command SKILL.md files under plugin/commands/ (overview, pattern, impact, history, flow, deps, seam, refactor, etc.)
 - ✅ See scripts/atlas/ directory
 - ✅ At project root (has .git/)
 - ✅ Code file count < 1000 (TINY/SMALL) or < 5000 (MEDIUM/LARGE)
@@ -1193,4 +1192,4 @@ echo -e "\n=== Check Complete ==="
 ---
 
 **SourceAtlas** - Code analysis assistant for Claude Code
-v3.0.0 | Updated: 2026-03-09
+v3.0.0 | Updated: 2026-07-22

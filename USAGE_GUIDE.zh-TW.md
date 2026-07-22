@@ -1176,8 +1176,7 @@ echo -e "\n=== 檢查完成 ==="
 ```
 
 **預期結果**：
-- ✅ 看到 8 個 .md 命令檔案（overview, pattern, impact, history, flow, deps, list, clear）
-- ✅ 看到 6 個 skill 目錄（codebase-overview, pattern-finder 等）
+- ✅ 看到 plugin/commands/ 下的命令 SKILL.md（overview, pattern, impact, history, flow, deps, seam, refactor 等）
 - ✅ 在專案根目錄（有 .git/）
 - ✅ 程式碼檔案數 < 1000（TINY/SMALL）或 < 5000（MEDIUM/LARGE）
 
@@ -1193,4 +1192,4 @@ echo -e "\n=== 檢查完成 ==="
 ---
 
 **SourceAtlas** - Claude Code 的程式分析助手
-v3.0.0 | 更新時間: 2026-03-09
+v3.0.0 | 更新時間: 2026-07-22
