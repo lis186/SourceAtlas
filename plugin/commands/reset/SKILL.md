@@ -3,7 +3,7 @@ name: reset
 description: Clear saved SourceAtlas analysis results
 model: haiku
 allowed-tools: Bash, Read
-argument-hint: (optional) [target: overview|patterns|flows|history|impact|deps]
+argument-hint: "(optional) [target: overview|patterns|flows|history|impact|deps]"
 ---
 
 # SourceAtlas: Clear Saved Results

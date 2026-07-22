@@ -2,7 +2,7 @@
 description: Extract business logic flow from code, trace execution path from entry point
 model: opus
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: [flow description or entry point, e.g., "user checkout", "from OrderService.create()"] [--save] [--force]
+argument-hint: '[flow description or entry point, e.g., "user checkout", "from OrderService.create()"] [--save] [--force]'
 ---
 
 # SourceAtlas: Flow Analysis
