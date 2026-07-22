@@ -5,6 +5,28 @@ All notable changes to SourceAtlas Plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-07-22
+
+### Breaking
+- **Wrapper skills removed** — `codebase-overview`, `dependency-analyzer`, `code-flow-tracer`, `impact-analyzer`, `history-analyzer`, `pattern-finder` wrapper skills no longer exist. Use `/sourceatlas:overview`, `/sourceatlas:deps`, etc. directly.
+- **Flow modes removed** — `flow-modes/*.md` files removed; flow analysis modes (taint, dead-code, feature-toggle) are now inline in the flow command SKILL.md.
+- **V1-V4 verification ceremony removed** — Verification is now handled by `verification-guide.md` per command.
+
+### Added
+- **`/sourceatlas:refactor`** — 13-step legacy code migration Playbook (Steps 1-7 tool-assisted), based on Feathers' *Working Effectively with Legacy Code*
+- **`/sourceatlas:seam`** — Responsibility zone discovery with `detect-zones.sh`
+- **ObjC/Swift cross-language support** — Visibility graph, companion detection, mixed-language boundary classification
+- **`detect-zones.sh` consistency check** — `tests/tools/check-duplicate-scripts.sh` ensures 3 copies stay in sync
+- **VERIFICATION.md** — Change verification SOP with 7 SOPs, credibility ladder, CI 3-tier integration
+
+### Fixed
+- **`detect-zones.sh` arithmetic error** — `grep -c || echo 0` produced multi-line values on zero matches; changed to `|| true`
+- **`SEARCH_LANG` locale override** — Renamed from `LANG` to avoid overriding system locale in `ast-grep-search.sh`
+
+### Changed
+- **Plugin architecture: 5-file → single SKILL.md** — 15,896 → 4,249 lines (-73%), all commands consolidated
+- **Script paths use `${CLAUDE_PLUGIN_ROOT}`** — No more hardcoded `~/.claude/scripts/atlas/` paths
+
 ## [2.13.1] - 2026-03-09
 
 ### Changed

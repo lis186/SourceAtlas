@@ -20,9 +20,9 @@ SourceAtlas helps developers quickly understand any codebase through pattern lea
 - **📋 List Results** (`/sourceatlas:list`) - List saved SourceAtlas analysis results
 - **🗑️ Reset Results** (`/sourceatlas:reset`) - Clear saved SourceAtlas analysis results
 
-### Automatic Triggering
+### Agent Skills (Model-invoked)
 
-Every command doubles as a model-invoked skill — Claude automatically triggers the right analysis based on your questions:
+Claude automatically triggers the right analysis based on your questions:
 
 | You Ask | Claude Runs |
 |---------|-------------|
@@ -102,16 +102,18 @@ Expected output:
 ```
 Installing from: lis186/SourceAtlas
 ✔ Repository cloned
-Found 11 skill(s)
+Found 14 skill(s)
 
 ? Select skills to install (Press <space> to select)
 ❯ ◉ overview   - Project architecture overview
   ◉ pattern    - Learn design patterns from existing code
   ◉ flow       - Trace code execution and data flow
-  ... (select the skills you need)
+  ... (select the 8 SourceAtlas skills)
 
-✅ Installation complete: 11 skill(s) installed
+✅ Installation complete: 8 skill(s) installed
 ```
+
+> **Tip**: Select only the 8 skills starting with common names (overview, pattern, flow, history, impact, deps, list, clear). Skip agent skills like "codebase-overview" to avoid duplicates.
 
 **Step 3: Generate AGENTS.md**
 
@@ -122,7 +124,7 @@ openskills sync -y
 
 Expected output:
 ```
-✅ Synced 11 skill(s) to AGENTS.md
+✅ Synced 8 skill(s) to AGENTS.md
 ```
 
 **Step 4: Verify installation**
@@ -229,12 +231,13 @@ npm bin -g  # Shows the path
 export PATH="$PATH:$(npm bin -g)"  # Add to PATH
 ```
 
-#### Single-file Architecture Note
+#### v2.13.0 Testing Note (Progressive Disclosure Architecture)
 
-**What changed**: Most commands are now a single self-contained SKILL.md. Only `refactor` and `seam` keep additional support files (workflow.md, scripts/, templates/) because they drive multi-step state machines.
+**What changed**: Starting from v2.13.0, SKILL.md files are now more concise with detailed steps in separate support files (workflow.md, output-template.md, etc.). This follows Claude Code's Progressive Disclosure Architecture best practice.
 
 **For OpenSkills users**:
-- ✅ Core functionality works from SKILL.md alone for all analysis commands
+- ✅ Core functionality should work normally - SKILL.md still contains all execution logic
+- ⚠️ If your AI agent cannot access support files, you may notice less detailed error handling instructions
 - 💬 **We need your feedback!** Please test and report issues at: https://github.com/lis186/SourceAtlas/issues
 
 **Quick Test**:
@@ -563,18 +566,20 @@ Clear cached analysis results from `.sourceatlas/`.
 /sourceatlas:reset history
 ```
 
-## 🧠 Automatic Triggering
+## 🧠 Agent Skills (Auto-triggered)
 
-Each command's skill description tells Claude when to use it, so Claude automatically picks the right analysis from your natural language questions — no separate agent skills needed.
+SourceAtlas includes 6 Agent Skills that let Claude automatically choose the right analysis tool based on your natural language questions.
 
-| You Ask About | Claude Runs |
-|---------------|-------------|
-| Project structure, architecture, tech stack, onboarding | `/sourceatlas:overview` |
-| How to implement features, code examples, conventions | `/sourceatlas:pattern` |
-| Change impact, dependencies, breaking changes, safety | `/sourceatlas:impact` |
-| How features work, execution paths, data flow | `/sourceatlas:flow` |
-| Hotspots, code ownership, bus factor, knowledge silos | `/sourceatlas:history` |
-| Upgrades, migrations, deprecated APIs, version changes | `/sourceatlas:deps` |
+### Available Skills
+
+| Skill | Triggers When You Ask About |
+|-------|----------------------------|
+| `codebase-overview` | Project structure, architecture, tech stack, onboarding |
+| `pattern-finder` | How to implement features, code examples, conventions |
+| `impact-analyzer` | Change impact, dependencies, breaking changes, safety |
+| `code-flow-tracer` | How features work, execution paths, data flow |
+| `history-analyzer` | Hotspots, code ownership, bus factor, knowledge silos |
+| `dependency-analyzer` | Upgrades, migrations, deprecated APIs, version changes |
 
 ### Example Conversations
 
@@ -586,6 +591,18 @@ Each command's skill description tells Claude when to use it, so Claude automati
 
 **You**: "Is it safe to refactor UserService.ts?"
 **Claude**: *automatically runs `/sourceatlas:impact "UserService.ts"`*
+
+### Skills Location
+
+```
+plugin/skills/
+├── codebase-overview/SKILL.md
+├── pattern-finder/SKILL.md
+├── impact-analyzer/SKILL.md
+├── code-flow-tracer/SKILL.md
+├── history-analyzer/SKILL.md
+└── dependency-analyzer/SKILL.md
+```
 
 ---
 
@@ -654,7 +671,13 @@ sourceatlas-plugin/
 │   ├── refactor/SKILL.md    # Guided 13-step migration
 │   ├── list/SKILL.md        # List saved analyses
 │   └── reset/SKILL.md       # Clear saved analyses
-├── scripts/                 # Bundled utility scripts
+├── skills/                  # Agent Skills (model-invoked)
+│   ├── codebase-overview/SKILL.md
+│   ├── pattern-finder/SKILL.md
+│   ├── impact-analyzer/SKILL.md
+│   ├── code-flow-tracer/SKILL.md
+│   ├── history-analyzer/SKILL.md
+│   └── dependency-analyzer/SKILL.md
 ├── README.md
 ├── CHANGELOG.md
 ├── TESTING.md
@@ -713,4 +736,4 @@ Built on SourceAtlas methodology:
 
 ---
 
-**SourceAtlas v2.13.1** - Understanding codebases at the speed of thought 🚀
+**SourceAtlas v3.0.0** - Understanding codebases at the speed of thought 🚀

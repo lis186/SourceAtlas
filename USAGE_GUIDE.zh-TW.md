@@ -4,7 +4,7 @@
 
 **所有斜線命令的完整使用說明**
 
-適用於 Claude Code | v2.13.1 | Constitution v1.1
+適用於 Claude Code | v3.0.0 | Constitution v1.1
 
 ---
 
@@ -1193,4 +1193,4 @@ echo -e "\n=== 檢查完成 ==="
 ---
 
 **SourceAtlas** - Claude Code 的程式分析助手
-v2.13.1 | 更新時間: 2026-03-09
+v3.0.0 | 更新時間: 2026-03-09

@@ -6,7 +6,7 @@ AI collaboration guide for SourceAtlas development.
 
 **AI-optimized codebase analysis tool** - scan <5% of files to achieve 70-95% understanding using information theory principles.
 
-**Current Version**: v2.13.1 (2026-03-09)
+**Current Version**: v3.0.0 (2026-07-22)
 
 ## Key Files
 
