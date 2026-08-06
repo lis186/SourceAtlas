@@ -200,7 +200,7 @@ module_q=$(yaml_dq "$module_name")
 file_q=$(yaml_dq "$file_rel")
 
 cat > "$state_file" <<EOF
-schema_version: "2.0"
+schema_version: "2.1"
 module: $module_q
 file: $file_q
 language: "$language"
@@ -237,6 +237,12 @@ steps:
   5_interface: { status: pending, completed_at: null, migration_type: null, target_language: null, target_interface_ref: null, skip_reason: null }
   6_adapter:   { status: pending, completed_at: null, skip_reason: null }
   7_gate:      { status: pending, completed_at: null, replacement_script: null }
+  8_new_impl:       { status: pending, completed_at: null }
+  9_swap:           { status: pending, completed_at: null }
+  10_verification:  { status: pending, completed_at: null }
+  11_integration:   { status: pending, completed_at: null }
+  12_cleanup:       { status: pending, completed_at: null }
+  13_delete_legacy: { status: pending, completed_at: null }
 EOF
 
 # ── Write 1_target.yaml ─────────────────────────────────────────────────────
@@ -275,6 +281,14 @@ showstoppers:
   storyboard_dispatch: $storyboard_dispatch
   category_count: $category_count
   cross_language_exposed: $cross_language_exposed
+
+# Declared BEFORE work begins; Step 12 echoes these back with results.
+# goal: free-text definition of "better" for THIS refactor (empty = universal metrics only).
+# checks: machine-verifiable rules, each { desc, verify }. verify is a shell command,
+# exit 0 = met. Prefer quote-free grep -qE patterns (see SKILL.md Gotchas).
+success_criteria:
+  goal: ""
+  checks: []
 EOF
 
 # ── Summary to stdout ───────────────────────────────────────────────────────
@@ -315,3 +329,6 @@ echo
 echo "  artifacts: $state_file"
 echo "             $target_file"
 echo "             $pilot_report"
+echo
+echo "  optional: declare this refactor's success criteria (goal + checks) in"
+echo "            1_target.yaml → success_criteria — Step 12 will echo them back"

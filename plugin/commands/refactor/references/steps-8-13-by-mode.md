@@ -6,6 +6,8 @@ For other modes, refer to the appropriate section below.
 
 > **How to use**: Check `state.yaml → migration_mode.mode_name`. Then jump to that mode's section.
 
+> **All modes**: whatever the mode, the final cleanup step (Step 12 in `seam-injection` / `platform-migration` / `platform-strangler`; after all zones are done in `strangler-fig`) also runs `gate-postswap.sh --step 12 [--impl-file <new-file>]` to record structural metrics into `12_metrics.yaml`. Metrics are evidence, not a gate — see the verification boundary note in [SKILL.md](../SKILL.md).
+
 ---
 
 ## Mode: `seam-injection` (default)

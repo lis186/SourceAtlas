@@ -1,9 +1,9 @@
 ---
 name: refactor
-description: Guided legacy code migration using the 13-step Playbook (Steps 1-7 tool-assisted)
+description: Guided legacy code migration using the 13-step Playbook (Steps 1-7 tool-assisted, 8-13 gate-verified)
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: "<file-path> [--zone <zone-id>] [--step <1-7>] [--zones-only] [--status] [--force]"
+argument-hint: "<file-path> [--zone <zone-id>] [--step <1-13>] [--zones-only] [--status] [--force]"
 ---
 
 # SourceAtlas: Refactor (Playbook Navigator)
@@ -33,7 +33,7 @@ argument-hint: "<file-path> [--zone <zone-id>] [--step <1-7>] [--zones-only] [--
 ## Quick Start
 
 0. **No arguments?** → Discovery Mode: auto-find hotspots, show in-progress refactors, suggest candidates
-1. **Select target** → history hotspot + impact analysis → `1_target.yaml`
+1. **Select target** → history hotspot + impact analysis → `1_target.yaml` (+ optional `success_criteria` declaration)
 2. **Inventory contracts** → seam zones + audit → `2_contracts.yaml`
 3. **Find seams** → dependency graph + seam recommendations → `3_seams.yaml`
 4. **Record behavior** → spike tests + characterization test skeletons → `4_tests.{ext}`
@@ -170,21 +170,23 @@ The Playbook Navigator adds:
 
 ## Steps 8-13: Post-Tool Guidance
 
-Steps 8-13 are **user-driven** without tool assistance. After Step 7 passes, output the table below — each row names the starting artifact, the concrete action, and the verifiable Done signal so the user can self-check.
+Steps 8-13 are **user-driven**, but state-tracked: `state.sh advance` continues past Step 7, and `bash "${CLAUDE_PLUGIN_ROOT}/commands/refactor/scripts/gate-postswap.sh" --module <m> --step <8|12|13>` machine-verifies the grep-checkable Done signals below (Steps 9-11 are verified by test suites — re-run `gate-step7.sh` / the full suite). After Step 7 passes, output the table below — each row names the starting artifact, the concrete action, and the verifiable Done signal so the user can self-check.
 
 > **Mode variants**: The table below shows `seam-injection` (default). For `platform-migration`, `strangler-fig`, or `platform-strangler`, see **[references/steps-8-13-by-mode.md](references/steps-8-13-by-mode.md)**.
 > Check `state.yaml → migration_mode.mode_name` to determine which path to follow.
+
+> **Verification boundary**: green gates at Steps 10–11 prove **no regression** only — they do not prove the refactor made anything better. Improvement evidence comes from Step 12's structural metrics (`12_metrics.yaml`: LOC, decision points, reference counts, before vs after) and gate-postswap's zero-reference checks. When reporting Step 10 results, state this boundary explicitly. If `success_criteria` were declared in `1_target.yaml` at Step 1, Step 12 echoes them back with per-check results (`12_metrics.yaml → goal_checks`) — an unmet declared criterion is loud evidence for review, not a gate failure. Step 12 also prints a retrospective prompt (`retrospective: pending` in `12_metrics.yaml`) — the LLM should ask the user whether the refactoring achieved its goal and update the field to `yes`, `no`, or `deferred`.
 
 ### Mode: `seam-injection` — swap_strategy: `direct` (default)
 
 | Step | Start From | Do (concrete actions) | Done When (verifiable signal) |
 |------|------------|-----------------------|-------------------------------|
-| 8 — Write New Implementation | `5_interface.{ext}` + `4_tests.{ext}` | Create new file implementing the Seam Interface; no imports of legacy file; inject collaborators via constructor; write unit tests alongside | New file compiles, unit tests green, characterization tests still green, `grep -l "<LegacyClass>" <new-file>` returns no hits |
+| 8 — Write New Implementation | `5_interface.{ext}` + `4_tests.{ext}` | Create new file implementing the Seam Interface; no imports of legacy file; inject collaborators via constructor; write unit tests alongside | New file compiles, unit tests green, characterization tests still green; `gate-postswap.sh --step 8 --impl-file <new-file>` passes |
 | 9 — Swap Implementation | New impl + `3_seams.yaml.recommended.enabling_point` | Replace `LegacyAdapter` with new impl at the ONE injection-site line; no other files touched in this commit | Single-file, single-line wiring change committed; characterization tests still pass |
 | 10 — Run Verification | Swapped code + `7_gate_results.yaml` (baseline) | Re-run `gate-step7.sh`; diff each section (Layer A / Layer B / contract CI) against the baseline | New gate output matches baseline 1:1 — same passes, same counts, no new failures |
 | 11 — Integration Testing | Verified swap from Step 10 | Run full app test suite; manual smoke every user-facing flow touching this module; check perf on hot paths | Full suite green; manual flows pass; no perf regression flagged |
-| 12 — Clean Up | Integrated swap from Step 11 | Delete `6_adapter.{ext}`; rename Seam Interface → final Target Interface name; delete temporary mocks/shims; update imports / re-exports | `grep -r "<AdapterName>"` and `grep -r "<TemporarySeamName>"` both return zero hits; full suite green |
-| 13 — Delete Legacy | Cleaned codebase from Step 12 | `grep -r "<LegacyClassName>"` to confirm zero refs; delete legacy file(s); final full-suite run; one dedicated commit | Legacy file no longer exists; full suite green; deletion is its own commit (not bundled with refactor work) |
+| 12 — Clean Up | Integrated swap from Step 11 | Delete `6_adapter.{ext}`; rename Seam Interface → final Target Interface name; delete temporary mocks/shims; update imports / re-exports; run gate-postswap.sh --step 12 --impl-file <new-file> to record structural metrics (LOC / decision points / references, before vs after) into 12_metrics.yaml | `gate-postswap.sh --step 12` passes (adapter + temporary seam name zero refs); full suite green; 12_metrics.yaml written and its delta presented to the user (⚠️ REVIEW flags need human judgment, they do not fail the gate) |
+| 13 — Delete Legacy | Cleaned codebase from Step 12 | Delete legacy file(s); final full-suite run; one dedicated commit | `gate-postswap.sh --step 13` passes (legacy file gone, zero class refs); full suite green; deletion is its own commit (not bundled with refactor work) |
 
 ### Mode: `seam-injection` — swap_strategy: `shadow`
 
@@ -198,8 +200,8 @@ Steps 8-13 are **user-driven** without tool assistance. After Step 7 passes, out
 | 9c — Hard Swap | Threshold met + `3_seams.yaml.recommended.enabling_point` | Replace `ShadowAdapter` with new impl directly at the ONE injection site. Single-file, single-line commit. | Characterization tests pass; shadow logger no longer called; `grep -l "ShadowAdapter" <wiring-file>` = 0 hits |
 | 10 — Run Verification | Swapped code + `7_gate_results.yaml` (baseline) | Re-run `gate-step7.sh`; diff against baseline | Baseline matched 1:1 |
 | 11 — Integration Testing | Verified swap from Step 10 | Full suite + manual smoke | Full suite green; no perf regression |
-| 12 — Clean Up | Integrated swap from Step 11 | Delete `6_adapter.{ext}` (ShadowAdapter) + `6_logger_protocol.{ext}`; rename Seam Interface; delete logger implementation | `grep -r "ShadowAdapter\|ShadowLogger"` = 0 hits; full suite green |
-| 13 — Delete Legacy | Cleaned codebase from Step 12 | Confirm zero refs to legacy class; delete; own commit | Legacy file deleted; full suite green |
+| 12 — Clean Up | Integrated swap from Step 11 | Delete `6_adapter.{ext}` (ShadowAdapter) + `6_logger_protocol.{ext}`; rename Seam Interface; delete logger implementation; run gate-postswap.sh --step 12 --impl-file <new-file> to record structural metrics (LOC / decision points / references, before vs after) into 12_metrics.yaml | `gate-postswap.sh --step 12` passes (also checks the shadow logger protocol); full suite green; 12_metrics.yaml written and its delta presented to the user (⚠️ REVIEW flags need human judgment, they do not fail the gate) |
+| 13 — Delete Legacy | Cleaned codebase from Step 12 | Delete legacy file; own commit | `gate-postswap.sh --step 13` passes; full suite green |
 
 > See [references/playbook-overview.md](references/playbook-overview.md) for the complete 13-step overview with detailed checklists per step.
 
@@ -255,3 +257,18 @@ $STEP_OUTPUT
 - **[../seam/references/seam-types.md](../seam/references/seam-types.md)** — Seam type taxonomy
 - **scripts/gate-contracts.sh** — Gate 2: deterministic contract verification dry-run
 - **scripts/gate-seams.sh** — Gate 3: deterministic enabling point existence check
+- **scripts/gate-postswap.sh** — Steps 8/12/13: grep-checkable Done-When signals as exit codes (self-test: `scripts/test-postswap.sh`)
+
+---
+
+## Gotchas
+
+- **`.sourceatlas/` caches lie after the repo moves on.** A cached `cross-language.yaml` from months ago silently fed stale counts into pilot reports (caught by fact-checking against a freshly updated repo, 2026-07). `pilot-run.sh` now regenerates any cache older than the last commit — apply the same freshness check before trusting any other `.sourceatlas/` artifact.
+- **`agy -p` runs in its own scratch directory, not your cwd.** Without `--add-dir "$PWD"` the blind reviewer wanders `~/.gemini/antigravity-cli/scratch` until print-timeout and returns garbage. Every agy invocation in this playbook must pass `--add-dir` (first hit: express E2E, 2026-07).
+- **Reviewer CLIs die mid-playbook — fall back per call, not per session.** codex ran Step 2b fine, then its refresh token was revoked before Step 3 (`refresh_token_invalidated`). Probe with a trivial prompt when output is empty, then substitute the fresh-context Claude subagent and record the actual reviewer in that artifact's `reviewers:` — one artifact may say `codex`, the next `claude-subagent`, both true.
+- **Write `verification_grep` rules quote-free.** Three gate scripts (gate-contracts, gate-seams, gate-step7) each re-extract rules with sed + `eval`; YAML `\"` escapes reached eval as literal backslash-quotes until 2026-07 (all three now unescape). Belt-and-braces: prefer `grep -qE` with `.` wildcards over embedded quotes — `cookieParser..secret..` instead of `cookieParser(\"secret\")`.
+- **Group C module names are common words — bare-word grep gates are unsatisfiable.** `lib/response.js` → legacy_class `response`, which matches `http.ServerResponse`, prose, everything. gate-postswap Steps 8/13 now check module-path references (`require('./response')`) for dynamic languages instead of the bare word. Same trap awaits any `utils`/`helpers`/`index` target.
+- **Re-running gate-step7.sh as the Step 10 verification used to reset `current_step` to 8.** SKILL.md Step 10 says "re-run gate-step7" — the script now only advances state when `current_step ≤ 7`. If state ever regresses after a gate, suspect the gate script, not your state.sh usage.
+- **Zero zone markers is the NORM for Group C, not an edge case.** JS/Python files rarely have `// MARK:`-style markers; the zero-marker path had never run before express: `grep -c ... || echo 0` printed a double zero (breaking the guard) and init-step2a.sh had no fallback. Both fixed (init-step2a synthesizes a single whole-file zone) — but treat any "first time on a new language group" run as hostile territory.
+- **`/atlas.audit --zone` reads `.sourceatlas/seam/{module}.yaml`, but refactor Step 2a writes `2a_zones.yaml`.** Interop gap, still open: whole-file zones sidestep it (audit without `--zone`); a real zone-scoped Group C run will hit it. Either run `/atlas.seam` first or pass explicit line ranges.
+- **Group C mock guidance says jest; the repo may use mocha.** Express uses mocha — `jest.mock` does not exist there. The working equivalents: require-cache seeding (see the `6_adapter.js` pattern from the express run) for pre-swap validation, and the require-line swap itself as the migration seam.

@@ -146,7 +146,8 @@ if [[ -f "$CONTRACTS_FILE" ]]; then
             current_id=$(echo "$line" | sed -E 's/.*(id|contract_id): *"?([^"]*)"?[[:space:]]*$/\2/')
             current_grep=""
         elif echo "$line" | grep -qE '^[[:space:]]*verification_grep:'; then
-            current_grep=$(echo "$line" | sed -E 's/^[[:space:]]*verification_grep: *"?(.*[^"])"?[[:space:]]*$/\1/')
+            # Trailing sed unescapes YAML \" sequences — same fix as gate-contracts.sh
+            current_grep=$(echo "$line" | sed -E 's/^[[:space:]]*verification_grep: *"?(.*[^"])"?[[:space:]]*$/\1/' | sed 's/\\"/"/g')
         fi
     done < "$CONTRACTS_FILE"
     # final block
@@ -206,10 +207,15 @@ fi
 sed -i.bak "s|^\([[:space:]]*\)7_gate:.*|\\17_gate: { status: $overall, completed_at: \"$timestamp\" }|" "$STATE_FILE" 2>/dev/null || true
 rm -f "${STATE_FILE}.bak"
 
-# If pass, advance current_step to 8
+# If pass, advance current_step to 8 — but only when actually at Step 7.
+# SKILL.md Step 10 re-runs this gate as the post-swap verification; that
+# re-run must not regress current_step (10 → 8).
 if [[ "$overall" = "pass" ]]; then
-    sed -i.bak "s|^current_step:.*|current_step: 8|" "$STATE_FILE" 2>/dev/null || true
-    rm -f "${STATE_FILE}.bak"
+    current=$(awk '/^current_step:/ {print $2; exit}' "$STATE_FILE")
+    if [[ "${current:-7}" -le 7 ]]; then
+        sed -i.bak "s|^current_step:.*|current_step: 8|" "$STATE_FILE" 2>/dev/null || true
+        rm -f "${STATE_FILE}.bak"
+    fi
 fi
 
 # ── 7.6 Print summary ────────────────────────────────────────────────

@@ -76,6 +76,23 @@ raw_zones=$(bash "$DETECT" "$target_abs" --language "$language" 2>"$stderr_tmp")
 }
 rm -f "$stderr_tmp"
 
+# ── Zero-marker fallback (Group C common case) ──────────────────────────────
+# JS/Python files rarely carry MARK-style markers; detect-zones.sh then emits
+# "zones: []". Synthesize a single whole-file zone so the pipeline proceeds
+# (workflow.md Step 2a: small/markerless files are handled as a single zone).
+if ! echo "$raw_zones" | grep -qE '^  - id:'; then
+    total_lines=$(wc -l < "$target_abs" | tr -d ' ')
+    raw_zones=$(echo "$raw_zones" | grep -vE '^zones: \[\]|^# WARNING')
+    raw_zones="$raw_zones
+zones:
+  - id: \"whole-file\"
+    name: \"Whole file (no zone markers)\"
+    lines: [1, ${total_lines}]
+    line_count: ${total_lines}
+    method_count: 0
+    deps: []"
+fi
+
 # ── Pick first-slice zone via deterministic ranking ─────────────────────────
 # Strategy: smallest line_count first; tie-break by fewest deps.
 # (Phase 2 high-deps preference handled by pilot-run.sh's recommended_zone;

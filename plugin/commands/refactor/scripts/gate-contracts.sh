@@ -152,7 +152,9 @@ else
             FAIL=$((FAIL + 1))
             FAILURES="${FAILURES}\n  - [$CONTRACT_ID] $line"
         fi
-    done < <(grep 'verification_grep:' "$CONTRACTS_FILE" | sed 's/.*verification_grep: *"\{0,1\}//' | sed 's/"\{0,1\} *$//')
+    # Final sed unescapes YAML \" sequences inside double-quoted scalars —
+    # without it, rules containing quotes reach eval as literal \" and fail.
+    done < <(grep 'verification_grep:' "$CONTRACTS_FILE" | sed 's/.*verification_grep: *"\{0,1\}//' | sed 's/"\{0,1\} *$//' | sed 's/\\"/"/g')
 
     # Try extraction method B: verification.grep fields (nested YAML)
     if [ "$TOTAL" -eq 0 ]; then

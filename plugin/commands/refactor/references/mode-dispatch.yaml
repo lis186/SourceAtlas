@@ -97,6 +97,46 @@ steps:
       replacement_script:    gate-platform-migration.sh
       note:                  "Runs both platform checks and strangler plan verification."
 
+  # Steps 8-13 apply in every mode; mode-specific actions live in
+  # references/steps-8-13-by-mode.md (strangler modes loop 8-12 per zone).
+  # gate-postswap.sh verifies the grep-checkable Done-When signals for 8/12/13.
+
+  S8_new_impl:
+    seam-injection:          applies
+    platform-migration:      applies
+    strangler-fig:           applies
+    platform-strangler:      applies
+
+  S9_swap:
+    seam-injection:          applies
+    platform-migration:      applies
+    strangler-fig:           applies
+    platform-strangler:      applies
+
+  S10_verification:
+    seam-injection:          applies
+    platform-migration:      applies
+    strangler-fig:           applies
+    platform-strangler:      applies
+
+  S11_integration:
+    seam-injection:          applies
+    platform-migration:      applies
+    strangler-fig:           applies
+    platform-strangler:      applies
+
+  S12_cleanup:
+    seam-injection:          applies
+    platform-migration:      applies
+    strangler-fig:           applies
+    platform-strangler:      applies
+
+  S13_delete_legacy:
+    seam-injection:          applies
+    platform-migration:      applies
+    strangler-fig:           applies
+    platform-strangler:      applies
+
 # Skip reasons written to state.yaml when dispatch == skip:
 #   state.steps.SN.status = "skipped"
 #   state.steps.SN.skip_reason = <skip_reason from above>
