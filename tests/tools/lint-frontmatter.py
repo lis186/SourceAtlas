@@ -25,10 +25,10 @@ def validate(path, root):
     content = path.read_text(encoding="utf-8")
     lines = content.splitlines()
 
-    if not lines or lines[0].strip() != "---":
+    if not lines or lines[0].rstrip() != "---":
         return [(relative, "missing frontmatter opening ---")]
 
-    closing = next((index for index in range(1, len(lines)) if lines[index].strip() == "---"), None)
+    closing = next((index for index in range(1, len(lines)) if lines[index].rstrip() == "---"), None)
     if closing is None:
         return [(relative, "unterminated frontmatter (missing closing ---)")]
 
