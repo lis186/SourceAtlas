@@ -2,7 +2,7 @@
 description: Get project overview - scan <5% of files to achieve 70-80% understanding
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: [path] [--save] [--force] (e.g., "src/api" or ". --save")
+argument-hint: '[path] [--save] [--force] (e.g., "src/api" or ". --save")'
 ---
 
 # SourceAtlas: Project Overview (Stage 0 Fingerprint)

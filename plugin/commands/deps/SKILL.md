@@ -3,7 +3,7 @@ name: deps
 description: Analyze dependency usage for library/framework/SDK upgrades
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write, WebSearch, WebFetch
-argument-hint: [target, e.g., "react 17 → 18", "iOS 16", "lodash"] [--force]
+argument-hint: '[target, e.g., "react 17 → 18", "iOS 16", "lodash"] [--force]'
 ---
 
 # SourceAtlas: Dependencies
