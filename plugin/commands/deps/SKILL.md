@@ -3,7 +3,7 @@ name: deps
 description: Analyze dependency usage for library/framework/SDK upgrades — detects the installed version, finds breaking changes and deprecated API usage, and produces a migration checklist with effort estimates, cached to .sourceatlas/deps/. Use when the user asks "upgrade to X", "migrate from X to Y", "what breaks if we upgrade", "how much work is the iOS 17 / React 18 / Python 3.12 migration", or wants to audit usage of a specific library.
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write, WebSearch, WebFetch
-argument-hint: [target, e.g., "react 17 → 18", "iOS 16", "lodash"] [--force]
+argument-hint: '[target, e.g., "react 17 → 18", "iOS 16", "lodash"] [--force]'
 ---
 
 # SourceAtlas: Dependencies

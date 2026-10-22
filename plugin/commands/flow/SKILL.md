@@ -3,7 +3,7 @@ name: flow
 description: Traces code execution paths and business logic flow from an entry point, producing a call graph with boundary detection and file:line references. Use when the user asks "how does X work", "what happens when X", "trace this flow", "where does this data come from", or "who calls X".
 model: opus
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: [flow description or entry point, e.g., "user checkout", "from OrderService.create()"] [--force]
+argument-hint: '[flow description or entry point, e.g., "user checkout", "from OrderService.create()"] [--force]'
 ---
 
 # SourceAtlas: Flow Analysis

@@ -2,7 +2,7 @@
 description: Analyze the impact scope of code changes using static dependency analysis
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: [target, e.g., "User model", "api /api/users/{id}", "authentication"] [--save] [--force]
+argument-hint: '[target, e.g., "User model", "api /api/users/{id}", "authentication"] [--save] [--force]'
 ---
 
 # SourceAtlas: Impact Analysis (Static Dependencies)
