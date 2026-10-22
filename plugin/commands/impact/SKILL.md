@@ -3,7 +3,7 @@ name: impact
 description: Analyze the impact scope of a code change via static dependency analysis — direct and transitive dependents, test impact, risk level, and a migration checklist, cached to .sourceatlas/impact/. Use when the user asks "what will break if I change X", "what depends on X", "impact of changing X", "is it safe to modify X", or before making significant code changes.
 model: sonnet
 allowed-tools: Bash, Glob, Grep, Read, Write
-argument-hint: [target, e.g., "User model", "api /api/users/{id}", "UserService", "src/api/users.ts"] [--force]
+argument-hint: '[target, e.g., "User model", "api /api/users/{id}", "UserService", "src/api/users.ts"] [--force]'
 ---
 
 # SourceAtlas: Impact Analysis
